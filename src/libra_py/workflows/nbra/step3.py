@@ -42,7 +42,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from . import mapping, step2_many_body
+from . import mapping, step2_many_body, step3_many_body
 import util.libutil as comn
 import libra_py.tsh as tsh
 import libra_py.units as units
@@ -1907,9 +1907,14 @@ def run_step3_ks_nacs_libint(params):
         except:
             print('Could not specify the active_space or data_dim. Please set them manually!')
             sys.exit(0)
-
-    active_space = params['active_space']
-    nstates = int(len(active_space)/2)
+    num_occ_states = params['num_occ_states']
+    num_unocc_states = params['num_unocc_states']
+    data_dim = params['data_dim']
+    npz_file_ks_homo_index = params['npz_file_ks_homo_index']
+    ks_active_space_1, ks_homo_index_1 = make_active_space( num_occ_states, num_unocc_states, data_dim, npz_file_ks_homo_index)
+    params['active_space'] = ks_active_space_1
+    params['ks_homo_index'] = ks_homo_index_1
+    nstates = int(len(ks_active_space_1)/2)
     start_time = params['start_time']
     finish_time = params['finish_time']
     nprocs = params['nprocs']
@@ -2035,7 +2040,7 @@ def run_step3_sd_nacs_libint(params):
     comn.check_input(params, default_params, critical_params)
     # Building the new active space based on the number of occupied and unoccupied 
     # orbitals from the active space that we used to generate the St_ks matrices
-    ks_active_space_2, ks_homo_index_2 = make_active_space(params['num_occ'], params['num_unocc'], 
+    ks_active_space_2, ks_homo_index_2 = make_active_space(params['num_occ_states'], params['num_unocc_states'], 
                                                                  params['data_dim'], params['npz_file_ks_homo_index'])
 
     # Update the parameters
@@ -2104,6 +2109,7 @@ def run_step3_sd_nacs_libint(params):
     sd_states_reindexed_sorted = []
     sd_states_unique_sorted = []
     for step in range(start_time, finish_time):
+        # isUKS should be added to this function
         E_sd_step, sd_states_unique_sorted_step, sd_states_reindexed_sorted_step, reindex_nsteps = sort_unique_SD_basis_scipy(
             step, sd_unique_basis, sd_states_reindexed, params )
         sd_states_reindexed_sorted.append(sd_states_reindexed_sorted_step)
@@ -2115,14 +2121,25 @@ def run_step3_sd_nacs_libint(params):
     print('Done with sorting and computing the SDs energies. Elapsed time:',time.time()-t2)
     params.update({'sd_states_reindexed_sorted':sd_states_reindexed_sorted})
     if params['is_many_body']:
+        # add midpoint energies for CI states in here (isUKS should also be considered)
+        ci_midpoint_energies = step3_many_body.compute_ci_energies_midpoint( ci_energies, params )
+        # For SD2CI, isUKS should also be considered
         if params['sorting_type']=='identity':
             # The new, faster way
-            SD2CI = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
+            SD2CI_alp = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
+            #if params['isUKS']:
+            #    SD2CI_bet = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
         else:
             # The old way
-            SD2CI = step3_many_body.make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
-        for i in range(len(SD2CI)):
-            SD2CI[i] = data_conv.MATRIX2nparray(SD2CI[i].real())
+            SD2CI_alp = step3_many_body.make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
+            #if params['isUKS']:
+            #    SD2CI_bet = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
+        for i in range(len(SD2CI_alp)):
+            SD2CI_alp[i] = data_conv.MATRIX2nparray(SD2CI_alp[i].real())
+        if params['isUKS']:
+            for i in range(len(SD2CI_bet)):
+                SD2CI_bet[i] = data_conv.MATRIX2nparray(SD2CI_bet[i].real())
+
         var_pool = []
         for step in range( finish_time - start_time -1 ):
             var_pool.append((step, params, SD2CI[step]))
@@ -2160,6 +2177,7 @@ def run_step3_sd_nacs_libint(params):
 
     if params['is_many_body']:
         for step in range(start_time, finish_time):
+            # how isUKS is considered herein?!?!
             E_ci_step = ci_energies[step]
             if step>start_time:
                 E_midpoint = 0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha
