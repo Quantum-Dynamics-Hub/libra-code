@@ -2096,7 +2096,7 @@ def run_step3_sd_nacs_libint(params):
         # Add electron-only SDs
         for state in range(ks_homo_index+1,max_band+1):
             sd_tmp = [[ks_homo_index, state], 'alp']
-            if params['isUKS']:
+            if params['isUKS']==1:
                 sd_tmp = [[ks_homo_index, state], 'bet']
             if sd_tmp not in sd_unique_basis:
                 sd_unique_basis.append(sd_tmp)
@@ -2106,7 +2106,7 @@ def run_step3_sd_nacs_libint(params):
         max_band = ks_homo_index+1
         for state in range(min_band, max_band):
             sd_tmp = [[state, ks_homo_index+1], 'alp']
-            if params['isUKS']:
+            if params['isUKS']==1:
                 sd_tmp = [[ks_homo_index, state], 'bet']
             if sd_tmp not in sd_unique_basis:
                 sd_unique_basis.append(sd_tmp)
@@ -2131,7 +2131,7 @@ def run_step3_sd_nacs_libint(params):
             step, sd_unique_basis, sd_states_reindexed, params )
         sd_states_reindexed_sorted.append(sd_states_reindexed_sorted_step)
         sd_states_unique_sorted.append(sd_states_unique_sorted_step)
-        E_sds.append(E_sd_step.todense().real)
+        E_sds.append(np.array(E_sd_step.todense().real))
         if step>start_time:
             E_midpoint = 0.5*(E_sd_step+E_sd_step_plus)
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step}_re.npz',E_midpoint)
@@ -2162,15 +2162,37 @@ def run_step3_sd_nacs_libint(params):
         var_pool = []
         for step in range( finish_time - start_time -1 ):
             #print(E_sds[step])
-            var_pool.append((step, params, data_conv.nparray2CMATRIX(np.array(E_sds[step])), np.zeros((1,1)) ))
-    
+            #var_pool.append((step, params, data_conv.nparray2CMATRIX(np.array(E_sds[step])), np.zeros((1,1)) ))
+            var_pool.append((step, params))
+
     t2 = time.time()
     st_sds = []
     st_cis = []
     for variable in var_pool:
-        st_sd, st_ci = compute_sd_overlaps_in_parallel(variable[0],variable[1],variable[2], variable[3])
+        #st_sd, st_ci = compute_sd_overlaps_in_parallel(variable[0],variable[1],variable[2], variable[3])
+        st_sd = compute_sd_overlaps_in_parallel(variable[0],variable[1])
         st_sds.append(st_sd)
-        st_cis.append(st_ci)
+        #st_cis.append(st_ci)
+    st_sds_cmatrix = []
+    E = []
+    for i in range(len(st_sds)):
+        st_sd_cmatrix = data_conv.nparray2CMATRIX( np.array(st_sds[i].todense().real) )
+        st_sds_cmatrix.append(st_sd_cmatrix)
+        E_sd_cmatrix = data_conv.nparray2CMATRIX(E_sds[i])
+        E.append(E_sd_cmatrix)
+    if params['do_state_reordering']==2 or params['do_state_reordering']==1:
+        print('Applying state-reordering...\n\n\n\n')
+        apply_state_reordering(st_sds_cmatrix, E, params)
+    st_cis = []
+    for i in range(len(st_sds_cmatrix)):
+        st_sds[i] = data_conv.MATRIX2scipynpz( st_sds_cmatrix[i].real() )
+        sd2ci = SD2CI[step]
+        #print('sd2ci',sd2ci)
+        st_ci = np.linalg.multi_dot([sd2ci.T, st_sds[i].todense().real, sd2ci])
+        st_cis.append(sp.csc_matrix(st_ci))
+    #print('st_sd',np.diag(st_sds[0].todense().real))
+    #print('st_ci',np.diag(st_cis[0]))
+    #sys.exit(0)
     #with mp.Pool( nprocs ) as pool:
     #    st_sds, st_cis = pool.starmap( compute_sd_overlaps_in_parallel, var_pool ) 
     #    pool.close()
@@ -2233,7 +2255,9 @@ def run_step3_sd_nacs_libint(params):
 
             
 
-def compute_sd_overlaps_in_parallel( step, params, E, sd2ci=np.array((1,1)) ):
+#def compute_sd_overlaps_in_parallel( step, params, E, sd2ci=np.array((1,1)) ):
+def compute_sd_overlaps_in_parallel( step, params ):
+
     """
     This function is used as an auxilary function that computes the SDs overlaps.
     It is used in the run_step3_sd_nacs_libint function.
@@ -2245,13 +2269,14 @@ def compute_sd_overlaps_in_parallel( step, params, E, sd2ci=np.array((1,1)) ):
     t2 = time.time()
     print('Computing the SD overlaps for step',step)
     # The same procedure as above
+    print(F'{res_dir_1}/St_ks_{step+start_time}.npz')
     st_ks = np.array( sp.load_npz(F'{res_dir_1}/St_ks_{step+start_time}.npz').todense()
                      [active_space,:][:,active_space] ).real
     s_ks_1 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
                       [active_space,:][:,active_space] ).real
     s_ks_2 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
                       [active_space,:][:,active_space] ).real
-    print('ks raw', np.diag(st_ks))
+    #print('ks raw', np.diag(st_ks))
     st_ks = data_conv.nparray2MATRIX(st_ks)
     s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
     s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
@@ -2263,40 +2288,35 @@ def compute_sd_overlaps_in_parallel( step, params, E, sd2ci=np.array((1,1)) ):
                                            sd_states_reindexed_sorted[step+1], s_ks_2,use_minimal=False, use_mo_approach=True).real()
     st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
                                           sd_states_reindexed_sorted[step+1], st_ks, use_minimal=False, use_mo_approach=True).real()
-    st_sd_ = [st_sd]
-    E_ = [E]
-    if params['do_state_reordering']==2:
-        print('applying state reordering...')
-        apply_state_reordering(st_sd_, E, params)
     s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
     s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
-    st_sd = data_conv.MATRIX2nparray(st_sd_[0])
+    st_sd = data_conv.MATRIX2nparray(st_sd)
 
-    print(sd2ci, sd2ci.shape)
-    print('st_sd',np.diag(st_sd), st_sd.shape)
-    print('s_sd',np.diag(s_sd_1), s_sd_1.shape)
-    np.savetxt('St_sd', st_sd.real)
-    np.savetxt('S_sd', s_sd_1.real)
-    if params['is_many_body']:
-        st_ci = np.linalg.multi_dot([sd2ci.T, st_sd, sd2ci])
-        s_ci_1 = np.linalg.multi_dot([sd2ci.T, s_sd_1, sd2ci])
-        s_ci_2 = np.linalg.multi_dot([sd2ci.T, s_sd_2, sd2ci])
-        if params['apply_orthonormalization']:
-            print('Applying orthonormalization for many-body states for step', step)
-            st_ci, s_ci = apply_orthonormalization_scipy(s_ci_1, s_ci_2, st_ci)
-        print(F'Done with computing the overlaps of many-body states for step {step}. Elapsed time {time.time()-t2}')
-        print('st_ci',np.diag(st_ci), st_ci.shape)
-        print(np.diag(s_ci_1), s_ci_1.shape)
-        print(np.diag(s_ci_2), s_ci_2.shape)
-    else:
-        st_ci = np.zeros((1,1))
+    #print(sd2ci, sd2ci.shape)
+    #print('st_sd',np.diag(st_sd), st_sd.shape)
+    #print('s_sd',np.diag(s_sd_1), s_sd_1.shape)
+    #np.savetxt('St_sd', st_sd.real)
+    #np.savetxt('S_sd', s_sd_1.real)
+    #if params['is_many_body']:
+    #    st_ci = np.linalg.multi_dot([sd2ci.T, st_sd, sd2ci])
+    #    s_ci_1 = np.linalg.multi_dot([sd2ci.T, s_sd_1, sd2ci])
+    #    s_ci_2 = np.linalg.multi_dot([sd2ci.T, s_sd_2, sd2ci])
+    #    if params['apply_orthonormalization']:
+    #        print('Applying orthonormalization for many-body states for step', step)
+    #        st_ci, s_ci = apply_orthonormalization_scipy(s_ci_1, s_ci_2, st_ci)
+    #    print(F'Done with computing the overlaps of many-body states for step {step}. Elapsed time {time.time()-t2}')
+    #    #print('st_ci',np.diag(st_ci), st_ci.shape)
+    #    #print(np.diag(s_ci_1), s_ci_1.shape)
+    #    #print(np.diag(s_ci_2), s_ci_2.shape)
+    #else:
+    #    st_ci = np.zeros((1,1))
     if params['apply_orthonormalization']:
         #print('Applying orthonormalization for SDs for step', step)
         st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1, s_sd_2, st_sd)
-        print(np.diag(st_sd), st_sd.shape)
+        #print(np.diag(st_sd), st_sd.shape)
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 
-    return sp.csc_matrix(st_sd), sp.csc_matrix(st_ci)
+    return sp.csc_matrix(st_sd) #, sp.csc_matrix(st_ci)
 
 
 
