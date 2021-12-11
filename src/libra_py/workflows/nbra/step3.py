@@ -1898,15 +1898,15 @@ def run_step3_ks_nacs_libint(params):
                      }
     comn.check_input(params, default_params, critical_params)
 
-    if 'active_space' not in params.keys():
-        try:
-            npz_files = glob.glob(params['path_to_npz_files']+'/*npz')
-            dimension_of_sample_file = sp.load_npz(npz_files[0]).todense().shape[0]
-            params['data_dim'] = dimension_of_sample_file
-            params['active_space'] = range(dimension_of_sample_file)
-        except:
-            print('Could not specify the active_space or data_dim. Please set them manually!')
-            sys.exit(0)
+    #if 'active_space' not in params.keys():
+    #    try:
+    #        npz_files = glob.glob(params['path_to_npz_files']+'/*npz')
+    #        dimension_of_sample_file = sp.load_npz(npz_files[0]).todense().shape[0]
+    #        params['data_dim'] = dimension_of_sample_file
+    #        params['active_space'] = range(dimension_of_sample_file)
+    #    except:
+    #        print('Could not specify the active_space or data_dim. Please set them manually!')
+    #        sys.exit(0)
     num_occ_states = params['num_occ_states']
     num_unocc_states = params['num_unocc_states']
     data_dim = params['data_dim']
@@ -2028,7 +2028,7 @@ def run_step3_sd_nacs_libint(params):
 
         None    
     """
-    critical_params = ['active_space','ks_homo_index']
+    critical_params = []
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
@@ -2057,15 +2057,15 @@ def run_step3_sd_nacs_libint(params):
         print(F'The directory {res_dir_2} already exists.')
 
     
-    params['sd_unique_basis'] = sd_unique_basis
     nprocs = params['nprocs']
     ks_homo_index = params['ks_homo_index']
-    # This is always 1
-    min_band = 1
-    max_band = int(data_dim/2) #int(len(active_space)/2)
-    ks_orbital_indicies = range(min_band, max_band+1)
-    sd_unique_basis = params['sd_unique_basis']
+    #"orbital_indices":list( range(160,220) ), "homo_index":196,
     if params['is_many_body']:
+        params['isnap'] = params['start_time']
+        params['fsnap'] = params['finish_time']
+        #params['orbital_indices']
+        ks_orbital_indicies = params['orbital_indices']
+        ks_homo_index = params['homo_index']
         res = step3_many_body.get_step2_mb_sp_properties( params )
         sd_unique_basis = res[0]
         ci_basis_states = res[1]
@@ -2074,11 +2074,14 @@ def run_step3_sd_nacs_libint(params):
         spin_components = res[4]
     else:
         sd_unique_basis = []
+        min_band = 1
+        max_band = int(data_dim/2) #int(len(active_space)/2)
+        ks_orbital_indicies = range(min_band, max_band+1)
         ks_homo_index = params['ks_homo_index']
         min_band = ks_homo_index+1
-        max_band = ks_homo_index+params['num_unocc']
+        max_band = ks_homo_index+params['num_unocc_states']
         # Add electron-only SDs
-        for state in range(ks_homo_index+1,max_band):
+        for state in range(ks_homo_index+1,max_band+1):
             sd_tmp = [[ks_homo_index, state], 'alp']
             if params['isUKS']:
                 sd_tmp = [[ks_homo_index, state], 'bet']
@@ -2086,7 +2089,7 @@ def run_step3_sd_nacs_libint(params):
                 sd_unique_basis.append(sd_tmp)
         
         # Add hole-only SDs
-        min_band = ks_homo_index-params['num_occ']+1
+        min_band = ks_homo_index-params['num_occ_states']+1
         max_band = ks_homo_index+1
         for state in range(min_band, max_band):
             sd_tmp = [[state, ks_homo_index+1], 'alp']
@@ -2095,11 +2098,12 @@ def run_step3_sd_nacs_libint(params):
             if sd_tmp not in sd_unique_basis:
                 sd_unique_basis.append(sd_tmp)
         print('unique_SDs', sd_unique_basis)
-    
+    params['sd_unique_basis'] = sd_unique_basis
     # Reindex the SD basis
     sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
                                                                  sd_unique_basis, sd_format=2 )
     print(sd_states_reindexed)
+    #sys.exit(0)
     params['isnap'] = start_time
     params['fsnap'] = finish_time
     apply_phase_correction = params['apply_phase_correction']
@@ -2126,19 +2130,19 @@ def run_step3_sd_nacs_libint(params):
         # For SD2CI, isUKS should also be considered
         if params['sorting_type']=='identity':
             # The new, faster way
-            SD2CI_alp = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
+            SD2CI = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
             #if params['isUKS']:
             #    SD2CI_bet = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
         else:
             # The old way
-            SD2CI_alp = step3_many_body.make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
+            SD2CI = step3_many_body.make_T_matrices( ci_coefficients, ci_basis_states,  spin_components, sd_states_unique_sorted,  params )
             #if params['isUKS']:
             #    SD2CI_bet = step3_many_body.make_T_matrices_fast( ci_coefficients, ci_basis_states, spin_components, sd_unique_basis,  params )
-        for i in range(len(SD2CI_alp)):
-            SD2CI_alp[i] = data_conv.MATRIX2nparray(SD2CI_alp[i].real())
+        for i in range(len(SD2CI)):
+            SD2CI[i] = data_conv.MATRIX2nparray(SD2CI[i].real())
         if params['isUKS']:
             for i in range(len(SD2CI_bet)):
-                SD2CI_bet[i] = data_conv.MATRIX2nparray(SD2CI_bet[i].real())
+                SD2CI[i] = data_conv.MATRIX2nparray(SD2CI[i].real())
 
         var_pool = []
         for step in range( finish_time - start_time -1 ):
@@ -2147,12 +2151,18 @@ def run_step3_sd_nacs_libint(params):
         var_pool = []
         for step in range( finish_time - start_time -1 ):
             var_pool.append((step, params, np.zeros((1,1)) ))
-
+    
     t2 = time.time()
-    with mp.Pool( nprocs ) as pool:
-        st_sds, st_cis = pool.starmap( compute_sd_overlaps_in_parallel, var_pool ) 
-        pool.close()
-        pool.join()
+    st_sds = []
+    st_cis = []
+    for variable in var_pool:
+        st_sd, st_ci = compute_sd_overlaps_in_parallel(variable[0],variable[1],variable[2])
+        st_sds.append(st_sd)
+        st_cis.append(st_ci)
+    #with mp.Pool( nprocs ) as pool:
+    #    st_sds, st_cis = pool.starmap( compute_sd_overlaps_in_parallel, var_pool ) 
+    #    pool.close()
+    #    pool.join()
     print('Done with computing the SD overlaps. Elapsed time:', time.time()-t2)
 
 
@@ -2176,26 +2186,31 @@ def run_step3_sd_nacs_libint(params):
 
 
     if params['is_many_body']:
+        c = 0
         for step in range(start_time, finish_time):
             # how isUKS is considered herein?!?!
-            E_ci_step = ci_energies[step]
+            E_ci_step = np.array(ci_energies[step-start_time])
             if step>start_time:
-                E_midpoint = 0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha
-                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step}_re.npz',E_midpoint)
+                E_midpoint = np.diag(0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha)
+                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step}_re.npz',sp.csc_matrix(E_midpoint))
             E_ci_step_plus = E_ci_step
+            c += 1
         print('Done with sorting and computing the CI energies. Elapsed time:',time.time()-t2)
         #var_pool = []
         if params['apply_phase_correction']:
+            c = 0
             for step in range( finish_time - start_time -1 ):
                 if step==0:
-                    nstates = int(st_ci[0].shape[0]/2)
+                    nstates = int(st_cis[0].shape[0]/2)
                     cum_phase_aa = np.ones((nstates,1))
                     cum_phase_bb = np.ones((nstates,1))
+                print('nstates', nstates)
                 st_ci_step_phase_corrected, cum_phase_aa, cum_phase_bb = \
                     apply_phase_correction_scipy(st_cis[step].real, step, cum_phase_aa, cum_phase_bb)
                 Hvib_ci = 0.5/dt * (st_ci_step_phase_corrected.todense().T - st_ci_step_phase_corrected.todense())
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ci ))
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(st_ci_step_phase_corrected))
+                c += 1
 
         else:
             for step in range( finish_time - start_time -1 ):
@@ -2224,11 +2239,9 @@ def compute_sd_overlaps_in_parallel( step, params, sd2ci=np.array((1,1)) ):
                       [active_space,:][:,active_space] ).real
     s_ks_2 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
                       [active_space,:][:,active_space] ).real
-
     st_ks = data_conv.nparray2MATRIX(st_ks)
     s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
     s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
-    
     # Computing the overlaps for SDs
     t2 = time.time()
     s_sd_1 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
@@ -2240,6 +2253,7 @@ def compute_sd_overlaps_in_parallel( step, params, sd2ci=np.array((1,1)) ):
     s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
     s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
     st_sd = data_conv.MATRIX2nparray(st_sd)
+    #print(sd2ci)
     if params['is_many_body']:
         st_ci = np.linalg.multi_dot([sd2ci.T, st_sd, sd2ci])
         s_ci_1 = np.linalg.multi_dot([sd2ci.T, s_sd_1, sd2ci])
@@ -2248,11 +2262,15 @@ def compute_sd_overlaps_in_parallel( step, params, sd2ci=np.array((1,1)) ):
             print('Applying orthonormalization for many-body states for step', step)
             st_ci, s_ci = apply_orthonormalization_scipy(s_ci_1, s_ci_2, st_ci)
         print(F'Done with computing the overlaps of many-body states for step {step}. Elapsed time {time.time()-t2}')
+        print(np.diag(st_ci))
+        #print(s_ci_1)
+        #print(s_ci_2)
     else:
         st_ci = np.zeros((1,1))
     if params['apply_orthonormalization']:
-        print('Applying orthonormalization for SDs for step', step)
+        #print('Applying orthonormalization for SDs for step', step)
         st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1, s_sd_2, st_sd)
+        print(np.diag(st_sd))
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 
     return sp.csc_matrix(st_sd), sp.csc_matrix(st_ci)
