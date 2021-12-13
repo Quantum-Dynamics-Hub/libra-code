@@ -821,12 +821,10 @@ def apply_state_reordering(St, E, params):
             """
             The Hungarian approach
             """
-            #print('Here in the state reordering')
             pop_submatrix(St[i], aa, alp, alp); pop_submatrix(St[i], ab, alp, bet)
             pop_submatrix(St[i], ba, bet, alp); pop_submatrix(St[i], bb, bet, bet)
 
             # Extract the alpha and beta orbtial energies
-            #print('Flag 4 ', E[i].real().show_matrix() )
             pop_submatrix(E[i], en_mat_aa, alp, alp); pop_submatrix(E[i], en_mat_bb, bet, bet)
 
             # Permute rows 
@@ -2425,7 +2423,7 @@ def compute_sd_overlaps_in_parallel( step, params ):
         st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1.real, s_sd_2.real, st_sd.real)
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 
-    return sp.csc_matrix(st_sd) #, sp.csc_matrix(st_ci)
+    return sp.csc_matrix(st_sd) 
 
 
 
