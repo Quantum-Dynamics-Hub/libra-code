@@ -31,7 +31,8 @@ from libra_py import units
 import math
 
 
-def molden_file_to_libint_shell(molden_filename: str, is_spherical: bool):
+def molden_file_to_libint_shell(molden_filename: str, is_spherical: bool, is_periodic=False,
+                                cell=np.array([[0,0,0],[0,0,0],[0,0,0]]), R_vec=np.array([0,0,0])):
     """
     This function gets the molden file and returns the shell for use with 
     libint to compute the atomic orbital overlaps.
@@ -75,6 +76,11 @@ def molden_file_to_libint_shell(molden_filename: str, is_spherical: bool):
         x = float(tmp[3])
         y = float(tmp[4])
         z = float(tmp[5])
+        if is_periodic:
+            translation = np.dot(R_vec,cell)
+            x += translation[0]
+            y += translation[1]
+            z += translation[2]
         # append all in the coords
         coords.append([atomic_number, x, y, z])
         
