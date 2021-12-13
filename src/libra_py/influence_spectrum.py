@@ -196,7 +196,8 @@ def compute_mat_elt(X, a, b, params):
 
     # Set defaults and check critical parameters
     critical_params = [ ] 
-    default_params = { "nfreqs":1, "logname":"out.log", "filename":"influence_spectra_", "do_output":0 }
+    default_params = { "nfreqs":1, "logname":"out.log", "filename":"influence_spectra_", "do_output":0,
+                       "do_center":True, "acf_type":1, "data_type":0 }
     comn.check_input(params, default_params, critical_params)
 
     # Local variables and dimensions
