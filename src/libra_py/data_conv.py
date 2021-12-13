@@ -456,12 +456,11 @@ def MATRIX2nparray( data ):
 
 def matrix2list(q):
     """
-    Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers
+    Converts the MATRIX(N, M) or CMATRIX(N, M) to a list of `N * M` float/complex numbers
 
     Args:
 
-=======
-        q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix
+        q ( MATRIX(N, M) or CMATRIX(N, M) ): input matrix
 
 
     Returns:
@@ -472,10 +471,10 @@ def matrix2list(q):
     
     list_q = []
     
-    ndof = q.num_of_rows
+    nelts = q.num_of_elems
     
-    for idof in range(ndof):
-        list_q.append( q.get(idof, 0) )
+    for ielt in range(nelts):
+        list_q.append( q.get(ielt) )
         
     return list_q
 
