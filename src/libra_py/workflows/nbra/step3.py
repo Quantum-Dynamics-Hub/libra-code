@@ -2084,24 +2084,39 @@ def run_step3_sd_nacs_libint(params):
             * **params['apply_phase_correction']** (bool): a True or False flag for performing the phase-correction
             * **params['apply_orthonormalization']** (bool): a True or False flag for performing orthonormalization
             * **params['npz_file_ks_homo_index']** (integer): the KS HOMO index of the raw npz files.
-            * **params['do_state_reordering']** (integer): the value for performing the state reordering
+            * **params['is_many_body']** (bool): a True or False flag for computing the overlaps and energies 
+                                                 for many-body states
+            * **params['use_multiprocessing']** (bool): a True or False flag for using multiprocessing
+            * **params['isUKS']** (integer): if this value is set to `1`, the unrestricted spin calculations are considered.
+            * **params['logfile_directory']** (string): the full path to logfile directory
+            * **params['es_software']** (string): software name - values that it can take are 'cp2k', 'gaussian', and 'dftb+' 
+            * **params['tolerance']** (float): a value to select SDs that the square value of their CI is more than tolerance
+            * **params['number_of_states']** (integer): the number of TD-DFT excited states to be considered
+            * **params['homo_index']** (integer): the HOMO index specified by user (starts from 1)
+            * **params['num_occ_states']** (integer): the number of occupied states to be considered for single-particle basis.
+            * **params['num_unocc_states']** (integer): the number of unoccupied states to be considered for single-particle basis.
+            * **params['verbosity']** (integer): a value for printing the TD-DFT data
+            * **params['do_state_reordering']** (integer): the value for performing the state-reordering
                 the vlaues it takes are:
                     - 0: no state reordering - same as in Pyxaid
                     - 1: older method (is not robust, may or may not work) 
                     - 2: Hungarian algorithm [default]
+            * **params['state_reordering_alpha']** (float): a value for state-reordering
 
     Returns:
 
         None    
     """
-    critical_params = []
+    critical_params = ['homo_index']
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
                       'sorting_type': 'energy', 'apply_phase_correction': True,
                       'apply_orthonormalization': True, 'do_state_reordering': 0,
-                      'state_reordering_alpha': 0
+                      'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
+                      'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
+                      'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles'
                      }
     comn.check_input(params, default_params, critical_params)
     data_dim = params['data_dim']
@@ -2362,12 +2377,12 @@ def run_step3_sd_nacs_libint(params):
             Hvib_sd = 0.5/dt * (St_sds[step].todense().real.T - St_sds[step].todense().real)
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step+start_time}_im.npz', sp.csc_matrix( Hvib_sd ))
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_sd_{step+start_time}_re.npz', St_sds[step] )
-            if params['is_many_body']:
-                for step in range( finish_time - start_time -1 ):
-                    St_ci_step = St_cis[step].todense().real
-                    Hvib_ci = 0.5/dt * (St_ci_step.T - St_ci_step)
-                    sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ci ))
-                    sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci_step))
+        if params['is_many_body']:
+            for step in range( finish_time - start_time -1 ):
+                St_ci_step = St_cis[step].todense().real
+                Hvib_ci = 0.5/dt * (St_ci_step.T - St_ci_step)
+                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ci ))
+                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci_step))
     
             
 

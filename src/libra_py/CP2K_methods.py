@@ -921,7 +921,16 @@ def read_molog_file(filename: str):
 
 
 def read_ao_matrices(filename):
-    
+    """
+    This function reads the files printed by CP2K for atomic orbital matrices data.
+    If the AO_MATRICES keyword is activated in CP2K input, then all the specified 
+    matrices in that section will be appened in one file. This function reads all the
+    matrices and data.
+    Args:
+        filename (string): The name of the file that contains AO matrices data.
+    Returs:
+        data (list): A list that contains the AO matrices with the same order as in the file.
+    """    
     
     file = open(filename,'r')
     lines = file.readlines()
