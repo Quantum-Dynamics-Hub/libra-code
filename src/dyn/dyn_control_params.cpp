@@ -90,6 +90,7 @@ dyn_control_params::dyn_control_params(){
   constrained_dofs = vector<int>();
 
   dt = 41.0;
+  num_electronic_substeps = 1;
 
 }
 
@@ -143,6 +144,12 @@ void dyn_control_params::sanity_check(){
 
   }// sz1!=0
 
+
+  if(num_electronic_substeps<=0){
+      cout<<"Error in dyn_control_params::sanity_check: num_electronic_substeps = "<<num_electronic_substeps
+          <<" should be a positive integer"<<endl;
+      cout<<"Exiting...\n";
+  }
 
 }
 
@@ -233,6 +240,7 @@ void dyn_control_params::set_parameters(bp::dict params){
       for(int j=0; j<len(tmp); j++){  constrained_dofs.push_back( extract<double>(tmp[j]) );  }
     }
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
+    else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
 
   }// for i
 

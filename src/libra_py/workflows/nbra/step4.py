@@ -939,7 +939,7 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
     plt.rc('figure.subplot', top=0.88)
     
     prefix = dyn_params["dir_prefix"]
-    all_time = np.array( list(range( dyn_params["nsteps"] ) ) ) #* units.au2fs
+    all_time = np.array( list(range( dyn_params["nsteps"] ) ) ) * dyn_params["dt"] * units.au2fs
     
     for istate in init_states:  # initial states       
         print(F"======= Running initial state {istate} =======")

@@ -104,13 +104,40 @@ void export_dyn_control_params_objects(){
       .def_readwrite("quantum_dofs", &dyn_control_params::quantum_dofs)
       .def_readwrite("constrained_dofs", &dyn_control_params::constrained_dofs)
       .def_readwrite("dt", &dyn_control_params::dt)
-
+      .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
 
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
   ;
 }
+
+
+
+
+void export_dyn_variables_objects(){
+
+  // Arbitrary wavefunction
+  void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
+
+
+  class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
+      .def("__copy__", &generic__copy__<dyn_variables>)
+      .def("__deepcopy__", &generic__deepcopy__<dyn_variables>)
+
+      ///================= Dimension numbers ===================
+      .def_readwrite("ndia", &dyn_variables::ndia)
+      .def_readwrite("nadi", &dyn_variables::nadi)
+      .def_readwrite("ndof", &dyn_variables::ndof)
+      .def_readwrite("ntraj", &dyn_variables::ntraj)
+
+      .def("set_parameters", expt_set_parameters_v1)
+
+      .def("allocate_afssh", &dyn_variables::allocate_afssh)
+  ;
+}
+
+
 
 
 void export_dyn_decoherence_objects(){
@@ -185,9 +212,20 @@ void export_dyn_decoherence_objects(){
 
   vector<int> (*expt_dish_v1)
   (dyn_control_params& prms, MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
-   vector<CMATRIX>& projectors, nHamiltonian& ham, vector<int>& act_states, 
-   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
+  vector<CMATRIX>& projectors, nHamiltonian& ham, vector<int>& act_states, 
+  MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
   def("dish", expt_dish_v1);
+
+
+  CMATRIX (*expt_afssh_dzdt_v1)
+  (CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state) = &afssh_dzdt;
+  def("afssh_dzdt", expt_afssh_dzdt_v1);
+
+  void (*expt_integrate_afssh_moments_v1)
+  (CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, 
+  double mass, int act_state, double dt, int nsteps) = &integrate_afssh_moments;
+  def("integrate_afssh_moments", expt_integrate_afssh_moments_v1);
+
 
 
 /*
@@ -508,6 +546,7 @@ void export_Dyn_objects(){
   export_heom_objects();
 
   export_dyn_control_params_objects();
+  export_dyn_variables_objects();
   export_dyn_decoherence_objects();
   export_dyn_hop_acceptance_objects();
   export_dyn_hop_proposal_objects();
@@ -590,6 +629,13 @@ void export_Dyn_objects(){
    nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
    vector<Thermostat>& therm) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v2);
+
+  void (*expt_compute_dynamics_v3)
+  (MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
+   nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
+   vector<Thermostat>& therm, dyn_variables&) = &compute_dynamics;
+  def("compute_dynamics", expt_compute_dynamics_v3);
+
 
 
 

@@ -882,7 +882,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     #================= Bath, Constraints, and Dynamical controls ===================
     default_params.update( { "Temperature":300.0, "ensemble":0, "thermostat_params":{},
                              "quantum_dofs":None, "thermostat_dofs":[], "constrained_dofs":[],
-                             "dt":1.0*units.fs2au
+                             "dt":1.0*units.fs2au, "num_electronic_substeps":1
                            } )
 
     #================= Variables specific to Python version: saving ================
@@ -916,6 +916,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     compression_level = dyn_params["compression_level"]
     ensemble = dyn_params["ensemble"]
     time_overlap_method = dyn_params["time_overlap_method"]
+    decoherence_algo = dyn_params["decoherence_algo"]
     
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -959,6 +960,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             therm.append( Thermostat( dyn_params["thermostat_params"] ) )
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
+
+
+    dyn_var = dyn_variables(ndia, nadi, nnucl, ntraj)    
+
+    if decoherence_algo==2:
+        dyn_var.allocate_afssh()
 
                 
     # Do the propagation
@@ -1039,17 +1046,18 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 del hvib_adi, hvib_dia
 
             del St
-            if time_overlap_method==0:
-                del U[tr]
+            #if time_overlap_method==0:
+            #    del U[tr]
 
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
-        
+
         if rep_tdse==0:            
-            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
+            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
         elif rep_tdse==1:
-            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
+            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
             
+#        sys.exit(0)        
 
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)

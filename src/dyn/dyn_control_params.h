@@ -304,6 +304,7 @@ class dyn_control_params{
       - [-1]: no decoherence [ default ]
       - 0: SDM and alike
       - 1: instantaneous decoherence options (ID-S, ID-A, ID-C)
+      - 2: AFSSH
   */
   double decoherence_algo;
 
@@ -492,6 +493,12 @@ class dyn_control_params{
     the nuclear and electronic integration timesteps [ units: a.u. of time, default: 41.0 a.u. = 1 fs ]
   */
   double dt;
+
+
+  /**
+    the number of electronic integration substeps per a nuclear step, such that dt_el = dt_nucl / num_electronic_substeps
+  */
+  int num_electronic_substeps; 
 
 
 

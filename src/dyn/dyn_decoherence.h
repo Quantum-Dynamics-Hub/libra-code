@@ -50,6 +50,10 @@ void instantaneous_decoherence(CMATRIX& Coeff,
    int instantaneous_decoherence_variant, int collapse_option);
 
 
+CMATRIX afssh_dzdt(CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state);
+void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state, double dt, int nsteps);
+
+
 
 ///================  In dyn_decoherence_time.cpp  ===================================
 

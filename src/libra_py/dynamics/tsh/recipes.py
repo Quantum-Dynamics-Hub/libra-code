@@ -157,6 +157,9 @@ def adiabatic_md_interfaces_params():
     # integration timestep [units: a.u., default: 41 a.u. = 1 fs]
     dyn_params["dt"] = 1.0 * units.fs2au
 
+    # how many electronic substeps to do per each nuclear timestep
+    dyn_params["num_electronic_substeps"] = 1
+
     # how many nuclear dynamics steps to perform
     dyn_params["nsteps"] = 1
 
@@ -212,7 +215,7 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
           3 - DISH
           21 - mSDM, deph-informed
           31 - DISH, deph-informed
-
+          4 - AFSSH
           
     """
 
@@ -262,5 +265,9 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
 
     elif method==31:  # DISH
         params.update( {"tsh_method": 3, "decoherence_algo":-1, "dephasing_informed":1 } )   # DISH, no other decoherence, yes deph-informed
+
+    elif method==4:  # AFSSH
+        params.update( {"tsh_method": 0, "decoherence_algo":2, "dephasing_informed":0 } )   # AFSSH
+
 
 
