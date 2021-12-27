@@ -733,6 +733,29 @@ def read_energies_from_cp2k_md_log_file( params ):
     return KS_energies, total_energy
 
 
+def read_homo_index(filename: str):
+    """
+    This function extract the HOMO index from CP2K log file. This index starts from 1.
+    Args:
+
+        filename (string): The full path to the log file.
+
+    Returns:
+
+        homo_index (integer): The HOMO index (the number of occupied orbitals).
+    """
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+
+    for i in range(len(lines)):
+        if 'occupied' in lines[i].lower():
+            if 'number' in lines[i].lower():
+                homo_index = int(lines[i].split()[-1])
+
+    return homo_index
+
+
 def read_molog_file(filename: str):
     """
     This function reads the coefficiets of the molecular orbitals printed out

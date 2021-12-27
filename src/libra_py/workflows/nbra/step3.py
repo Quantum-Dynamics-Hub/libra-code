@@ -33,6 +33,7 @@ import cmath
 import math
 import os
 import time
+import glob
 import numpy as np
 import multiprocessing as mp
 from scipy.linalg import fractional_matrix_power
@@ -44,6 +45,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from . import mapping, step2_many_body, step3_many_body
 import util.libutil as comn
+import libra_py.CP2K_methods as CP2K_methods
 import libra_py.tsh as tsh
 import libra_py.units as units
 import libra_py.data_read as data_read
@@ -1908,10 +1910,15 @@ def run_step3_ks_nacs_libint(params):
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
                       'apply_phase_correction': True, 'apply_orthonormalization': True, 
-                      'do_state_reordering': 0, 'state_reordering_alpha': 0
+                      'do_state_reordering': 0, 'state_reordering_alpha': 0, 'es_software': 'cp2k'
                      }
     comn.check_input(params, default_params, critical_params)
-
+    if params['es_software'].lower()=='cp2k':
+        sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
+        params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
+    params['npz_file_ks_homo_index'] = params['homo_index']-params['istate']+1
+    sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
+    params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
     # Number of occupied states
     num_occ_states = params['num_occ_states']
     # Number of unoccupied states
@@ -1975,7 +1982,7 @@ def run_step3_ks_nacs_libint(params):
             St_ks = np.array( sp.load_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz').todense().real )
             St_ks_cmatrix = data_conv.nparray2CMATRIX(St_ks)
             St_ks_cmatrices.append(St_ks_cmatrix)
-            E_ks = np.array( sp.load_npz(F'{res_dir_2}/Hvib_ks_{step+start_time}_re.npz').todense().real )
+            E_ks = np.array( sp.load_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz').todense().real )
             E_ks_cmatrix = data_conv.nparray2CMATRIX(E_ks)
             E_ks_cmatrices.append(E_ks_cmatrix)
         # Now apply the state-reordering
@@ -1983,10 +1990,10 @@ def run_step3_ks_nacs_libint(params):
         # After that the state-reordering is done, we can turn them back into sparse and save them.
         # For now, this is done so that the code is consistent with the rest of the code.
         for step in range(start_time, finish_time):
-            St_ks_sparse = data_conv.MATRIX2scipynpz( St_ks_cmatrices[step].real() )
+            St_ks_sparse = data_conv.MATRIX2scipynpz( St_ks_cmatrices[step-start_time].real() )
             sp.save_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz', St_ks_sparse)
-            E_ks_sparse = data_conv.MATRIX2scipynpz( E_ks_cmatrices[step].real() )
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step+start_time}_re.npz', E_ks_sparse)
+            E_ks_sparse = data_conv.MATRIX2scipynpz( E_ks_cmatrices[step-start_time].real() )
+            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz', E_ks_sparse)
         print('Done with state-reordering of the KS orbitals. Elapsed time:',time.time()-t2)
 
     # Applying phase correction
@@ -2006,15 +2013,15 @@ def run_step3_ks_nacs_libint(params):
             St_step_phase_corrected, cum_phase_aa, cum_phase_bb = \
                 apply_phase_correction_scipy(St_step, step, cum_phase_aa, cum_phase_bb, two_spinor_format=True)
             Hvib_ks = 0.5/dt * (St_step_phase_corrected.todense().T - St_step_phase_corrected.todense())
-            sp.save_npz(F'{res_dir_2}/St_ks_{step+start_time}_im.npz', St_step_phase_corrected )
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+            sp.save_npz(F'{res_dir_2}/St_ks_{step-start_time}_re.npz', St_step_phase_corrected )
+            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
             os.system(F'rm {res_dir_2}/St_ks_orthonormalized_{step}.npz')
     else:
         for step in range(start_time, finish_time):
             St_step = sp.load_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz')
             Hvib_ks = 0.5/dt * (St_step.todense().T - St_step.todense())
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
-            os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step+start_time}_im.npz')
+            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+            os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step-start_time}_re.npz')
 
     print('Done with phase correction. Elapsed time:', time.time()-t2)
 
@@ -2049,7 +2056,7 @@ def orthonormalize_ks_overlaps(step, params):
     S_step_sparse  = sp.csc_matrix(S_step)
 
     sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz', St_step_sparse)
-    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step+start_time}_re.npz', E_step)
+    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step-start_time}_re.npz', E_step)
     print('Done with step', step,'. Elapsed time:', time.time()-t2)
 
 
@@ -2105,7 +2112,7 @@ def run_step3_sd_nacs_libint(params):
 
         None    
     """
-    critical_params = ['homo_index']
+    critical_params = ['istate','fstate']
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
@@ -2117,6 +2124,12 @@ def run_step3_sd_nacs_libint(params):
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles'
                      }
     comn.check_input(params, default_params, critical_params)
+    if params['es_software'].lower()=='cp2k':
+        sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
+        params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
+    params['npz_file_ks_homo_index'] = params['homo_index']-params['istate']+1
+    sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
+    params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
     data_dim = params['data_dim']
     start_time = params['start_time']
     finish_time = params['finish_time']
