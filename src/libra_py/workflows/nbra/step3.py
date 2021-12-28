@@ -1916,7 +1916,7 @@ def run_step3_ks_nacs_libint(params):
     if params['es_software'].lower()=='cp2k':
         sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
         params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
-    params['npz_file_ks_homo_index'] = params['homo_index']-params['istate']+1
+    params['npz_file_ks_homo_index'] = params['homo_index']-params['lowest_orbital']+1
     sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
     params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
     # Number of occupied states
@@ -2112,7 +2112,7 @@ def run_step3_sd_nacs_libint(params):
 
         None    
     """
-    critical_params = ['istate','fstate']
+    critical_params = ['lowest_orbital','highest_orbital']
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
@@ -2127,7 +2127,7 @@ def run_step3_sd_nacs_libint(params):
     if params['es_software'].lower()=='cp2k':
         sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
         params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
-    params['npz_file_ks_homo_index'] = params['homo_index']-params['istate']+1
+    params['npz_file_ks_homo_index'] = params['homo_index']-params['lowest_orbital']+1
     sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
     params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
     data_dim = params['data_dim']
