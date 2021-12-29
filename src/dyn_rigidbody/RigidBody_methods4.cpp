@@ -185,7 +185,7 @@ void RigidBody::Rotate(double phi,VECTOR& dir){
   The rotation axis and angle define a quaternion, which is then applied to produce rotation
 
   \param[in] phi the rotation angle
-  \param[in] dir the rotation axis, direction
+  \param[in] dir the rotation axis, direction  in the body frame!
 */
 
   double cs = cos(0.5*phi);
@@ -196,14 +196,14 @@ void RigidBody::Rotate(double phi,VECTOR& dir){
 }
 
 
-void RigidBody::Rotate(double phi,VECTOR& dir, VECTOR& pivot){
+void RigidBody::Rotate(double phi, VECTOR& dir, VECTOR& pivot){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a rotation axis, pivot point, and angle
 
   The rotation axis and angle define a quaternion, which is then applied to produce rotation
 
   \param[in] phi the rotation angle
-  \param[in] dir the rotation axis, direction
+  \param[in] dir the rotation axis, direction in the body frame
   \param[in] pivot the pivot point coordinates
 */
 
