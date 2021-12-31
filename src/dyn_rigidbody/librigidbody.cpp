@@ -59,14 +59,14 @@ void export_RigidBody_objects(){
   int (RigidBody::*apply_force1)(double)      = &RigidBody::apply_force;
   int (RigidBody::*apply_force2)(MATRIX3x3&)  = &RigidBody::apply_force;
 
-  void (RigidBody::*Rotate1)(MATRIX3x3& rot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate2)(MATRIX3x3& rot, VECTOR& pivot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate3)(QUATERNION& rot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate4)(QUATERNION& rot, VECTOR& pivot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate5)(double phi, VECTOR& dir) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate6)(double phi, VECTOR& dir, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate1)(const MATRIX3x3& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate2)(const MATRIX3x3& rot, const VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate3)(const QUATERNION& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate4)(const QUATERNION& rot, const VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate5)(double phi, const VECTOR& dir) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate6)(double phi, const VECTOR& dir, const VECTOR& pivot) = &RigidBody::Rotate;
 
-  void (RigidBody::*expt_Rotate_I_v1)(double,VECTOR&)   = &RigidBody::Rotate_I;
+  void (RigidBody::*expt_Rotate_I_v1)(double, const VECTOR& dir)   = &RigidBody::Rotate_I;
 
 
   void (RigidBody::*expt_propagate_dlml_v1)(double t,double&) = &RigidBody::propagate_dlml;

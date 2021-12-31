@@ -230,53 +230,7 @@ void System::TRANSLATE_MOLECULE(double amount,VECTOR direction,int Mol){
 
 
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR rot_direction, int fr_id, int center_indx){
-/**
-  \param[in] degree_amount The magnitude of rotation, in degrees
-  \param[in] rot_direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
-  \param[in] fr_id The ID (not index!) of the group/fragment to be rotated
-  \param[in] center_indx The index of the atom around which the rotation occurs 
-
-  Simplest manipulation
-  Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
-  around the axis given by "VECTOR direction" around the given center
-*/
-
-  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
-
-  if(fr_indx!=-1){
-
-    VECTOR shift_dir, shift_dir2, rot_dir_body;   
-    VECTOR rot_dir = rot_direction.unit();
-
-    shift_dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-    // Translate the fragment's center of mass to the "center" point
-    Fragments[fr_indx].Group_RB.shift_position(shift_dir);
-
-    // Convert Lab (Cartesian) rotation axis vector to the body (internal) coordinate system
-    rot_dir_body = Fragments[fr_indx].Group_RB.rb_A_I_to_e * rot_dir;
-
-    // Rotate in the body coordinate system
-    Fragments[fr_indx].Group_RB.Rotate(degree_amount * deg_to_rad, rot_dir_body);
-
-    // Update atomic coordinates and recompute the shift direction
-    update_atoms_for_fragment(fr_indx);
-    shift_dir2 = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-    // Translate the fragment's center of mass back to the original position        
-    Fragments[fr_indx].Group_RB.shift_position(-1.0*shift_dir2);
-    
-    // Update coordinates once again
-    update_atoms_for_fragment(fr_indx);
-
-  }
-
-}
-
-
-
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR rot_direction, int fr_id, VECTOR center){
+void System::ROTATE_FRAGMENT(double degree_amount, const VECTOR& rot_direction, int fr_id, const VECTOR& center){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation in the external coordinate system
@@ -289,56 +243,41 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR rot_direction, int fr_
   around the axis given by "VECTOR direction" around the center given by "center"
 */
 
-  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
 
-  if(fr_indx!=-1){
-
-    VECTOR shift_dir, shift_dir2, rot_dir_body;   
-    VECTOR rot_dir = rot_direction.unit();
-
-    shift_dir = center - Fragments[fr_indx].Group_RB.rb_cm;
-
-    // Translate the fragment's center of mass to the "center" point
-    Fragments[fr_indx].Group_RB.shift_position(shift_dir);
-
-    // Convert Lab (Cartesian) rotation axis vector to the body (internal) coordinate system
-    rot_dir_body = Fragments[fr_indx].Group_RB.rb_A_I_to_e * rot_dir;
-
-    // Rotate in the body coordinate system
-    Fragments[fr_indx].Group_RB.Rotate(degree_amount * deg_to_rad, rot_dir_body);
-
-    // Update atomic coordinates and recompute the shift direction
-    //update_atoms_for_fragment(fr_indx);
-    //shift_dir2 = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-    // Translate the fragment's center of mass back to the original position        
-    Fragments[fr_indx].Group_RB.shift_position(-1.0*shift_dir);
-    
-    // Update coordinates once again
-    update_atoms_for_fragment(fr_indx);
-
-  }
-
-
-
-/*
   double phi = M_PI*degree_amount/180.0; // Convert to the radians
-  VECTOR u = direction.unit();
+  VECTOR u = rot_direction.unit();
 
   int fr_indx = get_fragment_index_by_fragment_id(fr_id);
   if(fr_indx!=-1){
 
-    VECTOR rot_dir_body = Fragments[fr_indx].Group_RB.rb_A_I_to_e * u;
-    Fragments[fr_indx].Group_RB.Rotate(phi, rot_dir_body, center);
+    Fragments[fr_indx].Group_RB.Rotate(phi, u, center);
     update_atoms_for_fragment(fr_indx);
   }
-
-*/
 
 }
 
 
-void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int fr_id){
+void System::ROTATE_FRAGMENT(double degree_amount, const VECTOR& rot_direction, int fr_id, int center_indx){
+/**
+  \param[in] degree_amount The magnitude of rotation, in degrees
+  \param[in] rot_direction The vector definining the axis of rotation. The magnitude of this vector does not matter.
+  \param[in] fr_id The ID (not index!) of the group/fragment to be rotated
+  \param[in] center_indx The index of the atom around which the rotation occurs 
+
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount of "double amount"
+  around the axis given by "VECTOR direction" around the given center
+*/
+
+  VECTOR center = Atoms[center_indx].Atom_RB.rb_cm;
+
+  ROTATE_FRAGMENT(degree_amount, rot_direction, fr_id, center);
+
+}
+
+
+
+void System::ROTATE_FRAGMENT(double degree_amount, const VECTOR& direction, int fr_id){
 /**
   \param[in] degree_amount The magnitude of rotation, in degrees
   \param[in] direction The vector definining the axis of rotation. in the external coordinate system
@@ -350,28 +289,18 @@ void System::ROTATE_FRAGMENT(double degree_amount, VECTOR direction, int fr_id){
   around the axis given by "VECTOR direction" around the fragment's center of mass
 */
 
-/*
-  double phi = M_PI*degree_amount/180.0; // Convert to the radians
-  VECTOR u = direction.unit();
+  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
+  if(fr_indx!=-1){
 
-  int v = get_fragment_index_by_fragment_id(Gr);
-  if(v!=-1){
-    Fragments[v].Group_RB.Rotate(phi, direction);
-    update_atoms_for_fragment(v);
+    VECTOR center(Fragments[fr_indx].Group_RB.rb_cm);
+    ROTATE_FRAGMENT(degree_amount, direction, fr_id, center);
   }
-
-  // Molecule orientation does not change because the center of mass of the
-  // fragment v does not change
-*/
-
-  VECTOR center(0.0, 0.0, 0.0);
-  ROTATE_FRAGMENT(degree_amount, direction, fr_id, center);
 
 }
 
 
 
-void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, VECTOR center){
+void System::ROTATE_FRAGMENT(const MATRIX3x3& rot, int fr_id, const VECTOR& center){
 /**
   \param[in] rot The rotation matrix to be applied
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
@@ -382,45 +311,17 @@ void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, VECTOR center){
   rotation matrix. Rotation is around the center given by "center"
 */
 
-  int v = get_fragment_index_by_fragment_id(Gr);
-  if(v!=-1){
-    Fragments[v].Group_RB.Rotate(rot, center);
-    update_atoms_for_fragment(v);
+  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
+  if(fr_indx!=-1){
+    Fragments[fr_indx].Group_RB.Rotate(rot, center);
+    update_atoms_for_fragment(fr_indx);
   }
 
 }
 
 
 
-void System::ROTATE_FRAGMENT(MATRIX3x3& rot, int fr_id){
-/**
-  \param[in] rot The rotation matrix to be applied
-  \param[in] fr_id The ID (not index!) of the group/fragment to be rotated
-
-  Simplest manipulation
-  Rotates the fragment with the fragment ID "int Gr" on amount and direction defined by the 
-  rotation matrix. Rotation is around the fragment's center of mass
-*/
-
-
-/*
-  int v = get_fragment_index_by_fragment_id(Gr);
-  if(v!=-1){
-    Fragments[v].Group_RB.Rotate(rot);
-    update_atoms_for_fragment(v);
-  }
-
-  // Molecule orientation does not change because the center of mass of the
-  // fragment v does not change
-*/
-
-  VECTOR center(0.0, 0.0, 0.0);
-  ROTATE_FRAGMENT(rot, fr_id, center);
-}
-
-
-
-void System::ROTATE_FRAGMENT(MATRIX3x3& rot_matrix, int fr_id, int center_indx){
+void System::ROTATE_FRAGMENT(const MATRIX3x3& rot_matrix, int fr_id, int center_indx){
 /**
   \param[in] rot The rotation matrix to be applied
   \param[in] Gr The ID (not index!) of the group/fragment to be rotated
@@ -433,52 +334,32 @@ void System::ROTATE_FRAGMENT(MATRIX3x3& rot_matrix, int fr_id, int center_indx){
 */
 
   int fr_indx = get_fragment_index_by_fragment_id(fr_id);
+  if(fr_indx!=-1){
 
-  VECTOR shift_dir, shift_dir2, rot_dir_body; 
-  //double amount = shift_dir.length();
-
-  shift_dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-
-  // Translate the fragment's center of mass to the "center" point
-  //TRANSLATE_FRAGMENT(amount, dir,Gr);
-  Fragments[fr_indx].Group_RB.shift_position(shift_dir);
+    VECTOR center = Atoms[center_indx].Atom_RB.rb_cm;
+    ROTATE_FRAGMENT(rot_matrix, fr_id, center);
+  }
 
 
-  // Rotate in the body coordinate system
-  Fragments[fr_indx].Group_RB.Rotate(rot_matrix);
-
-  // Update atomic coordinates and recompute the shift direction
-  update_atoms_for_fragment(fr_indx);
-  shift_dir2 = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-  // Translate the fragment's center of mass back to the original position        
-  Fragments[fr_indx].Group_RB.shift_position(-1.0*shift_dir2);
-    
-  // Update coordinates once again
-  update_atoms_for_fragment(fr_indx);
+}
 
 
+void System::ROTATE_FRAGMENT(const MATRIX3x3& rot, int fr_id){
 /**
-  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
+  \param[in] rot The rotation matrix to be applied
+  \param[in] fr_id The ID (not index!) of the group/fragment to be rotated
 
-  VECTOR dir; dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-  double amount = dir.length();
-
-  // Translate the fragment's center of mass to the "center" point
-  TRANSLATE_FRAGMENT(amount, dir, fr_id);
-
-  // Rotate the fragment around new center of mass
-  ROTATE_FRAGMENT(rot_matrix, fr_id);
-
-  update_atoms_for_fragment(fr_indx);
-
-  dir = Atoms[center_indx].Atom_RB.rb_cm - Fragments[fr_indx].Group_RB.rb_cm;
-
-  // Translate the fragment's center of mass back to the original position
-  TRANSLATE_FRAGMENT(-amount, dir, fr_id);
+  Simplest manipulation
+  Rotates the fragment with the fragment ID "int Gr" on amount and direction defined by the 
+  rotation matrix. Rotation is around the fragment's center of mass
 */
 
+  int fr_indx = get_fragment_index_by_fragment_id(fr_id);
+  if(fr_indx!=-1){
+
+    VECTOR center = Fragments[fr_indx].Group_RB.rb_cm;
+    ROTATE_FRAGMENT(rot, fr_id, center);
+  }
 }
 
 
