@@ -396,7 +396,7 @@ def MATRIX2nparray( data ):
     N = data.num_of_rows
     M = data.num_of_cols
 
-    res = np.zeros( (N, M) )
+    res = np.zeros( (N, M), dtype=np.complex128 )
 
     for n in range(0,N):
         for m in range(0,M):

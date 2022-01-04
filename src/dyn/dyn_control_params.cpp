@@ -41,6 +41,8 @@ dyn_control_params::dyn_control_params(){
   rep_lz = 0;
   rep_force = 1;
   force_method = 1;
+  enforce_state_following = 0; 
+  enforced_state_index = 0; 
   time_overlap_method = 0;
   nac_update_method = 1;
   do_phase_correction = 1;
@@ -162,6 +164,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="rep_lz") { rep_lz = bp::extract<int>(params.values()[i]);  }
     else if(key=="rep_force") { rep_force = bp::extract<int>(params.values()[i]);  }
     else if(key=="force_method") { force_method = bp::extract<int>(params.values()[i]);  }
+    else if(key=="enforce_state_following") { enforce_state_following = bp::extract<int>(params.values()[i]);  }
+    else if(key=="enforced_state_index") { enforced_state_index = bp::extract<int>(params.values()[i]);  }
     else if(key=="time_overlap_method"){ time_overlap_method = bp::extract<double>(params.values()[i]); }
     else if(key=="nac_update_method") { nac_update_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }

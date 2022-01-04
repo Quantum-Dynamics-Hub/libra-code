@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019-2020 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2021 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -183,3 +183,84 @@ def adiabatic_md_interfaces_params():
                       )
 
     return dyn_params
+
+
+
+def set_method(params, ham_rep=0, is_nbra=0, method=0):
+    """
+    This function updates the parameters of the simulation to select the 
+    parameters suitable for a particular type of simulations
+
+    Args:
+
+        params ( dict ): the parameters dictionary which will be modified
+
+        ham_rep ( int ): how are the properties computed:
+ 
+          0 - the adiabatic Hamiltonian is computed via the diabatic one [ default ]
+          1 - the adiabatic properties are available directly
+
+
+        is_nbra ( int ): whether the method is within the NBRA (1) or not (0, default)
+
+
+        method ( int ): the ID of the methodology of interest 
+
+          0 - FSSH
+          1 - IDA
+          2 - mSDM
+          3 - DISH
+          21 - mSDM, deph-informed
+          31 - DISH, deph-informed
+
+          
+    """
+
+ 
+    params.update( {"rep_ham":ham_rep} )
+
+    if is_nbra == -1: # Custom
+        pass
+
+    elif is_nbra == 0: # non-nbra
+        params.update( {"force_method":1, "rep_force":1} )    # state-specific forces, compute them in the adiabatic rep
+        params.update( {"nac_update_method":1} )              # update NACs based on derivative couplings and momenta
+        params.update( {"time_overlap_method":0} )            # state-tracking based on the on-the-fly time-overlaps                         
+        params.update( {"hop_acceptance_algo":20, "momenta_rescaling_algo":200} )  # Tully-style velocity rescaling and frustr. hops
+
+    elif is_nbra == 1:  # file-based NBRA
+        params.update( {"force_method":0 } )           # don't compute forces
+        params.update( {"nac_update_method":0} )       # don't update NACs - they will likely be defined directly
+        params.update( {"time_overlap_method":1} )     # use the time-overlaps from the external sources
+        params.update( {"hop_acceptance_algo":31, "momenta_rescaling_algo":0} )  # Boltzmann-type acceptance, no velocity rescaling
+
+    elif is_nbra == 2:  # on-the-fly NBRA
+        params.update( {"force_method":1, "rep_force":1 } )   # state-specific forces
+        params.update( {"enforce_state_following":0 } )       # but make the nuclear dynamics follow the forces of a specific state (to be specified by user)
+        params.update( {"nac_update_method":1} )              # update NACs based on derivative couplings and momenta
+        params.update( {"time_overlap_method":0} )            # state-tracking based on the on-the-fly time-overlaps                         
+        params.update( {"hop_acceptance_algo":31, "momenta_rescaling_algo":0} )  # Boltzmann-type acceptance, no velocity rescaling
+
+
+    if method == -1:   # Custom
+        pass 
+
+    elif method==0:  # FSSH
+        params.update( {"tsh_method": 0, "decoherence_algo":-1, "dephasing_informed":0 } )   # FSSH, no decoherence, no deph-informed
+
+    elif method==1:  # IDA
+        params.update( {"tsh_method": 0, "decoherence_algo":1, "dephasing_informed":0 } )   # FSSH, ID decoherence, no deph-informed
+                 
+    elif method==2:  # mSDM
+        params.update( {"tsh_method": 0, "decoherence_algo":0, "dephasing_informed":0 } )   # FSSH, mSDM decoherence, no deph-informed
+
+    elif method==3:  # DISH
+        params.update( {"tsh_method": 3, "decoherence_algo":-1, "dephasing_informed":0 } )   # DISH, no other decoherence, no deph-informed
+
+    elif method==21:  # mSDM
+        params.update( {"tsh_method": 0, "decoherence_algo":0, "dephasing_informed":1 } )   # FSSH, mSDM decoherence, yes deph-informed
+
+    elif method==31:  # DISH
+        params.update( {"tsh_method": 3, "decoherence_algo":-1, "dephasing_informed":1 } )   # DISH, no other decoherence, yes deph-informed
+
+

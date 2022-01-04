@@ -30,6 +30,22 @@ namespace liblibra{
 /// liblinalg namespace
 namespace liblinalg{
 
+/*
+MATRIX::MATRIX(boost::python::tuple ob){
+
+    n_rows = extract<int>( ob[0] );
+    n_cols = extract<int>( ob[1] );
+    n_elts = n_rows * n_cols;
+
+    M = new double[n_elts];
+
+    for(int i=0;i<n_elts;i++){  
+      M[i] = extract<double>(ob[i+2]);
+    }
+
+}
+*/
+
 
 MATRIX::MATRIX(const VECTOR& u1, const VECTOR& u2, const VECTOR& u3){
 /** The constructor of a 3 x 3 matrix from 3 input vectors  */
@@ -544,6 +560,10 @@ void set_value(int& is_defined, MATRIX& value,boost::python::object obj, std::st
 
 // ----------- Save --------------
 void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt){
+  pt.put(path+".n_rows", vt.n_rows);
+  pt.put(path+".n_cols", vt.n_cols);
+  pt.put(path+".n_elts", vt.n_elts);
+
   for(int i=0;i<vt.n_elts;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
@@ -552,6 +572,10 @@ void save(boost::property_tree::ptree& pt,std::string path,MATRIX& vt){
 }
 
 void save(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt){
+  pt.put(path+".n_rows", vt.n_rows);
+  pt.put(path+".n_cols", vt.n_cols);
+  pt.put(path+".n_elts", vt.n_elts);
+
   for(int i=0;i<vt.n_elts;i++){
     stringstream ss(stringstream::in | stringstream::out);
     std::string rt; ss<<i; ss>>rt;
@@ -580,10 +604,58 @@ void save(boost::property_tree::ptree& pt,std::string path, char path_separator,
 
 
 // ----------- Load --------------
-void load(boost::property_tree::ptree& pt,std::string path, MATRIX& vt, int& status){ std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); }
-void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt, int& status){ std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); }
-void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status){ std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); }
-void load(boost::property_tree::ptree& pt,std::string path, char path_separator,vector<MATRIX>& vt,int& status){ std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); }
+void load(boost::property_tree::ptree& pt,std::string path, MATRIX& vt, int& status){ 
+  std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); 
+}  /// Not useful
+
+MATRIX load(boost::property_tree::ptree& pt,std::string path, int& status){ 
+
+  int st;
+  status = 0;
+
+  int n_rows, n_cols, n_elts;
+
+  libio::load(pt,path+".n_rows", n_rows, st); if(st==1) { status=1;}
+  libio::load(pt,path+".n_cols", n_cols, st); if(st==1) { status=1;}
+  libio::load(pt,path+".n_elts", n_elts, st); if(st==1) { status=1;}
+
+  MATRIX vt(n_rows, n_cols);
+
+  for(int i=0;i<vt.n_elts;i++){
+
+    stringstream ss(stringstream::in | stringstream::out);
+    std::string rt; ss<<i; ss>>rt;
+
+    libio::load(pt,path+"."+rt, vt.M[i], st); if(st==1) { status=1;}
+  }
+
+  return vt;
+
+}
+
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator, MATRIX& vt, int& status){ 
+  std::cout<<"Sorry: load function for MATRIX object is not defined yet\n"; exit(0); 
+}
+
+
+void load(boost::property_tree::ptree& pt,std::string path,vector<MATRIX>& vt,int& status){ 
+
+  int st;
+  status = 0;
+  try{
+    BOOST_FOREACH(boost::property_tree::ptree::value_type &v, pt.get_child(path)){
+      MATRIX x( load(pt,path+"."+v.first, st)); if(st==1){ vt.push_back(x); status = 1; }
+    }
+  }catch(std::exception& e){ }
+
+}
+
+void load(boost::property_tree::ptree& pt,std::string path, char path_separator,vector<MATRIX>& vt,int& status){ 
+  std::cout<<"Sorry: load function for vector<MATRIX> object is not defined yet\n"; exit(0); 
+}
+
+
 
 
 
