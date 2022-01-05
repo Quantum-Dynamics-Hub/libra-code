@@ -372,16 +372,18 @@ def run_cp2k_libint_step2(params):
 
                              cp2k_exe (string): The full path to CP2K executable.
 
+                             mpi_executable (string): The mpi run executable for CP2K. It can be mpiexe, mpirun, or srun.
+
     """
     # Making the required directories for gatherig all the information needed
     # including the overlap data and pdos files. The logfiles do not contain
     # specific data but we finally move them to all_logfiles
     if not os.path.exists(params['res_dir']):
-        os.mkdir(params['res_dir'])
+        os.system(F"mkdir {params['res_dir']}")
     if not os.path.exists(params['all_logfiles']):
-        os.mkdir(params['all_logfiles'])
+        os.system(F"mkdir {params['all_logfiles']}")
     if not os.path.exists(params['all_pdosfiles']):
-        os.mkdir(params['all_pdosfiles'])
+        os.system(F"mkdir {params['all_pdosfiles']}")
     # setting up the initial step and final step
     istep = params['istep']
     fstep = params['fstep']
@@ -391,6 +393,8 @@ def run_cp2k_libint_step2(params):
     nprocs = params['nprocs']
     # CP2K executable
     cp2k_exe = params['cp2k_exe']
+    # mpirun executable
+    mpi_executable = params['mpi_executable']
     # Unrestricted spin calculations
     isUKS = params['isUKS']
     # Extended tight-binding calculations
@@ -414,7 +418,7 @@ def run_cp2k_libint_step2(params):
             molden_filename = F'Diag_{step}-libra-1_0.molden'
         else:
             CP2K_methods.CP2K_input_static( params['cp2k_diag_input_template'], 'Diag_libra', params['trajectory_xyz_filename'], step )
-            os.system(F'mpirun -np {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
+            os.system(F'{mpi_executable} -n {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
             molden_filename = F'Diag_libra-{step}-1_0.molden'
         print('Done with step', step,'Elapsed time:',time.time()-t1)
         # now if the counter is equal to zero 
@@ -621,6 +625,7 @@ def run_cp2k_libint_step2(params):
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
     os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
     os.system(F'mv *log {params["all_logfiles"]}/.')
+    os.system('rm *.wfn* *.tdwfn*')
     print('Done with the job!!!')
 
 

@@ -1506,18 +1506,19 @@ def run_cp2k_xtb(params):
     trajectory_xyz_filename = params['trajectory_xyz_filename']
     step = params['step']
     cp2k_exe = params['cp2k_exe']
+    mpi_executable = params['mpi_executable']
     nprocs = params['nprocs']
     ##### Run OT
     print('Step', step,'Computing the OT method wfn file...')
     cp2k_xtb_ot_inp(ot_input_template, trajectory_xyz_filename, step)
     t1 = time.time()
-    os.system('mpirun -np %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(nprocs, cp2k_exe, step, step))
+    os.system('%s -n %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(mpi_executable, nprocs, cp2k_exe, step, step))
     print('Done with OT wfn. Elapsed time:',time.time()-t1)
     ##### Run diagonalization
     t1 = time.time()
     print('Computing the wfn file using diagonalization method...')
     cp2k_xtb_diag_inp(diag_input_template, step)
-    os.system('mpirun -np %d %s -i xtb_diag_step_%d.inp -o OUT-diag_%d.log'%(nprocs, cp2k_exe, step, step))
+    os.system('%s -n %d %s -i xtb_diag_step_%d.inp -o OUT-diag_%d.log'%(mpi_executable, nprocs, cp2k_exe, step, step))
     print('Done with diagonalization. Elapsed time:', time.time()-t1)
 
 

@@ -988,7 +988,6 @@ def apply_phase_correction_scipy(St, step, cum_phase_aa, cum_phase_bb, two_spino
     alp = list(range(0,nstates))
     if two_spinor_format:
         bet = list(range(nstates, 2*nstates))
-        print(nstates, alp, bet)
 
     St_aa = St[alp,:][:, alp]
     if two_spinor_format:
