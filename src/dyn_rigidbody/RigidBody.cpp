@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -173,6 +173,8 @@ void RigidBody::init_variables(int is_new){
   is_fixed_translation = 0;
   is_fixed_rotation = 0;
 
+  set_orientation_option = 1;          is_set_orientation_option = 0;
+
 
 }
 
@@ -213,6 +215,8 @@ void RigidBody::copy_content(const RigidBody& rb){
 
   is_fixed_translation = rb.is_fixed_translation;
   is_fixed_rotation = rb.is_fixed_rotation;
+
+  if(is_set_orientation_option) {  set_orientation_option = rb.set_orientation_option; }
 
 //-------------- Copy auxiliary variables ---------------------
 

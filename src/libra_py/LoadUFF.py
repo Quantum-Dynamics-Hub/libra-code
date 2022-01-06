@@ -23,7 +23,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 
-def Load_UFF(force_field, ff_file="uff.dat"):
+def Load_UFF(force_field, ff_file="data/force_fields/uff/uff.dat"):
 ##
 # This function loads data into the force field object provided, assuming a specific format of the input file 
 # In this case we assume the input file is formatted to provide some data to set UFF force field
