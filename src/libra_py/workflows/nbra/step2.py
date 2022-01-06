@@ -347,9 +347,9 @@ def run_cp2k_libint_step2(params):
 
                              fstep (integer): The final step.
 
-                             init_state (integer): The initial state.
+                             lowest_orbital (integer): The lowest orbital considered in the calculations.
 
-                             final_state (integer): The final state.
+                             highest_orbital (integer): The highest orbital considered in the calcualtions.
 
                              is_spherical (bool): Flag for spherical coordinates.
 
@@ -372,16 +372,18 @@ def run_cp2k_libint_step2(params):
 
                              cp2k_exe (string): The full path to CP2K executable.
 
+                             mpi_executable (string): The mpi run executable for CP2K. It can be mpiexe, mpirun, or srun.
+
     """
     # Making the required directories for gatherig all the information needed
     # including the overlap data and pdos files. The logfiles do not contain
     # specific data but we finally move them to all_logfiles
     if not os.path.exists(params['res_dir']):
-        os.mkdir(params['res_dir'])
+        os.system(F"mkdir {params['res_dir']}")
     if not os.path.exists(params['all_logfiles']):
-        os.mkdir(params['all_logfiles'])
+        os.system(F"mkdir {params['all_logfiles']}")
     if not os.path.exists(params['all_pdosfiles']):
-        os.mkdir(params['all_pdosfiles'])
+        os.system(F"mkdir {params['all_pdosfiles']}")
     # setting up the initial step and final step
     istep = params['istep']
     fstep = params['fstep']
@@ -391,6 +393,8 @@ def run_cp2k_libint_step2(params):
     nprocs = params['nprocs']
     # CP2K executable
     cp2k_exe = params['cp2k_exe']
+    # mpirun executable
+    mpi_executable = params['mpi_executable']
     # Unrestricted spin calculations
     isUKS = params['isUKS']
     # Extended tight-binding calculations
@@ -414,7 +418,7 @@ def run_cp2k_libint_step2(params):
             molden_filename = F'Diag_{step}-libra-1_0.molden'
         else:
             CP2K_methods.CP2K_input_static( params['cp2k_diag_input_template'], 'Diag_libra', params['trajectory_xyz_filename'], step )
-            os.system(F'mpirun -np {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
+            os.system(F'{mpi_executable} -n {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
             molden_filename = F'Diag_libra-{step}-1_0.molden'
         print('Done with step', step,'Elapsed time:',time.time()-t1)
         # now if the counter is equal to zero 
@@ -451,8 +455,8 @@ def run_cp2k_libint_step2(params):
             AO_S = data_conv.MATRIX2nparray(AO_S)
             #scipy.sparse.save_npz(params['res_dir']+'/AO_S.npz', scipy.sparse.csc_matrix(AO_S))
             print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
-            istate = params['init_state']
-            fstate = params['final_state']
+            lowest_orbital = params['lowest_orbital']
+            highest_orbital = params['highest_orbital']
             ## Now, we need to resort the eigenvectors based on the new indices
             print('Resorting eigenvectors elements...')
             t1 = time.time()
@@ -477,33 +481,33 @@ def run_cp2k_libint_step2(params):
             ##
             t1 = time.time()
             print('Computing and saving molecular orbital overlaps...')
-            # Note that we choose the data from istate to fstate
-            # the values for istate and fstate start from 1
+            # Note that we choose the data from lowest_orbital to highest_orbital
+            # the values for lowest_orbital and highest_orbital start from 1
             if isUKS:
-                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
-                S_beta  = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
+                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                S_beta  = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 # creating zero matrix                                     
                 mat_block_size = (len(S_alpha), len(S_beta))
                 zero_mat = np.zeros(mat_block_size)
                 S_step = data_conv.form_block_matrix(S_alpha,zero_mat,zero_mat.T,S_beta)
                 # Since a lot of the data are zeros we save them as sparse matrices
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
-                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_1)[istate-1:fstate,istate-1:fstate],\
+                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat.T,\
-                                                     np.diag(beta_energies_1)[istate-1:fstate,istate-1:fstate])
+                                                     np.diag(beta_energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
             else:
-                S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[istate-1:fstate,istate-1:fstate]
+                S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 # creating zero matrix
                 mat_block_size = len(S)
                 zero_mat = np.zeros((mat_block_size,mat_block_size))
                 S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
                 # Since a lot of the data are zeros we save them as sparse matrices
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
-                E_step = data_conv.form_block_matrix(np.diag(energies_1)[istate-1:fstate,istate-1:fstate],\
+                E_step = data_conv.form_block_matrix(np.diag(energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat,\
-                                                     np.diag(energies_1)[istate-1:fstate,istate-1:fstate])
+                                                     np.diag(energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
             scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
@@ -574,32 +578,32 @@ def run_cp2k_libint_step2(params):
             t1 = time.time()
             print('Computing and saving molecular orbital overlaps...')
             if isUKS:
-                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
-                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
 
-                S_beta = np.linalg.multi_dot([beta_eigenvectors_2, AO_S, beta_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
-                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                S_beta = np.linalg.multi_dot([beta_eigenvectors_2, AO_S, beta_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
 
                 S_step = data_conv.form_block_matrix(S_alpha,zero_mat,zero_mat.T,S_beta)
                 St_step = data_conv.form_block_matrix(St_alpha,zero_mat,zero_mat.T,St_beta)
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
                 St_step_sparse = scipy.sparse.csc_matrix(St_step)
 
-                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_2)[istate-1:fstate,istate-1:fstate],\
+                E_step = data_conv.form_block_matrix(np.diag(alpha_energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat.T,\
-                                                     np.diag(beta_energies_2)[istate-1:fstate,istate-1:fstate])
+                                                     np.diag(beta_energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
 
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             else:
-                S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
-                St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[istate-1:fstate,istate-1:fstate]
+                S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
                 St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)
                 St_step_sparse = scipy.sparse.csc_matrix(St_step)
-                E_step = data_conv.form_block_matrix(np.diag(energies_2)[istate-1:fstate,istate-1:fstate],\
+                E_step = data_conv.form_block_matrix(np.diag(energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat,\
-                                                     np.diag(energies_2)[istate-1:fstate,istate-1:fstate])
+                                                     np.diag(energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
             scipy.sparse.save_npz(params['res_dir']+F'/St_ks_{step-1}.npz', St_step_sparse)
@@ -621,6 +625,7 @@ def run_cp2k_libint_step2(params):
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
     os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
     os.system(F'mv *log {params["all_logfiles"]}/.')
+    os.system('rm *.wfn* *.tdwfn*')
     print('Done with the job!!!')
 
 

@@ -40,7 +40,7 @@ import sys
 import math
 import copy
 import re
-
+import numpy as np
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -395,4 +395,35 @@ def replace_pattern_in_file(filename, old_string, new_string, method=0):
         f.truncate()
         f.write(content)
         f.close()
+
+
+def sort_hvib_file_names(files):
+    """
+    This function sorts the file names obtained from `glob` for the files
+    Hvib_{basis}_{step}_im.npz, Hvib_{basis}_{step}_re.npz, or St_{basis}_{step}_re.npz. 
+    Args:
+        files (list): A list of files obtained form `glob.glob` function.
+    Returns:
+        files_sorted (list): The list of files which are sorted based on the step.
+    """
+    steps = []
+    for file in files:
+        digits = []
+        for i in range(len(file)):
+            try:
+                int(file[i])
+                digits.append(file[i])
+            except:
+                pass
+        number = ''
+        for i in range(len(digits)):
+            number += digits[i]
+
+        number = int(number)
+        steps.append(number)
+    steps = np.argsort(np.array(steps))
+    files_sorted = []
+    for i in range(len(steps)):
+        files_sorted.append(files[steps[i]])
+    return files_sorted
 

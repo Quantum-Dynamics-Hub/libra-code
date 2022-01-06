@@ -532,4 +532,49 @@ def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
 
     return block_matrix
 
- 
+
+def vasp_to_xyz(filename):
+    """
+    This function turns VASP POSCAR files into .xyz files.
+    Args:
+        filename (string): The name of the VASP POSCAR file.
+    Returns:
+        None
+    """
+    
+    f = open(filename,'r')
+    lines = f.readlines()
+    f.close()
+    if '.vasp' in filename:
+        xyz_file_name = filename.replace('.vasp','')+'.xyz'
+    else:
+        xyz_file_name = filename+'.xyz'
+    f = open(xyz_file_name,'w')
+    types = lines[5].split()
+    n_types = [int(lines[6].split()[i]) for i in range(len(lines[6].split()))]
+    print(n_types,types)
+    coord = []
+    for i in range(8,len(lines)):
+        try:
+            tmp_line = lines[i].split()
+            x = float(tmp_line[0])
+            y = float(tmp_line[1])
+            z = float(tmp_line[2])
+            coord.append([x,y,z])
+        except:
+            pass
+    print('A',lines[2])
+    print('B',lines[3])
+    print('C',lines[4])
+    
+    f.write(str(np.sum(np.array(n_types)))+'\n\n')
+    
+    counter = 0
+    for i in range(len(types)):
+        for k in range(n_types[i]):
+            f.write(types[i]+' '+str(coord[counter][0])+' '+str(coord[counter][1])+' '+str(coord[counter][2])+'\n')
+            counter += 1
+            
+    f.close() 
+
+
