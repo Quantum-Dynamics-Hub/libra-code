@@ -742,8 +742,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 //  exit(0); 
 
   //========= Use the resulting amplitudes to do the hopping =======
+  // Adiabatic dynamics
+  if(prms.tsh_method==-1){ ;; } 
+
   // FSSH, GFSH, MSSH
-  if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2){
+  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2){
 
     // Compute hopping probabilities
     vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, projectors, ham, prev_ham_dia) );
