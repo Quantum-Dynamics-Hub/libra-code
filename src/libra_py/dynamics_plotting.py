@@ -118,7 +118,7 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     pes_params_default = { "ndia":2, "nadi":2, "ndof":1,
                            "active_dof":0,
                            "coord_type":0,
-                           "reference_coord":MATRIX(1, 0),
+                           "reference_coord":MATRIX(1, 1),
                            "coord_mapping":None,
                            "xmin":-10.0, "xmax":10.0, "dx":1.0,
                            "tmin":0, "tmax":10, "dt":1
