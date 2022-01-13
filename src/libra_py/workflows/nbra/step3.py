@@ -2203,33 +2203,33 @@ def run_step3_sd_nacs_libint(params):
         params['active_space'] = ks_active_space
 
         # Now, start buidling the unique SDs for both spin channels
-        # Add electron-only SDs
         min_band = ks_homo_index+1
         max_band = ks_homo_index+params['num_unocc_states']
-        for state in range(ks_homo_index+1,max_band+1):
-            # Alpha spin excitations
-            sd_tmp = [[ks_homo_index, state], 'alp']
-            if sd_tmp not in sd_unique_basis:
-                sd_unique_basis.append(sd_tmp)
+        for occ_state in range(ks_homo_index-params['num_occ_states']+1, ks_homo_index+1):
+            for unocc_state in range(ks_homo_index+1,max_band+1):
+                # Alpha spin excitations
+                sd_tmp = [[occ_state, unocc_state], 'alp']
+                if sd_tmp not in sd_unique_basis:
+                    sd_unique_basis.append(sd_tmp)
             # If unrestricted spin calculations is requested the 
             # add the beta spin excitations as well
-            if params['isUKS']==1:
-                sd_tmp = [[ks_homo_index, state], 'bet']
-                #sd_tmp = [[state, ks_homo_index], 'bet']
-            if sd_tmp not in sd_unique_basis:
-                sd_unique_basis.append(sd_tmp)
-        
-        # Add hole-only SDs
+                if params['isUKS']==1:
+                    sd_tmp = [[occ_state, unocc_state], 'bet']
+                    #sd_tmp = [[state, ks_homo_index], 'bet']
+                if sd_tmp not in sd_unique_basis:
+                    sd_unique_basis.append(sd_tmp)
+        # I will keep this part for now as previously used and only commented the hole-only part
+        ## Add hole-only SDs
         min_band = ks_homo_index-params['num_occ_states']+1
         max_band = ks_homo_index+1
-        for state in range(min_band, max_band):
-            sd_tmp = [[state, ks_homo_index+1], 'alp']
-            if sd_tmp not in sd_unique_basis:
-                sd_unique_basis.append(sd_tmp)
-            if params['isUKS']==1:
-                sd_tmp = [[state, ks_homo_index+1], 'bet']
-            if sd_tmp not in sd_unique_basis:
-                sd_unique_basis.append(sd_tmp)
+        #for state in range(min_band, max_band):
+        #    sd_tmp = [[state, ks_homo_index+1], 'alp']
+        #    if sd_tmp not in sd_unique_basis:
+        #        sd_unique_basis.append(sd_tmp)
+        #    if params['isUKS']==1:
+        #        sd_tmp = [[state, ks_homo_index+1], 'bet']
+        #    if sd_tmp not in sd_unique_basis:
+        #        sd_unique_basis.append(sd_tmp)
     # The params is updated with sd_unique_basis for reindexing
     params['sd_unique_basis'] = sd_unique_basis
     # Reindex the SD basis
@@ -2356,8 +2356,10 @@ def run_step3_sd_nacs_libint(params):
 
     # Now, we move to applying phase-corrections
     if params['apply_phase_correction']:
+        t3 = time.time()
         for step in range(len(St_sds)):
             # Initialize the nstates and cum_phase_aa and cum_phase_bb
+            print('Applying phase-correction to St_sd matrix of step', step)
             if step==0:
                 nstates = int(St_sds[0].shape[0]) #/2)
                 cum_phase_aa = np.ones((nstates,1))
@@ -2367,10 +2369,13 @@ def run_step3_sd_nacs_libint(params):
             Hvib_sd = 0.5/dt * (St_step_phase_corrected.todense().T - St_step_phase_corrected.todense())
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step+start_time}_im.npz', sp.csc_matrix( Hvib_sd ))
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_sd_{step+start_time}_re.npz', St_step_phase_corrected )
+        print('Done with applying phase-correction to St_sd matrices. Elpased time:', time.time()-t3)
         if params['is_many_body']:
             # Set up the counter
             c = 0
+            t3 = time.time()
             for step in range( finish_time - start_time -1 ):
+                print('Applying phase-correction to St_ci matrix of step', step)
                 if step==0:
                     nstates = int(St_cis[0].shape[0])
                     cum_phase_aa = np.ones((nstates,1))
@@ -2381,6 +2386,7 @@ def run_step3_sd_nacs_libint(params):
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step+start_time}_im.npz', sp.csc_matrix( Hvib_ci ))
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci_step_phase_corrected))
                 c += 1
+            print('Done with applying phase-correction to St_ci matrices. Elpased time:', time.time()-t3)
 
     else:
         for step in range(len(St_sds)):
