@@ -11,48 +11,59 @@ from libra_py import data_outs
 import numpy as np
 import qtag_calc
 
-def _momentum(ndof,ntraj,qpas,c):
-	"""Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). Also returns the corresponding real component *r*, which can be used in updates of the basis phase parameter *s*.
+def _momentum(ndof, ntraj, qpas, c):
+    """Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). 
+       Also returns the corresponding real component *r*, which can be used in updates of the basis phase parameter *s*.
 
-        Args:
-		ndof (integer): The number of degrees of freedom.
+    Args:
 
-                ntraj (integer): The number of trajectories per surface.
+        ndof (integer): The number of degrees of freedom.
 
-                qpas (list): List of {q,p,a,s} MATRIX objects.
+        ntraj (integer): The number of trajectories per surface.
 
-                c (CMATRIX): The coefficient matrix for the basis.
+        qpas (list): List of {q,p,a,s} MATRIX objects.
 
-        Returns:
-                mom (MATRIX): The momentum matrix, dimensioned ndof-by-ntraj.
+        c (CMATRIX): The coefficient matrix for the basis.
 
-		r (MATRIX): The complementary real component of the momentum, dimensioned ndof-by-ntraj.
-        """
+    Returns:
 
-	mom=MATRIX(ndof,ntraj);r=MATRIX(ndof,ntraj);dz=CMATRIX(ndof,1)
+        mom (MATRIX): The momentum matrix, dimensioned ndof-by-ntraj.
 
-	qvals,pvals,avals,svals=MATRIX(qpas[0]),MATRIX(qpas[1]),MATRIX(qpas[2]),MATRIX(qpas[3])
+        r (MATRIX): The complementary real component of the momentum, dimensioned ndof-by-ntraj.
 
-	for i in range(ntraj):
-		z=complex(0.0,0.0)
-		for n in range(ndof):
-			dz.set(n,0,0+0j)
-		q1,p1,a1,s1=qvals.col(i),pvals.col(i),avals.col(i),svals.col(i)
-		for j in range(ntraj):
-			term0,term1=1.0,1.0
-			q2,p2,a2,s2=qvals.col(j),pvals.col(j),avals.col(j),svals.col(j)
-			for n in range(ndof):
-				term0*=(a2.get(n)/np.pi)**0.25
-				term1*=np.exp(-0.5*a2.get(n)*(q1.get(n)-q2.get(n))**2+1.0j*(p2.get(n)*(q1.get(n)-q2.get(n))+s2.get(n)))
-			z+=c.get(j)*term0*term1
-			for n in range(ndof):
-				dzt=dz.get(n)-(a2.get(n)*(q1.get(n)-q2.get(n))-1.0j*p2.get(n))*c.get(j)*term0*term1
-				dz.set(n,dzt)	
+    """
 
-		for n in range(ndof):
-			mom.set(n,i,(dz.get(n)/z).imag)
-			r.set(n,i,(dz.get(n)/z).real)
-	return(mom,r)
+    mom=MATRIX(ndof,ntraj)
+    r=MATRIX(ndof,ntraj) 
+    dz=CMATRIX(ndof,1)
+
+    qvals,pvals,avals,svals=MATRIX(qpas[0]),MATRIX(qpas[1]),MATRIX(qpas[2]),MATRIX(qpas[3])
+
+    for i in range(ntraj):
+        z=complex(0.0,0.0)
+        for n in range(ndof):
+            dz.set(n,0,0+0j)
+
+        q1,p1,a1,s1=qvals.col(i),pvals.col(i),avals.col(i),svals.col(i)
+
+        for j in range(ntraj):
+            term0,term1 = 1.0,1.0
+            q2,p2,a2,s2 = qvals.col(j),pvals.col(j),avals.col(j),svals.col(j)
+            for n in range(ndof):
+                term0 *= (a2.get(n)/np.pi)**0.25
+                term1 *= np.exp(-0.5*a2.get(n)*(q1.get(n)-q2.get(n))**2+1.0j*(p2.get(n)*(q1.get(n)-q2.get(n))+s2.get(n)))
+            z += c.get(j)*term0*term1
+
+            for n in range(ndof):
+                dzt = dz.get(n)-(a2.get(n)*(q1.get(n)-q2.get(n))-1.0j*p2.get(n))*c.get(j)*term0*term1
+                dz.set(n,dzt)	
+
+        for n in range(ndof):
+            mom.set(n,i,(dz.get(n)/z).imag)
+            r.set(n,i,(dz.get(n)/z).real)
+
+    return (mom,r)
+
 
 def _lin_fitting(ndof,ntraj,qvals,qpas,c,mom_in,r,d_weight,beta):
 	"""Returns the momentum *mom_out* and it's gradient *gmom* after linear fitting via the internal procedure solve_linsys. The points are each weighted by the local wavefunction density. The fitted values for *r* and its gradient *gr* are also returned.

@@ -30,6 +30,7 @@
 #include "ensemble/libensemble.h"
 #include "gwp/libgwp.h"
 #include "heom/libheom.h"
+#include "qtag/libqtag.h"
 
 // General dynamics
 #include "Energy_and_Forces.h"

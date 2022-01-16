@@ -11,7 +11,7 @@ from liblibra_core import *
 
 import numpy as np
 
-def psi(ndof,ntraj,qpas,c,x0):
+def psi(ndof, ntraj, qpas, c, x0):
 	"""Returns the (complex) wavefunction value *wf* at a given point *x0*, calculated using the single-surface basis parameters stored in *qpas* and coefficients *c*.
 
         Args:
