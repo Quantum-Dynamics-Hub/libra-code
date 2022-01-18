@@ -118,6 +118,7 @@ def sync(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm2,be
 
     return(qpas1n,qpas2n,b1,b2)
 
+
 def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm2,beta):
 	"""Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of functions are calculated via classical forces computed at their centers. Also necessary are the functions for calculating momentum (*mom_calc*) and basis updates (*props*).
 

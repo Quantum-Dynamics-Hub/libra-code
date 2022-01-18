@@ -138,6 +138,7 @@ def cls_force_q(univ,q_in,p_in, model, model_params):
     q_out=MATRIX(ndof,ntraj)
     p_out=MATRIX(ndof,ntraj)
 
+#    q_out = q_in + iM * p_in * dt
     for i in range(ntraj):
         x, dvx, d2vx = pot(ndof,q_in.col(i),2,model_params)
 

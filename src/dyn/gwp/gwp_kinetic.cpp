@@ -111,6 +111,105 @@ complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1
 }
 
 
+complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                            MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                            MATRIX& iM){
+/**
+  This function computes a second derivative matrix elements of two moving N-dimensional Gaussians  <G_1|d^2/dr^2|G_2>, where:
+
+  G_a(r; r_a, p_a, alp_a, gamma_a) = \product_s^Ndof { (2*alp_a/pi)^(1/4) * exp(-alp_a*(r-r_a)^2 + i*(p_a/hbar)*(r-r_a) + i*gamma_a/hbar)}_s
+
+  Atomic units are assumed, so hbar = 1
+
+  Look derivations at: https://github.com/compchem-cybertraining/derivatory/tree/master/1_gaussian_wavepackets/1_matrix_elements
+
+  \param[in] q1, q2 Coordinates of the Gaussians in a given dimension
+  \param[in] p1, p2 Momenta of the Gaussians in a given dimension
+  \param[in] gamma1, gamma2 The phase factors of the overall Gaussians
+  \param[in] alp1, alp2 The Gaussian width factors for given dimension. 
+  \param[in] iM (ndof x 1) The inverse masses of all DOFs.
+
+  The function returns the sum of the second derivative matrix elements (times the inverse of dof mas) over all DOFs
+  - one complex number
+*/
+
+
+  int Ndof = check_dimensions("libgwp::gwp_coupling", q1, p1, q2, p2);
+
+  complex<double> res(0.0, 0.0);
+
+  for(int  i=0; i<Ndof; i++){
+
+    if(alp1.get(i,0) <= 0.0){  cout<<"Error: alp1 should be positive.\nExiting...\n"; exit(0); }
+    if(alp2.get(i,0) <= 0.0){  cout<<"Error: alp2 should be positive.\nExiting...\n"; exit(0); }
+
+
+    double alp = alp1.get(i,0) + alp2.get(i,0);
+    double pref1 = 2.0 *alp1.get(i,0) * alp2.get(i,0) / alp; 
+    double p_weighted = (alp2.get(i,0) * p1.get(i,0) + alp1.get(i,0) * p2.get(i,0) )/alp; 
+    double dq = q2.get(i,0) - q1.get(i,0);
+ 
+    double re =  -pref1 + pref1 * pref1 * dq * dq - p_weighted * p_weighted;
+    double im =   2.0 * pref1 * p_weighted * dq;
+    res += iM.get(i, 0) * complex<double>( re, im);
+
+  }  
+
+  res *= gwp_overlap(q1, p1, gamma1, alp1, q2, p2, gamma2, alp2);
+
+  return res;
+
+}
+
+
+CMATRIX gwp_kinetic_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                           MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2, 
+                           MATRIX& invM){
+/**
+  Returns the Gaussian overlaps across GWPs belonging to different sets
+
+  Args:
+  \param[in] q1, q2  ndof x ntraj1 and ndof x ntraj2 Coordinates of the Gaussians in a given dimension
+  \param[in] p1, p2  ndof x ntraj1 and ndof x ntraj2 Momenta of the Gaussians in a given dimension
+  \param[in] gamma1, gamma2 ndof x ntraj1 and ndof x ntraj2 The phase factors of the overall Gaussians
+  \param[in] alp1, alp2 ndof x ntraj1 and ndof x ntraj2 The Gaussian width factors for given dimension. 
+
+  Returns:
+  CMATRIX(ntraj1, ntraj2) - the overlap matrix of basis functions defined by two sets 
+
+*/
+  int i,j;
+  int ndof = q1.n_rows;
+  int ntraj1 = q1.n_cols;
+  int ntraj2 = q2.n_cols;
+  CMATRIX t(ntraj1, ntraj2);
+
+  MATRIX q1_i(ndof, ntraj1);
+  MATRIX p1_i(ndof, ntraj1);
+  MATRIX g1_i(ndof, ntraj1);
+  MATRIX a1_i(ndof, ntraj1);
+
+  MATRIX q2_j(ndof, ntraj1);
+  MATRIX p2_j(ndof, ntraj1);
+  MATRIX g2_j(ndof, ntraj1);
+  MATRIX a2_j(ndof, ntraj1);
+
+
+  for(i=0; i<ntraj1; i++){
+    q1_i = q1.col(i); p1_i = p1.col(i); g1_i = gamma1.col(i); a1_i = alp1.col(i);
+
+    for(j=0; j<ntraj2; j++){
+      q2_j = q2.col(j); p2_j = p2.col(j); g2_j = gamma2.col(j); a2_j = alp2.col(j);
+
+      complex<double> tij = gwp_kinetic(q1_i, p1_i, g1_i, a1_i,  q2_j, p2_j, g2_j, a2_j, invM);
+      t.set(i, j,  tij);
+    }
+  }
+  return t;
+
+}
+
+
 
 
 complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1, 

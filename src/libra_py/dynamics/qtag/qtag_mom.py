@@ -66,12 +66,14 @@ def _momentum(ndof, ntraj, qpas, c):
 
 
 def _lin_fitting(ndof,ntraj,qvals,qpas,c,mom_in,r,d_weight,beta):
-	"""Returns the momentum *mom_out* and it's gradient *gmom* after linear fitting via the internal procedure solve_linsys. The points are each weighted by the local wavefunction density. The fitted values for *r* and its gradient *gr* are also returned.
+    """Returns the momentum *mom_out* and it's gradient *gmom* after linear fitting via the 
+       internal procedure solve_linsys. The points are each weighted by the local wavefunction density. 
+       The fitted values for *r* and its gradient *gr* are also returned.
 
-        Args:
-		ndof (integer): The number of degrees of freedom.
+    Args:
+        ndof (integer): The number of degrees of freedom.
 
-                ntraj (integer): The number of trajectories per surface.
+        ntraj (integer): The number of trajectories per surface.
 
 		qvals (MATRIX): ndof-by-ntraj MATRIX object containing trajectory positions.
 

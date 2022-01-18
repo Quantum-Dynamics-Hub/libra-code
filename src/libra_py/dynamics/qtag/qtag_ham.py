@@ -140,28 +140,30 @@ def hamiltonian(univ,qpas,ov,nsurf,vcalc,pot,model_params):
 	return(H)
 
 def coupling(univ,qpas1,qpas2,ov12,nsurf,cplg,pot,model_params):
-	"""Calculates the off-diagonal coupling matrix elements V_ij=<gi|V_cpl|gj>, where gi and gj are basis functions on separate surfaces defined by *qpas1* and *qpas2*, respectively. This requires the overlap matrix *ov12* as well as the potential function *pot* and coupling type *cplg*. The value of *nsurf* is set to 3 in the function call to specify the coupling function and its derivatives should be used if invoking the LHA (rather than the single surfaces 1 or 2). Returns the off-diagonal matrix *H*.
+    """Calculates the off-diagonal coupling matrix elements V_ij=<gi|V_cpl|gj>, where gi and gj are 
+       basis functions on separate surfaces defined by *qpas1* and *qpas2*, respectively. This requires the overlap matrix *ov12* as well as the potential function *pot* and coupling type *cplg*. The value of *nsurf* is set to 3 in the function call to specify the coupling function and its derivatives should be used if invoking the LHA (rather than the single surfaces 1 or 2). Returns the off-diagonal matrix *H*.
+ 
+    Args:
+        univ (dictionary): Dictionary containing various system parameters.
 
-        Args:
-		univ (dictionary): Dictionary containing various system parameters.
+        qpas1 (list): List of {q,p,a,s} MATRIX objects on surface 1.
 
-                qpas1 (list): List of {q,p,a,s} MATRIX objects on surface 1.
+        qpas2 (list): List of {q,p,a,s} MATRIX objects on surface 2.
 
-		qpas2 (list): List of {q,p,a,s} MATRIX objects on surface 2.
+        ov12 (CMATRIX): The dual-surface ntraj-by-ntraj complex overlap matrix.
 
-                ov12 (CMATRIX): The dual-surface ntraj-by-ntraj complex overlap matrix.
+        nsurf (integer): Integer specifying the potential surface to be calculated. 1 = ground; 2 = excited; 3 = coupling (always set to 3 here).
 
-                nsurf (integer): Integer specifying the potential surface to be calculated. 1 = ground; 2 = excited; 3 = coupling (always set to 3 here).
+        cplg (function object): Function object containing the coupling potential.
 
-		cplg (function object): Function object containing the coupling potential.
+        pot (function object): Function object containing the potential model for the ground and excited states.
 
-                pot (function object): Function object containing the potential model for the ground and excited states.
+        model_params (dictionary): Dictionary containing the potential parameters.
 
-		model_params (dictionary): Dictionary containing the potential parameters.
+    Returns:
+        H (CMATRIX): The coupling-surface ntraj-by-ntraj Hamiltonian matrix.
 
-        Returns:
-                H (CMATRIX): The coupling-surface ntraj-by-ntraj Hamiltonian matrix.
-        """
+    """
 
 	ndof,ntraj=univ['ndof'],univ['ntraj']
 	H = CMATRIX(ntraj,ntraj)

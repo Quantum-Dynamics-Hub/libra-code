@@ -39,8 +39,34 @@ void export_qtag_objects(){
 
 */
 
-  double (*expt_qtag_momentum_v1)(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff) = &qtag_momentum;
+  CMATRIX (*expt_qtag_psi_v1)
+  (MATRIX q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff) = &qtag_psi;
+  def("qtag_psi",  expt_qtag_psi_v1);
 
+
+  CMATRIX (*expt_qtag_overlap_elementary_v1)
+  (MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1,
+   MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2) = &qtag_overlap_elementary;
+  def("qtag_overlap_elementary",  expt_qtag_overlap_elementary_v1);
+
+  CMATRIX (*expt_qtag_kinetic_elementary_v1)
+  (MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM) = &qtag_kinetic_elementary;
+  def("qtag_kinetic_elementary", expt_qtag_kinetic_elementary_v1);
+
+  CMATRIX (*expt_qtag_overlap_v1)
+  (vector<int>& active_states, CMATRIX& ovlp, int nstates) = &qtag_overlap;
+  def("qtag_overlap", expt_qtag_overlap_v1);
+
+
+  CMATRIX (*expt_qtag_hamiltonian_v1)
+  (MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
+   vector<int>& active_states, CMATRIX& ovlp, CMATRIX& kin,
+   MATRIX& invM, nHamiltonian& ham, bp::object compute_ham_funct,  
+   bp::dict& compute_ham_params) = &qtag_hamiltonian;
+  def("qtag_hamiltonian", expt_qtag_hamiltonian_v1);
+
+
+  CMATRIX (*expt_qtag_momentum_v1)(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff) = &qtag_momentum;
   def("qtag_momentum",  expt_qtag_momentum_v1);
 
 

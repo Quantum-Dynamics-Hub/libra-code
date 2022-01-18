@@ -70,6 +70,7 @@ def norm(c,ov):
 	n=(c.H()*ov*c).get(0).real
 	return(n)
 
+
 def overlap(ntraj,qpas1,qpas2):
 	"""Returns the Gaussian overlap matrix *ov_mat*, which stores the complex overlap elements of the two basis functions defined by the rows of the *qpas1* and *qpas2* matrices.
 
