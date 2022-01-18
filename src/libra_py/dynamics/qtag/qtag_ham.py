@@ -21,23 +21,25 @@ def BAT(univ,nstate,qpasi,qpasj,params,libra_model):
     ndof=univ['ndof']
     nstates=univ['nstates']
 
-    obj1, obj2 = CMATRIX(nstates,nstates), CMATRIX(nstates,nstates)
-
     q1,p1,a1,s1=qpasi[0], qpasi[1], qpasi[2], qpasi[3]
     q2,p2,a2,s2=qpasj[0], qpasj[1], qpasj[2], qpasj[3]
     
-    obj1=libra_model(q1, params, full_id)
-    obj2=libra_model(q2, params, full_id)
+    obj1 = libra_model(q1, params, full_id)
+    obj2 = libra_model(q2, params, full_id)
 
     dvx1_sum=0.0;dvx2_sum=0.0
     vx1=obj1.ham_dia.get(nstate,nstate)
     vx2=obj2.ham_dia.get(nstate,nstate)
+
     for i in range(ndof):
-    	dvx1,dvx2=obj1.d1ham_dia[i].get(nstate,nstate),obj2.d1ham_dia[i].get(nstate,nstate)
+    	dvx1 = obj1.d1ham_dia[i].get(nstate,nstate)
+        dvx2 = obj2.d1ham_dia[i].get(nstate,nstate)
+
     	q1_rr1_q2=complex(a2.get(i)*(q2.get(i)-q1.get(i)),p2.get(i)-p1.get(i))/(a1.get(i)+a2.get(i))
     	q1_rr2_q2=complex(a1.get(i)*(q1.get(i)-q2.get(i)),p2.get(i)-p1.get(i))/(a1.get(i)+a2.get(i))
+
     	dvx1_sum+=dvx1*q1_rr1_q2
-    	dvx2_sum+=dvx2[i]*q1_rr2_q2
+    	dvx2_sum+=dvx2*q1_rr2_q2
 
     v=0.5*(vx1+vx2+dvx1_sum+dvx2_sum)
 

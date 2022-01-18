@@ -127,24 +127,26 @@ CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates){
 
   Args:
     active_states - list[ ntraj x int] - state indices for all trajectories
-    ovlp - MATRIX(ntraj, ntraj) - couplings of all trajectories as if they are on the same state
+    ovlp - CMATRIX(ntraj, ntraj) - couplings of all trajectories as if they are on the same state
 
   Returns:
     S - CMATRIX(nstates x ntraj, nstates x ntraj) - The many-surface Hamiltonian matrix.
 
 */
-
+  int i, j;
   int ntraj = active_states.size();
 
   CMATRIX S(nstates * ntraj, nstates * ntraj);
 
   for(int itraj=0; itraj<ntraj; itraj++){
-    for(int i=0; i<nstates; i++){
+    //for(int i=0; i<nstates; i++){
+    i = active_states[itraj];
 
       int indx1 = itraj * nstates + i;
 
       for(int jtraj=0; jtraj<ntraj; jtraj++){
-        for(int j=0; j<nstates; j++){
+        //for(int j=0; j<nstates; j++){
+          j = active_states[jtraj];
  
           int indx2 = jtraj * nstates + j;
 
@@ -155,10 +157,10 @@ CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates){
 
           S.set(indx1, indx2, val);
         
-        }// j
+//        }// j
       }// jtraj
 
-    }// for i
+//    }// for i
   }// for itraj
 
   return S;
@@ -196,21 +198,44 @@ CMATRIX qtag_hamiltonian(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& C
   int nstates = Coeff.n_rows;
   int ntraj = active_states.size();
   int sz = nstates * ntraj;
+  int i, j;
 
   CMATRIX H(sz, sz);
 
+  //==================== Kinetic energy ================
   // Same ordering scheme as for super-overlap
 
   for(int itraj=0; itraj<ntraj; itraj++){    
-    for(int i=0; i<nstates; i++){
+    //for(int i=0; i<nstates; i++){
+      i = active_states[itraj];
 
       int indx1 = itraj * nstates + i;
 
       for(int jtraj=0; jtraj<ntraj; jtraj++){
-        for(int j=0; j<nstates; j++){
+        //for(int j=0; j<nstates; j++){
+          j = active_states[jtraj];
  
           int indx2 = jtraj * nstates + j;
 
+
+          // Kinetic energy terms are always added
+          H.set(indx1, indx2, kin.get(itraj, jtraj));
+        
+//        }// j
+      }// jtraj
+
+//    }// for i
+  }// for itraj
+
+  //==================== Potential energy/Couplings ================
+
+  for(int itraj=0; itraj<ntraj; itraj++){    
+    for(int i=0; i<nstates; i++){    
+      int indx1 = itraj * nstates + i;
+
+      for(int jtraj=0; jtraj<ntraj; jtraj++){
+        for(int j=0; j<nstates; j++){ 
+          int indx2 = jtraj * nstates + j;
 
           // Kinetic energy terms are always added
           H.set(indx1, indx2, kin.get(itraj, jtraj));
@@ -233,6 +258,7 @@ CMATRIX qtag_hamiltonian(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& C
 
     }// for i
   }// for itraj
+
 
   return H;
 
