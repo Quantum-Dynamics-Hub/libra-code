@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -25,6 +25,7 @@
 
 #include "dyn_decoherence.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
 #include "dyn_hop_acceptance.h"
 #include "dyn_hop_proposal.h"
 #include "dyn_methods.h"
@@ -43,6 +44,8 @@ namespace bp = boost::python;
 namespace libdyn{
 
 using namespace libthermostat;
+
+
 
 //========== Dynamics.cpp ===================
 
@@ -81,8 +84,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
               nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd);
 
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
-              nHamiltonian& ham, bp::object py_funct, bp::dict model_params, bp::dict dyn_params, Random& rnd, 
+              nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
               vector<Thermostat>& therm);
+
+void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
+              nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
+              vector<Thermostat>& therm, dyn_variables& dyn_var);
+
 
 
 

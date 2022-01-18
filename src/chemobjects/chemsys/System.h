@@ -221,12 +221,13 @@ public:
   void TRANSLATE_ATOM(double,VECTOR,int);
   void TRANSLATE_FRAGMENT(double,VECTOR,int);
   void TRANSLATE_MOLECULE(double,VECTOR,int);
-  void ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr);
-  void ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, VECTOR center);
-  void ROTATE_FRAGMENT(double degree_amount, VECTOR direction,int Gr, int center_indx);
-  void ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr);
-  void ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, VECTOR center);
-  void ROTATE_FRAGMENT(MATRIX3x3& rot, int Gr, int center_indx);
+
+  void ROTATE_FRAGMENT(double degree_amount, const VECTOR& direction_lab, int fr_id, const VECTOR& center);
+  void ROTATE_FRAGMENT(double degree_amount, const VECTOR& direction_lab, int fr_id, int center_indx);
+  void ROTATE_FRAGMENT(double degree_amount, const VECTOR& direction_lab, int fr_id);
+  void ROTATE_FRAGMENT(const MATRIX3x3& rot, int fr_id, const VECTOR& center);
+  void ROTATE_FRAGMENT(const MATRIX3x3& rot, int fr_id, int center_indx);
+  void ROTATE_FRAGMENT(const MATRIX3x3& rot, int fr_id);
 
 
   void ROTATE_MOLECULE(double, VECTOR,int);

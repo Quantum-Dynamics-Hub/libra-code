@@ -23,6 +23,7 @@ import sys
 import math
 import copy
 import numpy as np
+import scipy.sparse as sp
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -380,6 +381,42 @@ def nparray2CMATRIX(data):
 
 
 
+def scipynpz2MATRIX(data):
+    """
+    This function converts the scipy sparse matrix into MATRIX type. 
+
+    Args:
+        data (scipy.sparse): The scipy sparse matrix. This includes all types of sparse matrices
+                             such as csc_matrix, csr_matrix, etc.
+
+    Returns:
+        res (MATRIX): The MATRIX format of the sparse matrix.
+    """
+    # First turn it into dense format
+    tmp_dense_real = np.array( data.todense().real )
+    
+    # Now numpy to CMATRIX
+    res = nparray2MATRIX(tmp_dense_real)
+
+    return res
+
+
+def MATRIX2scipynpz(data):
+    """
+    This function converts a MATRIX data type to a npz scipy sparse matrix.
+
+    Args:
+        data (MATRIX): The MATRIX data.
+
+    Returns:
+        res (scipy.sparse): The scipy sparse matrix. This includes all types of sparse matrices
+                            such as csc_matrix, csr_matrix, etc.
+    """
+    tmp_dense_nparray = MATRIX2nparray(data)
+    res = sp.csc_matrix(tmp_dense_nparray.real)
+    
+    return res
+
 
 def MATRIX2nparray( data ):
     """
@@ -396,7 +433,7 @@ def MATRIX2nparray( data ):
     N = data.num_of_rows
     M = data.num_of_cols
 
-    res = np.zeros( (N, M) )
+    res = np.zeros( (N, M), dtype=np.complex128 )
 
     for n in range(0,N):
         for m in range(0,M):
@@ -419,12 +456,11 @@ def MATRIX2nparray( data ):
 
 def matrix2list(q):
     """
-    Converts the MATRIX(ndof, 1) or CMATRIX(ndof, 1) to a list of `ndof` float/complex numbers
+    Converts the MATRIX(N, M) or CMATRIX(N, M) to a list of `N * M` float/complex numbers
 
     Args:
 
-=======
-        q ( MATRIX(ndof, 1) or CMATRIX(ndof, 1) ): input matrix
+        q ( MATRIX(N, M) or CMATRIX(N, M) ): input matrix
 
 
     Returns:
@@ -435,10 +471,10 @@ def matrix2list(q):
     
     list_q = []
     
-    ndof = q.num_of_rows
+    nelts = q.num_of_elems
     
-    for idof in range(ndof):
-        list_q.append( q.get(idof, 0) )
+    for ielt in range(nelts):
+        list_q.append( q.get(ielt) )
         
     return list_q
 
@@ -496,4 +532,49 @@ def form_block_matrix( mat_a, mat_b, mat_c, mat_d ):
 
     return block_matrix
 
- 
+
+def vasp_to_xyz(filename):
+    """
+    This function turns VASP POSCAR files into .xyz files.
+    Args:
+        filename (string): The name of the VASP POSCAR file.
+    Returns:
+        None
+    """
+    
+    f = open(filename,'r')
+    lines = f.readlines()
+    f.close()
+    if '.vasp' in filename:
+        xyz_file_name = filename.replace('.vasp','')+'.xyz'
+    else:
+        xyz_file_name = filename+'.xyz'
+    f = open(xyz_file_name,'w')
+    types = lines[5].split()
+    n_types = [int(lines[6].split()[i]) for i in range(len(lines[6].split()))]
+    print(n_types,types)
+    coord = []
+    for i in range(8,len(lines)):
+        try:
+            tmp_line = lines[i].split()
+            x = float(tmp_line[0])
+            y = float(tmp_line[1])
+            z = float(tmp_line[2])
+            coord.append([x,y,z])
+        except:
+            pass
+    print('A',lines[2])
+    print('B',lines[3])
+    print('C',lines[4])
+    
+    f.write(str(np.sum(np.array(n_types)))+'\n\n')
+    
+    counter = 0
+    for i in range(len(types)):
+        for k in range(n_types[i]):
+            f.write(types[i]+' '+str(coord[counter][0])+' '+str(coord[counter][1])+' '+str(coord[counter][2])+'\n')
+            counter += 1
+            
+    f.close() 
+
+

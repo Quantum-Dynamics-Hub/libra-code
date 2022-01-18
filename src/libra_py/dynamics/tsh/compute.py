@@ -854,7 +854,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params = {}
     #================= Computing Hamiltonian-related properties ====================
     default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
-                             "force_method":1, "time_overlap_method":0, "nac_update_method":1, 
+                             "force_method":1, "enforce_state_following":0, "enforced_state_index":0, 
+                             "time_overlap_method":0, "nac_update_method":1, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0
@@ -881,12 +882,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     #================= Bath, Constraints, and Dynamical controls ===================
     default_params.update( { "Temperature":300.0, "ensemble":0, "thermostat_params":{},
                              "quantum_dofs":None, "thermostat_dofs":[], "constrained_dofs":[],
-                             "dt":1.0*units.fs2au
+                             "dt":1.0*units.fs2au, "num_electronic_substeps":1
                            } )
 
     #================= Variables specific to Python version: saving ================
-    default_params.update( { "nsteps":1, "prefix":"out",
-                             "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1,
+    default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
+                             "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
                              "progress_frequency":0.1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
@@ -898,6 +899,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     comn.check_input(dyn_params, default_params, critical_params)
                
     prefix = dyn_params["prefix"] 
+    prefix2 = dyn_params["prefix2"] 
     rep_tdse = dyn_params["rep_tdse"]
     nsteps = dyn_params["nsteps"]
     dt = dyn_params["dt"]
@@ -905,6 +907,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     hdf5_output_level = dyn_params["hdf5_output_level"]
     mem_output_level = dyn_params["mem_output_level"]
     txt_output_level = dyn_params["txt_output_level"]
+    txt2_output_level = dyn_params["txt2_output_level"]
     do_phase_correction = dyn_params["do_phase_correction"]
     state_tracking_algo = dyn_params["state_tracking_algo"]
     force_method = dyn_params["force_method"]
@@ -913,6 +916,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     compression_level = dyn_params["compression_level"]
     ensemble = dyn_params["ensemble"]
     time_overlap_method = dyn_params["time_overlap_method"]
+    decoherence_algo = dyn_params["decoherence_algo"]
     
     ndia = Cdia.num_of_rows
     nadi = Cadi.num_of_rows
@@ -926,9 +930,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     # Initialize savers
     _savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
 
+
     # Open and close the output files for further writing
     if _savers["txt_saver"]!=None:
         _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "w", 0)
+
+    if _savers["txt2_saver"]!=None:
+        _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "w", 0)
 
 
     # ======= Hierarchy of Hamiltonians =======
@@ -953,6 +961,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
+
+    dyn_var = dyn_variables(ndia, nadi, nnucl, ntraj)    
+
+    if decoherence_algo==2:
+        dyn_var.allocate_afssh()
+
                 
     # Do the propagation
     for i in range(nsteps):
@@ -968,7 +982,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw, = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
         pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors)
 
 
@@ -991,12 +1005,16 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                        i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, states,
                        pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia  )
 
+        del dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
+        del pops, pops_raw
+
     
         for tr in range(ntraj):
             if time_overlap_method==0:
                 x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
                 St = U[tr].H() * x
                 U[tr] = CMATRIX(x)
+                del x
 
             elif time_overlap_method==1:                
                 St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
@@ -1006,30 +1024,47 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
 
             if mem_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
+
 
             if txt_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
                 save.save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
+                del hvib_adi, hvib_dia
 
+            if txt2_output_level>=4: 
+                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
+                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
+                save.save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr], 1)
+                del hvib_adi, hvib_dia
 
-
+            del St
+            #if time_overlap_method==0:
+            #    del U[tr]
 
         #============ Propagate ===========        
         model_params.update({"timestep":i})        
-        
-        if rep_tdse==0:
-            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
+
+        if rep_tdse==0:            
+            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
         elif rep_tdse==1:
-            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm)
+            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
+            
+#        sys.exit(0)        
 
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)
+
+        if _savers["txt2_saver"]!=None:
+            _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "a", 0)
+
 
 
     if _savers["mem_saver"]!=None:
@@ -1560,7 +1595,6 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
 
     """
 
-
     comn.check_input(_model_params, {  }, [ "model0" ] )
     comn.check_input(_dyn_params, { "rep_tdse":1 }, [  ] )
 
@@ -1598,7 +1632,6 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
             Cdia = transform_amplitudes(1, 0, Cdia, ham) 
 
     res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
-
 
     return res
 

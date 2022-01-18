@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2017-2020 Alexey V. Akimov
+* Copyright (C) 2017-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -134,7 +134,7 @@ nHamiltonian::~nHamiltonian(){
  
   if(ovlp_dia_mem_status == 1){ delete ovlp_dia;  ovlp_dia = NULL; ovlp_dia_mem_status = 0;}
 
-  for(n;n<dc1_dia.size();n++){
+  for(n=0;n<dc1_dia.size();n++){
     if(dc1_dia_mem_status[n] == 1){ delete dc1_dia[n];  dc1_dia[n] = NULL; dc1_dia_mem_status[n] = 0;}
   } 
   dc1_dia.clear();
@@ -144,20 +144,20 @@ nHamiltonian::~nHamiltonian(){
   if(nac_dia_mem_status == 1){ delete nac_dia; nac_dia = NULL; nac_dia_mem_status = 0;}
   if(hvib_dia_mem_status == 1){ delete hvib_dia; hvib_dia = NULL; hvib_dia_mem_status = 0;}
 
-  for(n;n<d1ham_dia.size();n++){
+  for(n=0;n<d1ham_dia.size();n++){
     if(d1ham_dia_mem_status[n] == 1){ delete d1ham_dia[n];  d1ham_dia[n] = NULL; d1ham_dia_mem_status[n] = 0;}
   } 
   d1ham_dia.clear();
   d1ham_dia_mem_status.clear();
 
-  for(n;n<d2ham_dia.size();n++){
+  for(n=0;n<d2ham_dia.size();n++){
     if(d2ham_dia_mem_status[n] == 1){ delete d2ham_dia[n];  d2ham_dia[n] = NULL; d2ham_dia_mem_status[n] = 0;}
   } 
   d2ham_dia.clear();
   d2ham_dia_mem_status.clear();
 
 
-  for(n;n<dc1_adi.size();n++){
+  for(n=0;n<dc1_adi.size();n++){
     if(dc1_adi_mem_status[n] == 1){ delete dc1_adi[n];  dc1_adi[n] = NULL; dc1_adi_mem_status[n] = 0;}
   } 
   dc1_adi.clear();
@@ -169,13 +169,13 @@ nHamiltonian::~nHamiltonian(){
   if(hvib_adi_mem_status == 1){ delete hvib_adi; hvib_adi = NULL; hvib_adi_mem_status = 0;}
 
 
-  for(n;n<d1ham_adi.size();n++){
+  for(n=0;n<d1ham_adi.size();n++){
     if(d1ham_adi_mem_status[n] == 1){ delete d1ham_adi[n];  d1ham_adi[n] = NULL; d1ham_adi_mem_status[n] = 0;}
   } 
   d1ham_adi.clear();
   d1ham_adi_mem_status.clear();
 
-  for(n;n<d2ham_adi.size();n++){
+  for(n=0;n<d2ham_adi.size();n++){
     if(d2ham_adi_mem_status[n] == 1){ delete d2ham_adi[n];  d2ham_adi[n] = NULL; d2ham_adi_mem_status[n] = 0;}
   } 
   d2ham_adi.clear();

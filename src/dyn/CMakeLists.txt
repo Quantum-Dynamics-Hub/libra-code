@@ -31,6 +31,8 @@ ADD_SUBDIRECTORY("gwp")
 MESSAGE("Going into subdirectory heom...")
 ADD_SUBDIRECTORY("heom")
 
+MESSAGE("Going into subdirectory qtag...")
+ADD_SUBDIRECTORY("qtag")
 
 
 #
@@ -52,6 +54,7 @@ ADD_LIBRARY(dyn_stat STATIC ${DYN_SRC})
 #
 TARGET_LINK_LIBRARIES(dyn      
                       heom_stat
+                      qtag_stat
                       gwp_stat ensemble_stat 
                       wfcgrid_stat 
                       wfcgrid2_stat 
@@ -63,6 +66,7 @@ TARGET_LINK_LIBRARIES(dyn
 
 TARGET_LINK_LIBRARIES(dyn_stat
                       heom_stat
+                      qtag_stat
                       gwp_stat ensemble_stat 
                       wfcgrid_stat 
                       wfcgrid2_stat 

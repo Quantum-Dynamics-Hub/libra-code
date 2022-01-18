@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -59,14 +59,14 @@ void export_RigidBody_objects(){
   int (RigidBody::*apply_force1)(double)      = &RigidBody::apply_force;
   int (RigidBody::*apply_force2)(MATRIX3x3&)  = &RigidBody::apply_force;
 
-  void (RigidBody::*Rotate1)(MATRIX3x3& rot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate2)(MATRIX3x3& rot, VECTOR& pivot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate3)(QUATERNION& rot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate4)(QUATERNION& rot, VECTOR& pivot) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate5)(double phi, VECTOR& dir) = &RigidBody::Rotate;
-  void (RigidBody::*Rotate6)(double phi, VECTOR& dir, VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate1)(const MATRIX3x3& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate2)(const MATRIX3x3& rot, const VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate3)(const QUATERNION& rot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate4)(const QUATERNION& rot, const VECTOR& pivot) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate5)(double phi, const VECTOR& dir) = &RigidBody::Rotate;
+  void (RigidBody::*Rotate6)(double phi, const VECTOR& dir, const VECTOR& pivot) = &RigidBody::Rotate;
 
-  void (RigidBody::*expt_Rotate_I_v1)(double,VECTOR&)   = &RigidBody::Rotate_I;
+  void (RigidBody::*expt_Rotate_I_v1)(double, const VECTOR& dir)   = &RigidBody::Rotate_I;
 
 
   void (RigidBody::*expt_propagate_dlml_v1)(double t,double&) = &RigidBody::propagate_dlml;
@@ -106,6 +106,9 @@ void export_RigidBody_objects(){
 
       .def_readwrite("is_fixed_translation",&RigidBody::is_fixed_translation)
       .def_readwrite("is_fixed_rotation",&RigidBody::is_fixed_rotation)
+
+      .def_readwrite("set_orientation_option", &RigidBody::set_orientation_option)
+      .def_readwrite("is_set_orientation_option", &RigidBody::is_set_orientation_option)
 
 
       .def("set",&RigidBody::set)

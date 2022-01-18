@@ -56,9 +56,16 @@ complex<double> gwp_overlap(double q1, double p1, double gamma1, double alp1,
 complex<double> gwp_overlap(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
                             MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2);
 
+CMATRIX gwp_overlap_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                           MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2);
+
 complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar);
+
+complex<double> gwp_overlap(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                            MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                            MATRIX& q3, MATRIX& p3, MATRIX& gamma3, MATRIX& alp3);
 
 
 ///=============== Transition dipole moments (gwp_dipole.cpp) ===================
@@ -93,6 +100,14 @@ complex<double> gwp_kinetic(double q1, double p1, double gamma1, double alp1,
 
 complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
                             MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2);
+
+complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                            MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                            MATRIX& iM);
+
+CMATRIX gwp_kinetic_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                           MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2, 
+                           MATRIX& invM);
 
 complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 

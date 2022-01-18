@@ -180,8 +180,13 @@ MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMAT
     else if(prms.rep_force==1){  
       // Adiabatic 
       //F = ham.forces_adi(act_states).real();
+      vector<int> effective_states(act_states);
 
-      _amplitudes = tsh_indx2ampl(act_states, nst);
+      if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
+         for(int i=0; i<nst; i++){  effective_states[i] = prms.enforced_state_index;  }
+      }
+
+      _amplitudes = tsh_indx2ampl(effective_states, nst);
 
       // Since the Hamiltonians are given in the "raw" format 
       // and because the Ehrenfest forces (including adiabatic)
@@ -215,6 +220,7 @@ MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMAT
     }
   
   }// Ehrenfest
+
 
   return F;
 }

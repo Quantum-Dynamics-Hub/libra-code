@@ -55,8 +55,8 @@ double Vdw_Buffered14_7(VECTOR& ri,VECTOR& rj,          /*Inputs*/
                         VECTOR& fi,VECTOR& fj,          /*Outputs*/
                         double sigma, double epsilon){  /*Parameters*/
 //****************** double Buffered 14-7 potential *************************
-//*  u = epsilon*(1.07*sigma_ij/(r_ij + 0.07*sigma_ij))^7*                  *
-//*          1.12*sigma_ij^7/(r_ij^7 + 0.12*sigma_ij^7)) - 2]               *
+//*
+//*  u = epsilon * ( 1.07*sigma_{ij}/(r_ij + 0.07 sigma_ij) )^7 [ (1.12 sigma_ij^7 / ( r_ij^7 + 0.12 sigma_ij^7) ) - 2] *
 //*                                                                         *
 //***************************************************************************
   double energy,r1,r2,r6,r7,r12,d2;

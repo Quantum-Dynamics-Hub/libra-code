@@ -101,6 +101,52 @@ complex<double> gwp_overlap(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1
 }
 
 
+CMATRIX gwp_overlap_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                           MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2){
+/**
+  Returns the Gaussian overlaps across GWPs belonging to different sets
+
+  Args:
+  \param[in] q1, q2  ndof x ntraj1 and ndof x ntraj2 Coordinates of the Gaussians in a given dimension
+  \param[in] p1, p2  ndof x ntraj1 and ndof x ntraj2 Momenta of the Gaussians in a given dimension
+  \param[in] gamma1, gamma2 ndof x ntraj1 and ndof x ntraj2 The phase factors of the overall Gaussians
+  \param[in] alp1, alp2 ndof x ntraj1 and ndof x ntraj2 The Gaussian width factors for given dimension. 
+
+  Returns:
+  CMATRIX(ntraj1, ntraj2) - the overlap matrix of basis functions defined by two sets 
+
+*/
+  int i,j;
+  int ndof = q1.n_rows;
+  int ntraj1 = q1.n_cols;
+  int ntraj2 = q2.n_cols;
+  CMATRIX ovlp(ntraj1, ntraj2);
+
+  MATRIX q1_i(ndof, ntraj1);
+  MATRIX p1_i(ndof, ntraj1);
+  MATRIX g1_i(ndof, ntraj1);
+  MATRIX a1_i(ndof, ntraj1);
+
+  MATRIX q2_j(ndof, ntraj1);
+  MATRIX p2_j(ndof, ntraj1);
+  MATRIX g2_j(ndof, ntraj1);
+  MATRIX a2_j(ndof, ntraj1);
+
+
+  for(i=0; i<ntraj1; i++){
+    q1_i = q1.col(i); p1_i = p1.col(i); g1_i = gamma1.col(i); a1_i = alp1.col(i);
+
+    for(j=0; j<ntraj2; j++){
+      q2_j = q2.col(j); p2_j = p2.col(j); g2_j = gamma2.col(j); a2_j = alp2.col(j);
+
+      complex<double> sij = gwp_overlap(q1_i, p1_i, g1_i, a1_i,  q2_j, p2_j, g2_j, a2_j);
+      ovlp.set(i, j,  sij);
+    }
+  }
+  return ovlp;
+
+}
+
 complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar){
@@ -131,6 +177,42 @@ complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1,
   return exp(complex<double>(re, im));
 
 }
+
+
+
+complex<double> gwp_overlap(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+                            MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+                            MATRIX& q3, MATRIX& p3, MATRIX& gamma3, MATRIX& alp3){
+/**
+  This function computes an overlap of two moving N-dimensional Gaussians  <G_1|G_2|G_3>, where:
+
+  G_a(r; r_a, p_a, alp_a, gamma_a) = \product_s^Ndof { (2*alp_a/pi)^(1/4) * exp(-alp_a*(r-r_a)^2 + i*(p_a/hbar)*(r-r_a) + i*gamma_a/hbar)}_s
+
+  Atomic units are assumed, so hbar = 1
+
+  \param[in] q1, q2, q3 Coordinates of the Gaussians in a given dimension
+  \param[in] p1, p2, p3 Momenta of the Gaussians in a given dimension
+  \param[in] gamma1, gamma2, gamma3 The phase factors of the overall Gaussians
+  \param[in] alp1, alp2, alp3 The Gaussian width factors for given dimension. 
+
+  The function returns the value of the overlap - a complex number
+*/
+
+  int ndof = check_dimensions("libgwp::gwp_overlap", q1, p1, q2, p2);
+  check_dimensions("libgwp::gwp_overlap", q1, p1, q3, p3);
+  MATRIX q(ndof, 1);
+  MATRIX p(ndof, 1);
+  MATRIX gamma(ndof, 1);
+  MATRIX alp(ndof, 1);
+
+  double scl = gwp_product_decomposition(q1, p1, gamma1, alp1, q2, p2, gamma2, alp2, q,  p,  gamma,  alp);
+
+  complex<double> res = scl * gwp_overlap(q, p, gamma, alp, q3, p3, gamma3, alp3);
+
+  return res;
+
+}
+
 
 
 

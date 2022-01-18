@@ -50,13 +50,13 @@ import libra_py.data_savers as data_savers
 
 #===================== TSH calculations output ====================
 
-def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
+def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
     """
     saver - can be either hdf5_saver or mem_saver
 
     """
 
-    if hdf5_output_level>=1:
+    if output_level>=1:
 
         # Time axis (integer steps)     
         saver.add_dataset("timestep", (_nsteps,) , "I")  
@@ -91,14 +91,14 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
 
 
 
-    if hdf5_output_level>=2:
+    if output_level>=2:
 
         # Trajectory-resolved instantaneous adiabatic states
         if "states" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("states", (_nsteps, _ntraj), "I") 
 
 
-    if hdf5_output_level>=3:
+    if output_level>=3:
 
         # Average adiabatic SH populations (dynamically-consistent)
         if "SH_pop" in saver.keywords: # and "SH_pop" in saver.np_data.keys():
@@ -145,7 +145,7 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
             saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C") 
 
 
-    if hdf5_output_level>=4:
+    if output_level>=4:
 
         # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
         if "hvib_adi" in saver.keywords: # and "hvib_adi" in saver.np_data.keys():
@@ -174,24 +174,42 @@ def init_tsh_data(saver, hdf5_output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia
 def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
 
     #================ Create savers ==================    
-    prefix = params["prefix"]
+    if params["txt_output_level"] > 0 or params["hdf5_output_level"] > 0 or params["mem_output_level"] > 0:
 
-    # Create an output directory, if not present    
-    if not os.path.isdir(prefix):
-        os.mkdir(prefix)
+        prefix = params["prefix"]
 
-    # Simulation parameters                    
-    f = open(F"{prefix}/_dyn_params.txt","w")
-    f.write( str(params) );  f.close()
+        # Create an output directory, if not present    
+        if not os.path.isdir(prefix):
+            os.mkdir(prefix)
+
+        # Simulation parameters                    
+        f = open(F"{prefix}/_dyn_params.txt","w")
+        f.write( str(params) );  f.close()
     
-    f = open(F"{prefix}/_model_params.txt","w")
-    f.write( str(model_params) );  f.close()    
+        f = open(F"{prefix}/_model_params.txt","w")
+        f.write( str(model_params) );  f.close()    
+
+
+    if params["txt2_output_level"] > 0:
+
+        prefix2 = params["prefix2"]
+
+        # Create an output directory, if not present    
+        if not os.path.isdir(prefix2):
+            os.mkdir(prefix2)
+
+        # Simulation parameters                    
+        f = open(F"{prefix2}/_dyn_params.txt","w")
+        f.write( str(params) );  f.close()
+    
+        f = open(F"{prefix2}/_model_params.txt","w")
+        f.write( str(model_params) );  f.close()    
 
 
     properties_to_save = params["properties_to_save"]
 
 
-    _savers = {"hdf5_saver":None, "txt_saver":None, "mem_saver":None }
+    _savers = {"hdf5_saver":None, "txt_saver":None, "mem_saver":None , "txt2_saver":None }
 
     #====== HDF5 ========
     hdf5_output_level = params["hdf5_output_level"]
@@ -210,6 +228,18 @@ def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
         #_savers["txt_saver"].set_compression_level(params["use_compression"], params["compression_level"])
         init_tsh_data(_savers["txt_saver"], txt_output_level, nsteps, ntraj, nnucl, nadi, ndia)
 
+
+    #====== TXT2: No intermediate memory allocation ========
+    txt2_output_level = params["txt2_output_level"]
+
+    if params["txt2_output_level"] > 0:
+        _savers["txt2_saver"] = data_savers.mem_saver(properties_to_save) 
+
+        # Here, nsteps is set to 1 since in this type of saver, we only care about the current values,
+        # not all the timesteps - that would be too consuming
+        init_tsh_data(_savers["txt2_saver"], txt2_output_level, 1, ntraj, nnucl, nadi, ndia)   
+
+
     
     #====== MEM =========
     mem_output_level = params["mem_output_level"]
@@ -225,154 +255,178 @@ def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
 
 
 
-def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC):
+def save_hdf5_1D(saver, i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
+    txt_type ( int ): 0 - standard, all the timesteps, 1 - only the current one
+
     """
+
+    t = 0
+    if txt_type==0:
+        t = i
 
     # Timestep 
-    saver.save_scalar(i, "timestep", i) 
+    saver.save_scalar(t, "timestep", i) 
 
     # Actual time
-    saver.save_scalar(i, "time", dt*i)  
+    saver.save_scalar(t, "time", dt*i)  
 
     # Average kinetic energy
-    saver.save_scalar(i, "Ekin_ave", Ekin)  
+    saver.save_scalar(t, "Ekin_ave", Ekin)  
 
     # Average potential energy
-    saver.save_scalar(i, "Epot_ave", Epot)  
+    saver.save_scalar(t, "Epot_ave", Epot)  
 
     # Average total energy
-    saver.save_scalar(i, "Etot_ave", Etot)  
+    saver.save_scalar(t, "Etot_ave", Etot)  
 
     # Fluctuation of average kinetic energy
-    saver.save_scalar(i, "dEkin_ave", dEkin)  
+    saver.save_scalar(t, "dEkin_ave", dEkin)  
 
     # Fluctuation of average potential energy
-    saver.save_scalar(i, "dEpot_ave", dEpot)  
+    saver.save_scalar(t, "dEpot_ave", dEpot)  
 
     # Fluctuation average total energy
-    saver.save_scalar(i, "dEtot_ave", dEtot)  
+    saver.save_scalar(t, "dEtot_ave", dEtot)  
 
     # Thermostat energy 
-    saver.save_scalar(i, "Etherm", Etherm)  
+    saver.save_scalar(t, "Etherm", Etherm)  
 
     # System + thermostat energy
-    saver.save_scalar(i, "E_NHC", E_NHC)  
+    saver.save_scalar(t, "E_NHC", E_NHC)  
 
 
 
 
-def save_hdf5_2D(saver, i, states):
+def save_hdf5_2D(saver, i, states, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
+    txt_type ( int ): 0 - standard, all the timesteps, 1 - only the current one
+
     """
+
+    t = 0
+    if txt_type==0:
+        t = i
 
 
     # Trajectory-resolved instantaneous adiabatic states
     # Format: saver.add_dataset("states", (_nsteps, _ntraj), "I")        
     ntraj = len(states)
     for itraj in range(ntraj):
-        saver.save_multi_scalar(i, itraj, "states", states[itraj])
+        saver.save_multi_scalar(t, itraj, "states", states[itraj])
 
 
 
 
-def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia):
+def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
+    txt_type ( int ): 0 - standard, all the timesteps, 1 - only the current one
+
     """
+
+    t = 0
+    if txt_type==0:
+        t = i
 
     # Average adiabatic SH populations (dynamically-consistent)
     # Format: saver.add_dataset("SH_pop", (_nsteps, _nadi, 1), "R") 
     if "SH_pop" in saver.keywords and "SH_pop" in saver.np_data.keys():
-        saver.save_matrix(i, "SH_pop", pops) 
+        saver.save_matrix(t, "SH_pop", pops) 
 
     # Average adiabatic SH populations (raw)
     # Format: saver.add_dataset("SH_pop_raw", (_nsteps, _nadi, 1), "R") 
     if "SH_pop_raw" in saver.keywords and "SH_pop_raw" in saver.np_data.keys():
-        saver.save_matrix(i, "SH_pop_raw", pops_raw) 
+        saver.save_matrix(t, "SH_pop_raw", pops_raw) 
 
 
 
     # Average adiabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
-    if "D_adia" in saver.keywords and "D_adi" in saver.np_data.keys():
-        saver.save_matrix(i, "D_adi", dm_adi) 
+    if "D_adi" in saver.keywords and "D_adi" in saver.np_data.keys():
+        saver.save_matrix(t, "D_adi", dm_adi) 
 
     # Average adiabatic density matrices (raw)
     # Format: saver.add_dataset("D_adi_raw", (_nsteps, _nadi, _nadi), "C") 
     if "D_adi_raw" in saver.keywords and "D_adi_raw" in saver.np_data.keys():
-        saver.save_matrix(i, "D_adi_raw", dm_adi_raw) 
+        saver.save_matrix(t, "D_adi_raw", dm_adi_raw) 
 
 
     # Average diabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
     if "D_dia" in saver.keywords and "D_dia" in saver.np_data.keys():
-        saver.save_matrix(i, "D_dia", dm_dia) 
+        saver.save_matrix(t, "D_dia", dm_dia) 
 
     # Average diabatic density matrices (raw)
     # Format: saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
     if "D_dia_raw" in saver.keywords and "D_dia_raw" in saver.np_data.keys():
-        saver.save_matrix(i, "D_dia_raw", dm_dia_raw) 
+        saver.save_matrix(t, "D_dia_raw", dm_dia_raw) 
 
 
     # Trajectory-resolved coordinates
     # Format: saver.add_dataset("q", (_nsteps, _ntraj, _dof), "R") 
     if "q" in saver.keywords and "q" in saver.np_data.keys():
-        saver.save_matrix(i, "q", q.T()) 
+        saver.save_matrix(t, "q", q.T()) 
 
     # Trajectory-resolved momenta
     # Format: saver.add_dataset("p", (_nsteps, _ntraj, _dof), "R") 
     if "p" in saver.keywords and "p" in saver.np_data.keys():
-        saver.save_matrix(i, "p", p.T()) 
+        saver.save_matrix(t, "p", p.T()) 
 
     # Trajectory-resolved adiabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
     if "Cadi" in saver.keywords and "Cadi" in saver.np_data.keys():
-        saver.save_matrix(i, "Cadi", Cadi.T()) 
+        saver.save_matrix(t, "Cadi", Cadi.T()) 
 
     # Trajectory-resolved diabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_dia", (_nsteps, _ntraj, _ndia), "C") 
     if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
-        saver.save_matrix(i, "Cdia", Cdia.T()) 
+        saver.save_matrix(t, "Cdia", Cdia.T()) 
 
 
 
-def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector):
+def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
+    txt_type ( int ): 0 - standard, all the timesteps, 1 - only the current one
+
     """
+
+    t = 0
+    if txt_type==0:
+        t = i
 
     # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
     # Format: saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C") 
     if "hvib_adi" in saver.keywords and "hvib_adi" in saver.np_data.keys():
-        saver.save_multi_matrix(i, tr, "hvib_adi", hvib_adi) 
+        saver.save_multi_matrix(t, tr, "hvib_adi", hvib_adi) 
 
 
     # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
     # Format: saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C") 
     if "hvib_dia" in saver.keywords and "hvib_dia" in saver.np_data.keys():
-        saver.save_multi_matrix(i, tr, "hvib_dia", hvib_dia) 
+        saver.save_multi_matrix(t, tr, "hvib_dia", hvib_dia) 
 
     # Trajectory-resolved time-overlaps of the adiabatic states
     # Format: saver.add_dataset("St", (_nsteps, _ntraj, _nadi, _nadi), "C") 
     if "St" in saver.keywords and "St" in saver.np_data.keys():
-        saver.save_multi_matrix(i, tr, "St", St) 
+        saver.save_multi_matrix(t, tr, "St", St) 
 
     # Trajectory-resolved diabatic-to-adiabatic transformation matrices 
     # Format: saver.add_dataset("basis_transform", (_nsteps, _ntraj, _ndia, _nadi), "C") 
     if "basis_transform" in saver.keywords and "basis_transform" in saver.np_data.keys():
-        saver.save_multi_matrix(i, tr, "basis_transform", U) 
+        saver.save_multi_matrix(t, tr, "basis_transform", U) 
 
     # Trajectory-resolved projector matrices (from the raw adiabatic to consistent adiabatic)
     # Format: saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
     if "projector" in saver.keywords and "projector" in saver.np_data.keys():
-        saver.save_multi_matrix(i, tr, "projector", projector) 
+        saver.save_multi_matrix(t, tr, "projector", projector) 
 
 
 
@@ -381,9 +435,12 @@ def save_tsh_data_123(_savers, params,
                       pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia
                      ):
 
+
     hdf5_output_level = params["hdf5_output_level"]
     mem_output_level = params["mem_output_level"]
     txt_output_level = params["txt_output_level"]
+    txt2_output_level = params["txt2_output_level"]
+
 
     nsteps = params["nsteps"]
     print_freq = int(params["progress_frequency"]*nsteps)    
@@ -402,6 +459,9 @@ def save_tsh_data_123(_savers, params,
     if txt_output_level>=1 and _savers["txt_saver"]!=None:
         save_hdf5_1D(_savers["txt_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC)
 
+    if txt2_output_level>=1 and _savers["txt2_saver"]!=None:
+        save_hdf5_1D(_savers["txt2_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, 1)
+
 
 
     if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
@@ -413,6 +473,10 @@ def save_tsh_data_123(_savers, params,
     if txt_output_level>=2 and _savers["txt_saver"]!=None:
         save_hdf5_2D(_savers["txt_saver"], i, states)
 
+    if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
+        save_hdf5_2D(_savers["txt2_saver"], i, states, 1)
+
+
 
 
     if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None: 
@@ -423,6 +487,10 @@ def save_tsh_data_123(_savers, params,
 
     if txt_output_level>=3 and _savers["txt_saver"]!=None: 
         save_hdf5_3D(_savers["txt_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia)
+
+    if txt2_output_level>=3 and _savers["txt2_saver"]!=None: 
+        save_hdf5_3D(_savers["txt2_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia, 1)
+
 
 
 

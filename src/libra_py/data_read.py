@@ -22,6 +22,7 @@ import sys
 import math
 import copy
 import numpy as np
+import scipy.sparse as sp
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -29,6 +30,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 #import common_utils as comn
+from libra_py import data_conv
 import util.libutil as comn
 
     
@@ -352,4 +354,84 @@ def read_2D_grid(filename):
         
     return x, y, z
           
-   
+  
+def get_all_data(params):
+    """
+    This function reads all the data needed for running the nonadiabatic dynamics.
+    Args:
+        params (dictionary):
+            * **params['istep']*: The initial step
+            * **params['nsteps']*: Number of steps to be read from the inital step
+            * **params['path_to_res_files']*: The full path to where the data are stored
+            * **params['Hvib_re_prefix']*: The prefix of the real part of the Hamiltonian file
+            * **params['Hvib_im_prefix']*: The prefix of the imaginary part of the Hamiltonian file
+            * **params['Hvib_re_suffix']*: The suffix of the real part of the Hamiltonian file
+            * **params['Hvib_im_suffix']*: The suffix of the imaginary part of the Hamiltonian file
+            * **params['St_re_prefix']*: The prefix of the real part of the time-overlap file
+            * **params['St_re_suffix']*: The suffix of the real part of the time-overlap file
+            * **params['is_sparse']**: whether the files are stored as sparse (`npz`) or readable text files
+    Returns:
+        Hadi (list of CMATRIX): A list of real part of the Hamiltonian
+        Hvib (list of CMATRIX): A list of the full Hamiltonian
+        nac (list of CMATRIX): A list of the nonadiabatic couplings
+        St (list of CMATRIX): A list of the time-overlap matrices
+        nstates (integer): The number of states which is equivalent to the number of rows of one of the files.
+    """
+    Hadi, Hvib, nac, St = [], [], [], []
+    istep = params['istep']
+    fstep = istep + params['nsteps']
+    path_to_res_files = params['path_to_res_files']
+    hvib_re_prefix = params['Hvib_re_prefix']
+    hvib_im_prefix = params['Hvib_im_prefix']
+    st_re_prefix   = params['St_re_prefix']
+    hvib_re_suffix = params['Hvib_re_suffix']
+    hvib_im_suffix = params['Hvib_im_suffix']
+    st_re_suffix   = params['St_re_suffix']
+    # find nstates
+    if params['is_sparse']:
+        tmp_mat = sp.load_npz(F'{path_to_res_files}/{hvib_re_prefix}{istep}{hvib_re_suffix}.npz')
+        nstates = tmp_mat.shape[0]
+    else:
+        tmp_mat = np.loadtxt(F'{path_to_res_files}/{hvib_re_prefix}{istep}{hvib_re_suffix}')
+        nstates = tmp_mat.shape[0]
+    dummy = MATRIX(nstates, nstates)
+    if params['is_sparse']:
+        for step in range(istep, fstep):
+            print('Reading the data of step', step)
+            filename = F'{path_to_res_files}/{hvib_re_prefix}{step}{hvib_re_suffix}.npz'
+            hvib_re = np.array(sp.load_npz(filename).todense().real)
+            hvib_re = data_conv.nparray2MATRIX(hvib_re)
+            filename = F'{path_to_res_files}/{hvib_im_prefix}{step}{hvib_im_suffix}.npz'
+            hvib_im = np.array(sp.load_npz(filename).todense().real)
+            hvib_im = data_conv.nparray2MATRIX(hvib_im)
+            filename = F'{path_to_res_files}/{st_re_prefix}{step}{st_re_suffix}.npz'
+            st_re = np.array(sp.load_npz(filename).todense().real)
+            st_re = data_conv.nparray2MATRIX(st_re)
+            Hvib.append( CMATRIX(hvib_re, hvib_im) )
+            Hadi.append( CMATRIX(hvib_re, dummy) )
+            nac.append( CMATRIX(-1.0*hvib_im, dummy) )
+            St.append( CMATRIX(st_re, dummy) )
+    else:
+        for step in range(istep, fstep):
+            # Hvib
+            print('Reading the data of step', step)
+            filename_re = F'{path_to_res_files}/{hvib_re_prefix}{step}{hvib_re_suffix}'
+            filename_im = F'{path_to_res_files}/{hvib_im_prefix}{step}{hvib_im_suffix}'
+            hvib = data_read.get_matrix(nstates, nstates, filename_re, filename_im,  list(range(nstates)), 1, 1)
+            Hvib.append(hvib)
+
+            # Hadi
+            Hadi.append( CMATRIX(hvib.real(), dummy) )
+
+            # NAC
+            nac.append( CMATRIX(-1.0*hvib.imag(), dummy) )
+
+            # St
+            filename_re = F'{path_to_res_files}/{st_re_prefix}{step}{st_re_suffix}'
+            filename_im = F'{path_to_res_files}/{st_im_prefix}{step}{st_im_suffix}'
+            st = data_read.get_matrix(nstates, nstates, filename_re, filename_im, list(range(nstates)), 1, 1)
+            St.append(st)
+
+    return Hadi, Hvib, nac, St, nstates
+
+ 

@@ -112,7 +112,7 @@ void RigidBody::Rotate_e_z(double phi){
 }
 
 
-void RigidBody::Rotate(MATRIX3x3& R){
+void RigidBody::Rotate(const MATRIX3x3& R){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a matrix
 
@@ -125,7 +125,7 @@ void RigidBody::Rotate(MATRIX3x3& R){
 }
 
 
-void RigidBody::Rotate(MATRIX3x3& R, VECTOR& pivot){
+void RigidBody::Rotate(const MATRIX3x3& R, const VECTOR& pivot){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a matrix
 
@@ -136,17 +136,16 @@ void RigidBody::Rotate(MATRIX3x3& R, VECTOR& pivot){
 
 */
 
-  rb_A_I_to_e = R*rb_A_I_to_e;
+  rb_A_I_to_e = R*rb_A_I_to_e;  
   set_orientation(rb_A_I_to_e);
 
   rb_cm = R.T()*(rb_cm - pivot) + pivot;
 
+
 }
 
 
-
-
-void RigidBody::Rotate(QUATERNION& quat){
+void RigidBody::Rotate(const QUATERNION& quat){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a quaternion
 
@@ -154,13 +153,14 @@ void RigidBody::Rotate(QUATERNION& quat){
 */
 
   MATRIX3x3 R;
-  QUATERNION_TO_MATRIX(quat,R);
+  QUATERNION q(quat);
+  QUATERNION_TO_MATRIX(q,R);
   rb_A_I_to_e = R*rb_A_I_to_e;
   set_orientation(rb_A_I_to_e);
 }
 
 
-void RigidBody::Rotate(QUATERNION& quat, VECTOR& pivot){
+void RigidBody::Rotate(const QUATERNION& quat, const VECTOR& pivot){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a quaternion
 
@@ -169,50 +169,57 @@ void RigidBody::Rotate(QUATERNION& quat, VECTOR& pivot){
 */
 
   MATRIX3x3 R;
-  QUATERNION_TO_MATRIX(quat,R);
-  rb_A_I_to_e = R*rb_A_I_to_e;
+  QUATERNION q(quat);
+  QUATERNION_TO_MATRIX(q,R);
+  rb_A_I_to_e = R*rb_A_I_to_e;  
   set_orientation(rb_A_I_to_e);
 
-  rb_cm = R.T()*(rb_cm - pivot) + pivot;
+  rb_cm = R.T()*(rb_cm - pivot) + pivot;  
 }
 
 
 
-void RigidBody::Rotate(double phi,VECTOR& dir){
-/**
-  \brief Arbitrary rotation in the body frame, parameterized by a rotation axis and angle
-
-  The rotation axis and angle define a quaternion, which is then applied to produce rotation
-
-  \param[in] phi the rotation angle
-  \param[in] dir the rotation axis, direction
-*/
-
-  double cs = cos(0.5*phi);
-  double si = sin(0.5*phi);
-  VECTOR u = dir.unit();
-  QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
-  Rotate(quat);
-}
-
-
-void RigidBody::Rotate(double phi,VECTOR& dir, VECTOR& pivot){
+void RigidBody::Rotate(double phi, const VECTOR& dir, const VECTOR& pivot){
 /**
   \brief Arbitrary rotation in the body frame, parameterized by a rotation axis, pivot point, and angle
 
   The rotation axis and angle define a quaternion, which is then applied to produce rotation
 
-  \param[in] phi the rotation angle
-  \param[in] dir the rotation axis, direction
+  \param[in] phi the rotation angle in radians
+  \param[in] dir the rotation axis, direction in the lab frame
   \param[in] pivot the pivot point coordinates
 */
 
   double cs = cos(0.5*phi);
   double si = sin(0.5*phi);
   VECTOR u = dir.unit();
+  VECTOR u_body = rb_A_I_to_e * u;
+
   QUATERNION quat(cs,si*u.x,si*u.y,si*u.z);
-  Rotate(quat, pivot);
+  QUATERNION quat_body(cs,si*u_body.x,si*u_body.y,si*u_body.z);
+  MATRIX3x3 R;
+  QUATERNION_TO_MATRIX(quat,R);
+
+
+  Rotate(quat_body);
+  rb_cm = R.T()*(rb_cm - pivot) + pivot;  
   
+}
+
+
+
+void RigidBody::Rotate(double phi, const VECTOR& dir){
+/**
+  \brief Arbitrary rotation in the body frame around the center of mass, parameterized by a rotation axis and angle
+
+  The rotation axis and angle define a quaternion, which is then applied to produce rotation
+
+  \param[in] phi the rotation angle in radians
+  \param[in] dir the rotation axis, direction  in the body frame!
+*/
+
+  Rotate(phi, dir, rb_cm);
+
 }
 
 
@@ -220,7 +227,7 @@ void RigidBody::Rotate(double phi,VECTOR& dir, VECTOR& pivot){
 
 
 
-void RigidBody::Rotate_I(double phi,VECTOR& lab_dir){
+void RigidBody::Rotate_I(double phi, const VECTOR& lab_dir){
 /**
   \brief Arbitrary rotation in the lab (external) frame, parameterized by a rotation axis and angle
 
