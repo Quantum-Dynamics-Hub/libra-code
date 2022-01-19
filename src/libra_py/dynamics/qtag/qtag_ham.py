@@ -1,49 +1,66 @@
 def BAT(univ,nstate,qpasi,qpasj,params,libra_model):
-	"""Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Bra-ket Averaged Taylor expansion (BAT) about each basis center, which requires a potential function *pot* as well as its first derivative. The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
+    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
+       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Bra-ket 
+       Averaged Taylor expansion (BAT) about each basis center, which requires a potential function *pot* as well as 
+       its first derivative. The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
 
-        Args:
-		univ (dictionary): Dictionary containing various system parameters.
+    Args:
+        univ (dictionary): Dictionary containing various system parameters.
 
-		nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
 
-                qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
 
-                qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
 
-		params (dictionary): Dictionary containing the potential parameters.
+        params (dictionary): Dictionary containing the potential parameters.
 
-                libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
 
-        Returns:
-                v (complex): The complex potential v computed via the bra-ket averaged Taylor expansion between basis functions i and j.
-        """
+    Returns:
+        complex : v - The complex potential v computed via the bra-ket averaged Taylor expansion between basis functions i and j.
+
+    """
 
     ndof=univ['ndof']
     nstates=univ['nstates']
 
-    q1,p1,a1,s1=qpasi[0], qpasi[1], qpasi[2], qpasi[3]
-    q2,p2,a2,s2=qpasj[0], qpasj[1], qpasj[2], qpasj[3]
-    
-    obj1 = libra_model(q1, params, full_id)
-    obj2 = libra_model(q2, params, full_id)
+    obj1 = libra_model(qpasi[0], params, full_id)
+    obj2 = libra_model(qpasj[0], params, full_id)
 
-    dvx1_sum=0.0;dvx2_sum=0.0
+    dvx1_sum, dvx2_sum = 0.0, 0.0
+
     vx1=obj1.ham_dia.get(nstate,nstate)
     vx2=obj2.ham_dia.get(nstate,nstate)
+    v = 0.5 * (vx1 + vx2)    
 
     for i in range(ndof):
     	dvx1 = obj1.d1ham_dia[i].get(nstate,nstate)
         dvx2 = obj2.d1ham_dia[i].get(nstate,nstate)
 
-    	q1_rr1_q2=complex(a2.get(i)*(q2.get(i)-q1.get(i)),p2.get(i)-p1.get(i))/(a1.get(i)+a2.get(i))
-    	q1_rr2_q2=complex(a1.get(i)*(q1.get(i)-q2.get(i)),p2.get(i)-p1.get(i))/(a1.get(i)+a2.get(i))
+        q1 = qpasi[0].get(i)
+        q2 = qpasj[0].get(i)
 
-    	dvx1_sum+=dvx1*q1_rr1_q2
-    	dvx2_sum+=dvx2*q1_rr2_q2
+        p1 = qpasi[1].get(i)
+        p2 = qpasj[1].get(i)
 
-    v=0.5*(vx1+vx2+dvx1_sum+dvx2_sum)
+        a1 = qpasi[2].get(i)
+        a2 = qpasj[2].get(i)
 
-    return(v)
+        dq = q2 - q1
+        dp = p2 - p1
+        denom = a1 + a2 
+        
+    	q1_rr1_q2 = complex(a2*dq, dp) /denom
+    	q1_rr2_q2 = complex(-a1*dq, dp) / denom
+
+    	dvx1_sum += dvx1*q1_rr1_q2
+    	dvx2_sum += dvx2*q1_rr2_q2
+
+    v += 0.5*(dvx1_sum + dvx2_sum)
+
+    return v
+
 
 def LHA(univ,nstate,qpasi,qpasj,params,libra_model):
 	"""Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives. The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
@@ -183,7 +200,7 @@ def basis_diag(m,dt,H,ov,b):
     evals=CMATRIX(m,m)
     evecs=CMATRIX(m,m)
     solve_eigen(H,ov,evals,evecs,0)
-    ct=evecs.T().conj()
+    ct=evecs.H()
     c_new=evecs*(exp_(evals,-dt*1.0j))*ct*b
 
     return(c_new)
