@@ -202,6 +202,7 @@ CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& 
 
   CMATRIX H(sz, sz);
 
+  //Some test comment.
   //==================== Kinetic energy ================
   // Same ordering scheme as for super-overlap
 
