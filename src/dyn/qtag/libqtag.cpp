@@ -59,7 +59,7 @@ void export_qtag_objects(){
 
 
   CMATRIX (*expt_qtag_hamiltonian_v1)
-  (MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
+  (MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
    vector<int>& active_states, CMATRIX& ovlp, CMATRIX& kin,
    MATRIX& invM, nHamiltonian& ham, bp::object compute_ham_funct,  
    bp::dict& compute_ham_params) = &qtag_hamiltonian;

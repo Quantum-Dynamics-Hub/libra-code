@@ -167,7 +167,7 @@ CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates){
 }
 
 
-CMATRIX qtag_hamiltonian(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
+CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
                          vector<int>& active_states, CMATRIX& ovlp, CMATRIX& kin,
                          MATRIX& invM, nHamiltonian& ham, bp::object compute_ham_funct,  
                          bp::dict& compute_ham_params){
