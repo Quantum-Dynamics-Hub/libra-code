@@ -202,6 +202,7 @@ CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& 
 
   CMATRIX H(sz, sz);
 
+  //Some test comment.
   //==================== Kinetic energy ================
   // Same ordering scheme as for super-overlap
 
@@ -237,8 +238,6 @@ CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& 
         for(int j=0; j<nstates; j++){ 
           int indx2 = jtraj * nstates + j;
 
-          // Kinetic energy terms are always added
-          H.set(indx1, indx2, kin.get(itraj, jtraj));
 
           // Potential term is only added for the same states
           complex<double> val(0.0, 0.0);
@@ -249,7 +248,13 @@ CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& 
             // Here we need to add the call of a function to compute the 
             // potential = matrix elements for the mid-center of 2 trajectories
             // or otherwise
-
+            
+            //Compare active_states[itraj] with i and j:
+            //Case 1: itraj and jtraj are on the same state and it is the state of interest n
+            //    ->  compute V_ij and place it in H_ij(n,n)
+            //Case 2: itraj and jtraj are on different states n1 and n2
+            //    ->  compute V_ij and place it in H_ij(n1,n2)
+        
             H.add(indx1, indx2, pot*val);
           }
         
