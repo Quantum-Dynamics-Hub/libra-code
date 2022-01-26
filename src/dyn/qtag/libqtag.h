@@ -28,7 +28,7 @@ namespace liblibra{
 namespace libdyn{
 
 /// libqtag namespace
-namespace libgwp{
+namespace libqtag{
 
 
 void export_qtag_objects();

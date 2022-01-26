@@ -31,7 +31,7 @@ using namespace libgwp;
 namespace libqtag{
 
 
-CMATRIX qtag_psi(MATRIX q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff){
+CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff){
 /**
   Returns the (complex) wavefunction value *wf* at a given point *q* for all quantum states
   calculated using the TBF parameters stored in *q1, p1, alp1, s1* and coefficients *Coeff*.
@@ -88,7 +88,7 @@ CMATRIX qtag_psi(MATRIX q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMA
 }
 
 
-CMATRIX qtag_overlap_elementary(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s){
+CMATRIX qtag_overlap_elementary(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s){
 /**
   Returns a ntraj x ntraj matrix of the GBFs, independent of their active states
 
@@ -103,7 +103,7 @@ CMATRIX qtag_overlap_elementary(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s){
 
 }
 
-CMATRIX qtag_kinetic_elementary(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM){
+CMATRIX qtag_kinetic_elementary(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM){
 /**
   Returns a ntraj x ntraj matrix of the kinetic energy for GBFs, independent of their active states
 

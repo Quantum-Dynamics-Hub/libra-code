@@ -23,6 +23,7 @@ import qtag_pots
 import qtag_prop
 import qtag_calc
 
+"""
 univ = {"ndof" : 1, "ntraj" : 35, "dt" : 0.01, "niter" : 800, "mass" : [1.0], "n_snapshots" : 4, "n_data_out" : 1}
 wf0 = {"q" : [-2.0], "p" : [0.0], "a" : [1.0], "s" : [0.0]}
 traj0 = {"placement" : "grid", "grid_dims" : [35], "rho" : 1e-12, "a0" : [18.0]}
@@ -31,6 +32,7 @@ mss = {"prop_method" : "mean_field", "decpl" : 0.3, "mirror" : "true"}
 mom_params = {"adjust" : "average", "beta" : 1e-3}
 model = {"pot_type" : "HO", "rep" : "diab", "calc_type" : "BAT", "coupling" : "exact"}
 model_params = {"rNaF" : 3.779, "k1" : [10.0], "k2" : [10.0], "x0" : [1.0], "d1" : [1.0], "d2" : [0.5], "d3" : [2.0]}
+"""
 
 def run_qtag(univ,wf0,traj0,basis,mss,mom_params,model,model_params):
 #Create output file objects...
@@ -217,4 +219,4 @@ def run_qtag(univ,wf0,traj0,basis,mss,mom_params,model,model_params):
 	f_wf1.close();f_wf2.close()
 	f_a1.close();f_a2.close()
 
-run_qtag(univ,wf0,traj0,basis,mss,mom_params,model,model_params)
+#run_qtag(univ,wf0,traj0,basis,mss,mom_params,model,model_params)

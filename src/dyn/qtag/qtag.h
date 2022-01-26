@@ -39,14 +39,13 @@ namespace libqtag{
 ///=============== (qtag.cpp) ===================
 
 /// Wavefunction
-CMATRIX qtag_psi(MATRIX q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
+CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
 
 /// Elementary overlap matrix
-CMATRIX qtag_overlap_elementary(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1,
-                                MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2);
+CMATRIX qtag_overlap_elementary(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s);
 
 /// Elementary kinetic matrix
-CMATRIX qtag_kinetic_elementary(MATRIX q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM);
+CMATRIX qtag_kinetic_elementary(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM);
 
 /// Global overlap matrix
 CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates);
