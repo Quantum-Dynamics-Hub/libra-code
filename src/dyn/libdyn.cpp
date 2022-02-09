@@ -135,6 +135,7 @@ void export_dyn_variables_objects(){
       .def("set_parameters", expt_set_parameters_v1)
 
       .def("allocate_afssh", &dyn_variables::allocate_afssh)
+      .def("allocate_bcsh", &dyn_variables::allocate_bcsh)
   ;
 }
 
@@ -179,6 +180,17 @@ void export_dyn_decoherence_objects(){
   vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence", expt_instantaneous_decoherence_v1);
+
+
+
+  MATRIX (*expt_wp_reversal_events_v1)
+  (MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+   nHamiltonian& ham, vector<CMATRIX>& projectors, double dt) = &wp_reversal_events;
+  def("wp_reversal_events", expt_wp_reversal_events_v1);
+
+  CMATRIX (*expt_bcsh_v1)
+  (CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events) = &bcsh;
+  def("bcsh", expt_bcsh_v1);
 
 
   ///================  In dyn_decoherence_time.cpp  ===================================

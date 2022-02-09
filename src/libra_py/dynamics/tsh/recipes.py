@@ -216,6 +216,7 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
           21 - mSDM, deph-informed
           31 - DISH, deph-informed
           4 - AFSSH
+          5 - BC-FSSH
           
     """
 
@@ -268,6 +269,10 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
 
     elif method==4:  # AFSSH
         params.update( {"tsh_method": 0, "decoherence_algo":2, "dephasing_informed":0 } )   # AFSSH
+
+    elif method==5:  # BC-FSSH
+        params.update( {"tsh_method": 0, "decoherence_algo":3, "dephasing_informed":0 } )   # BC-FSSH, no decoherence, no deph-informed
+
 
 
 

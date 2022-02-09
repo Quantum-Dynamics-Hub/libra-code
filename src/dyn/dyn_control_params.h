@@ -305,6 +305,7 @@ class dyn_control_params{
       - 0: SDM and alike
       - 1: instantaneous decoherence options (ID-S, ID-A, ID-C)
       - 2: AFSSH
+      - 3: BCSH of Linjun Wang
   */
   double decoherence_algo;
 

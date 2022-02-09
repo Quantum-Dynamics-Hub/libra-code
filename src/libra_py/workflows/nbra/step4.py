@@ -822,22 +822,7 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
 
                 # This instruction is made backward-compatible with the commented block
                 recipes.set_method(prms, ham_rep, is_nbra, method)
-                
-                """
-                if method==0:  # FSSH  = FSSH, ID, no informed                    
-                    prms.update( {"tsh_method":0, "decoherence_algo":-1, "dephasing_informed":0 } )  
-                elif method==1: # IDA = 
-                    prms.update( {"tsh_method":0, "decoherence_algo":1, "dephasing_informed":0 } )  
-                elif method==2: # mSDM = FSSH, mSDM, no informed
-                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":0 } )  
-                elif method==3: # DISH = DISH, no other decoherence, no informed
-                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":0 } )  
-                elif method==21: # mSDM = FSSH, mSDM, informed
-                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":1 } )  
-                elif method==31: # DISH = DISH, no other decoherence, informed
-                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":1 } )  
-                """                    
-                
+                                
                 var_pool.append( (prms, compute_model, mdl_prms) )    
 
     return var_pool

@@ -966,6 +966,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
+    elif decoherence_algo==3:
+        dyn_var.allocate_bcsh()
 
                 
     # Do the propagation
