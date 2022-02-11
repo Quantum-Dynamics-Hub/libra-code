@@ -496,6 +496,143 @@ void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F
 
 
 
+MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt){
+/**
+   This function computes the flags to decide on whether WP on any given surface of every trajectory
+   reflects (1) or not (0).
+
+   This is according to:
+   Xu, J.; Wang, L. "Branching corrected surface hopping: Resetting wavefunction coefficients based
+   on judgement of wave packet reflection" J. Chem. Phys. 2019,  150,  164101
+  
+*/
+
+  int ntraj = p.n_cols;
+  int nadi = ham.nadi;
+  int ndof = ham.nnucl;
+
+  CMATRIX E(nadi, nadi);
+  CMATRIX dE(nadi, nadi);
+  MATRIX pa(ndof, 1);
+  MATRIX pi(ndof, 1);
+  MATRIX pi_adv(ndof, 1);
+  MATRIX F(ndof, nadi);
+  MATRIX fi(ndof, 1);
+
+  MATRIX res(nadi, ntraj);  res = 0.0;
+
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+
+    int a = act_states[itraj]; // active state index
+    
+    pa = p.col(itraj); // this is momentum on the active state
+
+    double T_a = compute_kinetic_energy(pa, invM); // kinetic energy on the active state
+
+    // Energy
+    E = ham.children[itraj]->get_ham_adi();
+    E = projectors[itraj].H() * E * projectors[itraj];      
+    double E_a = E.get(a, a).real();  // potential energy on the active state
+
+    // Forces
+    for(int idof=0; idof<ndof; idof++){
+      dE = ham.children[itraj]->get_d1ham_adi(idof);
+      dE = -1.0 * projectors[itraj].H() * dE * projectors[itraj];
+
+      for(int i=0; i<nadi; i++){
+        F.set(idof, i,  dE.get(i,i).real() );
+      }
+    }
+
+
+    for(int i=0; i<nadi; i++){
+
+      if(i!=a){
+
+        double E_i = E.get(i, i).real();  // potential energy on all other states
+        double T_i = T_a + E_a - E_i;        // predicted kinetic energy on other state i
+
+        // WP momenta on all surfaces
+        if(T_i<0){  pi = 0.0000001 * pa; }   // infinitesimally small along pa
+        else{   pi = sqrt(T_i/T_a) * pa; }   // just along pa, conserving energy
+        
+      }// i != a
+      else{ pi = pa; }
+
+      // Compute the advanced momentum
+      fi = F.col(i);
+      pi_adv = pi + fi * dt; 
+
+      // Compute the old and new dot products:
+      double dp_old = (pi.T() * fi).get(0,0);
+      double dp_new = (pi_adv.T() * fi).get(0,0);
+
+      // Different signs: reflection on the i-th surface takes place
+      if(dp_old * dp_new < 0.0){
+         res.set(i, itraj, 1.0);
+      }
+
+
+    }// for i
+  }// for itraj
+
+  return res;
+
+}
+
+
+CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events){
+    /**
+    \brief Branching corrected surface hopping decoherence algorithm
+  
+    This function performs the wavefunction amplitudes collapses according to:
+
+    Xu, J.; Wang, L. "Branching corrected surface hopping: Resetting wavefunction coefficients based
+    on judgement of wave packet reflection" J. Chem. Phys. 2019,  150,  164101
+    
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+    \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    \param[in]      act_st [ list of integer ] The active state indices for all trajectories
+    \param[in]      reversal_events [ MATRIX(nadi, ntraj) ]  > 0 - wp on that state reverses
+
+    The function returns:
+    C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
+
+    */
+
+    int nadi = Coeff.n_rows;
+    int ntraj = Coeff.n_cols;
+
+    CMATRIX C(Coeff);
+
+    for(int itraj=0; itraj<ntraj; itraj++){    
+
+      // First handle the active state:
+      int a = act_states[itraj];
+
+      // If it reverses, we collapse wfc on that state
+      if(reversal_events.get(a, itraj) > 0 ){    collapse(C, itraj, a, 0);    }
+
+      else{ // Otherwise, let's project out the all the nonactive states that reflect
+
+        for(int i=0; i<nadi; i++){
+          if(i!=a){
+            if(reversal_events.get(i, itraj) > 0){ project_out(C, itraj, i);  }
+          }// if
+        }// for i
+ 
+      }// else
+
+    }// for itraj
+
+  return C;
+
+}
+
+
+
 
 }// namespace libdyn
 }// liblibra

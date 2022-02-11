@@ -167,9 +167,30 @@ class dyn_variables{
   vector< vector<CMATRIX*> > dP;
 
 
+  ///================= For BCSH ===================
+  /**
+    Status of the BCSH vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int bcsh_vars_status; 
+
+  /**
+    Reversal event matrix
+    
+    Options:
+     MATRIX(nadi, ntraj)
+
+    For Method: BCSH
+  */
+  MATRIX* reversal_events;
+
+
 
 
   void allocate_afssh();
+  void allocate_bcsh();
 
   //dyn_variables();
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);

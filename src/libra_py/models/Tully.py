@@ -83,14 +83,17 @@ def Tully1_py(q, params):
 
     V11,dV11 = 0.0, 0.0
     if x>0:
-        V11 = A*(1.0 - math.exp(-B*x))
-        dV11 =  A*B*math.exp(-B*x)
+        e = math.exp(-B*x)
+        V11 = A*(1.0 - e)
+        dV11 = A*B*e  
     else:
-        V11 = -A*(1.0 - math.exp(B*x))
-        dV11 =  A*B*math.exp(B*x)
-    
-    V = C * math.exp(-D*x*x)
-    dV = -2.0*x*C*D*math.exp(-D*x*x)
+        e = math.exp(B*x)
+        V11 = -A*(1.0 - e)
+        dV11 = A*B*e
+
+    e = math.exp(-D*x*x)
+    V = C * e
+    dV = -2.0*x*C*D*e
 
     Hdia.set(0,0, V11*(1.0+0.0j) );   Hdia.set(0,1, V*(1.0+0.0j));
     Hdia.set(1,0, V*(1.0+0.0j));      Hdia.set(1,1, V11*(-1.0+0.0j));

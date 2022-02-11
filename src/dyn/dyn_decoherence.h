@@ -54,6 +54,11 @@ CMATRIX afssh_dzdt(CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double ma
 void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state, double dt, int nsteps);
 
 
+// For branching-corrected SH
+MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt);
+CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events);
+
 
 ///================  In dyn_decoherence_time.cpp  ===================================
 

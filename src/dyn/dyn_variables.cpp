@@ -55,12 +55,15 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   //dR = NULL;
   //dP = NULL;
 
+  ///================= BCSH ====================
+  bcsh_vars_status = 0;
+
 
 }
 
 
 void dyn_variables::allocate_afssh(){
-     cout<<"dyn_variables allocate_afssh!!!\n";  
+//     cout<<"dyn_variables allocate_afssh!!!\n";  
 
   if(afssh_vars_status==0){
 
@@ -80,7 +83,22 @@ void dyn_variables::allocate_afssh(){
 
   }
 
-}
+}// allocate_afssh
+
+
+
+void dyn_variables::allocate_bcsh(){
+//     cout<<"dyn_variables allocate_bcsh!!!\n";  
+
+  if(bcsh_vars_status==0){
+
+    reversal_events = new MATRIX(nadi, ntraj);
+    bcsh_vars_status = 1;
+
+  }
+
+}// allocate_bcsh
+
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
