@@ -36,93 +36,93 @@ model_params = {"rNaF" : 3.779, "k1" : [10.0], "k2" : [10.0], "x0" : [1.0], "d1"
 
 def run_qtag(univ,wf0,traj0,basis,mss,mom_params,model,model_params):
 #Create output file objects...
-	f_traj1=open('gbc1.txt', 'w')
-	f_traj2=open('gbc2.txt', 'w')
-	f_mom1=open('p1.txt', 'w')
-	f_mom2=open('p2.txt', 'w')
-	f_a1=open('a1.txt', 'w')
-	f_a2=open('a2.txt', 'w')
-	f_obs=open('obs.txt', 'w')
-	f_wf1=open('wft1.txt', 'w')
-	f_wf2=open('wft2.txt', 'w')
+    f_traj1=open('gbc1.txt', 'w')
+    f_traj2=open('gbc2.txt', 'w')
+    f_mom1=open('p1.txt', 'w')
+    f_mom2=open('p2.txt', 'w')
+    f_a1=open('a1.txt', 'w')
+    f_a2=open('a2.txt', 'w')
+    f_obs=open('obs.txt', 'w')
+    f_wf1=open('wft1.txt', 'w')
+    f_wf2=open('wft2.txt', 'w')
 
 #Libra + QTAG checks for input dictionaries...
-	comn.check_input(univ,{"ndof":1,"ntraj":1,"mass":[1836.0],"dt":0.1,"niter":1,"n_data_out":1,"n_snapshots":1},[])
-	comn.check_input(wf0,{},["q","p","a","s"])
-	comn.check_input(traj0,{"rho":1e-10},["placement","grid_dims","a0"])
-	comn.check_input(basis,{"qtype":"adpt","ptype":"adpt","atype":"adpt","stype":"frzn"},[])
-	comn.check_input(mss,{"decpl":0.9},["prop_method"])
-	comn.check_input(mom_params,{"adjust":"unmodified","beta":1e-1},[])
-	comn.check_input(model,{"calc_type":"LHA","coupling":"LHA"},["pot_type","rep"])
-	qtag_init.qtag_checks(univ,wf0,traj0,mss,model,model_params)
+    comn.check_input(univ,{"ndof":1,"ntraj":1,"mass":[1836.0],"dt":0.1,"niter":1,"n_data_out":1,"n_snapshots":1},[])
+    comn.check_input(wf0,{},["q","p","a","s"])
+    comn.check_input(traj0,{"rho":1e-10},["placement","grid_dims","a0"])
+    comn.check_input(basis,{"qtype":"adpt","ptype":"adpt","atype":"adpt","stype":"frzn"},[])
+    comn.check_input(mss,{"decpl":0.9},["prop_method"])
+    comn.check_input(mom_params,{"adjust":"unmodified","beta":1e-1},[])
+    comn.check_input(model,{"calc_type":"LHA","coupling":"LHA"},["pot_type","rep"])
+    qtag_init.qtag_checks(univ,wf0,traj0,mss,model,model_params)
 
 #Create potential and coupling module names from input...
-	model_name="model_"+str(model['pot_type']).lower()+"_"+str(model['rep']).lower()+"_nD"
-	coupling_name=str(model['coupling'])
+    model_name="model_"+str(model['pot_type']).lower()+"_"+str(model['rep']).lower()+"_nD"
+    coupling_name=str(model['coupling'])
 
 #Assemble propagation types for {q,p,a,s} basis parameters...
-	props=qtag_basis.param_check(basis,mss['prop_method'])
+    props=qtag_basis.param_check(qtag_params[basis],qtag_params[mss]['prop_method'])
 
 #Obtain the keywords for the calculation type from the various dictionaries...
-	try:
-		vcalc=getattr(qtag_ham,str(model['calc_type']))
-	except AttributeError:
-		sys.exit("Error in model dictionary: 'calc_type' keyword not recognized!")
+    try:
+        vcalc=getattr(qtag_ham,str(model['calc_type']))
+    except AttributeError:
+        sys.exit("Error in model dictionary: 'calc_type' keyword not recognized!")
 
-	try:
-		pot=getattr(qtag_pots,model_name)
-		if coupling_name == 'LHA' or coupling_name == 'BAT':
-			cplg=getattr(qtag_ham,coupling_name)
-		else:
-			cplg=getattr(qtag_pots,coupling_name)
-		univ['pot_fxn']=pot;univ['cplg_fxn']=cplg
-	except AttributeError:
-		print("Potential Model: ",model_name)
-		print("Coupling: ",coupling_name)
-		sys.exit("Error in model dictionary, check that pot_type and rep are compatible!")
-	try:
-		mom_calc=getattr(qtag_mom,str(mom_params['adjust']))
-	except AttributeError:
-		sys.exit("Error in mom_params dictionary: 'adjust' keyword not recognized!")
+    try:
+        pot=getattr(qtag_pots,model_name)
+        if coupling_name == 'LHA' or coupling_name == 'BAT':
+            cplg=getattr(qtag_ham,coupling_name)
+        else:
+            cplg=getattr(qtag_pots,coupling_name)
+        univ['pot_fxn']=pot;univ['cplg_fxn']=cplg
+    except AttributeError:
+        print("Potential Model: ",model_name)
+        print("Coupling: ",coupling_name)
+        sys.exit("Error in model dictionary, check that pot_type and rep are compatible!")
 
-	try:
-		propagate=getattr(qtag_prop,str(mss['prop_method']))
-	except AttributeError:
-		sys.exit("Error in mss dictionary: 'prop_method' keyword not recognized!")
+    try:
+        mom_calc=getattr(qtag_mom,str(mom_params['adjust']))
+    except AttributeError:
+        sys.exit("Error in mom_params dictionary: 'adjust' keyword not recognized!")
+
+    try:
+        propagate=getattr(qtag_prop,str(mss['prop_method']))
+    except AttributeError:
+        sys.exit("Error in mss dictionary: 'prop_method' keyword not recognized!")
 
 #Rename variables locally for convenience...
-	ndof,ntraj,niter,dt=univ['ndof'],univ['ntraj'],univ['niter'],univ['dt']
-	n_data_out,n_snapshots=univ['n_data_out'],univ['n_snapshots']
-	n_wf_print=int(niter/n_snapshots)
-	if n_wf_print==0:
-		n_wf_print=1
+    ndof,ntraj,niter,dt=univ['ndof'],univ['ntraj'],univ['niter'],univ['dt']
+    n_data_out,n_snapshots=univ['n_data_out'],univ['n_snapshots']
+    n_wf_print=int(niter/n_snapshots)
+    if n_wf_print==0:
+        n_wf_print=1
 
 #Define MATRIX and CMATRIX objects...
-	b1=CMATRIX(ntraj,1);b2=CMATRIX(ntraj,1)
-	c1_new=CMATRIX(ntraj,1);c2_new=CMATRIX(ntraj,1)
-	ct_old=CMATRIX(2*ntraj,1);ct_new=CMATRIX(2*ntraj,1)
-	dummy=CMATRIX(ntraj,ntraj)
-	iovt=CMATRIX(2*ntraj,2*ntraj)
+    b1=CMATRIX(ntraj,1);b2=CMATRIX(ntraj,1)
+    ct_old=CMATRIX(ntraj,1)
+    ct_new=CMATRIX(ntraj,1)
 
 #Create list used in nonad vector assignments...
-	pop_list=[]
-	for i in range(ntraj):
-		pop_list.append(i)
+    pop_list=[]
+    for i in range(ntraj):
+        pop_list.append(i)
 
 #Initialize the basis parameters {q,p,a,s} and create initial b-matrix...
-	try:
-		qpas1=getattr(qtag_init,str(traj0['placement']))(ndof,ntraj,traj0,wf0)
-		qpas2=getattr(qtag_init,str(traj0['placement']))(ndof,ntraj,traj0,wf0)
-	except AttributeError:
-		sys.exit("Error in traj0 dictionary: 'placement' keyword not recognized!")
+    try:
+        for n in range nstates:
+            qpas=getattr(qtag_init,str(traj0['placement']))(ndof,ntraj,traj0,wf0)
+            qpas2=getattr(qtag_init,str(traj0['placement']))(ndof,ntraj,traj0,wf0)
+    except AttributeError:
+        sys.exit("Error in traj0 dictionary: 'placement' keyword not recognized!")
 
 #Create initial projection vectors...
-	b1=qtag_init.coeffs(ndof,ntraj,wf0,qpas1,1)
-	b2=qtag_init.coeffs(ndof,ntraj,wf0,qpas2,2)
-	nsurf1=[1 for i in range(ntraj)]
-	nsurf2=[2 for i in range(ntraj)]
+    b1=qtag_init.coeffs(ndof,ntraj,wf0,qpas1,1)
+    b2=qtag_init.coeffs(ndof,ntraj,wf0,qpas2,2)
+    nsurf1=[1 for i in range(ntraj)]
+    nsurf2=[2 for i in range(ntraj)]
 
-	bt=qtag_calc.nonad_assemble("cplx",ntraj,1,b1,b2,dummy)
+    bt=qtag_calc.nonad_assemble("cplx",ntraj,1,b1,b2,dummy)
 
 #Begin the iterative process...
 	t=0.0

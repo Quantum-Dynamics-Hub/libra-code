@@ -12,196 +12,184 @@ from liblibra_core import *
 
 import numpy as np
 
-def qtag_checks(univ,wf0,traj0,mss,model,model_params):
-	"""Runs checks to ensure the validity of the user input.
+def grid(ndof,nstates,traj0,wf0):
+    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 
+       based on the input contained in the dicts *traj0* and *wf0*. The placement is evenly spaced 
+       across the domain where the initial wavefunction has a magnitude greater than *rcut*, and 
+       each surface has the same number of trajectories.
 
-        Args:
-                univ (dictionary): Dictionary containing system parameters.
+    Args:
+        ndof (integer): The number of degrees of freedom.
 
-                wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+        nstates (integer): The total number of states.
 
-                traj0 (dictionary): Dictionary containing initialization parameters and keywords.
+        traj0 (dictionary): Dictionary containing initialization parameters and keywords.
 
-		mss (dictionary): Dictionary containing multi-surface scheme keywords.
+        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
 
-                model (dictionary): Dictionary containing containing keywords for the potential energy model.
+    Returns:
+        ntraj (integer): The number of trajectories per surface.
 
-		model_params (dictionary): Dictionary containing the potential energy parameters.
-        Returns:
-		None.
-	"""
+        qpas (list): List of {q,p,a,s} MATRIX objects storing trajectory information.
+    """
 
-	ntraj,ndof=univ['ntraj'],univ['ndof']
-	if len(univ['mass']) != ndof:
-		sys.exit("List of masses does not match given number of DoFs!")
-	if len(wf0['q']) != ndof:
-		sys.exit("Initial WF q's do not match given number of DoFs!")
-	if len(wf0['p']) != ndof:
-		sys.exit("Initial WF p's do not match given number of DoFs!")
-	if len(wf0['a']) != ndof:
-		sys.exit("Initial WF a's do not match given number of DoFs!")
-	if len(wf0['s']) != ndof:
-		sys.exit("Initial WF s's do not match given number of DoFs!")
-	if len(traj0['grid_dims']) != ndof and traj0['placement']=='grid':
-		sys.exit("List of grid_dims does not match given number of DoFs!")
-	if len(traj0['a0']) != ndof:
-		sys.exit("List of a0 values does not match given number of DoFs!")
-	if model['rep'] == 'diabatic':
-		model['rep'] = 'diab'
-	if model['rep'] == 'adiabatic':
-		model['rep'] = 'adiab'
-	if model['coupling'] == 'exact':
-		model['coupling'] = 'exact_gauss_cpl'
-	if model['coupling'] == 'none':
-		model['coupling'] = 'no_coupling'
-	if model['pot_type'] == 'HO':
-		for i in range(ndof):
-			model_params['d2'][i]=model_params['d2'][i]*np.sqrt(model_params['k1'][i])
-	if np.prod(traj0['grid_dims'])!=ntraj:
-		sys.exit("Error in grid_dims: number does not match given value for ntraj!")
+    grid_dims=traj0['grid_dims']
 
-	return()	
+    ntraj_on_state = 1
+    for i in range(len(grid_dims)):
+        ntraj_on_state *= grid_dims[i]
 
-def grid(ndof,ntraj,traj0,wf0):
-	"""Returns the initial basis parameters {q,p,a,s} as an *ntraj*-by-4 matrix *qpas*, based on the input contained in the dicts *traj0* and *wf0*. The placement is evenly spaced across the domain where the initial wavefunction has a magnitude greater than *rcut*.
+    ntraj = ntraj_on_state*nstates
 
-        Args:
-		ndof (integer): The number of degrees of freedom.
+    qvals=MATRIX(ndof,ntraj)
+    pvals=MATRIX(ndof,ntraj)
+    avals=MATRIX(ndof,ntraj)
+    svals=MATRIX(ndof,ntraj)
 
-                ntraj (integer): The number of trajectories per surface.
+    rcut=traj0['rho']
+    a0=traj0['a0']
 
-                traj0 (dictionary): Dictionary containing initialization parameters and keywords.
+    surf_ids = []
+    qlo,qhi = [], []
 
-		wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+    for dof in range(ndof):
+        xlow = wf0['q'][dof]-np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
+        xhi = wf0['q'][dof]+np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
+        qlo.append(xlow)
+        qhi.append(xhi)
 
-        Returns:
-                qpas (list): List of {q,p,a,s} MATRIX objects.
-        """
+    grid = np.mgrid[tuple(slice(qlo[dof],qhi[dof],complex(0,grid_dims[dof])) for dof in range(ndof))]
 
-	qvals=MATRIX(ndof,ntraj)
-	pvals=MATRIX(ndof,ntraj)
-	avals=MATRIX(ndof,ntraj)
-	svals=MATRIX(ndof,ntraj)
+    elems = 1
+    for i in grid_dims:
+        elems *= i
 
-	rcut=traj0['rho']
-	a0=traj0['a0']
-	grid_dims=traj0['grid_dims']
+    b = grid.flatten()
+    qs = []
+    for i in range(elems):
+        index = i
+        coords = []
 
-	qlo,qhi=[],[]
-	for i in range(ndof):
-        	xlow=wf0['q'][i]-np.sqrt(-0.5/wf0['a'][i]*np.log(rcut))
-        	xhi=wf0['q'][i]+np.sqrt(-0.5/wf0['a'][i]*np.log(rcut))
-        	qlo.append(xlow)
-        	qhi.append(xhi)
+        while index < len(b):
+            coords.append(b[index])
+            index += elems
+        qs.append(coords)
 
-	grid=np.mgrid[tuple(slice(qlo[i],qhi[i],complex(0,grid_dims[i])) for i in range(ndof))]
+    for dof in range(ndof):
+        for j in range(ntraj_on_state):
+            for n in range(nstates):
+                qvals.set(dof,j+n*ntraj_on_state,qs[j][dof])
+                pvals.set(dof,j+n*ntraj_on_state,wf0['p'][dof])
+                avals.set(dof,j+n*ntraj_on_state,wf0['a'][dof]*a0[dof])
+                svals.set(dof,j+n*ntraj_on_state,0.0)
 
-	elems=1
-	for i in grid_dims:
-        	elems*=i
+    for n in range(nstates):
+        for j in range(ntraj_on_state):
+            surf_ids.append(n)
 
-	b=grid.flatten()
-	qs=[]
-	for i in range(elems):
-        	index=i
-        	coords=[]
-        	while index < len(b):
-                	coords.append(b[index])
-                	index+=elems
-        	qs.append(coords)
-
-	for i in range(ndof):
-		for j in range(ntraj):
-			qvals.set(i,j,qs[j][i])
-			pvals.set(i,j,wf0['p'][i])
-			avals.set(i,j,wf0['a'][i]*a0[i])
-			svals.set(i,j,0.0)
-
-	qpas=[qvals,pvals,avals,svals]
-	return(qpas)
+    qpas=[qvals,pvals,avals,svals,surf_ids]
+    return(ntraj,qpas)
 
 def gaussian(ndof,ntraj,traj0,wf0):
-	"""Returns the initial basis parameters {q,p,a,s} as an *ntraj*-by-4 matrix *qpas*, based on the input contained in the dicts *traj0* and *wf0*. The placement is randomly chosen from a Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho*. The corresponding Gaussian-distributed momenta are ordered so that the wavepacket spreads as x increases.
+    """Returns the initial basis parameters {q,p,a,s} as an *ntraj*-by-4 matrix *qpas*, based on the input contained in the dicts *traj0* and *wf0*. The placement is randomly chosen from a Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho*. The corresponding Gaussian-distributed momenta are ordered so that the wavepacket spreads as x increases.
 
-        Args:
-		ndof (integer): The number of degrees of freedom.
+    Args:
+        ndof (integer): The number of degrees of freedom.
 
-                ntraj (integer): The number of trajectories per surface.
+        ntraj (integer): The number of trajectories per surface.
 
-                traj0 (dictionary): Dictionary containing initialization parameters and keywords.
+        traj0 (dictionary): Dictionary containing initialization parameters and keywords.
 
-                wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
 
-        Returns:
-                qpas (list): List of {q,p,a,s} MATRIX objects.
+    Returns:
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+    """
 
-	"""
+    qvals=MATRIX(ndof,ntraj)
+    pvals=MATRIX(ndof,ntraj)
+    avals=MATRIX(ndof,ntraj)
+    svals=MATRIX(ndof,ntraj)
 
-	qvals=MATRIX(ndof,ntraj)
-	pvals=MATRIX(ndof,ntraj)
-	avals=MATRIX(ndof,ntraj)
-	svals=MATRIX(ndof,ntraj)
+    rho=traj0['rho']
+    a0=traj0['a0']
 
-	rho=traj0['rho']
-	a0=traj0['a0']
+    q_gaus=np.sort(np.random.normal(wf0['q'],rho,ntraj))
+    p_gaus=np.sort(np.random.normal(wf0['p'],rho,ntraj))
 
-	q_gaus=np.sort(np.random.normal(wf0['q'],rho,ntraj))
-	p_gaus=np.sort(np.random.normal(wf0['p'],rho,ntraj))
+    for i in range(ndof):
+        for j in range(ntraj):
+            qvals.set(i,j,q_gaus[i])
+            pvals.set(i,j,p_gaus[i])
+            avals.set(i,j,wf0['a']*a0)
+            svals.set(i,j,0.0)
 
-	for i in range(ndof):
-		for j in range(ntraj):
-			qvals.set(i,j,q_gaus[i])
-			pvals.set(i,j,p_gaus[i])
-			avals.set(i,j,wf0['a']*a0)
-			svals.set(i,j,0.0)
+    qpas=[qvals,pvals,avals,svals]
+    return(qpas)
 
-	qpas=[qvals,pvals,avals,svals]
-	return(qpas)
+def coeffs(wf0,qpas,active_state):
+    """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict *wf0* onto the basis defined by *qpas*. This function assumes the wavefunction is located entirely on *nsurf*=1 initially.
 
-def coeffs(ndof,ntraj,wf0,qpas,nsurf):
-	"""Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict *wf0* onto the basis defined by *qpas*. This function assumes the wavefunction is located entirely on *nsurf*=1 initially.
+    Args:
+        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
 
-        Args:
-		ndof (integer): The number of degrees of freedom.
+        qpas (list): List of {q,p,a,s} MATRIX objects.
 
-                ntraj (integer): The number of trajectories per surface.
+        active_state (integer): Number specifying the active state (i.e. the state w/ the initial wavepacket). 0 = ground, 1 = first excited, ...
 
-                wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+    Returns:
 
-		qpas (list): List of {q,p,a,s} MATRIX objects.
+        b (CMATRIX): Projection vector for the initial wavefunction onto the initial Gaussian basis.
+    """
 
-		nsurf (integer): The number of the desired surface. 1 = ground; 2 = excited.
+    qvals = qpas[0]
+    pvals = qpas[1]
+    avals = qpas[2]
+    svals = qpas[3]
+    surf_ids = qpas[4]
 
-	Returns:
-                b (CMATRIX): Projection vector for the initial wavefunction onto the initial Gaussian basis.
-        """
+    ndof = qvals.num_of_rows
+    ntraj = qvals.num_of_cols
+    nstates = len(set(surf_ids))
 
-	q2,p2,a2,s2=MATRIX(ndof,1),MATRIX(ndof,1),MATRIX(ndof,1),MATRIX(ndof,1)
-	b=CMATRIX(ntraj,1)
-	qvals,pvals,avals,svals=qpas[0],qpas[1],qpas[2],qpas[3]
+    q2 = MATRIX(ndof,1)
+    p2 = MATRIX(ndof,1)
+    a2 = MATRIX(ndof,1)
+    s2 = MATRIX(ndof,1)
+    b = CMATRIX(ntraj,1)
 
-	for i in range(ndof):
-		q2.set(i,0,wf0['q'][i])
-		p2.set(i,0,wf0['p'][i])
-		a2.set(i,0,wf0['a'][i])
-		s2.set(i,0,wf0['s'][i])
+    for dof in range(ndof):
+        q2.set(dof,0,wf0['q'][dof])
+        p2.set(dof,0,wf0['p'][dof])
+        a2.set(dof,0,wf0['a'][dof])
+        s2.set(dof,0,wf0['s'][dof])
 
-	if nsurf==1:
-		for i in range(ntraj):
-			q1,p1,a1,s1=qvals.col(i),pvals.col(i),avals.col(i),svals.col(i)
-			b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))
-	elif nsurf==2:
-		for i in range(ntraj):
-			b.set(i,0,0+0j)
-#			q1,p1,a1,s1=qvals.col(i),pvals.col(i),avals.col(i),svals.col(i)
-#			b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2)/np.sqrt(2.0))
-	elif nsurf==3:
-		for i in range(ntraj):
-			if i%2==0:
-				q1,p1,a1,s1=qvals.col(i),pvals.col(i),avals.col(i),svals.col(i)
-				b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))
-			else:
-				b.set(i,0,0+0j)
+    for i in range(ntraj):
+        b.set(i,complex(0.0,0.0))
 
-	return(b)
+    traj_active = [index for index, traj_id in enumerate(surf_ids) if traj_id == active_state]
+    ntraj_active = len(traj_active)
+
+    qvals_active = MATRIX(ndof,ntraj_active)
+    pvals_active = MATRIX(ndof,ntraj_active)
+    avals_active = MATRIX(ndof,ntraj_active)
+    svals_active = MATRIX(ndof,ntraj_active)
+
+    pop_submatrix(qvals,qvals_active,[dof for dof in range(ndof)],traj_active)
+    pop_submatrix(pvals,pvals_active,[dof for dof in range(ndof)],traj_active)
+    pop_submatrix(avals,avals_active,[dof for dof in range(ndof)],traj_active)
+    pop_submatrix(svals,svals_active,[dof for dof in range(ndof)],traj_active)
+
+    ii = 0
+    for i in traj_active:
+
+        q1 = qvals_active.col(ii)
+        p1 = pvals_active.col(ii)
+        a1 = avals_active.col(ii)
+        s1 = svals_active.col(ii)
+
+        b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))
+        ii += 1
+
+    return(b)
 
