@@ -15,7 +15,7 @@ instead of choosing different functions
 
 from liblibra_core import *
 
-def frozen(univ, i, param_in, *args, **kwargs):
+def frozen(param_in, *args, **kwargs):
     """The non-update function.
     Args:
         univ (dictionary): Dictionary containing various system parameters.
@@ -31,7 +31,7 @@ def frozen(univ, i, param_in, *args, **kwargs):
     return(param_in)
 
 
-def q_update(univ, ndim, q_in, mom_in, mss_prop):
+def q_update(q_in, univ, ndim, mom_in, mss_prop):
     """Returns the updated position *q_out* from an input position *q_in* and the momentum *mom*, 
        calculated via q_out = q_in+mom*dt/m (i.e. symplectic).
 
@@ -51,18 +51,13 @@ def q_update(univ, ndim, q_in, mom_in, mss_prop):
 
     """
 
-#	if mss_prop=='two_surf':
-#		ntraj=2*univ['ntraj']
-#	else:
-
-    ntraj=univ['ntraj']
     dt = univ['dt']
     mass = univ['mass']
 
     return (q_in+mom_in*dt/mass[ndim])
 
 
-def p_update(mom):
+def p_update(p_in, mom):
     """Returns the updated basis parameter *p_out* from the momentum *mom*. Currently these two things are equal, but they don't necessarily need to be.
 
     Args:
@@ -76,7 +71,7 @@ def p_update(mom):
     return 1.0*mom
 
 
-def a_update(univ, ndim, a_in, gmom, mss_prop):
+def a_update(a_in, univ, ntraj_on_surf, ndim, gmom, mss_prop):
     """Returns the updated basis width *a_out*, calculated from the old basis width *a_in* and the momentum gradient *gmom*.
 
     Args:
@@ -97,18 +92,13 @@ def a_update(univ, ndim, a_in, gmom, mss_prop):
 
     """
 
-#	if mss_prop=='two_surf':
-#		ntraj=2*univ['ntraj']
-#	else:
-
-    ntraj=univ['ntraj']
     dt=univ['dt']
     mass=univ['mass']
 
-    a_out, an1 = MATRIX(1,ntraj), MATRIX(1,ntraj)
+    a_out, an1 = MATRIX(1,ntraj_on_surf), MATRIX(1,ntraj_on_surf)
     an1.dot_product(a_in, gmom)
 
-    return a_in - 2.0*an1*dt/mass[ndim]
+    return (a_in - 2.0*an1*dt/mass[ndim])
 
 
 def cls_force_q(univ,q_in,p_in, model, model_params):
@@ -156,55 +146,3 @@ def cls_force_q(univ,q_in,p_in, model, model_params):
 
     return (q_out,p_out)
 
-
-def param_check(basis, cls_chk):
-     """Checks the type of propagation requested for each basis parameter {q,p,a,s} from the basis dictionary.
-
-     Args:
-         basis (dictionary): The input dictionary containing keywords for the basis parameter propagation.
-
-         cls_chk (character): Keyword determining if classical propagation is used in the mss.
-
-     Returns:
-         props (list of function objects): List containing the functions for {q,p,a,s} parameter updates.
-
-    """
-
-    if basis['qtype'] == 'adpt':
-        qprop=q_update    
-    elif basis['qtype'] == 'frzn':
-        qprop=frozen
-    else:
-        sys.exit("Unrecognized keyword in basis qtype!")
-
-
-    if basis['ptype'] == 'adpt':
-        pprop=p_update
-    elif basis['ptype'] == 'frzn':
-        pprop=frozen
-    else:
-        sys.exit("Unrecognized keyword in basis ptype!")
-
-    if basis['atype'] == 'adpt':
-        aprop=a_update
-    elif basis['atype'] == 'frzn':
-        aprop=frozen
-    else:
-        sys.exit("Unrecognized keyword in basis atype!")
-
-    if basis['stype'] == 'adpt':
-        print("Adaptable s not implemented yet! Reverting to frozen...")
-        sprop=frozen
-    elif basis['stype'] == 'frzn':
-        sprop=frozen
-    else:
-        sys.exit("Unrecognized keyword in basis stype!")
-
-    if cls_chk == 'cls_force':
-        cls_prop=cls_force_q
-    else:
-        cls_prop=frozen
-
-    props = [qprop,pprop,aprop,sprop,cls_prop]
-
-    return (props)
