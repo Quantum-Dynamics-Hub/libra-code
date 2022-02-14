@@ -12,7 +12,7 @@ from liblibra_core import *
 
 import numpy as np
 
-def grid(ndof,nstates,traj0,wf0):
+def grid(ndof,nstates,params):
     """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 
        based on the input contained in the dicts *traj0* and *wf0*. The placement is evenly spaced 
        across the domain where the initial wavefunction has a magnitude greater than *rcut*, and 
@@ -33,7 +33,7 @@ def grid(ndof,nstates,traj0,wf0):
         qpas (list): List of {q,p,a,s} MATRIX objects storing trajectory information.
     """
 
-    grid_dims=traj0['grid_dims']
+    grid_dims=params['grid_dims']
 
     ntraj_on_state = 1
     for i in range(len(grid_dims)):
@@ -46,15 +46,15 @@ def grid(ndof,nstates,traj0,wf0):
     avals=MATRIX(ndof,ntraj)
     svals=MATRIX(ndof,ntraj)
 
-    rcut=traj0['rho']
-    a0=traj0['a0']
+    rcut=params['rho_cut']
+    a0=params['a0']
 
     surf_ids = []
     qlo,qhi = [], []
 
     for dof in range(ndof):
         xlow = wf0['q'][dof]-np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
-        xhi = wf0['q'][dof]+np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
+        xhi = params['basis_qtype'][dof]+np.sqrt(-0.5/params['wfa0'][dof]*np.log(rcut))
         qlo.append(xlow)
         qhi.append(xhi)
 
@@ -79,8 +79,8 @@ def grid(ndof,nstates,traj0,wf0):
         for j in range(ntraj_on_state):
             for n in range(nstates):
                 qvals.set(dof,j+n*ntraj_on_state,qs[j][dof])
-                pvals.set(dof,j+n*ntraj_on_state,wf0['p'][dof])
-                avals.set(dof,j+n*ntraj_on_state,wf0['a'][dof]*a0[dof])
+                pvals.set(dof,j+n*ntraj_on_state,params['wfp0'][dof])
+                avals.set(dof,j+n*ntraj_on_state,params['wfa0'][dof]*a0[dof])
                 svals.set(dof,j+n*ntraj_on_state,0.0)
 
     for n in range(nstates):
@@ -127,7 +127,7 @@ def gaussian(ndof,ntraj,traj0,wf0):
     qpas=[qvals,pvals,avals,svals]
     return(qpas)
 
-def coeffs(wf0,qpas,active_state):
+def coeffs(params,qpas,active_state):
     """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict *wf0* onto the basis defined by *qpas*. This function assumes the wavefunction is located entirely on *nsurf*=1 initially.
 
     Args:
@@ -159,10 +159,10 @@ def coeffs(wf0,qpas,active_state):
     b = CMATRIX(ntraj,1)
 
     for dof in range(ndof):
-        q2.set(dof,0,wf0['q'][dof])
-        p2.set(dof,0,wf0['p'][dof])
-        a2.set(dof,0,wf0['a'][dof])
-        s2.set(dof,0,wf0['s'][dof])
+        q2.set(dof,0,params['wfq0'][dof])
+        p2.set(dof,0,params['wfp0'][dof])
+        a2.set(dof,0,params['wfa0'][dof])
+        s2.set(dof,0,params['wfs0'][dof])
 
     for i in range(ntraj):
         b.set(i,complex(0.0,0.0))
