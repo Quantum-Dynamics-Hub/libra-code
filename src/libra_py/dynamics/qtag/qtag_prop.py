@@ -14,7 +14,7 @@ from libra_py import data_outs
 import numpy as np
 import qtag_calc
 
-def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
+def sync(dyn_params,qtag_params,mom_calc,props,model_params,qpas,ctot,surf_pops):
     """Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
        as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of 
        functions are synced to the lower energetic surface while the density on the upper surface is less than 
@@ -57,8 +57,8 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
     """
 
 
-    decpl = mss['decpl']
-    mirror = mss['mirror']
+    decpl = qtag_params['decpl_den']
+    mirror = qtag_params['mirror']
 
     qprop = props[0]
     pprop = props[1]
