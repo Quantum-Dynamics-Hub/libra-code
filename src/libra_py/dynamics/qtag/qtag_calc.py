@@ -7,11 +7,12 @@
 """
 
 import sys
+import numpy as np
+
 from liblibra_core import *
 from libra_py import data_outs
 
-import numpy as np
-
+# CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
 def psi(ndof, ntraj_on_surf, qpas, c, x0):
     """Returns the (complex) wavefunction value *wf* at a given point *x0*, calculated using the single-surface basis parameters stored in *qpas* and coefficients *c*.
 

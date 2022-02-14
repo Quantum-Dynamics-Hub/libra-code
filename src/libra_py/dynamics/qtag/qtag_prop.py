@@ -12,7 +12,7 @@ from liblibra_core import *
 from libra_py import data_outs
 
 import numpy as np
-import qtag_calc
+from . import qtag_calc
 
 def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
     """Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
@@ -106,6 +106,10 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
             pop_submatrix(ctot,csurf,traj_on_surf,[0])
             qpas_surf = [qvals_surf,pvals_surf,avals_surf,svals_surf]
             mom, r, gmom, gr = mom_calc(ndof,ntraj_on_surf,beta,qpas_surf,csurf)
+
+            # mom_tmp = qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
+            # mom = mom_tmp.imag() 
+            # r = mom_tmp.real()
 
             for dof in range(ndof):
 

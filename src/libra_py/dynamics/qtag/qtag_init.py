@@ -8,9 +8,11 @@
 
 import sys
 import os
+import numpy as np
+
 from liblibra_core import *
 
-import numpy as np
+
 
 def grid(ndof,nstates,traj0,wf0):
     """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 

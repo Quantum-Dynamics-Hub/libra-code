@@ -132,8 +132,12 @@ def LHA(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,params,compute_model):
 
     return(v)
 
+
 def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,vapprox,compute_model,model_params):
-    """Calculates the single-surface Hamiltonian matrix elements H_ij=<gi|KE+V|gj>, computed using the basis parameters stored in *qpas*. This requires the single-surface overlap matrix *ov* as well as the potential function *pot*, which is specified in qtag_config. The surface is designated by *nsurf*. Returns the single-surface Hamiltonian *H*.
+    """Calculates the single-surface Hamiltonian matrix elements H_ij=<gi|KE+V|gj>, computed using the basis 
+       parameters stored in *qpas*. This requires the single-surface overlap matrix *ov* as well as the potential 
+       function *pot*, which is specified in qtag_config. The surface is designated by *nsurf*. 
+       Returns the single-surface Hamiltonian *H*.
 
     Args:
         univ (dictionary): Dictionary containing various system parameters.
@@ -157,135 +161,103 @@ def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,vapprox,compute_model,model_p
 
     super_ham = CMATRIX(ntraj,ntraj)
 
-    for i in range(ntraj):
-        for j in range(ntraj):
-            super_ham.set(i,j,complex(0.0,0.0))
-
-#Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
+    #Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
     qvals,pvals,avals,svals=MATRIX(qpas[0]),MATRIX(qpas[1]),MATRIX(qpas[2]),MATRIX(qpas[3])
     surf_ids=qpas[4]
 
-    itot = 0
+    dof_dim = list(range(ndof))    
+
     for n1 in range(nstates):
-        jtot = 0
+
+        #Extract the relevent trajectories for the n1-th state...
+        traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
+        ntraj_on_surf_n1 = len(traj_on_surf_n1)
+
+        qvals_surf_n1 = MATRIX(ndof, ntraj_on_surf_n1)
+        pvals_surf_n1 = MATRIX(ndof, ntraj_on_surf_n1)
+        avals_surf_n1 = MATRIX(ndof, ntraj_on_surf_n1)
+        svals_surf_n1 = MATRIX(ndof, ntraj_on_surf_n1)
+
+        pop_submatrix(qvals,qvals_surf_n1, dof_dim, traj_on_surf_n1)
+        pop_submatrix(pvals,pvals_surf_n1, dof_dim, traj_on_surf_n1)
+        pop_submatrix(avals,avals_surf_n1, dof_dim, traj_on_surf_n1)
+        pop_submatrix(svals,svals_surf_n1, dof_dim, traj_on_surf_n1)
+
         for n2 in range(n1+1):
 
-#Extract the relevent trajectories for the n1-th state...
-            traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
-            ntraj_on_surf_n1 = len(traj_on_surf_n1)
+            #Extract the relevant trajectories for the n2-th state...
+            traj_on_surf_n2 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n2]
+            ntraj_on_surf_n2 = len(traj_on_surf_n2)
 
-            qvals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-            pvals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-            avals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-            svals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
+            qvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
+            pvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
+            avals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
+            svals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
 
-            pop_submatrix(qvals,qvals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-            pop_submatrix(pvals,pvals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-            pop_submatrix(avals,avals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-            pop_submatrix(svals,svals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-
-#Extract the relevant trajectories for the n2-th state...
-            if n2 != n1:
-                traj_on_surf_n2 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n2]
-                ntraj_on_surf_n2 = len(traj_on_surf_n2)
-
-                qvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                pvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                avals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                svals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-
-                pop_submatrix(qvals,qvals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(pvals,pvals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(avals,avals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(svals,svals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-
-            else:
-                traj_on_surf_n2 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
-                ntraj_on_surf_n2 = len(traj_on_surf_n2)
-
-                qvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                pvals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                avals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-                svals_surf_n2 = MATRIX(ndof,ntraj_on_surf_n2)
-
-                pop_submatrix(qvals,qvals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(pvals,pvals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(avals,avals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
-                pop_submatrix(svals,svals_surf_n2,[dof for dof in range(ndof)],traj_on_surf_n2)
+            pop_submatrix(qvals,qvals_surf_n2, dof_dim, traj_on_surf_n2)
+            pop_submatrix(pvals,pvals_surf_n2, dof_dim, traj_on_surf_n2)
+            pop_submatrix(avals,avals_surf_n2, dof_dim, traj_on_surf_n2)
+            pop_submatrix(svals,svals_surf_n2, dof_dim, traj_on_surf_n2)
 
 
-            ii,jj = ntraj_on_surf_n1, ntraj_on_surf_n2
-            n12_mat = CMATRIX(ii,jj)
+            n12_mat = CMATRIX(ntraj_on_surf_n1, ntraj_on_surf_n2)
 
             n12_mat = state_hamiltonian(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
                                         qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2, \
                                         nstates, mass, vapprox, compute_model, model_params)
 
-            for i in range(ii):
-                for j in range(jj):
-                    super_ham.set(i+itot,j+jtot,n12_mat.get(i,j))
-                    if n1 != n2:
-                        super_ham.set(j+jtot,i+itot,super_ham.get(i+itot,j+jtot).conjugate())
-            jtot += jj
-        itot += ii
-    return(super_ham)
+
+            push_submatrix(super_ham, n12_mat, traj_on_surf_n1, traj_on_surf_n2)
+            if n1!=n2:
+                push_submatrix(super_ham, n12_mat.H(), traj_on_surf_n2, traj_on_surf_n1)
+
+
+    return super_ham
 
 def state_hamiltonian(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
                       qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2, \
                       nstates, mass, vapprox, compute_model, model_params):
+    """
+    This function computes a block hamiltonian for the two sets of trajectories - belonging to two surfaces
+    (including to the same surface)
+
+    
+    """
 
     ndof = qvals_surf_n1.num_of_rows
-    itraj = qvals_surf_n1.num_of_cols
-    jtraj = qvals_surf_n2.num_of_cols
-    state_ham = CMATRIX(itraj,jtraj)
-
-    for i in range(itraj):
-        for j in range(jtraj):
-            state_ham.set(i,j,complex(0.0,0.0))
+    ntraj1 = qvals_surf_n1.num_of_cols  # the number of trajectories on state 1 (itraj)
+    ntraj2 = qvals_surf_n2.num_of_cols  # the number of trajectories on state 2 (jtraj)
+    state_ham = CMATRIX(ntraj1, ntraj2)
 
     invM = MATRIX(ndof,1)
     for dof in range(ndof):
         invM.set(dof,0,1.0/mass[dof])
 
-    for i in range(itraj):
-#        ii = i*nstates+n1
 
+    for i in range(ntraj1):
         qi = qvals_surf_n1.col(i)
         pi = pvals_surf_n1.col(i)
         ai = avals_surf_n1.col(i)
         si = svals_surf_n1.col(i)
 
-        if n1 != n2:
-            for j in range(jtraj):
-#                jj = j*nstates+n2
+        for j in range(ntraj2):
+            qj = qvals_surf_n2.col(j)
+            pj = pvals_surf_n2.col(j)
+            aj = avals_surf_n2.col(j)
+            sj = svals_surf_n2.col(j)
 
-                qj = qvals_surf_n2.col(j)
-                pj = pvals_surf_n2.col(j)
-                aj = avals_surf_n2.col(j)
-                sj = svals_surf_n2.col(j)
+            v = vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,model_params,compute_model)
+            ov = gwp_overlap(qi,pi,si,0.5*ai,qj,pj,sj,0.5*aj)
+            state_ham.set(i, j, v*ov)
 
-                v = vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,model_params,compute_model) 
-                ov = gwp_overlap(qi,pi,si,0.5*ai,qj,pj,sj,0.5*aj)
-                state_ham.set(i,j,v*ov)
-
-        else:
-            for j in range(i+1):
-#                jj = j*nstates+n2
-
-                qj = qvals_surf_n2.col(j)
-                pj = pvals_surf_n2.col(j)
-                aj = avals_surf_n2.col(j)
-                sj = svals_surf_n2.col(j)
-
+            # trajectories on the same state - then add kintetic energy term
+            if n1 == n2:
                 ke = gwp_kinetic(qi,pi,si,0.5*ai,qj,pj,sj,0.5*aj,invM)
-                v = vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,model_params,compute_model)
-                ov = gwp_overlap(qi,pi,si,0.5*ai,qj,pj,sj,0.5*aj)
-                state_ham.set(i,j,ke+v*ov)
+                state_ham.add(i, j, ke)
 
-                if j != i:
-                    state_ham.set(j,i,state_ham.get(i,j).conjugate())
+    return state_ham
 
-    return(state_ham)
+
 
 def basis_diag(m,dt,H,ov,b):
     """Returns the updated basis coefficients for both surfaces, stored in a single vector *c_new*, computed as c_new=Z*exp(-i*dt*eps)*Z_dagger*b. The variables eps and Z are the eigenvalues and eigenvectors obtained from diagonalizing the full *m*-by-*m* Hamiltonian matrix *H* using the solve_eigen internal function. Note that the projection vector *b* and the full overlap matrix *ov* are required.

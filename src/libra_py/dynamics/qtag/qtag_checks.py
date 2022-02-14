@@ -1,10 +1,10 @@
 import sys
 
-import qtag_init
-import qtag_basis
-import qtag_ham
-import qtag_mom
-import qtag_prop
+from . import qtag_init
+from . import qtag_basis
+from . import qtag_ham
+from . import qtag_mom
+from . import qtag_prop
 
 def user_input(univ,wf0,traj0,mss,model,model_params):
     """Runs checks to ensure the validity of the user input.
