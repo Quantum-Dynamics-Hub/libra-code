@@ -9,8 +9,10 @@
 from liblibra_core import *
 from libra_py import data_outs
 import numpy as np
-import qtag_calc
 
+from . import qtag_calc
+
+# CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
 def _momentum(ndof, ntraj_on_surf, qpas, c):
     """Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). 
        Also returns the corresponding real component *r*, which can be used in updates of the basis phase parameter *s*.
@@ -137,7 +139,7 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
         ccc.set(i,x.get(1,0))
         ddd.set(i,x.get(1,1))
 
-    return(aaa,bbb,ccc,ddd)
+    return(aaa,bbb,ccc,ddd) # Im, Re, dIm, dRe
 
 def unmodified(univ,beta,qpas,c,*args):
     """Returns the raw (i.e. unfitted and unconvoluted) momentum *mom* and corresponding real component *r*. The gradient of each (*gmom* and *gr*, respectively) are still calculated via a linear fitting procedure defined in the function lin_fit, as they are necessary for calculations with adaptable width.

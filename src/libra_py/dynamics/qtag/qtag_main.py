@@ -15,13 +15,13 @@ import datetime
 from libra_py import data_outs
 import numpy as np
 
-import qtag_init
-import qtag_basis
-import qtag_ham
-import qtag_mom
-import qtag_pots
-import qtag_prop
-import qtag_calc
+from . import qtag_init
+from . import qtag_basis
+from . import qtag_ham
+from . import qtag_mom
+from . import qtag_pots
+from . import qtag_prop
+from . import qtag_calc
 
 """
 univ = {"ndof" : 1, "ntraj" : 35, "dt" : 0.01, "niter" : 800, "mass" : [1.0], "n_snapshots" : 4, "n_data_out" : 1}
