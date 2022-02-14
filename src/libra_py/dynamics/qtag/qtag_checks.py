@@ -78,10 +78,10 @@ def assign_fobj(qtag_params):
     prop_method = str(qtag_params['mss']['prop_method'])
     placement = str(qtag_params['traj0']['placement'])
 
-#Assemble propagation types for {q,p,a,s} basis parameters...
+    #Assemble propagation types for {q,p,a,s} basis parameters...
     props = basis_fobj(basis,prop_method)
 
-#Obtain the keywords for the calculation type from the various dictionaries...
+    #Obtain the keywords for the calculation type from the various dictionaries...
     try:
         initialize = getattr(qtag_init,placement)
     except AttributeError:
@@ -115,6 +115,8 @@ def assign_fobj(qtag_params):
         sys.exit("Error in mss dictionary: 'prop_method' keyword not recognized!")
 
     return(initialize,props,vapprox,mom_calc,propagate)
+
+
 
 def basis_fobj(basis, cls_chk):
     """Checks the type of propagation requested for each basis parameter {q,p,a,s} from the basis dictionary.

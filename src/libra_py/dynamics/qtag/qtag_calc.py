@@ -98,14 +98,14 @@ def super_overlap(ndof,ntraj,nstates,qpas):
         for j in range(ntraj):
             super_ov.set(i,j,complex(0.0,0.0))
 
-#Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
+    #Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
     qvals,pvals,avals,svals=MATRIX(qpas[0]),MATRIX(qpas[1]),MATRIX(qpas[2]),MATRIX(qpas[3])
     surf_ids=qpas[4]
 
     itot = 0; jtot = 0
     for n1 in range(nstates):
 
-#Extract the relevent trajectories for the n1-th state...
+        #Extract the relevent trajectories for the n1-th state...
         traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
         ntraj_on_surf_n1 = len(traj_on_surf_n1)
 
@@ -133,6 +133,7 @@ def super_overlap(ndof,ntraj,nstates,qpas):
         jtot += jj
 
     return(super_ov)
+
 
 def state_overlap(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
                   qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2):
@@ -181,6 +182,7 @@ def state_overlap(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1
                 state_ov.set(j,i,state_ov.get(i,j).conjugate())
 
     return(state_ov)
+
 
 def new_old_overlap(ndof,ntraj,nstates,qpaso,qpasn):
     new_old_ov = CMATRIX(ntraj,ntraj)

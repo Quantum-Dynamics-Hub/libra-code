@@ -79,6 +79,9 @@ dyn_control_params::dyn_control_params(){
   ETHD3_alpha = 1.0;
   ETHD3_beta = 1.0;
 
+  ///============================ QTAG =============================================
+  qtag_pot_approx_method = 0;
+
   ///================= Bath, Constraints, and Dynamical controls ===================
 
   Temperature = 300.0;
@@ -219,6 +222,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="entangelment_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
     else if(key=="ETHD3_alpha") { ETHD3_alpha = bp::extract<double>(params.values()[i]);   }
     else if(key=="ETHD3_beta") { ETHD3_beta = bp::extract<double>(params.values()[i]);   }
+
+    ///================= Entanglement of trajectories ================================
+    else if(key=="qtag_pot_approx_method"){ qtag_pot_approx_method = bp::extract<int>(params.values()[i]); }
 
     ///================= Bath, Constraints, and Dynamical controls ===================
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }

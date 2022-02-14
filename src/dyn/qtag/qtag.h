@@ -20,6 +20,8 @@
 
 #include "../../math_linalg/liblinalg.h"
 #include "../../hamiltonian/libhamiltonian.h"
+#include "../dyn_control_params.h"
+
 
 /// liblibra namespace
 namespace liblibra{
@@ -50,11 +52,30 @@ CMATRIX qtag_kinetic_elementary(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, MA
 /// Global overlap matrix
 CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates);
 
-///Hamiltonian for all trajectories
-CMATRIX qtag_hamiltonian(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
-                         vector<int>& active_states, CMATRIX& ovlp, CMATRIX& kin,
-                         MATRIX& invM, nHamiltonian& ham, bp::object compute_ham_funct,  
-                         bp::dict& compute_ham_params);
+/// Bra-Ket Averaged Taylor expnasion Approximation
+complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
+                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2);
+
+/// Local Harmonic approximation to Hamiltonian
+complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2, 
+                    vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
+                    vector<CMATRIX*>& d2Ham1, vector<CMATRIX*>& d2Ham2,
+                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2);
+
+/// Elementary potential & coupling matrix
+CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, vector<int>& traj_on_surf_n1,
+                       MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2, vector<int>& traj_on_surf_n2,
+                       nHamiltonian& ham, int method);
+
+/// super-Hamiltonian and super-Overlap for all trajectories
+void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
+                                  vector<int>& active_states, MATRIX& invM, 
+                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict& compute_ham_params,
+                                  bp::dict& dyn_params,
+                                  CMATRIX& super_ovlp, CMATRIX& super_ham);
+
 /// QTAG momentum
 CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
 
