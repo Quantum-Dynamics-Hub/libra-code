@@ -65,7 +65,7 @@ void export_qtag_objects(){
   void (*expt_qtag_hamiltonian_and_overlap_v1)
   (MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
    vector<int>& active_states, MATRIX& invM, 
-   nHamiltonian& ham, bp::object compute_ham_funct, bp::dict& compute_ham_params,
+   nHamiltonian& ham, bp::object compute_ham_funct, bp::dict compute_ham_params,
    bp::dict& dyn_params,
    CMATRIX& super_ovlp, CMATRIX& super_ham) = &qtag_hamiltonian_and_overlap;
   def("qtag_hamiltonian_and_overlap", expt_qtag_hamiltonian_and_overlap_v1);

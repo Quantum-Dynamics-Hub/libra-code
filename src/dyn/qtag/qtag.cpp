@@ -386,7 +386,7 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1,
 
 void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
                                   vector<int>& active_states, MATRIX& invM, 
-                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict& compute_ham_params,
+                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict compute_ham_params,
                                   bp::dict& dyn_params,
                                   CMATRIX& super_ovlp, CMATRIX& super_ham){
 /**
@@ -412,26 +412,44 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
 */
 
+//  exit(0);
+
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
   int method = prms.qtag_pot_approx_method; 
 
+//  int method = 0;
+
   int ndof = q.n_rows;
+  int ntraj = q.n_cols;
   int nstates = Coeff.n_rows;
-  int ntraj = active_states.size();
+  //int ntraj = active_states.size();
   int i, j, itraj, n1, n2;
 
-  vector< int > dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
+  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
+
+
+
+  vector<int> dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
+
+
+
 
   for(itraj = 0; itraj<ntraj; itraj++){
     traj_on_surf[ active_states[itraj] ].push_back(itraj);
   }// for itraj
 
 
+
   // Compute Hamiltonians for all the trajectories
   ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
+
+
+//  exit(0);
+
+
 
   // State blocks
   for(n1=0; n1<nstates; n1++){
@@ -477,7 +495,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           // Overlap 
           CMATRIX s12(ntraj_on_surf_n1, ntraj_on_surf_n2);
 
-          s12 = gwp_kinetic_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half, invM );
+          s12 = gwp_overlap_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half);
 
 
           push_submatrix(super_ovlp, s12, traj_on_surf[n1], traj_on_surf[n2]);

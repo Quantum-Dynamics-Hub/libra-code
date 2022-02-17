@@ -72,7 +72,7 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1,
 /// super-Hamiltonian and super-Overlap for all trajectories
 void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
                                   vector<int>& active_states, MATRIX& invM, 
-                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict& compute_ham_params,
+                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict compute_ham_params,
                                   bp::dict& dyn_params,
                                   CMATRIX& super_ovlp, CMATRIX& super_ham);
 
