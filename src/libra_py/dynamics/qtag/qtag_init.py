@@ -13,8 +13,22 @@ import numpy as np
 from liblibra_core import *
 
 
+def initialize(ndof,nstates,qtag_params):
 
-def grid(ndof,nstates,traj0,wf0):
+    init_placement = qtag_params['init_placement']
+
+    if init_placement == 1:
+        ntraj, qpas = grid(ndof,nstates,qtag_params)
+
+    elif init_placement == 2:
+        ntraj, qpas = gaussian(ndof,nstates,qtag_params)
+
+    else:
+        sys.exit("Unrecognized option in basis initialization! 1 = grid, 2 = gaussian")
+
+    return(ntraj, qpas)
+
+def grid(ndof,nstates,params):
     """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 
        based on the input contained in the dicts *traj0* and *wf0*. The placement is evenly spaced 
        across the domain where the initial wavefunction has a magnitude greater than *rcut*, and 
@@ -35,7 +49,7 @@ def grid(ndof,nstates,traj0,wf0):
         qpas (list): List of {q,p,a,s} MATRIX objects storing trajectory information.
     """
 
-    grid_dims=traj0['grid_dims']
+    grid_dims=params['grid_dims']
 
     ntraj_on_state = 1
     for i in range(len(grid_dims)):
@@ -48,25 +62,25 @@ def grid(ndof,nstates,traj0,wf0):
     avals=MATRIX(ndof,ntraj)
     svals=MATRIX(ndof,ntraj)
 
-    rcut=traj0['rho']
-    a0=traj0['a0']
+    rcut=params['rho_cut']
+    a0=params['a0']
 
     surf_ids = []
     qlo,qhi = [], []
 
     for dof in range(ndof):
-        xlow = wf0['q'][dof]-np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
-        xhi = wf0['q'][dof]+np.sqrt(-0.5/wf0['a'][dof]*np.log(rcut))
+        xlow = params['wfq0'][dof]-np.sqrt(-0.5/params['wfa0'][dof]*np.log(rcut))
+        xhi = params['wfq0'][dof]+np.sqrt(-0.5/params['wfa0'][dof]*np.log(rcut))
         qlo.append(xlow)
         qhi.append(xhi)
 
-    grid = np.mgrid[tuple(slice(qlo[dof],qhi[dof],complex(0,grid_dims[dof])) for dof in range(ndof))]
+    grid_bounds = np.mgrid[tuple(slice(qlo[dof],qhi[dof],complex(0,grid_dims[dof])) for dof in range(ndof))]
 
     elems = 1
     for i in grid_dims:
         elems *= i
 
-    b = grid.flatten()
+    b = grid_bounds.flatten()
     qs = []
     for i in range(elems):
         index = i
@@ -81,8 +95,8 @@ def grid(ndof,nstates,traj0,wf0):
         for j in range(ntraj_on_state):
             for n in range(nstates):
                 qvals.set(dof,j+n*ntraj_on_state,qs[j][dof])
-                pvals.set(dof,j+n*ntraj_on_state,wf0['p'][dof])
-                avals.set(dof,j+n*ntraj_on_state,wf0['a'][dof]*a0[dof])
+                pvals.set(dof,j+n*ntraj_on_state,params['wfp0'][dof])
+                avals.set(dof,j+n*ntraj_on_state,params['wfa0'][dof]*a0[dof])
                 svals.set(dof,j+n*ntraj_on_state,0.0)
 
     for n in range(nstates):
@@ -92,7 +106,7 @@ def grid(ndof,nstates,traj0,wf0):
     qpas=[qvals,pvals,avals,svals,surf_ids]
     return(ntraj,qpas)
 
-def gaussian(ndof,ntraj,traj0,wf0):
+def gaussian(ndof,nstates,params):
     """Returns the initial basis parameters {q,p,a,s} as an *ntraj*-by-4 matrix *qpas*, based on the input contained in the dicts *traj0* and *wf0*. The placement is randomly chosen from a Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho*. The corresponding Gaussian-distributed momenta are ordered so that the wavepacket spreads as x increases.
 
     Args:
@@ -113,23 +127,27 @@ def gaussian(ndof,ntraj,traj0,wf0):
     avals=MATRIX(ndof,ntraj)
     svals=MATRIX(ndof,ntraj)
 
-    rho=traj0['rho']
-    a0=traj0['a0']
+    rho_cut=params['rho_cut']
+    a0=params['a0']
 
-    q_gaus=np.sort(np.random.normal(wf0['q'],rho,ntraj))
-    p_gaus=np.sort(np.random.normal(wf0['p'],rho,ntraj))
+    ntraj = params['grid_dims'][0]*nstates
 
-    for i in range(ndof):
-        for j in range(ntraj):
-            qvals.set(i,j,q_gaus[i])
-            pvals.set(i,j,p_gaus[i])
-            avals.set(i,j,wf0['a']*a0)
-            svals.set(i,j,0.0)
+    q_gaus, p_gaus = [],[]
+    for dof in range(ndof):
+        q_gaus.append(np.sort(np.random.normal(params['wfq0'][dof],rho_cut,ntraj)))
+        p_gaus.append(np.sort(np.random.normal(params['wfp0'][dof],rho_cut,ntraj)))
+
+    for dof in range(ndof):
+        for traj in range(ntraj):
+            qvals.set(dof,traj,q_gaus[dof][traj])
+            pvals.set(dof,traj,p_gaus[dof][traj])
+            avals.set(dof,traj,params['wfa0'][dof]*a0)
+            svals.set(dof,traj,0.0)
 
     qpas=[qvals,pvals,avals,svals]
-    return(qpas)
+    return(ntraj,qpas)
 
-def coeffs(wf0,qpas,active_state):
+def coeffs(params,qpas,active_state):
     """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict *wf0* onto the basis defined by *qpas*. This function assumes the wavefunction is located entirely on *nsurf*=1 initially.
 
     Args:
@@ -161,10 +179,10 @@ def coeffs(wf0,qpas,active_state):
     b = CMATRIX(ntraj,1)
 
     for dof in range(ndof):
-        q2.set(dof,0,wf0['q'][dof])
-        p2.set(dof,0,wf0['p'][dof])
-        a2.set(dof,0,wf0['a'][dof])
-        s2.set(dof,0,wf0['s'][dof])
+        q2.set(dof,0,params['wfq0'][dof])
+        p2.set(dof,0,params['wfp0'][dof])
+        a2.set(dof,0,params['wfa0'][dof])
+        s2.set(dof,0,params['wfs0'][dof])
 
     for i in range(ntraj):
         b.set(i,complex(0.0,0.0))

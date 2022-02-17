@@ -6,7 +6,7 @@ from . import qtag_ham
 from . import qtag_mom
 from . import qtag_prop
 
-def user_input(univ,wf0,traj0,mss,model,model_params):
+def user_input(dyn_params,qtag_params,model_params):
     """Runs checks to ensure the validity of the user input.
 
     Args:
@@ -26,71 +26,43 @@ def user_input(univ,wf0,traj0,mss,model,model_params):
         None.
     """
 
-    ntraj,ndof=univ['ntraj'],univ['ndof']
+    ndof=dyn_params['ndof']
 
-    if len(univ['mass']) != ndof:
+    if len(dyn_params['mass']) != ndof:
         sys.exit("List of masses does not match given number of DoFs!")
 
-    if len(wf0['q']) != ndof:
+    if len(qtag_params['wfq0']) != ndof:
         sys.exit("Initial WF q's do not match given number of DoFs!")
 
-    if len(wf0['p']) != ndof:
+    if len(qtag_params['wfp0']) != ndof:
         sys.exit("Initial WF p's do not match given number of DoFs!")
 
-    if len(wf0['a']) != ndof:
+    if len(qtag_params['wfa0']) != ndof:
         sys.exit("Initial WF a's do not match given number of DoFs!")
 
-    if len(wf0['s']) != ndof:
+    if len(qtag_params['wfs0']) != ndof:
         sys.exit("Initial WF s's do not match given number of DoFs!")
 
-    if len(traj0['grid_dims']) != ndof and traj0['placement']=='grid':
+    if len(qtag_params['grid_dims']) != ndof and qtag_params['init_placement']=='grid':
         sys.exit("List of grid_dims does not match given number of DoFs!")
 
-    if len(traj0['a0']) != ndof:
+    if len(qtag_params['a0']) != ndof:
         sys.exit("List of a0 values does not match given number of DoFs!")
 
-    if model['rep'] == 'diabatic':
-        model['rep'] = 'diab'
+#    if model['coupling'] == 'exact':
+#        model['coupling'] = 'exact_gauss_cpl'
 
-    if model['rep'] == 'adiabatic':
-        model['rep'] = 'adiab'
-
-    if model['coupling'] == 'exact':
-        model['coupling'] = 'exact_gauss_cpl'
-
-    if model['coupling'] == 'none':
-        model['coupling'] = 'no_coupling'
+#    if model['coupling'] == 'none':
+#        model['coupling'] = 'no_coupling'
 
 #    if model['pot_type'] == 'HO':
 #        for i in range(ndof):
 #            model_params['d2'][i]=model_params['d2'][i]*np.sqrt(model_params['k1'][i])
 
-#    if ntraj%nstates != 0:
-#        print("Number of trajectories does not evenly distribute across states!")
-#        dyn_params['ntraj']+=(nstates-ntraj%nstates)
-#        print("Adjusting by adding ", nstates-ntraj%nstates, " trajectories!")
-
     return()
 
-def assign_fobj(qtag_params):
 
-    basis = qtag_params['basis']
-    prop_method = str(qtag_params['mss']['prop_method'])
-    placement = str(qtag_params['traj0']['placement'])
-
-    #Assemble propagation types for {q,p,a,s} basis parameters...
-    props = basis_fobj(basis,prop_method)
-
-    #Obtain the keywords for the calculation type from the various dictionaries...
-    try:
-        initialize = getattr(qtag_init,placement)
-    except AttributeError:
-        sys.exit("Error in traj0 dictionary: 'placement' keyword not recognized!")
-
-    try:
-        vapprox = getattr(qtag_ham,str(qtag_params['v_approx']))
-    except AttributeError:
-        sys.exit("Error in qtag dictionary: 'v_approx' keyword not recognized!")
+#def assign_fobj(qtag_params):
 
 #    try:
 #        pot=getattr(qtag_pots,model_name)
@@ -104,21 +76,11 @@ def assign_fobj(qtag_params):
 #        print("Coupling: ",coupling_name)
 #        sys.exit("Error in model dictionary, check that pot_type and rep are compatible!")
 
-    try:
-        mom_calc=getattr(qtag_mom,str(qtag_params['mom_params']['adjust']))
-    except AttributeError:
-        sys.exit("Error in mom_params dictionary: 'adjust' keyword not recognized!")
-
-    try:
-        propagate=getattr(qtag_prop,str(qtag_params['mss']['prop_method']))
-    except AttributeError:
-        sys.exit("Error in mss dictionary: 'prop_method' keyword not recognized!")
-
-    return(initialize,props,vapprox,mom_calc,propagate)
+#    return(initialize,props,vapprox,mom_calc,propagate)
 
 
 
-def basis_fobj(basis, cls_chk):
+def set_basis_updates(qtag_params):
     """Checks the type of propagation requested for each basis parameter {q,p,a,s} from the basis dictionary.
 
     Args:
@@ -130,41 +92,42 @@ def basis_fobj(basis, cls_chk):
         props (list of function objects): List containing the functions for {q,p,a,s} parameter updates.
     """
 
-    if basis['qtype'] == 'adpt':
+    
+    if qtag_params['basis_qtype'] == 1:
         qprop=qtag_basis.q_update
-    elif basis['qtype'] == 'frzn':
+    elif qtag_params['basis_qtype'] == 0:
         qprop=qtag_basis.frozen
     else:
         sys.exit("Unrecognized keyword in basis qtype!")
 
 
-    if basis['ptype'] == 'adpt':
+    if qtag_params['basis_ptype'] == 1:
         pprop=qtag_basis.p_update
-    elif basis['ptype'] == 'frzn':
+    elif qtag_params['basis_ptype'] == 0:
         pprop=qtag_basis.frozen
     else:
         sys.exit("Unrecognized keyword in basis ptype!")
 
-    if basis['atype'] == 'adpt':
+    if qtag_params['basis_atype'] == 1:
         aprop=qtag_basis.a_update
-    elif basis['atype'] == 'frzn':
+    elif qtag_params['basis_atype'] == 0:
         aprop=qtag_basis.frozen
     else:
         sys.exit("Unrecognized keyword in basis atype!")
 
-    if basis['stype'] == 'adpt':
+    if qtag_params['basis_stype'] == 1:
         print("Adaptable s not implemented yet! Reverting to frozen...")
         sprop=qtag_basis.frozen
-    elif basis['stype'] == 'frzn':
+    elif qtag_params['basis_stype'] == 0:
         sprop=qtag_basis.frozen
     else:
         sys.exit("Unrecognized keyword in basis stype!")
 
-    if cls_chk == 'cls_force':
+    if qtag_params['prop_method'] == 'cls_force':
         cls_prop=qtag_basis.cls_force_q
     else:
         cls_prop=qtag_basis.frozen
 
-    props = [qprop,pprop,aprop,sprop,cls_prop]
+    basis_props = [qprop,pprop,aprop,sprop,cls_prop]
 
-    return (props)
+    return (basis_props)

@@ -31,7 +31,7 @@ def frozen(param_in, *args, **kwargs):
     return(param_in)
 
 
-def q_update(q_in, univ, ndim, mom_in, mss_prop):
+def q_update(q_in, params, ndim, mom_in):
     """Returns the updated position *q_out* from an input position *q_in* and the momentum *mom*, 
        calculated via q_out = q_in+mom*dt/m (i.e. symplectic).
 
@@ -51,8 +51,8 @@ def q_update(q_in, univ, ndim, mom_in, mss_prop):
 
     """
 
-    dt = univ['dt']
-    mass = univ['mass']
+    dt = params['dt']
+    mass = params['mass']
 
     return (q_in+mom_in*dt/mass[ndim])
 
@@ -68,10 +68,10 @@ def p_update(p_in, mom):
 
     """
 
-    return 1.0*mom
+    return (1.0*mom)
 
 
-def a_update(a_in, univ, ntraj_on_surf, ndim, gmom, mss_prop):
+def a_update(a_in, params, ntraj_on_surf, ndim, gmom):
     """Returns the updated basis width *a_out*, calculated from the old basis width *a_in* and the momentum gradient *gmom*.
 
     Args:
@@ -92,8 +92,8 @@ def a_update(a_in, univ, ntraj_on_surf, ndim, gmom, mss_prop):
 
     """
 
-    dt=univ['dt']
-    mass=univ['mass']
+    dt=params['dt']
+    mass=params['mass']
 
     a_out, an1 = MATRIX(1,ntraj_on_surf), MATRIX(1,ntraj_on_surf)
     an1.dot_product(a_in, gmom)

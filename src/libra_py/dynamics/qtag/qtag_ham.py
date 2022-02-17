@@ -1,5 +1,15 @@
 from liblibra_core import *
 
+def vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,approx_method,params,compute_model):
+
+    if approx_method == 0:
+        v = BAT(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,params,compute_model)
+
+    elif approx_method == 1:
+        v = LHA(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,params,compute_model)
+
+    return(v)
+
 def BAT(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,params,compute_model):
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Bra-ket 
@@ -133,7 +143,7 @@ def LHA(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,params,compute_model):
     return(v)
 
 
-def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,vapprox,compute_model,model_params):
+def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,approx_method,compute_model,model_params):
     """Calculates the single-surface Hamiltonian matrix elements H_ij=<gi|KE+V|gj>, computed using the basis 
        parameters stored in *qpas*. This requires the single-surface overlap matrix *ov* as well as the potential 
        function *pot*, which is specified in qtag_config. The surface is designated by *nsurf*. 
@@ -204,7 +214,7 @@ def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,vapprox,compute_model,model_p
 
             n12_mat = state_hamiltonian(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
                                         qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2, \
-                                        nstates, mass, vapprox, compute_model, model_params)
+                                        nstates, mass, approx_method, compute_model, model_params)
 
 
             push_submatrix(super_ham, n12_mat, traj_on_surf_n1, traj_on_surf_n2)
@@ -216,7 +226,7 @@ def super_hamiltonian(ndof,ntraj,nstates,mass,qpas,vapprox,compute_model,model_p
 
 def state_hamiltonian(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
                       qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2, \
-                      nstates, mass, vapprox, compute_model, model_params):
+                      nstates, mass, approx_method, compute_model, model_params):
     """
     This function computes a block hamiltonian for the two sets of trajectories - belonging to two surfaces
     (including to the same surface)
@@ -246,7 +256,7 @@ def state_hamiltonian(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1
             aj = avals_surf_n2.col(j)
             sj = svals_surf_n2.col(j)
 
-            v = vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,model_params,compute_model)
+            v = vapprox(ndof,nstates,n1,n2,qi,pi,ai,si,qj,pj,aj,sj,approx_method,model_params,compute_model)
             ov = gwp_overlap(qi,pi,si,0.5*ai,qj,pj,sj,0.5*aj)
             state_ham.set(i, j, v*ov)
 

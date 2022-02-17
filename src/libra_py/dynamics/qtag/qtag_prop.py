@@ -13,8 +13,26 @@ from libra_py import data_outs
 
 import numpy as np
 from . import qtag_calc
+from . import qtag_mom
 
-def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
+def propagate(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
+
+    prop_method = qtag_params['prop_method']
+
+    if prop_method == 1:
+        qtag_params['mirror'] = 'true'
+        qpasn, btot = sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops)
+
+    elif prop_method == 2:
+        qtag_params['mirror'] = 'false'
+        qpasn, btot = sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops)
+
+#    else:
+#    could default to fixed basis...
+
+    return(qpasn, btot)
+
+def sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
     """Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
        as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of 
        functions are synced to the lower energetic surface while the density on the upper surface is less than 
@@ -25,25 +43,13 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
 
         univ (dictionary): Dictionary containing various system parameters.
 
-        mss (dictionary): Dictionary containing multi-surface scheme parameters.
-
-        mom_calc (function object): The function object needed to calculate the momentum, as defined by qtag_config.
-
         props (list): A list of function objects for propagating basis parameters {q,p,a,s}.
 
-        model_params (dictionary): Dictionary containing the potential parameters.
+        qpas (list): List of {q,p,a,s} MATRIX objects for surface 1.
 
-        qpas1 (list): List of {q,p,a,s} MATRIX objects for surface 1.
-
-        c1_new (CMATRIX): The ntraj-by-1 complex coefficient matrix for the basis on surface 1.
+        ctot (CMATRIX): The ntraj-by-1 complex coefficient matrix for the basis on surface 1.
 
         qpas2 (list): List of {q,p,a,s} MATRIX objects for surface 2.
-
-        c2_new (CMATRIX): The ntraj-by-1 complex coefficient matrix for the basis on surface 2.
-
-        norm2 (float): The population on surface 2.
-
-        beta (float): Parameter determining tolerance in the momentum linear fitting algorithm.
 
     Returns:
         qpas1n (list): List of updated {q,p,a,s} MATRIX objects for surface 1.
@@ -57,8 +63,9 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
     """
 
 
-    decpl = mss['decpl']
-    mirror = mss['mirror']
+    decpl = qtag_params['decpl_den']
+    mirror = qtag_params['mirror']
+    beta = qtag_params['linfit_beta']
 
     qprop = props[0]
     pprop = props[1]
@@ -105,7 +112,7 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
             csurf = CMATRIX(ntraj_on_surf,1)
             pop_submatrix(ctot,csurf,traj_on_surf,[0])
             qpas_surf = [qvals_surf,pvals_surf,avals_surf,svals_surf]
-            mom, r, gmom, gr = mom_calc(ndof,ntraj_on_surf,beta,qpas_surf,csurf)
+            mom, r, gmom, gr = qtag_mom.mom_calc(qtag_params,ndof,ntraj_on_surf,qpas_surf,csurf)
 
             # mom_tmp = qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
             # mom = mom_tmp.imag() 
@@ -113,9 +120,9 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
 
             for dof in range(ndof):
 
-                qn = qprop(qvals_surf.row(dof),dyn_params,dof,mom.row(dof),mss)
+                qn = qprop(qvals_surf.row(dof),dyn_params,dof,mom.row(dof))
                 pn = pprop(pvals_surf.row(dof),mom.row(dof))
-                an = aprop(avals_surf.row(dof),dyn_params,ntraj_on_surf,dof,gmom.row(dof),mss)
+                an = aprop(avals_surf.row(dof),dyn_params,ntraj_on_surf,dof,gmom.row(dof))
                 sn = sprop(svals_surf.row(dof),dyn_params,dof)
 
                 for j in range(ntraj_on_surf):
@@ -166,7 +173,7 @@ def sync(dyn_params,mss,mom_calc,props,model_params,qpas,ctot,surf_pops,beta):
     ov_no=qtag_calc.new_old_overlap(ndof,ntraj,nstates,qpas,qpasn)
     btot=ov_no*ctot
 
-    return(qpasn,btot)
+    return(qpasn, btot)
 
 
 def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm2,beta):
