@@ -12,6 +12,19 @@ import numpy as np
 
 from . import qtag_calc
 
+def mom_calc(qtag_params,ndof,ntraj_on_surf,qpas,c,*args):
+
+    mom_calc_type = qtag_params['mom_calc_type']
+    beta = qtag_params['linfit_beta']
+
+    if mom_calc_type == 1:
+        mom,r,gmom,gr = lin_fit(ndof,ntraj_on_surf,beta,qpas,c)
+
+    else:
+        mom,r,gmom,gr = unmodified(ndof,ntraj_on_surf,beta,qpas,c)
+
+    return(mom, r, gmom, gr)
+
 # CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
 def _momentum(ndof, ntraj_on_surf, qpas, c):
     """Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). 
@@ -141,7 +154,7 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
 
     return(aaa,bbb,ccc,ddd) # Im, Re, dIm, dRe
 
-def unmodified(univ,beta,qpas,c,*args):
+def unmodified(ndof,ntraj_on_surf,beta,qpas,c,*args):
     """Returns the raw (i.e. unfitted and unconvoluted) momentum *mom* and corresponding real component *r*. The gradient of each (*gmom* and *gr*, respectively) are still calculated via a linear fitting procedure defined in the function lin_fit, as they are necessary for calculations with adaptable width.
 
     Args:
@@ -163,7 +176,6 @@ def unmodified(univ,beta,qpas,c,*args):
         gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj.
     """
 
-    ndof,ntraj=univ['ndof'],univ['ntraj']
     aaa=MATRIX(1,ntraj);bbb=MATRIX(1,ntraj)
     gmom=MATRIX(ndof,ntraj);gr=MATRIX(ndof,ntraj)
     mom,r=_momentum(ndof,ntraj,qpas,c)
