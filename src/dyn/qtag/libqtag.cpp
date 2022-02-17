@@ -57,8 +57,8 @@ void export_qtag_objects(){
   def("qtag_overlap", expt_qtag_overlap_v1);
 
   CMATRIX (*expt_qtag_potential_v1)
-  (MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, vector<int>& traj_on_surf_n1,
-   MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2, vector<int>& traj_on_surf_n2,
+  (MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
+   MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
    nHamiltonian& ham, int method) = &qtag_potential;
   def("qtag_potential", expt_qtag_potential_v1);
 

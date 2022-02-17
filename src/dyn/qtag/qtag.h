@@ -54,19 +54,19 @@ CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates);
 
 /// Bra-Ket Averaged Taylor expnasion Approximation
 complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
-                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
-                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2);
+                    MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2);
 
 /// Local Harmonic approximation to Hamiltonian
 complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2, 
                     vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
                     vector<CMATRIX*>& d2Ham1, vector<CMATRIX*>& d2Ham2,
-                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
-                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2);
+                    MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2);
 
 /// Elementary potential & coupling matrix
-CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, vector<int>& traj_on_surf_n1,
-                       MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2, vector<int>& traj_on_surf_n2,
+CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
+                       MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
                        nHamiltonian& ham, int method);
 
 /// super-Hamiltonian and super-Overlap for all trajectories
