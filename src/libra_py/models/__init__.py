@@ -10,6 +10,7 @@
 __all__ = ["Beswick_Jortner",
            "Esch_Levine",
            "Faist_Levine",
+           "Granucci_Persico",
            "Henon_Heiles",
            "Holstein",
            "Libra",
