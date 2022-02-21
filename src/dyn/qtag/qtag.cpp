@@ -193,8 +193,8 @@ CMATRIX qtag_overlap(vector<int>& active_states, CMATRIX& ovlp, int nstates){
 
 
 complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
-                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
-                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2){
+                    MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Bra-ket 
@@ -219,13 +219,17 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
     """
 */
 
+  //cout<<"In BAT\n";
+
   complex<double> vx1, vx2, dvx1, dvx2, v;
   int ndof = q1.n_rows;
 
   vx1 = Ham1->get(n1, n2);
-  vx2 = Ham1->get(n1, n2);
+  vx2 = Ham2->get(n1, n2);
 
   v = 0.5 * (vx1 + vx2);
+
+  //cout<<"average pot = "<<v<<endl;
 
   for(int dof=0; dof<ndof; dof++){
 
@@ -248,6 +252,9 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
     complex<double> q1_rr1_q2(a2i*dq, dp); 
     complex<double> q1_rr2_q2(-a1i*dq, dp);
 
+    //cout<<"dof = "<<dof<<" a1= "<<a1i<<" a2= "<<a2i<<endl;
+    //cout<<"dof = "<<dof<<" denom = "<<denom<<" dvx1 = "<<dvx1<<" q1_rr1_q2 = "<<q1_rr1_q2<<" dvx2 = "<<dvx2<<" q1_rr2_q2= "<<q1_rr2_q2<<endl;
+
     v += 0.5 * (dvx1*q1_rr1_q2 + dvx2*q1_rr2_q2)/denom;
 
   }// for  dof
@@ -261,8 +268,8 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
 complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2, 
                     vector<CMATRIX*>& dHam1, vector<CMATRIX*>& dHam2,
                     vector<CMATRIX*>& d2Ham1, vector<CMATRIX*>& d2Ham2,
-                    MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, 
-                    MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2){
+                    MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
+                    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic 
@@ -343,37 +350,60 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 }// LHA
 
 
-CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1, vector<int>& traj_on_surf_n1,
-                       MATRIX& q2, MATRIX& p2, MATRIX& alp2, MATRIX& s2, int n2, vector<int>& traj_on_surf_n2,
+CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
+                       MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
                        nHamiltonian& ham, int method){
 
   int ntraj_on_surf_n1 = q1.n_cols;
   int ntraj_on_surf_n2 = q2.n_cols;
+  int ndof = q1.n_rows;
 
   complex<double> v;
   CMATRIX res(ntraj_on_surf_n1, ntraj_on_surf_n2);
+  MATRIX qi(ndof, 1);
+  MATRIX pi(ndof, 1);
+  MATRIX ai(ndof, 1);
+  MATRIX si(ndof, 1);
+  MATRIX qj(ndof, 1);
+  MATRIX pj(ndof, 1);
+  MATRIX aj(ndof, 1);
+  MATRIX sj(ndof, 1);
+
 
   for(int itraj=0; itraj<ntraj_on_surf_n1; itraj++){
 
     int i = traj_on_surf_n1[itraj];
 
+    qi = q1.col(itraj);
+    pi = p1.col(itraj);
+    ai = alp1.col(itraj);
+    si = s1.col(itraj);
+
     for(int jtraj=0; jtraj<ntraj_on_surf_n2; jtraj++){
 
       int j = traj_on_surf_n2[jtraj];
+
+      qj = q1.col(jtraj);
+      pj = p1.col(jtraj);
+      aj = alp1.col(jtraj);
+      sj = s1.col(jtraj);
+
 
       if(method==0){ // BAT
 
         v = BAT(ham.children[i]->ham_dia, ham.children[j]->ham_dia, 
                 ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
-                q1, p1, alp1, s1, n1, q2, p2, alp2, s2, n2);
+                qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
 
       }// BAT
       else if(method==1){// LHA
         v = LHA(ham.children[i]->ham_dia, ham.children[j]->ham_dia, 
                 ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
                 ham.children[i]->d2ham_dia, ham.children[j]->d2ham_dia,
-                q1, p1, alp1, s1, n1, q2, p2, alp2, s2, n2);
+                qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
       }// LHA
+
+      //cout<<"i= "<<i<<" j= "<<j<<" v= "<<v<<endl;
 
       res.set(itraj, jtraj, v);
 
@@ -386,7 +416,7 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, int n1,
 
 void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
                                   vector<int>& active_states, MATRIX& invM, 
-                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict& compute_ham_params,
+                                  nHamiltonian& ham, bp::object compute_ham_funct, bp::dict compute_ham_params,
                                   bp::dict& dyn_params,
                                   CMATRIX& super_ovlp, CMATRIX& super_ham){
 /**
@@ -412,26 +442,44 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
 */
 
+//  exit(0);
+
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
   int method = prms.qtag_pot_approx_method; 
 
+//  int method = 0;
+
   int ndof = q.n_rows;
+  int ntraj = q.n_cols;
   int nstates = Coeff.n_rows;
-  int ntraj = active_states.size();
+  //int ntraj = active_states.size();
   int i, j, itraj, n1, n2;
 
-  vector< int > dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
+  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
+
+
+
+  vector<int> dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
+
+
+
 
   for(itraj = 0; itraj<ntraj; itraj++){
     traj_on_surf[ active_states[itraj] ].push_back(itraj);
   }// for itraj
 
 
+
   // Compute Hamiltonians for all the trajectories
   ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
+
+
+//  exit(0);
+
+
 
   // State blocks
   for(n1=0; n1<nstates; n1++){
@@ -477,7 +525,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           // Overlap 
           CMATRIX s12(ntraj_on_surf_n1, ntraj_on_surf_n2);
 
-          s12 = gwp_kinetic_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half, invM );
+          s12 = gwp_overlap_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half);
 
 
           push_submatrix(super_ovlp, s12, traj_on_surf[n1], traj_on_surf[n2]);
