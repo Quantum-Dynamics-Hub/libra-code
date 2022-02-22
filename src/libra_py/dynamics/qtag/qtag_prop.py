@@ -15,24 +15,26 @@ import numpy as np
 from . import qtag_calc
 from . import qtag_mom
 
-def propagate(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
+def propagate(dyn_params,props,qpas,ctot,surf_pops):
 
-    prop_method = qtag_params['prop_method']
+    params = dict(dyn_params)
+
+    prop_method = params['prop_method']
 
     if prop_method == 1:
-        qtag_params['mirror'] = 'true'
-        qpasn, btot = sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops)
+        params['mirror'] = 'true'
+        qpasn, btot = sync(params,props,qpas,ctot,surf_pops)
 
     elif prop_method == 2:
-        qtag_params['mirror'] = 'false'
-        qpasn, btot = sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops)
+        params['mirror'] = 'false'
+        qpasn, btot = sync(params,props,qpas,ctot,surf_pops)
 
 #    else:
 #    could default to fixed basis...
 
     return(qpasn, btot)
 
-def sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
+def sync(params,props,qpas,ctot,surf_pops):
     """Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
        as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of 
        functions are synced to the lower energetic surface while the density on the upper surface is less than 
@@ -63,9 +65,9 @@ def sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
     """
 
 
-    decpl = qtag_params['decpl_den']
-    mirror = qtag_params['mirror']
-    beta = qtag_params['linfit_beta']
+    decpl = params['decpl_den']
+    mirror = params['mirror']
+    beta = params['linfit_beta']
 
     qprop = props[0]
     pprop = props[1]
@@ -112,7 +114,7 @@ def sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
             csurf = CMATRIX(ntraj_on_surf,1)
             pop_submatrix(ctot,csurf,traj_on_surf,[0])
             qpas_surf = [qvals_surf,pvals_surf,avals_surf,svals_surf]
-            mom, r, gmom, gr = qtag_mom.mom_calc(qtag_params,ndof,ntraj_on_surf,qpas_surf,csurf)
+            mom, r, gmom, gr = qtag_mom.mom_calc(params,ndof,ntraj_on_surf,qpas_surf,csurf)
 
             # mom_tmp = qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
             # mom = mom_tmp.imag() 
@@ -120,10 +122,10 @@ def sync(dyn_params,qtag_params,props,qpas,ctot,surf_pops):
 
             for dof in range(ndof):
 
-                qn = qprop(qvals_surf.row(dof),dyn_params,dof,mom.row(dof))
+                qn = qprop(qvals_surf.row(dof),params,dof,mom.row(dof))
                 pn = pprop(pvals_surf.row(dof),mom.row(dof))
-                an = aprop(avals_surf.row(dof),dyn_params,ntraj_on_surf,dof,gmom.row(dof))
-                sn = sprop(svals_surf.row(dof),dyn_params,dof)
+                an = aprop(avals_surf.row(dof),params,ntraj_on_surf,dof,gmom.row(dof))
+                sn = sprop(svals_surf.row(dof),params,dof)
 
                 for j in range(ntraj_on_surf):
 

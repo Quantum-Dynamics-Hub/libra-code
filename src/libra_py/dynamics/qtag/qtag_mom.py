@@ -12,10 +12,10 @@ import numpy as np
 
 from . import qtag_calc
 
-def mom_calc(qtag_params,ndof,ntraj_on_surf,qpas,c,*args):
+def mom_calc(params,ndof,ntraj_on_surf,qpas,c,*args):
 
-    mom_calc_type = qtag_params['mom_calc_type']
-    beta = qtag_params['linfit_beta']
+    mom_calc_type = params['mom_calc_type']
+    beta = params['linfit_beta']
 
     if mom_calc_type == 1:
         mom,r,gmom,gr = lin_fit(ndof,ntraj_on_surf,beta,qpas,c)
