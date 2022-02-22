@@ -171,12 +171,17 @@ def gaussian(dyn_params):
 
     ndof = len(q0)
 
+    ntraj_on_state = 1
+    for i in range(len(grid_dims)):
+        ntraj_on_state *= grid_dims[i]
 
+    ntraj = ntraj_on_state*nstates
     qvals=MATRIX(ndof,ntraj)
     pvals=MATRIX(ndof,ntraj)
     avals=MATRIX(ndof,ntraj)
     svals=MATRIX(ndof,ntraj)
 
+    surf_ids = []
     ntraj = grid_dims[0]*nstates
 
     q_gaus, p_gaus = [],[]
@@ -191,7 +196,11 @@ def gaussian(dyn_params):
             avals.set(dof,traj, a0[dof]*alp_scl[dof])
             svals.set(dof,traj, 0.0)
 
-    qpas=[qvals,pvals,avals,svals]
+    for n in range(nstates):
+        for j in range(ntraj_on_state):
+            surf_ids.append(n)
+
+    qpas=[qvals,pvals,avals,svals,surf_ids]
     return ntraj,qpas
 
 

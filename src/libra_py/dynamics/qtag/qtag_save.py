@@ -43,36 +43,34 @@ def init_qtag_data(saver, output_level, _nsteps, _ntraj, _ndof, _nstates):
         if "pops" in saver.keywords: # and "pops" in saver.np_data.keys():
             saver.add_dataset("pops", (_nsteps, _nstates), "R")
 
-    if output_level>=3:
-
-        # Trajectory positions
-        if "traj_q" in saver.keywords: # and "traj_q" in saver.np_data.keys():
-            saver.add_dataset("traj_q", (_nsteps, _ndof, _ntraj), "R")
-
-        # Trajectory x-dependent phases
-        if "traj_p" in saver.keywords: # and "traj_p" in saver.np_data.keys():
-            saver.add_dataset("traj_p", (_nsteps, _ndof, _ntraj), "R")
-
-        # Trajectory widths
-        if "traj_a" in saver.keywords: # and "traj_a" in saver.np_data.keys():
-            saver.add_dataset("traj_a", (_nsteps, _ndof, _ntraj), "R")
-
-        # Trajectory x-independent phases
-        if "traj_s" in saver.keywords: # and "traj_s" in saver.np_data.keys():
-            saver.add_dataset("traj_s", (_nsteps, _ndof, _ntraj), "R")
-
-
-    if output_level>=4:
-
         # Trajectory basis coefficients
         if "coeffs" in saver.keywords: # and "coeffs" in saver.np_data.keys():
             saver.add_dataset("coeffs", (_nsteps, _ntraj), "C")
 
+    if output_level>=3:
+
+        # Trajectory positions
+        if "q" in saver.keywords: # and "q" in saver.np_data.keys():
+            saver.add_dataset("q", (_nsteps, _ntraj, _ndof), "R")
+
+        # Trajectory x-dependent phases
+        if "p" in saver.keywords: # and "p" in saver.np_data.keys():
+            saver.add_dataset("p", (_nsteps, _ntraj, _ndof), "R")
+
+        # Trajectory widths
+        if "a" in saver.keywords: # and "a" in saver.np_data.keys():
+            saver.add_dataset("a", (_nsteps, _ntraj, _ndof), "R")
+
+        # Trajectory x-independent phases
+        if "s" in saver.keywords: # and "s" in saver.np_data.keys():
+            saver.add_dataset("s", (_nsteps, _ntraj, _ndof), "R")
+
 def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
     #====== CREATE DIRECTORIES ========
-    if params["hdf5_output_level"] > 0 or params["mem_output_level"] > 0:
-
+    if params["txt2_output_level"] > 0 or params["hdf5_output_level"] > 0 or params["mem_output_level"] > 0:
+        
         prefix = params["prefix"]
+        properties_to_save = params["properties_to_save"]
 
         # Create an output directory, if not present
         if not os.path.isdir(prefix):
@@ -85,11 +83,22 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         f = open(F"{prefix}/_model_params.txt","w")
         f.write( str(model_params) );  f.close()
 
+        _savers = {"txt2_saver":None, "hdf5_saver":None, "mem_saver":None}
+
+    #====== txt2 ========
+
+    txt2_output_level = params["txt2_output_level"]
+
+    if params["txt2_output_level"] > 0:
+        _savers["txt2_saver"] = data_savers.mem_saver(properties_to_save)
+
+        # Here, nsteps is set to 1 since in this type of saver, we only care about the current values,
+        # not all the timesteps - that would be too consuming
+        init_qtag_data(_savers["txt2_saver"], txt2_output_level, 1, ntraj, ndof, nstates)
+
     #====== HDF5 ========
-    _savers = {"hdf5_saver":None, "mem_saver":None}
 
     hdf5_output_level = params["hdf5_output_level"]
-    properties_to_save = params["properties_to_save"]
 
     if hdf5_output_level > 0:
         _savers["hdf5_saver"] = data_savers.hdf5_saver(F"{prefix}/data.hdf", properties_to_save)
@@ -98,40 +107,84 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
 
     return(_savers)
 
-def save_qtag_hdf5_lvl1(saver,params,step,Etot,dEtot):
+def save_qtag_hdf5_1D(saver,dt,step,Etot,dEtot,txt_type=0):
 
-    dt = params['dt']
+
+    t = 0
+    if txt_type==0:
+        t = step
 
     #Time
-    saver.save_scalar(step, "time", dt*step)
+    saver.save_scalar(t, "time", dt*step)
 
     #Energy
-    saver.save_scalar(step, "Etot", Etot)
+    saver.save_scalar(t, "Etot", Etot)
 
     #Energy difference from t=0
-    saver.save_scalar(step, "dEtot", dEtot)
+    saver.save_scalar(t, "dEtot", dEtot)
 
-def save_qtag_hdf5_lvl2(saver,params,step,pops):
+def save_qtag_hdf5_2D(saver,nstates,step,pops,coeffs,txt_type=0):
+
+    t = 0
+    if txt_type==0:
+        t = step
 
     #Surface populations
-    saver.save_matrix(step, "pops", pops)
-
-def save_qtag_hdf5_lvl3(saver,params,step,qvals,pvals,avals,svals):
-
-    #Trajectory positions
-    saver.save_matrix(step, "traj_q", qvals)
-
-    #Trajectory momenta
-    saver.save_matrix(step, "traj_p", pvals)
-
-    #Trajectory widths
-    saver.save_matrix(step, "traj_a", avals)
-
-    #Trajectory phases
-    saver.save_matrix(step, "traj_s", svals)
-
-def save_qtag_hdf5_lvl4(saver,params,step,ctot):
+    for state in range(nstates):
+        saver.save_multi_scalar(t, state, "pops", pops[state])
 
     #Trajectory coefficients
-    saver.save_matrix(step, "coeffs", ctot.T())
+    saver.save_matrix(t, "coeffs", coeffs.T())
+
+def save_qtag_hdf5_3D(saver,step,qvals,pvals,avals,svals,txt_type=0):
+
+    t = 0
+    if txt_type==0:
+        t = step
+
+    #Trajectory positions
+    saver.save_matrix(t, "q", qvals.T())
+
+    #Trajectory momenta
+    saver.save_matrix(t, "p", pvals.T())
+
+    #Trajectory widths
+    saver.save_matrix(t, "a", avals.T())
+
+    #Trajectory phases
+    saver.save_matrix(t, "s", svals.T())
+
+def save_qtag_data(_savers, params,
+                      step, Etot, dEtot, pops, coeffs, qvals, pvals, avals, svals):
+
+    hdf5_output_level = params["hdf5_output_level"]
+    txt2_output_level = params["txt2_output_level"]
+
+    nsteps = params["nsteps"]
+    print_freq = int(params["progress_frequency"]*nsteps)
+
+    if step%print_freq==0:
+        print(F" step= {step}")
+
+#======LEVEL 1======
+    if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
+        save_qtag_hdf5_1D(_savers["hdf5_saver"], params['dt'], step, Etot, dEtot)
+
+    if txt2_output_level>=1 and _savers["txt2_saver"]!=None:
+        save_qtag_hdf5_1D(_savers["txt2_saver"], params['dt'], step, Etot, dEtot, 1)
+
+#======LEVEL 2======
+    if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
+        save_qtag_hdf5_2D(_savers["hdf5_saver"], params["nstates"], step, pops, coeffs)
+
+    if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
+        save_qtag_hdf5_2D(_savers["txt2_saver"], params["nstates"], step, pops, coeffs, 1)
+
+#======LEVEL 3======
+    if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None:
+        save_qtag_hdf5_3D(_savers["hdf5_saver"], step, qvals, pvals, avals, svals)
+
+    if txt2_output_level>=3 and _savers["txt2_saver"]!=None:
+        save_qtag_hdf5_3D(_savers["txt2_saver"], step, qvals, pvals, avals, svals, 1)
+
 
