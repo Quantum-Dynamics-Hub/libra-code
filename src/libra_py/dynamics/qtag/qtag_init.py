@@ -120,7 +120,7 @@ def grid(dyn_params):
     for dof in range(ndof):
         for j in range(ntraj_on_state):
             for n in range(nstates):
-                qvals.set(dof,j+n*ntraj_on_state,qs[j][dof])
+                qvals.set(dof,j+n*ntraj_on_state, qs[j][dof])
                 pvals.set(dof,j+n*ntraj_on_state, p0[dof])
                 avals.set(dof,j+n*ntraj_on_state, a0[dof]*alp_scl[dof])
                 svals.set(dof,j+n*ntraj_on_state,0.0)

@@ -527,11 +527,13 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
           s12 = gwp_overlap_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half);
 
+          if(n1==n2){
+             push_submatrix(super_ovlp, s12, traj_on_surf[n1], traj_on_surf[n2]);
+          }
 
-          push_submatrix(super_ovlp, s12, traj_on_surf[n1], traj_on_surf[n2]);
           if(n1 != n2){
-            CMATRIX s21(ntraj_on_surf_n2, ntraj_on_surf_n1);  s21 = s12.H();
-            push_submatrix(super_ovlp, s21, traj_on_surf[n2], traj_on_surf[n1]);
+            //CMATRIX s21(ntraj_on_surf_n2, ntraj_on_surf_n1);  s21 = s12.H();
+            //push_submatrix(super_ovlp, s21, traj_on_surf[n2], traj_on_surf[n1]);
           }
 
 
