@@ -89,101 +89,6 @@ def norm(surf_ids,c,ov,states):
     return(pops)
 
 
-def super_overlap(ndof,ntraj,nstates,qpas):
-
-#    ndof, ntraj = dyn_params['ndof'],['ntraj']
-    super_ov = CMATRIX(ntraj,ntraj)
-
-    for i in range(ntraj):
-        for j in range(ntraj):
-            super_ov.set(i,j,complex(0.0,0.0))
-
-    #Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
-    qvals,pvals,avals,svals=MATRIX(qpas[0]),MATRIX(qpas[1]),MATRIX(qpas[2]),MATRIX(qpas[3])
-    surf_ids=qpas[4]
-
-    itot = 0; jtot = 0
-    for n1 in range(nstates):
-
-        #Extract the relevent trajectories for the n1-th state...
-        traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
-        ntraj_on_surf_n1 = len(traj_on_surf_n1)
-
-        qvals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-        pvals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-        avals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-        svals_surf_n1 = MATRIX(ndof,ntraj_on_surf_n1)
-
-        pop_submatrix(qvals,qvals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-        pop_submatrix(pvals,pvals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-        pop_submatrix(avals,avals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-        pop_submatrix(svals,svals_surf_n1,[dof for dof in range(ndof)],traj_on_surf_n1)
-
-        ii,jj = ntraj_on_surf_n1, ntraj_on_surf_n1
-        n12_mat = CMATRIX(ii,jj)
-
-        n12_mat = state_overlap(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
-                                qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1)
-
-        for i in range(ii):
-            for j in range(jj):
-                super_ov.set(i+itot,j+jtot,n12_mat.get(i,j))
-
-        itot += ii
-        jtot += jj
-
-    return(super_ov)
-
-
-def state_overlap(qvals_surf_n1, pvals_surf_n1, avals_surf_n1, svals_surf_n1, n1, \
-                  qvals_surf_n2, pvals_surf_n2, avals_surf_n2, svals_surf_n2, n2):
-
-    """Returns the Gaussian overlap matrix *ov_mat*, which stores the complex overlap elements of the two basis functions defined by the rows of the *qpas1* and *qpas2* matrices.
-
-    Args:
-        ntraj (integer): Number of trajectories per surface.
-
-        qpas1 (list): List of {q,p,a,s} MATRIX objects for the first set of basis functions.
-
-        qpas2 (list): List of {q,p,a,s} MATRIX objects for the second set of basis functions.
-
-    Returns:
-        ov_mat (CMATRIX): The ntraj-by-ntraj complex (Gaussian) overlap matrix of basis functions defined by qpas1 and qpas2.
-    """
-
-    ndof = qvals_surf_n1.num_of_rows
-    itraj = qvals_surf_n1.num_of_cols
-    jtraj = qvals_surf_n2.num_of_cols
-    state_ov = CMATRIX(itraj,jtraj)
-
-    for i in range(itraj):
-        for j in range(jtraj):
-            state_ov.set(i,j,complex(0.0,0.0))
-
-    for i in range(itraj):
-#        ii = i*nstates+n1
-
-        qi = qvals_surf_n1.col(i)
-        pi = pvals_surf_n1.col(i)
-        ai = avals_surf_n1.col(i)
-        si = svals_surf_n1.col(i)
-
-        for j in range(i+1):
-#            jj = j*nstates+n2
-
-            qj = qvals_surf_n2.col(j)
-            pj = pvals_surf_n2.col(j)
-            aj = avals_surf_n2.col(j)
-            sj = svals_surf_n2.col(j)
-
-            state_ov.set(i,j,gwp_overlap(qi,pi,si,ai/2,qj,pj,sj,aj/2))
-
-            if j != i:
-                state_ov.set(j,i,state_ov.get(i,j).conjugate())
-
-    return(state_ov)
-
-
 def new_old_overlap(ndof,ntraj,nstates,qpaso,qpasn):
     new_old_ov = CMATRIX(ntraj,ntraj)
 
@@ -253,6 +158,37 @@ def new_old_overlap(ndof,ntraj,nstates,qpaso,qpasn):
 
     return(new_old_ov)
 
+
+def basis_diag(m,dt,H,ov,b):
+    """Returns the updated basis coefficients for both surfaces, stored in a single vector *c_new*, computed as c_new=Z*exp(-i*dt*eps)*Z_dagger*b. The variables eps and Z are the eigenvalues and eigenvectors obtained from diagonalizing the full *m*-by-*m* Hamiltonian matrix *H* using the solve_eigen internal function. Note that the projection vector *b* and the full overlap matrix *ov* are required.
+
+    Args:
+        m (integer): Dimension of the eigenvalue and eigenvector matrices. Usually equal to 2*ntraj.
+
+        dt (real): The timestep parameter.
+
+        H (CMATRIX): Total system Hamiltonian, dimension 2*ntraj-by-2*ntraj.
+
+        ov (CMATRIX): Total overlap matrix, dimension 2*ntraj-by-2*ntraj.
+
+        b (CMATRIX): Projection vector, dimensioned 2*ntraj-by-1.
+
+    Returns:
+
+        c_new (CMATRIX): Updated basis coefficient vector for both surfaces. Computed as c_new=Z*exp(-i*dt*eps)*Z_dagger*b.
+
+    """
+
+    evals = CMATRIX(m,m)
+    evecs = CMATRIX(m,m)
+    solve_eigen(H,ov,evals,evecs,0)
+    ct = evecs.H()
+    c_new = evecs*(exp_(evals,-dt*1.0j))*ct*b
+
+    return(c_new)
+
+
+
 def wf_print_1D(ntraj,qpas,c,fileobj):
     """Writes a 1D single-surface wavefunction to a file specified by *fileobj*, computed using the internal function psi(qpas,c,x0) with basis parameters *qpas* and coefficients *c*.
 
@@ -306,72 +242,3 @@ def wf_print_2D(ntraj,qpas,c,fileobj):
     print(file=fileobj)
     return()
 
-def nonad_assemble(chk,m,n,matrix1,matrix2,matrix3):
-	"""Returns a matrix *mtot* assembled from *m*-by-*n* component matrices *matrix1*, *matrix2*, and *matrix3*. The dimensions of *mtot* are dependent upon *m* and *n*: if *m*=*n*, then *mtot* is *2m*-by-*2n*; if *m*!=*n*, then *mtot* is *2m*-by-*n*. The variable *chk* designates whether the input (and output) matrices are real or complex.
-
-        Args:
-                chk (string): Variable specifying the type of matrix 1, matrix2, and matrix3. Either 'real' or 'cplx'.
-
-                m (integer): Number of rows of input matrices.
-
-                n (integer): Number of columns of input matrices.
-
-                matrix1 (MATRIX/CMATRIX): First of the matrices to be assembled into a total, system matrix.
-
-                matrix2 (MATRIX/CMATRIX): Second of the matrices to be assembled into a total, system matrix.
-
-                matrix3 (MATRIX/CMATRIX): Third of the matrices to be assembled into a total, system matrix.
-
-        Returns:
-                mtot (MATRIX/CMATRIX): Output composite matrix.
-	"""
-
-	if chk=='real':
-		if m==n:
-			mtot=MATRIX(2*m,2*n)
-		elif m>n:
-			mtot=MATRIX(2*m,n)
-		elif m<n:
-			mtot=MATRIX(m,2*n)
-
-	elif chk=='cplx':
-		if m==n:
-			mtot=CMATRIX(2*m,2*n)
-		elif m>n:
-			mtot=CMATRIX(2*m,n)
-		elif m<n:
-			mtot=CMATRIX(m,2*n)
-
-	if n==m:
-		listm=[]; listn=[]
-		for i in range(m):
-			listm.append(i)
-		for j in range(n):
-			listn.append(j)
-
-		push_submatrix(mtot,matrix1,listm,listn)
-		push_submatrix(mtot,matrix2,[m+lm for lm in listm],[n+ln for ln in listn])
-		push_submatrix(mtot,matrix3,listm,[n+ln for ln in listn])
-		push_submatrix(mtot,matrix3.T().conj(),[m+lm for lm in listm],listn)
-
-	elif m>n:
-		listm=[]; listn=[]
-		for i in range(m):
-			listm.append(i)
-		for j in range(n):
-			listn.append(j)
-
-		push_submatrix(mtot,matrix1,listm,listn)
-		push_submatrix(mtot,matrix2,[m+lm for lm in listm],listn)
-
-	elif m<n:
-		listm=[]; listn=[]
-		for i in range(m):
-			listm.append(i)
-		for j in range(n):
-			listn.append(j)
-
-		push_submatrix(mtot,matrix1,listm,listn)
-		push_submatrix(mtot,matrix2,listm,[n+ln for ln in listn])
-
-	return(mtot)

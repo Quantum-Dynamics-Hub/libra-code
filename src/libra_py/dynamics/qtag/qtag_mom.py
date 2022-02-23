@@ -38,7 +38,7 @@ def _momentum(ndof, ntraj_on_surf, qpas, c):
 
         qpas (list): List of {q,p,a,s} MATRIX objects.
 
-        c (CMATRIX): The coefficient matrix for the basis.
+        c (CMATRIX(ntraj_on_surf x 1) ): The coefficient matrix for the basis.
 
     Returns:
 
@@ -94,7 +94,7 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
 
                 qpas (list): List of {q,p,a,s} MATRIX objects.
 
-                c (CMATRIX): The coefficient matrix for the basis.
+                c (CMATRIX(ntraj_on_surf, 1)): The coefficient matrix for the basis.
 
 		mom_in (MATRIX): The input momentum matrix to be fitted.
 
@@ -114,16 +114,25 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
                 gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj_on_surf.
         """
 
-    aaa=MATRIX(1,ntraj_on_surf);bbb=MATRIX(1,ntraj_on_surf);ccc=MATRIX(1,ntraj_on_surf);ddd=MATRIX(1,ntraj_on_surf)
+    aaa=MATRIX(1,ntraj_on_surf)
+    bbb=MATRIX(1,ntraj_on_surf)
+    ccc=MATRIX(1,ntraj_on_surf)
+    ddd=MATRIX(1,ntraj_on_surf)
+
     a=MATRIX(2,2);b=MATRIX(2,2);x=MATRIX(2,2)
 
     for m in range(2):
+
         bb1=0+0j;bb2=0+0j
+
         for i in range(ntraj_on_surf):
-            x0=qpas[0].col(i)
+            x0 = qpas[0].col(i)
 
             if d_weight == 1:
-                z=qtag_calc.psi(ndof,ntraj_on_surf,qpas,c,x0);zstar=np.conj(z)
+
+                #CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
+                z = qtag_calc.psi(ndof,ntraj_on_surf,qpas,c,x0);
+                zstar = np.conj(z)
             else:
                 z=1+0j;zstar=1-0j
 
@@ -221,89 +230,3 @@ def lin_fit(ndof,ntraj_on_surf,beta,qpas,c,*args):
 
     return(mom,r,gmom,gr)
 
-
-def average(univ,beta,qpas1,c1,qpas2,c2):
-    """Returns the basis momenta *mom* and corresponding real component *r* after performing a density-weighted average across both surfaces at each point. The averaged momenta are then fitted via the lin_fit function. The gradients *gmom* and *gr* are also returned.
-
-    Args:
-        univ (dictionary): Dictionary containing various system parameters.
-
-        beta (real): Parameter from the univ dictionary specifying tolerance for the linear fitting algorithm.
-
-        qpas1 (list): List of {q,p,a,s} MATRIX objects for the functions on surface 1.
-
-        c1 (CMATRIX): The coefficient matrix for the basis on surface 1.
-
-        qpas2 (list): List of {q,p,a,s} MATRIX objects for the functions on surface 2.
-
-        c2 (CMATRIX): The coefficient matrix for the basis on surface 2.
-
-    Returns:
-        mom (MATRIX): The linear-fitted momentum matrix averaged across both surfaces, dimensioned ndof-by-ntraj.
-
-        r (MATRIX): The linear-fitted complementary real component of the average momentum, dimensioned ndof-by-ntraj.
-
-        gmom (MATRIX): The fitted momentum gradient matrix, dimensioned ndof-by-ntraj.
-
-        gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj.
-    """
-
-    ndof,ntraj=univ['ndof'],univ['ntraj']
-    aaa=MATRIX(ndof,ntraj);bbb=MATRIX(ndof,ntraj);
-    mom=MATRIX(ndof,ntraj);r=MATRIX(ndof,ntraj)
-    gmom=MATRIX(ndof,ntraj);gr=MATRIX(ndof,ntraj)
-    mom1,r1=_momentum(ndof,ntraj,qpas1,c1)
-    mom2,r2=_momentum(ndof,ntraj,qpas2,c2)
-
-    for i in range(ntraj):
-        z=qtag_calc.psi(ndof,ntraj,qpas1,c1,qpas1[0].col(i));zs=np.conj(z)
-        d1=(z*zs).real
-        z=qtag_calc.psi(ndof,ntraj,qpas2,c2,qpas2[0].col(i));zs=np.conj(z)
-        d2=(z*zs).real
-        d12=d1+d2
-        for j in range(ndof):
-            mom.set(j,i,d1*mom1.get(j,i)/d12+d2*mom2.get(j,i)/d12)
-            r.set(j,i,d1*r1.get(j,i)/d12+d2*r2.get(j,i)/d12)
-
-    for i in range(ndof):
-        qvals=qpas1[0].row(i)
-        aaa,bbb,ccc,ddd=_lin_fitting(ndof,ntraj,qvals,qpas1,c1,mom.row(i),r.row(i),0,beta)
-        for j in range(ntraj):
-            mom.set(i,j,aaa.get(j));r.set(i,j,bbb.get(j))
-            gmom.set(i,j,ccc.get(j));gr.set(i,j,ddd.get(j))
-
-    return(mom,r,gmom,gr)
-
-"""
-def two_surf_mom(univ,beta,qpas,c):
-	Args:
-		univ (dictionary): Dictionary containing various system parameters.
-
-		beta (real): Parameter from the univ dictionary specifying tolerance for the linear fitting algorithm.
-
-		qpas (list): List of {q,p,a,s} MATRIX objects for the functions on surface 1.
-
-		c (CMATRIX): The coefficient matrix for the basis on surface 1.
-
-	Returns:
-		mom (MATRIX): The linear-fitted momentum matrix averaged across both surfaces, dimensioned ndof-by-ntraj.
-
-		r (MATRIX): The linear-fitted complementary real component of the average momentum, dimensioned ndof-by-ntraj.
-
-		gmom (MATRIX): The fitted momentum gradient matrix, dimensioned ndof-by-ntraj.
-
-		gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj.
-
-	ndof,ntraj=univ['ndof'],univ['ntraj']
-	gmom=MATRIX(ndof,ntraj);gr=MATRIX(ndof,ntraj)
-	mom,r=_momentum(ndof,ntraj,qpas,c)
-
-	for i in range(ndof):
-		qvals=qpas[0].row(i)
-		aaa,bbb,ccc,ddd=_lin_fitting(ndof,ntraj,qvals,qpas,c,mom.row(i),r.row(i),1,beta)
-		for j in range(ntraj):
-			mom.set(i,j,aaa.get(j));r.set(i,j,bbb.get(j))
-			gmom.set(i,j,ccc.get(j));gr.set(i,j,ddd.get(j))
-
-	return(mom,r,gmom,gr)
-"""

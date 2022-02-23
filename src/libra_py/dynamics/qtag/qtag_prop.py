@@ -15,27 +15,12 @@ import numpy as np
 from . import qtag_calc
 from . import qtag_mom
 
-def propagate(dyn_params,props,qpas,ctot,surf_pops):
 
-    params = dict(dyn_params)
+def propagate(params, qpas, coeff, surf_pops):
+    """Makes the trajectories on surfaces with low populations (where quantum momentum
+       is ill-defined) to move as the trajectories on the surface with the highest population
 
-    prop_method = params['prop_method']
-
-    if prop_method == 1:
-        params['mirror'] = 'true'
-        qpasn, btot = sync(params,props,qpas,ctot,surf_pops)
-
-    elif prop_method == 2:
-        params['mirror'] = 'false'
-        qpasn, btot = sync(params,props,qpas,ctot,surf_pops)
-
-#    else:
-#    could default to fixed basis...
-
-    return(qpasn, btot)
-
-def sync(params,props,qpas,ctot,surf_pops):
-    """Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
+       Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
        as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of 
        functions are synced to the lower energetic surface while the density on the upper surface is less than 
        a threshold value specified by the *decpl* parameter. Also necessary are the functions for calculating 
@@ -43,13 +28,18 @@ def sync(params,props,qpas,ctot,surf_pops):
 
     Args:
 
-        univ (dictionary): Dictionary containing various system parameters.
+        params (dict): Dictionary containing simulation parameters.
+ 
+          * **params[`decpl_den`]** (float) : a parameter controlling independence of trajectories. If the population
+              on a given state is larger that this parameter, the trajectories evolve according to their own
+              quantum momentum. If the population is less than this number, the trajectories evolve according
+              to the quantum momentum for the most populated state.  [ default: 0.3 ]
 
         props (list): A list of function objects for propagating basis parameters {q,p,a,s}.
 
         qpas (list): List of {q,p,a,s} MATRIX objects for surface 1.
 
-        ctot (CMATRIX): The ntraj-by-1 complex coefficient matrix for the basis on surface 1.
+        coeff (CMATRIX(ntraj x 1)): The complex coefficient matrix for the TBF on all surfaces.
 
         qpas2 (list): List of {q,p,a,s} MATRIX objects for surface 2.
 
@@ -64,118 +54,166 @@ def sync(params,props,qpas,ctot,surf_pops):
 
     """
 
-
-    decpl = params['decpl_den']
-    mirror = params['mirror']
+    dt = params["dt"]
+    decpl = params['decpl_den'] # 
     beta = params['linfit_beta']
+    iM = params["iM"]  # MATRIX(ndof, 1)
 
-    qprop = props[0]
-    pprop = props[1]
-    aprop = props[2]
-    sprop = props[3]
 
-    qvals = MATRIX(qpas[0])
-    pvals = MATRIX(qpas[1])
-    avals = MATRIX(qpas[2])
-    svals = MATRIX(qpas[3])
-    
+    q_update_method = params["q_update_method"]  # 0 - frozen, 1 - move
+    p_update_method = params["p_update_method"]  # 0 - frozen, 1 - move
+    a_update_method = params["a_update_method"]  # 0 - frozen, 1 - move
+    s_update_method = params["s_update_method"]  # 0 - frozen, 1 - move
+
+    q_sync_method = params["q_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    p_sync_method = params["p_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    a_sync_method = params["a_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    s_sync_method = params["s_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+
+    # The original set
+    q_old = MATRIX(qpas[0])
+    p_old = MATRIX(qpas[1])
+    a_old = MATRIX(qpas[2])
+    s_old = MATRIX(qpas[3])    
     surf_ids = qpas[4]
 
-    ndof = qvals.num_of_rows
-    ntraj = qvals.num_of_cols
+    ndof = q_old.num_of_rows
+    ntraj = q_old.num_of_cols
     nstates = len(set(surf_ids))
 
-    qvalsn = MATRIX(ndof,ntraj)
-    pvalsn = MATRIX(ndof,ntraj)
-    avalsn = MATRIX(ndof,ntraj)
-    svalsn = MATRIX(ndof,ntraj)
+    x_dofs = list(range(ndof))
+    invM = MATRIX(ndof, ndof)
+    for i in x_dofs:
+        invM.set(i, i,  iM.get(i, 0))
 
-    sorted_pops = sorted(surf_pops, reverse = True)
-    sorted_states = []
-    for n in range(nstates):
-        sorted_states.append(surf_pops.index(sorted_pops[n]))
+    # The new set (propagated)
+    q_new = MATRIX(q_old)
+    p_new = MATRIX(p_old)
+    a_new = MATRIX(a_old)
+    s_new = MATRIX(s_old)
 
-    iref_pop_state = True
-    for n in sorted_states:
+    unsorted_pairs = []
+    for i in range(nstates):
+        unsorted_pairs.append([i, surf_pops[i]])
+
+    sorted_pairs = merge_sort(unsorted_pairs) 
+
+    sorted_states = [0]*nstates
+    for i in range(nstates):
+        sorted_states[nstates-1-i] = sorted_pairs[i][0]
+
+
+#    sys.exit(0)
+    
+    #sorted_pops = sorted(surf_pops, reverse = True)
+    #sorted_states = []
+    #for n in range(nstates):
+    #    sorted_states.append(surf_pops.index(sorted_pops[n]))
+
+   
+    # The properties for the trajectories on the most populated surface - reference for synchronizing
+    q_new_on_surf_ref = None
+    p_new_on_surf_ref = None
+    a_new_on_surf_ref = None
+    s_new_on_surf_ref = None
+
+#    iref_pop_state = True
+    for nindex, n in enumerate(sorted_states): # over all states, but starting with the most populated one
+
         traj_on_surf = [index for index, traj_id in enumerate(surf_ids) if traj_id == n]
-        ntraj_on_surf = len(traj_on_surf)
+        ntraj_on_surf = len(traj_on_surf)  
 
-        qvals_surf = MATRIX(ndof,ntraj_on_surf)
-        pvals_surf = MATRIX(ndof,ntraj_on_surf)
-        avals_surf = MATRIX(ndof,ntraj_on_surf)
-        svals_surf = MATRIX(ndof,ntraj_on_surf)
+        q_on_surf = MATRIX(ndof, ntraj_on_surf)
+        p_on_surf = MATRIX(ndof, ntraj_on_surf)
+        a_on_surf = MATRIX(ndof, ntraj_on_surf)
+        s_on_surf = MATRIX(ndof, ntraj_on_surf)
 
-        pop_submatrix(qvals,qvals_surf,[dof for dof in range(ndof)],traj_on_surf)
-        pop_submatrix(pvals,pvals_surf,[dof for dof in range(ndof)],traj_on_surf)
-        pop_submatrix(avals,avals_surf,[dof for dof in range(ndof)],traj_on_surf)
-        pop_submatrix(svals,svals_surf,[dof for dof in range(ndof)],traj_on_surf)
+        pop_submatrix(q_old, q_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(p_old, p_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(a_old, a_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(s_old, s_on_surf, x_dofs, traj_on_surf)
 
+
+        # "Independent" evolution of trajectories
         if surf_pops[n] > decpl:
-            csurf = CMATRIX(ntraj_on_surf,1)
-            pop_submatrix(ctot,csurf,traj_on_surf,[0])
-            qpas_surf = [qvals_surf,pvals_surf,avals_surf,svals_surf]
-            mom, r, gmom, gr = qtag_mom.mom_calc(params,ndof,ntraj_on_surf,qpas_surf,csurf)
+            coeff_on_surf = CMATRIX(ntraj_on_surf,1)  # coefficients for the TBFs on the surface n
+            pop_submatrix(coeff, coeff_on_surf, traj_on_surf, [0])
+
+            qpas_on_surf = [q_on_surf, p_on_surf, a_on_surf, s_on_surf] # variables for the TBFs on the surface n
+            mom, r, gmom, gr = qtag_mom.mom_calc(params, ndof, ntraj_on_surf, qpas_on_surf, coeff_on_surf)
+
+            # mom - MATRIX(ndof, ntraj_on_surf) - quantum momentum for q -  Im( nubla_{\alp} \psi / \psi)
+            # r - MATRIX(ndof, ntraj_on_surf) - quantum momentum for s   -  Re( nubla_{\alp} \psi / \psi)
+            # gmom - MATRIX(ndof, ntraj_on_surf) - gradient of the fit of mom ~ nubla_{\alp} Im( nubla_{\alp} \psi / \psi) - to update alphas
+            # gr - MATRIX(ndof, ntraj_on_surf) - gradient of the fit of r ~ nubla_{\alp} Re( nubla_{\alp} \psi / \psi)  - to update alphas
 
             # mom_tmp = qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
             # mom = mom_tmp.imag() 
             # r = mom_tmp.real()
 
-            for dof in range(ndof):
+            if q_update_method==0:
+                q_new_on_surf = MATRIX(q_on_surf)
+            elif q_update_method==1:
+                q_new_on_surf = q_on_surf + invM * mom * dt 
+            else:
+                print(F"q_update_method = {q_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
 
-                qn = qprop(qvals_surf.row(dof),params,dof,mom.row(dof))
-                pn = pprop(pvals_surf.row(dof),mom.row(dof))
-                an = aprop(avals_surf.row(dof),params,ntraj_on_surf,dof,gmom.row(dof))
-                sn = sprop(svals_surf.row(dof),params,dof)
 
-                for j in range(ntraj_on_surf):
+            if p_update_method==0:
+                p_new_on_surf = MATRIX(p_on_surf)
+            elif p_update_method==1:
+                p_new_on_surf = MATRIX(mom)
+            else:
+                print(F"p_update_method = {p_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
 
-                    qvalsn.set(dof,j+traj_on_surf[0],qn.get(j))
-                    pvalsn.set(dof,j+traj_on_surf[0],pn.get(j))
-                    avalsn.set(dof,j+traj_on_surf[0],an.get(j))
-                    svalsn.set(dof,j+traj_on_surf[0],sn.get(j))
 
-            if (iref_pop_state):
+            if a_update_method==0:
+                a_new_on_surf = MATRIX(a_on_surf)
+            elif a_update_method==1:
+                a_tmp = MATRIX(ndof, ntraj_on_surf)
+                a_tmp.dot_product(a_on_surf, gmom)
+                a_new_on_surf = a_on_surf - 2.0*dt * invM * a_tmp
+            else:
+                print(F"a_update_method = {a_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
 
-                qvals_ref = MATRIX(ndof,ntraj_on_surf)
-                pvals_ref = MATRIX(ndof,ntraj_on_surf)
-                avals_ref = MATRIX(ndof,ntraj_on_surf)
-                svals_ref = MATRIX(ndof,ntraj_on_surf)
+            s_new_on_surf = MATRIX(s_on_surf)
 
-                for dof in range(ndof):
-                    for j in range(ntraj_on_surf):
+            # Put the surface-specific variables in the global variables
+            push_submatrix(q_new, q_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(p_new, p_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(a_new, a_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(s_new, s_new_on_surf, x_dofs, traj_on_surf)
 
-                        qvals_ref.set(dof,j,qvalsn.get(dof,j+traj_on_surf[0]))
-                        pvals_ref.set(dof,j,pvalsn.get(dof,j+traj_on_surf[0]))
-                        avals_ref.set(dof,j,avalsn.get(dof,j+traj_on_surf[0]))
-                        svals_ref.set(dof,j,svalsn.get(dof,j+traj_on_surf[0]))
+             # Save it for later - for the "dependent" trajectories
+            if nindex == 0:
+                q_new_on_surf_ref = MATRIX(q_new_on_surf)
+                p_new_on_surf_ref = MATRIX(p_new_on_surf)
+                a_new_on_surf_ref = MATRIX(a_new_on_surf)
+                s_new_on_surf_ref = MATRIX(s_new_on_surf)
 
-                iref_pop_state = False
 
         else:
-            if mirror=='true':
-                for dof in range(ndof):
-                    for j in range(ntraj_on_surf):
-
-                        qvalsn.set(dof,j+traj_on_surf[0],qvals_ref.get(dof,j))
-                        pvalsn.set(dof,j+traj_on_surf[0],pvals_ref.get(dof,j))
-                        avalsn.set(dof,j+traj_on_surf[0],avals_ref.get(dof,j))
-                        svalsn.set(dof,j+traj_on_surf[0],svals_ref.get(dof,j))
-
-            elif mirror=='false':
-                for dof in range(ndof):
-                    for j in range(ntraj_on_surf):
-
-                        qvalsn.set(dof,j+traj_on_surf[0],qvals_ref.get(dof,j))
-                        pvalsn.set(dof,j+traj_on_surf[0],pvals_surf.get(dof,j))
-                        avalsn.set(dof,j+traj_on_surf[0],avals_surf.get(dof,j))
-                        svalsn.set(dof,j+traj_on_surf[0],svals_surf.get(dof,j))
+            # For this to work, we need that all surfaces have equal number of trajectories
+            if q_sync_method == 1:
+                push_submatrix(q_new, q_new_on_surf_ref, x_dofs, traj_on_surf)
+            if p_sync_method == 1:
+                push_submatrix(p_new, p_new_on_surf_ref, x_dofs, traj_on_surf)
+            if a_sync_method == 1:
+                push_submatrix(a_new, a_new_on_surf_ref, x_dofs, traj_on_surf)
+            if s_sync_method == 1:
+                push_submatrix(s_new, s_new_on_surf_ref, x_dofs, traj_on_surf)
 
 
-    qpasn = [qvalsn,pvalsn,avalsn,svalsn,surf_ids]
-    ov_no=qtag_calc.new_old_overlap(ndof,ntraj,nstates,qpas,qpasn)
-    btot=ov_no*ctot
+    qpas_new = [q_new, p_new, a_new, s_new, surf_ids]
 
-    return(qpasn, btot)
+    ov_no = qtag_calc.new_old_overlap(ndof, ntraj, nstates, qpas, qpas_new)
+    btot = ov_no*coeff
+
+    return qpas_new, btot
+
 
 
 def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm2,beta):
