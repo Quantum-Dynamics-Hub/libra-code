@@ -689,30 +689,35 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
 
-  if(prms.decoherence_algo==0 || prms.tsh_method==3){
-
-    // Just use the plain times given from the input, usually the
-    // mSDM formalism
-    if(prms.decoherence_times_type==0){
-      for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
-    }
-
-    // Compute the dephasing rates according the original energy-based formalism
-    else if(prms.decoherence_times_type==1){
-      Eadi = get_Eadi(ham); 
-      Ekin = compute_kinetic_energies(p, invM);
-      decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param);       
-    }
-
-    //== Optionally, apply the dephasing-informed correction ==
-    if(prms.dephasing_informed==1){
-      Eadi = get_Eadi(ham); 
-      MATRIX ave_gaps(*prms.ave_gaps);
-      dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
-    }
-
+  /// mSDM
+  /// Just use the plain times given from the input, usually the
+  /// mSDM formalism
+  if(prms.decoherence_times_type==0){
+    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
   }
-  
+
+  /// Compute the dephasing rates according the original energy-based formalism
+  else if(prms.decoherence_times_type==1){
+    Eadi = get_Eadi(ham); 
+    Ekin = compute_kinetic_energies(p, invM);
+    decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param);       
+  }
+
+  else if(prms.decoherence_times_type==2){
+    decoherence_rates = schwartz_1(prms, Coeff, projectors, ham, *prms.schwartz_decoherence_inv_alpha); 
+  }
+
+  else if(prms.decoherence_times_type==3){
+    decoherence_rates = schwartz_2(prms, projectors, ham, *prms.schwartz_decoherence_inv_alpha); 
+  }
+
+
+  ///== Optionally, apply the dephasing-informed correction ==
+  if(prms.dephasing_informed==1){
+    Eadi = get_Eadi(ham); 
+    MATRIX ave_gaps(*prms.ave_gaps);
+    dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
+  }
 
 
   //============ Apply decoherence corrections ==================
@@ -725,6 +730,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     *dyn_var.reversal_events = wp_reversal_events(p, invM, act_states, ham, projectors, prms.dt);
     Coeff = bcsh(Coeff, prms.dt, act_states, *dyn_var.reversal_events);
+  }
+
+  else if(prms.decoherence_algo==4){
+//    MATRIX decoh_rates(ndof, ntraj);
+    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd);
   }
 
  

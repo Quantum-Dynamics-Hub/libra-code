@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2018-2019 Alexey V. Akimov
+* Copyright (C) 2018-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -14,8 +14,11 @@
     
 */
 
+#include "../hamiltonian/libhamiltonian.h"
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
+#include "dyn_hop_proposal.h"
+#include "dyn_hop_acceptance.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -630,6 +633,116 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
   return C;
 
 }
+
+
+
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
+    /**
+    \brief Mean field with stochastic decoherence
+  
+    This function performs the wavefunction amplitudes collapses according to:
+
+    Bedard-Hearn, M. J.; Larsen, R. E.; Schwartz, B. J. "Mean-field dynamics with
+    stochastic decoherence (MF-SD): A new algorithm for nonadiabatic mixed quantum/classical
+    molecular-dynamics simulations with nuclear-induced decoherence" 
+    J. Chem. Phys. 123, 234106, 2005.
+    
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+    \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    \param[in]      act_st [ list of integer ] The active state indices for all trajectories
+    \param[in]      decoherence_rates [ MATRIX(nadi, nadi) x ntraj ]  - decoherence rates (1/tau_i)
+
+    The function returns:
+    C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
+
+    */
+
+    int i, idof;
+    int nadi = Coeff.n_rows;
+    int ntraj = Coeff.n_cols;
+    int ndof = ham.nnucl;
+
+    CMATRIX C(Coeff);
+    
+    for(int itraj=0; itraj<ntraj; itraj++){    
+
+      //================ Determine states onto which we could potentially collapse ===========
+      double ksi = rnd.uniform(0.0, 1.0);
+      vector<int> proposed_states;
+      vector<double> hopping_prob;
+      double summ_prob = 0.0;
+ 
+      for(i=0; i<nadi; i++){
+           
+        complex<double> c_i = C.get(i, itraj); 
+  
+        // Probability of decoherence on state i
+        // Here, we assume that the state-only decoherence rates are on the diagonal
+        double P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[itraj].get(i, i) * dt;
+
+        if(ksi<P_i){ 
+          proposed_states.push_back(i);
+          hopping_prob.push_back(P_i);
+          summ_prob += P_i;
+        }
+
+      }// for i
+
+
+      // There is a decoherence for at least 1 state
+      if(summ_prob>0.0){ 
+
+        // Renormalize relative probabilities of the collapse on any of non-unique states
+        for(i=0; i<proposed_states.size(); i++){
+           hopping_prob[i] /= summ_prob;
+        }
+
+        // Select one of the possible states
+        int indx_i = hop(hopping_prob, rnd.uniform(0.0, 1.0) );
+        int decohered_state = proposed_states[indx_i];
+
+        vector<int> _id(2, 0);  _id[1] = itraj;
+        double E_old = ham.Ehrenfest_energy_adi(Coeff, _id).real();
+        double E_new = ham.get_ham_adi(_id).get(decohered_state, decohered_state).real();
+
+        MATRIX nac_eff(ndof, 1);
+        MATRIX p_i(ndof, 1);
+
+        for(i=0; i<nadi; i++){
+
+          complex<double> c_i = C.get(i, itraj); 
+  
+          // Probability of decoherence on state i
+          double P_i = (std::conj(c_i) * c_i).real();
+
+          p_i = p.col(itraj); /// momentum
+          for(idof=0; idof<ndof; idof++){
+            nac_eff = nac_eff + P_i * ham.get_dc1_adi(idof, _id).real();
+          }// idof
+
+        }// i
+        
+        if(  can_rescale_along_vector(E_old, E_new, p_i, invM, nac_eff) ){
+
+          // Adjust velocities 
+          int do_reverse = 0;
+          rescale_along_vector(E_old, E_new, p_i, invM, nac_eff, do_reverse);
+
+          for(idof=0; idof<ndof; idof++){ p.set(idof, itraj, p_i.get(idof, 0)); }
+
+          // And collapse the coherent superposition on the decohered state 
+          collapse(C, itraj, decohered_state, 0);
+
+        }// can rescale
+
+      }// possible collapse
+        
+    }// for itraj
+
+    return C;
+
+}
+
 
 
 

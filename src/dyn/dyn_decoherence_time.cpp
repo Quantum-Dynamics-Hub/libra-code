@@ -239,8 +239,117 @@ MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates){
 }
 
 
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+/**
+  Compute decoherence rates 1/tau_i for all states and all trajectories according to Schwartz prescription 
+  
+  amplitudes  - CMATRIX(nstates, ntraj)
+  inv_alp - MATRIX(ndof, 1)
+
+  Return:
+
+  MATRIX(nstates, ntraj) - 1/tau - decoherence rates for all states and trajectories
+*/
+
+  int ndof = ham.nnucl;
+  int nstates = ham.nadi; 
+  int ntraj = ham.children.size();
+
+  dyn_control_params prms_mf(prms);  prms_mf.force_method = 2;  prms_mf.rep_force = 1;   /// MF force
+  dyn_control_params prms_st(prms);  prms_st.force_method = 1;  prms_st.rep_force = 1;   /// adiabatic force
+
+  MATRIX F_mf(ndof, ntraj);
+  MATRIX F_st(ndof, ntraj);
+  MATRIX tmp(ndof, ntraj);
+
+  vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
+
+  vector<int> act_states(ntraj, 0);
+  F_mf = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
 
+  for(int i=0;i<nstates; i++){
+    vector<int> act_states(ntraj, i);
+    
+    F_st = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+
+      double tau_inv2 = 0.0;
+      for(int idof=0; idof<ndof; idof++){
+        double dF = F_mf.get(idof, itraj) - F_st.get(idof, itraj);
+        
+        tau_inv2 += 0.25 * inv_alp.get(idof, 0) * dF * dF; 
+      }
+
+      double tau_inv = sqrt(tau_inv2);
+
+      res[itraj].set(i, i, tau_inv);
+
+    }// for itraj
+    
+  }// for i
+
+  return res;
+}
+
+
+
+
+vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+/**
+  Compute decoherence rates 1/tau_ij for all pairs of states and all trajectories according to Schwartz state-pair prescription 
+  
+  inv_alp - MATRIX(ndof, 1)
+
+  Return:
+
+  MATRIX(nstates, nstates) x ntraj  - 1/tau_ij - decoherence rates for all pairs of states and trajectories
+*/
+
+
+  int ndof = ham.nnucl;
+  int nstates = ham.nadi; 
+  int ntraj = ham.children.size();
+
+  dyn_control_params prms_st(prms);  prms_st.force_method = 1;  prms_st.rep_force = 1; /// adiabatic, state-resolved force
+
+
+  // Precompute state-resolved forces
+  CMATRIX amplitudes(nstates, ntraj);
+  vector<MATRIX> F(nstates, MATRIX(ndof, ntraj));
+
+  for(int i=0; i<nstates; i++){
+    vector<int> act_states_i(ntraj, i);
+    F[i] = aux_get_forces(prms_st, amplitudes, projectors, act_states_i, ham);
+
+  }// for i
+
+
+  vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
+
+  for(int i=0; i<nstates; i++){
+    for(int j=i+1; j<nstates; j++){
+    
+      for(int itraj=0; itraj<ntraj; itraj++){
+
+        double tau_inv2 = 0.0;
+        for(int idof=0; idof<ndof; idof++){
+          double dF = F[i].get(idof, itraj) - F[j].get(idof, itraj);
+        
+          tau_inv2 += 0.25 * inv_alp.get(idof, 0) * dF * dF; 
+        }
+        double tau_inv = sqrt(tau_inv2);
+        res[itraj].set(i, j, tau_inv);
+        res[itraj].set(j, i, tau_inv);
+
+      }// for itraj    
+    }// for j
+  }// for i
+
+  return res;
+
+}
 
 
 
