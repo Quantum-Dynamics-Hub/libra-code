@@ -12,22 +12,113 @@ import numpy as np
 
 from . import qtag_calc
 
-def mom_calc(params,ndof,ntraj_on_surf,qpas,c,*args):
+def momentum(params,ndof,ntraj_on_surf,qpas,coeff_on_surf,*args):
 
+#Extract parameters from params dict...
     mom_calc_type = params['mom_calc_type']
     beta = params['linfit_beta']
+    d_weight = params['d_weight']
 
+#Assign MATRIX and CMATRIX objects...
+    mom = MATRIX(ndof, ntraj_on_surf)
+    r = MATRIX(ndof, ntraj_on_surf)
+    gmom = MATRIX(ndof, ntraj_on_surf)
+    gr = MATRIX(ndof, ntraj_on_surf)
+
+    psi_tot = CMATRIX(ntraj_on_surf,1)
+    grad_psi = CMATRIX(ndof,1)
+    deriv_term = CMATRIX(ndof,1)
+
+    q_on_surf = MATRIX(qpas[0])
+    p_on_surf = MATRIX(qpas[1])
+    a_on_surf = MATRIX(qpas[2])
+    s_on_surf = MATRIX(qpas[3])
+
+#Calculate momentum for each trajectory (i) as Im(grad(psi)/psi)...
+    for i in range(ntraj_on_surf):
+        psi_sum = complex(0.0,0.0)
+        for dof in range(ndof):
+            grad_psi.set(dof,0,0+0j)
+
+        for j in range(ntraj_on_surf):
+            pre_exp_full = 1.0
+            exp_full = 1.0
+            c2 = coeff_on_surf.get(j)
+
+            for dof in range(ndof):
+                q1 = q_on_surf.get(dof,i)
+                q2 = q_on_surf.get(dof,j)
+                dq = q1-q2
+
+                p1 = p_on_surf.get(dof,i)
+                p2 = p_on_surf.get(dof,j)
+
+                a1 = a_on_surf.get(dof,i)
+                a2 = a_on_surf.get(dof,j)
+
+                s1 = s_on_surf.get(dof,i)
+                s2 = s_on_surf.get(dof,j)
+
+                pre_exp_full *= (a2/np.pi)**0.25
+                exp_full *= np.exp(-0.5*a2*dq**2+1.0j*(p2*dq+s2))
+                deriv_term.set(dof, complex(-a2*dq,p2) )
+
+            psi_at_j = c2*pre_exp_full*exp_full
+            psi_sum += psi_at_j
+
+            for dof in range(ndof):
+                grad_psi.set(dof, grad_psi.get(dof)+psi_at_j*deriv_term.get(dof))
+
+        psi_tot.set(i, psi_sum)
+        for dof in range(ndof):
+            mom.set(dof,i,(grad_psi.get(dof)/psi_sum).imag)
+            r.set(dof,i,(grad_psi.get(dof)/psi_sum).real)
+            gmom.set(dof,i,0.0)
+            gr.set(dof,i,0.0)
+
+#For linear fitting of momentum, procedure is least squares fitting of type Ax=B...
     if mom_calc_type == 1:
-        mom,r,gmom,gr = lin_fit(ndof,ntraj_on_surf,beta,qpas,c)
+        for dof in range(ndof):
+            A=MATRIX(2,2);B=MATRIX(2,2);x=MATRIX(2,2)
 
-    else:
-        mom,r,gmom,gr = unmodified(ndof,ntraj_on_surf,beta,qpas,c)
+            for m in range(2):
+                for n in range(2):
+                    elem_A = 0; elem_B = 0
 
-    return(mom, r, gmom, gr)
+                    for i in range(ntraj_on_surf):
+                        q = q_on_surf.get(dof,i)
+                        pimag = mom.get(dof,i)
+                        preal = r.get(dof,i)
 
-# CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
+                        if d_weight == 1:
+                            z = psi_tot.get(i)
+                            zstar = np.conj(z)
+                        else:
+                            z=1+0j; zstar=1-0j
+
+                        elem_A += q**(m+n)*(z*zstar).real
+                        if n == 0:
+                            elem_B += pimag*q**(m)*(z*zstar).real
+                        elif n == 1:
+                            elem_B += preal*q**(m)*(z*zstar).real
+
+                    A.set(m,n,elem_A)
+                    B.set(m,n,elem_B)
+
+            solve_linsys(A,B,x,beta,200000)
+            for i in range(ntraj_on_surf):
+                q = q_on_surf.get(dof,i)
+                aa=x.get(0,0)+x.get(1,0)*q
+                bb=x.get(0,1)+x.get(1,1)*q
+
+                mom.set(dof,i,aa); r.set(dof,i,bb)
+                gmom.set(dof,i,x.get(1,0)); gr.set(dof,i,x.get(1,1))
+
+    return mom, r, gmom, gr
+
+"""
 def _momentum(ndof, ntraj_on_surf, qpas, c):
-    """Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). 
+    Returns the momentum *mom* calculated for each basis function according to p=Im(grad(psi)/psi). 
        Also returns the corresponding real component *r*, which can be used in updates of the basis phase parameter *s*.
 
     Args:
@@ -46,7 +137,6 @@ def _momentum(ndof, ntraj_on_surf, qpas, c):
 
         r (MATRIX): The complementary real component of the momentum, dimensioned ndof-by-ntraj.
 
-    """
 
     mom=MATRIX(ndof,ntraj_on_surf)
     r=MATRIX(ndof,ntraj_on_surf) 
@@ -81,7 +171,7 @@ def _momentum(ndof, ntraj_on_surf, qpas, c):
 
 
 def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
-    """Returns the momentum *mom_out* and it's gradient *gmom* after linear fitting via the 
+    Returns the momentum *mom_out* and it's gradient *gmom* after linear fitting via the 
        internal procedure solve_linsys. The points are each weighted by the local wavefunction density. 
        The fitted values for *r* and its gradient *gr* are also returned.
 
@@ -112,7 +202,6 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
                 gmom (MATRIX): The fitted momentum gradient matrix, dimensioned ndof-by-ntraj_on_surf.
 
                 gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj_on_surf.
-        """
 
     aaa=MATRIX(1,ntraj_on_surf)
     bbb=MATRIX(1,ntraj_on_surf)
@@ -164,7 +253,7 @@ def _lin_fitting(ndof,ntraj_on_surf,qvals,qpas,c,mom_in,r,d_weight,beta):
     return(aaa,bbb,ccc,ddd) # Im, Re, dIm, dRe
 
 def unmodified(ndof,ntraj_on_surf,beta,qpas,c,*args):
-    """Returns the raw (i.e. unfitted and unconvoluted) momentum *mom* and corresponding real component *r*. The gradient of each (*gmom* and *gr*, respectively) are still calculated via a linear fitting procedure defined in the function lin_fit, as they are necessary for calculations with adaptable width.
+    Returns the raw (i.e. unfitted and unconvoluted) momentum *mom* and corresponding real component *r*. The gradient of each (*gmom* and *gr*, respectively) are still calculated via a linear fitting procedure defined in the function lin_fit, as they are necessary for calculations with adaptable width.
 
     Args:
         univ (dictionary): Dictionary containing various system parameters.
@@ -183,7 +272,6 @@ def unmodified(ndof,ntraj_on_surf,beta,qpas,c,*args):
         gmom (MATRIX): The fitted momentum gradient matrix, dimensioned ndof-by-ntraj.
 
         gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj.
-    """
 
     aaa=MATRIX(1,ntraj);bbb=MATRIX(1,ntraj)
     gmom=MATRIX(ndof,ntraj);gr=MATRIX(ndof,ntraj)
@@ -197,7 +285,7 @@ def unmodified(ndof,ntraj_on_surf,beta,qpas,c,*args):
     return(mom,r,gmom,gr)
 
 def lin_fit(ndof,ntraj_on_surf,beta,qpas,c,*args):
-    """Returns the basis momentum *mom* and corresponding real component *r* after linear fitting via the function lin_fit. The gradients of each (*gmom* and *gr*, respectively) are also returned.
+    Returns the basis momentum *mom* and corresponding real component *r* after linear fitting via the function lin_fit. The gradients of each (*gmom* and *gr*, respectively) are also returned.
 
     Args:
         univ (dictionary): Dictionary containing various system parameters.
@@ -216,7 +304,7 @@ def lin_fit(ndof,ntraj_on_surf,beta,qpas,c,*args):
         gmom (MATRIX): The fitted momentum gradient matrix, dimensioned ndof-by-ntraj.
 
         gr (MATRIX): The fitted gradient of the complementary real component of the momentum, dimensioned ndof-by-ntraj.
-    """
+    
 
     gmom=MATRIX(ndof,ntraj_on_surf);gr=MATRIX(ndof,ntraj_on_surf)
     mom,r=_momentum(ndof,ntraj_on_surf,qpas,c)
@@ -229,4 +317,4 @@ def lin_fit(ndof,ntraj_on_surf,beta,qpas,c,*args):
             gmom.set(i,j,ccc.get(j));gr.set(i,j,ddd.get(j))
 
     return(mom,r,gmom,gr)
-
+"""
