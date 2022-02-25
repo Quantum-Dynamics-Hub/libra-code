@@ -102,9 +102,6 @@ def propagate(params, qpas, coeff, surf_pops):
     for i in range(nstates):
         sorted_states[nstates-1-i] = sorted_pairs[i][0]
 
-
-#    sys.exit(0)
-    
     #sorted_pops = sorted(surf_pops, reverse = True)
     #sorted_states = []
     #for n in range(nstates):
@@ -140,7 +137,7 @@ def propagate(params, qpas, coeff, surf_pops):
             pop_submatrix(coeff, coeff_on_surf, traj_on_surf, [0])
 
             qpas_on_surf = [q_on_surf, p_on_surf, a_on_surf, s_on_surf] # variables for the TBFs on the surface n
-            mom, r, gmom, gr = qtag_mom.mom_calc(params, ndof, ntraj_on_surf, qpas_on_surf, coeff_on_surf)
+            mom, r, gmom, gr = qtag_mom.momentum(params, ndof, ntraj_on_surf, qpas_on_surf, coeff_on_surf)
 
             # mom - MATRIX(ndof, ntraj_on_surf) - quantum momentum for q -  Im( nubla_{\alp} \psi / \psi)
             # r - MATRIX(ndof, ntraj_on_surf) - quantum momentum for s   -  Re( nubla_{\alp} \psi / \psi)
@@ -158,7 +155,6 @@ def propagate(params, qpas, coeff, surf_pops):
             else:
                 print(F"q_update_method = {q_update_method} is not implemented. Exiting...\n")
                 sys.exit(0)
-
 
             if p_update_method==0:
                 p_new_on_surf = MATRIX(p_on_surf)
@@ -193,7 +189,6 @@ def propagate(params, qpas, coeff, surf_pops):
                 p_new_on_surf_ref = MATRIX(p_new_on_surf)
                 a_new_on_surf_ref = MATRIX(a_new_on_surf)
                 s_new_on_surf_ref = MATRIX(s_new_on_surf)
-
 
         else:
             # For this to work, we need that all surfaces have equal number of trajectories
