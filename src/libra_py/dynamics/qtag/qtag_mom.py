@@ -12,12 +12,54 @@ import numpy as np
 
 from . import qtag_calc
 
-def momentum(params,ndof,ntraj_on_surf,qpas,coeff_on_surf,*args):
+import util.libutil as comn
+
+def momentum(dyn_params,qpas,coeff_on_surf,*args):
+    """Calculates the single-surface momentum for a set of basis functions, received from
+       the `propagate( )' function.
+
+    Args:
+
+        dyn_params (dict): Dictionary containing simulation parameters.
+
+          * **dyn_params[`d_weight`]** (int) : parameter used to specify whether the fitted
+              momentum values should be density-weighted in the linear fitting function. It
+              is highly recommended to leave this value as 1 (on).  [ default: 1 ]
+
+          * **dyn_params[`linfit_beta`]** (float) : parameter used to specify the convergence
+              criterion for the linear fitting algorithm. A smaller value indicates a
+              stricter fit, although convergence issues may arise when going below 1e-5  
+              [ default: 1e-1 ]
+
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+
+        coeff_on_surf (CMATRIX(ntraj_on_surf x 1)): The complex coefficient matrix for the TBF
+        on the relevant surface.
+
+    Returns:
+        mom (MATRIX(ndof x ntraj)): Matrix containing trajectory momenta.
+
+        r (MATRIX(ndof x ntraj)): Matrix containing the real complement to the trajectory momenta.
+
+        gmom (MATRIX(ndof x ntraj)): Matrix containing the momentum gradients at each trajectory
+        location.
+
+        gr (MATRIX(ndof x ntraj)): Matrix containing the real complement to *gmom*.
+    """
+
+    params = dict(dyn_params)
+
+    critical_params = [ "mom_calc_type" ]
+    default_params = { "d_weight":1, "linfit_beta":1e-1}
+    comn.check_input(params, default_params, critical_params)
 
 #Extract parameters from params dict...
     mom_calc_type = params['mom_calc_type']
     beta = params['linfit_beta']
     d_weight = params['d_weight']
+
+    ndof = qpas[0].num_of_rows
+    ntraj_on_surf = qpas[0].num_of_cols
 
 #Assign MATRIX and CMATRIX objects...
     mom = MATRIX(ndof, ntraj_on_surf)

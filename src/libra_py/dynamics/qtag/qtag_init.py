@@ -15,6 +15,20 @@ import util.libutil as comn
 
 
 def initialize(dyn_params):
+    """Places the basis functions on all surfaces according to the `init_placement' parameter and
+       initializes their qpas MATRIX objects.
+
+    Args:
+        dyn_params (dict): Dictionary containing simulation parameters.
+
+          * **dyn_params[`init_placement`]** (float) : a parameter controlling how the initial placement
+              of the basis functions is handled; 0 = grid, 1 = gaussian distributed [ default: 0 ]
+
+    Returns:
+        ntraj (int): The total number of trajectories across all surfaces.
+
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+    """
 
     params = dict(dyn_params)
 
@@ -39,18 +53,36 @@ def initialize(dyn_params):
 
 def grid(dyn_params):
     """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 
-       based on the input contained in the dicts *traj0* and *wf0*. The placement is evenly spaced 
-       across the domain where the initial wavefunction has a magnitude greater than *rcut*, and 
+       based on the input contained in the dict *dyn_params*. The placement is evenly spaced 
+       across the domain where the initial wavefunction has a magnitude greater than *rho_cut*, and 
        each surface has the same number of trajectories.
 
     Args:
-        ndof (integer): The number of degrees of freedom.
+        dyn_params (dict): Dictionary containing simulation parameters.
 
-        nstates (integer): The total number of states.
+          * **dyn_params[`nstates`]** (int) : the number of states [ default: 2 ]
 
-        traj0 (dictionary): Dictionary containing initialization parameters and keywords.
+          * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be placed
+              on each surface. For grid, the list contains *ndof* elements, with each specifying the number
+              of basis functions to be placed along each grid dimension. [ default: 5 ]
 
-        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+          * **dyn_params[`rho_cut`]** (float) : cutoff parameter for basis placement, based on the wavefunction
+              density [ default: 1e-12 ]
+
+          * **dyn_params[`alp_scl`]** (list of floats) : scaling parameter for the basis function width,
+              based on the wavefunction width *wfc_a0* [ default: 8.0 ]
+
+          * **dyn_params[`wfc_q0`]** (list of floats) : list of coordinates (length *ndof*) for the initial 
+              wavefunction position [ default: 0.0 ]
+
+          * **dyn_params[`wfc_p0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction momenta [ default: 0.0 ]
+
+          * **dyn_params[`wfc_a0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction widths [ default: 1.0 ]
+
+          * **dyn_params[`wfc_s0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction phase [ default: 0.0 ]
 
     Returns:
         ntraj (integer): The number of trajectories per surface.
@@ -61,8 +93,8 @@ def grid(dyn_params):
     params = dict(dyn_params)
 
     critical_params = [ "nstates" ]
-    default_params = { "grid_dims":[5.0], "rho_cut":1e-12, 
-                       "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "alp_scl":[1.0], "wfc_s0":[0.0]
+    default_params = { "grid_dims":[5], "rho_cut":1e-12, "alp_scl":[8.0], 
+                       "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0]
                      }
     comn.check_input(params, default_params, critical_params)
 
@@ -135,19 +167,45 @@ def grid(dyn_params):
 
 
 def gaussian(dyn_params):
-    """Returns the initial basis parameters {q,p,a,s} as an *ntraj*-by-4 matrix *qpas*, based on the input contained in the dicts *traj0* and *wf0*. The placement is randomly chosen from a Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho*. The corresponding Gaussian-distributed momenta are ordered so that the wavepacket spreads as x increases.
+    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*,
+       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a 
+       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*, 
+       and each surface has the same number of trajectories. The corresponding Gaussian-distributed 
+       momenta are ordered so that the wavepacket spreads as x increases.
 
     Args:
-        ndof (integer): The number of degrees of freedom.
+        dyn_params (dict): Dictionary containing simulation parameters.
 
-        ntraj (integer): The number of trajectories per surface.
+          * **dyn_params[`nstates`]** (int) : the number of states [ default: 2 ]
 
-        traj0 (dictionary): Dictionary containing initialization parameters and keywords.
+          * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be 
+              placed on each surface. For Gaussian, the list has only one element, specifying the 
+              number of basis functions per surface. Note that the total number of basis functions 
+              will then be *nstates*-by-*prod(grid_dims)*
 
-        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+          * **dyn_params[`rho_cut`]** (float) : cutoff parameter for basis placement, based on the 
+              wavefunction density (strictly speaking, the standard deviation of the Gaussian sampling)
+              [ default: 1e-12 ]
+
+          * **dyn_params[`alp_scl`]** (list of floats) : scaling parameter for the basis function width,
+              based on the wavefunction width *wfc_a0* [ default: 8.0 ]
+
+          * **dyn_params[`wfc_q0`]** (list of floats) : list of coordinates (length *ndof*) for the initial
+              wavefunction position [ default: 0.0 ]
+
+          * **dyn_params[`wfc_p0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction momenta [ default: 0.0 ]
+
+          * **dyn_params[`wfc_a0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction widths [ default: 1.0 ]
+
+          * **dyn_params[`wfc_s0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction phase [ default: 0.0 ]
 
     Returns:
-        qpas (list): List of {q,p,a,s} MATRIX objects.
+        ntraj (integer): The number of trajectories per surface.
+
+        qpas (list): List of {q,p,a,s} MATRIX objects storing trajectory information.
     """
 
     params = dict(dyn_params)
@@ -206,14 +264,17 @@ def gaussian(dyn_params):
 
 
 def coeffs(dyn_params, qpas, active_state):
-    """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict *wf0* onto the basis defined by *qpas*. This function assumes the wavefunction is located entirely on *nsurf*=1 initially.
+    """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict 
+       *dyn_params* onto the basis defined by *qpas*. This function assumes the wavefunction is initialized 
+       on the state specified by *active_state*.
 
     Args:
-        wf0 (dictionary): Dictionary containing initial wavepacket conditions.
+        dyn_params (dict): Dictionary containing simulation parameters.
 
         qpas (list): List of {q,p,a,s} MATRIX objects.
 
-        active_state (integer): Number specifying the active state (i.e. the state w/ the initial wavepacket). 0 = ground, 1 = first excited, ...
+        active_state (integer): Number specifying the active state (i.e. the state w/ the initial wavepacket).
+        0 = ground, 1 = first excited, ...
 
     Returns:
 
