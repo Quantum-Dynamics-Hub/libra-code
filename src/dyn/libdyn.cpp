@@ -83,6 +83,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
       .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
+      .def_readwrite("schwartz_decoherence_inv_alpha", &dyn_control_params::schwartz_decoherence_inv_alpha)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
@@ -193,6 +194,11 @@ void export_dyn_decoherence_objects(){
   def("bcsh", expt_bcsh_v1);
 
 
+  CMATRIX (*expt_mfsd_v1)
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+   nHamiltonian& ham, Random& rnd) = &mfsd;
+
+
   ///================  In dyn_decoherence_time.cpp  ===================================
 
   MATRIX (*expt_edc_rates_v1)
@@ -219,6 +225,16 @@ void export_dyn_decoherence_objects(){
 
   MATRIX (*expt_coherence_intervals_v2)(CMATRIX& Coeff, vector<MATRIX>& rates) = &coherence_intervals;
   def("coherence_intervals", expt_coherence_intervals_v2);
+
+
+  vector<MATRIX> (*expt_schwartz_1_v1)
+  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, 
+   MATRIX& inv_alp) = &schwartz_1;
+
+  vector<MATRIX> (*expt_schwartz_2_v1)
+  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, 
+   MATRIX& inv_alp) = &schwartz_2;
+
 
 
   ///================== In dyn_methods_dish.cpp  =======================
@@ -357,8 +373,12 @@ void export_dyn_hop_proposal_objects(){
    nHamiltonian& ham, vector<MATRIX>& prev_ham_dia) = &hop_proposal_probabilities;
   def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v1);
 
-  int (*expt_hop_v1)(int initstate, MATRIX& g, double ksi) = &hop;
+
+  int (*expt_hop_v1)(vector<double>& prob, double ksi) = &hop;
   def("hop", expt_hop_v1);
+
+  int (*expt_hop_v2)(int initstate, MATRIX& g, double ksi) = &hop;
+  def("hop", expt_hop_v2);
 
   vector<int> (*expt_propose_hops_v1)
   (vector<MATRIX>& g, vector<int>& act_states, Random& rnd) = &propose_hops;

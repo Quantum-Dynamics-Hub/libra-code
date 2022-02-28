@@ -60,6 +60,10 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
 CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events);
 
 
+// For MF-SD of Schwartz
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
+
+
 ///================  In dyn_decoherence_time.cpp  ===================================
 
 MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param);
@@ -70,6 +74,9 @@ void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>&
 
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
+
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
+vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
 
 
 ///================  In dyn_methods_dish.cpp  ===================================

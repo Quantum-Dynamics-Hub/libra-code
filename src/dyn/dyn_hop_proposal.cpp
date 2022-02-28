@@ -398,6 +398,52 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 
 
 
+int hop(vector<double>& prob, double ksi){
+/** 
+  \brief Attempts a stochastic hop: basically select one of the intervals in proportion
+   to their length
+  \param[in] ksi A random number that determines the outcome of the "hop" procedure
+
+  Returned value: the index of the state to which we have hopped
+*/
+  int i;
+  int nstates = prob.size();
+  double left, right; left = right = 0.0;
+  int finstate = -1;
+  
+
+  // To avoid problems, lets renormalize the hopping probabilities
+  double nrm = 0.0;
+  if(ksi >= 1){ finstate = nstates; } // hops to highest state if ksi = 1 to avoid rounding errors
+  else{
+    for(i=0;i<nstates;i++){  nrm += prob[i];  }
+
+    if(nrm>0.0){
+      for(i=0;i<nstates;i++){    
+        if(i==0){left = 0.0; right = prob[i]/nrm; }
+        else{  left = right; right = right + prob[i]/nrm; }
+
+        if((left<=ksi) && (ksi<=right)){  finstate = i;  }    
+      } // for
+
+    } // if nrm
+    else{  finstate = initstate; }  // probability to hop to any other states is zero
+                                    // so stay on the original state
+                                  
+    if(finstate==-1){
+      std::cout<<"Something is wrong in the hop(...) function\nExiting now...\n";
+      exit(0);
+    }
+  } // else  ksi < 1.0
+
+  return finstate;
+
+}// hop
+
+
+
+
+
 int hop(int initstate, MATRIX& g, double ksi){
 /** 
   \brief Attempts a stochastic hop from the initial state "initstate"
