@@ -547,7 +547,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           if(n1==n2){ // kinetic energy for the diagonal terms
             CMATRIX kin(ntraj_on_surf_n1, ntraj_on_surf_n1);
             kin = gwp_kinetic_matrix(q1, p1, s1, a1_half, q1, p1, s1, a1_half, invM );
-            h12 += kin;
+            h12 += -0.5*kin;
           }
 
           push_submatrix(super_ham, h12, traj_on_surf[n1], traj_on_surf[n2]);
