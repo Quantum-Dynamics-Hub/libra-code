@@ -15,48 +15,41 @@ import numpy as np
 from . import qtag_calc
 from . import qtag_mom
 
+import util.libutil as comn
 
-def propagate(params, qpas, coeff, surf_pops):
+def propagate(dyn_params, qpas, coeff, surf_pops):
     """Makes the trajectories on surfaces with low populations (where quantum momentum
-       is ill-defined) to move as the trajectories on the surface with the highest population
-
-       Returns the values for the new basis parameter matrices on surfaces 1 (*qpas1n*) and 2 (*qpas2n*), 
-       as well as their corresponding projection vectors *b1* and *b2*, where the motion of both sets of 
-       functions are synced to the lower energetic surface while the density on the upper surface is less than 
-       a threshold value specified by the *decpl* parameter. Also necessary are the functions for calculating 
-       momentum (*mom_calc*) and basis updates (*props*).
+       is ill-defined) move as the trajectories on the surface with the highest population
 
     Args:
 
-        params (dict): Dictionary containing simulation parameters.
+        dyn_params (dict): Dictionary containing simulation parameters.
  
-          * **params[`decpl_den`]** (float) : a parameter controlling independence of trajectories. If the population
+          * **dyn_params[`decpl_den`]** (float) : a parameter controlling independence of trajectories. If the population
               on a given state is larger that this parameter, the trajectories evolve according to their own
               quantum momentum. If the population is less than this number, the trajectories evolve according
-              to the quantum momentum for the most populated state.  [ default: 0.3 ]
+              to the quantum momentum for the most populated state.  [ default: 0.25 ]
 
-        props (list): A list of function objects for propagating basis parameters {q,p,a,s}.
-
-        qpas (list): List of {q,p,a,s} MATRIX objects for surface 1.
+        qpas (list): List of {q,p,a,s} MATRIX objects.
 
         coeff (CMATRIX(ntraj x 1)): The complex coefficient matrix for the TBF on all surfaces.
 
-        qpas2 (list): List of {q,p,a,s} MATRIX objects for surface 2.
+        surf_pops (list): List of surface populations.
 
     Returns:
-        qpas1n (list): List of updated {q,p,a,s} MATRIX objects for surface 1.
+        qpas_new (list): List of updated {q,p,a,s} MATRIX objects for surface 1.
 
-        qpas2n (list): List of updated {q,p,a,s} MATRIX objects for surface 2.
-
-        b1 (CMATRIX): The updated projection vector of the old basis (defined by qpas1) onto the new basis (defined by qpas1n).
-
-        b2 (CMATRIX): The updated projection vector of the old basis (defined by qpas2) onto the new basis (defined by qpas2n).
-
+        btot (CMATRIX(ntraj x 1)): The complex projection vector for the TBF on all surfaces.
     """
 
+    params = dict(dyn_params)
+
+    critical_params = [  ]
+    default_params = {"decpl_den":0.25}
+    comn.check_input(params, default_params, critical_params)
+
     dt = params["dt"]
-    decpl = params['decpl_den'] # 
-    beta = params['linfit_beta']
+    decpl = params["decpl_den"] 
     iM = params["iM"]  # MATRIX(ndof, 1)
 
 
@@ -137,7 +130,7 @@ def propagate(params, qpas, coeff, surf_pops):
             pop_submatrix(coeff, coeff_on_surf, traj_on_surf, [0])
 
             qpas_on_surf = [q_on_surf, p_on_surf, a_on_surf, s_on_surf] # variables for the TBFs on the surface n
-            mom, r, gmom, gr = qtag_mom.momentum(params, ndof, ntraj_on_surf, qpas_on_surf, coeff_on_surf)
+            mom, r, gmom, gr = qtag_mom.momentum(dyn_params, qpas_on_surf, coeff_on_surf)
 
             # mom - MATRIX(ndof, ntraj_on_surf) - quantum momentum for q -  Im( nubla_{\alp} \psi / \psi)
             # r - MATRIX(ndof, ntraj_on_surf) - quantum momentum for s   -  Re( nubla_{\alp} \psi / \psi)
