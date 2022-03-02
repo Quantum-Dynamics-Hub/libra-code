@@ -717,7 +717,17 @@ def run_tsh(common_params, compute_model, model_params):
 
     """
 
-    params = dict(common_params)            
+    params = dict(common_params) 
+
+    critical_params = [ ] 
+    default_params = { "wait_time":0.0, "ntraj":1, "nstates":1, "istate":[1, 0],
+                       "x0":[0.0], "p0":[0.0], "masses":[1.0], "k":[0.01], 
+                       "nucl_init_type":2, "elec_init_type":3
+                     }
+    comn.check_input(params, default_params, critical_params)
+  
+
+
     time.sleep( int(params["wait_time"]) )
 
     # Random numbers generator object
@@ -726,9 +736,11 @@ def run_tsh(common_params, compute_model, model_params):
     #============ Initialize dynamical variables ==================
     x0, p0, masses, k0 = params["x0"], params["p0"], params["masses"], params["k"]
     ntraj, nstates = params["ntraj"], params["nstates"]
+    inucl = params["nucl_init_type"]
+    ielec = params["elec_init_type"]
     
     # Nuclear
-    init_nucl = {"init_type":2, "force_constant":k0, "ntraj":ntraj}
+    init_nucl = {"init_type":inucl, "force_constant":k0, "ntraj":ntraj}
     #init_nucl = {"init_type":3, "force_constant":k0, "ntraj":ntraj}
     q, p, iM = tsh_dynamics.init_nuclear_dyn_var(x0, p0, masses, init_nucl, rnd)
     
@@ -738,7 +750,7 @@ def run_tsh(common_params, compute_model, model_params):
     for i in range(nstates):
         istates.append(0.0)
     istates[ istate[1] ] = 1.0    
-    _init_elec = { "init_type":3, "nstates":nstates, "istates":istates, "rep":istate[0],  "ntraj":ntraj   }
+    _init_elec = { "init_type":ielec, "nstates":nstates, "istates":istates, "rep":istate[0],  "ntraj":ntraj   }
     
 
     #============= Dynamical variables ==============

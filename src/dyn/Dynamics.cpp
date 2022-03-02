@@ -523,7 +523,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   //if(prms.decoherence_algo==2){   dyn_var.allocate_afssh(); }
 
-
   //============ Sanity checks ==================
   if(prms.ensemble==1){  
     n_therm_dofs = therm[0].Nf_t + therm[0].Nf_r;
@@ -688,11 +687,16 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
+//    exit(0);
+  
+  if(prms.decoherence_times_type==-1){
+    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = 0.0;   }
+  }
 
   /// mSDM
   /// Just use the plain times given from the input, usually the
   /// mSDM formalism
-  if(prms.decoherence_times_type==0){
+  else if(prms.decoherence_times_type==0){
     for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
   }
 
@@ -727,7 +731,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
   // BCSH
   else if(prms.decoherence_algo==3){ 
-
     *dyn_var.reversal_events = wp_reversal_events(p, invM, act_states, ham, projectors, prms.dt);
     Coeff = bcsh(Coeff, prms.dt, act_states, *dyn_var.reversal_events);
   }
@@ -737,8 +740,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd);
   }
 
- 
-//  exit(0); 
+//  exit(0);
 
   //========= Use the resulting amplitudes to do the hopping =======
   // Adiabatic dynamics
@@ -762,7 +764,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     // Velocity rescaling
     handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
 
-//    exit(0);
+
 
     if(prms.decoherence_algo==1){
       // Instantaneous decoherence 
@@ -831,16 +833,25 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
   project_out_states.clear();
-  Uprev.clear();  
+
+  if(prms.rep_tdse==1){      
+    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
+      if(prms.time_overlap_method==0){  Uprev.clear();  }
+    }
+  }
+
+//    exit(0);
+
   St.clear();
   Eadi.clear();
   decoherence_rates.clear();
   Ekin.clear();
   prev_ham_dia.clear();
-  t1.clear();
-  t2.clear();
+//  t1.clear();
+//  t2.clear();
 
 
+//    exit(0);
 
 }
 

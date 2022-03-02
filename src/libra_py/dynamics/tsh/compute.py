@@ -81,6 +81,14 @@ def init_nuclear_dyn_var(Q, P, M, params, rnd):
                 These parameters define the Harmonic oscillator ground state wavefunctions from which
                 the coordinates and momenta are sampled. [ units: a.u. = Ha/Bohr^2, default: [0.001] ]
                 The length should be consistent with the length of Q, P and M arguments
+                The ground state of the corresponding HO is given by:
+                 psi_0 = (alp/pi)^(1/4)  exp(-1/2 * alp * x^2), with alp = m * omega / hbar
+                The corresponding probability density is distributed as:
+                Tully uses psi(x) ~ exp(-(x/sigma)^2) so 1/sigma^2 = alp/2 => alp = 2/sigma^2 = m sqrt (k/m) = sqrt( k * m )
+
+                To make sigma = 20 / p0 => k * m = 4 /sigma^4 = 4/ (20/p0)^4 = 4* p^4 / 20^4 =  0.000025 * p^4 
+                So: k =  0.000025 * p^4  / m
+                
 
             * **params["ntraj"]** ( int ): the number of trajectories - the parameter defines the
                 number of columns the output matrices will have [ default: 1 ]
@@ -868,12 +876,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,
-                             "dish_decoherence_event_option":1, "decoherence_times_type":0, 
+                             "dish_decoherence_event_option":1, "decoherence_times_type":-1, 
                              "decoherence_C_param":1.0, "decoherence_eps_param":0.1, 
                              "dephasing_informed":0, "instantaneous_decoherence_variant":1, 
                              "collapse_option":0,  
                              "decoherence_rates":MATRIX(len(_states), len(_states)),
-                             "ave_gaps":MATRIX(len(_states), len(_states))
+                             "ave_gaps":MATRIX(len(_states), len(_states)),
+                             "schwartz_decoherence_inv_alpha": MATRIX(len(_states), 1)
                            } )
 
     #================= Entanglement of trajectories ================================
@@ -944,6 +953,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)
     model_params.update({"timestep":0})
+
     
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
     update_Hamiltonian_p(dyn_params, ham, p, iM)  

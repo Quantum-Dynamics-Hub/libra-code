@@ -511,6 +511,7 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
   
 */
 
+
   int ntraj = p.n_cols;
   int nadi = ham.nadi;
   int ndof = ham.nnucl;
@@ -531,6 +532,7 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
     int a = act_states[itraj]; // active state index
     
     pa = p.col(itraj); // this is momentum on the active state
+//    exit(0);
 
     double T_a = compute_kinetic_energy(pa, invM); // kinetic energy on the active state
 
@@ -538,6 +540,8 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
     E = ham.children[itraj]->get_ham_adi();
     E = projectors[itraj].H() * E * projectors[itraj];      
     double E_a = E.get(a, a).real();  // potential energy on the active state
+
+//    exit(0);
 
     // Forces
     for(int idof=0; idof<ndof; idof++){

@@ -338,7 +338,8 @@ class dyn_control_params{
   /**
     Type of dephasing times/rates calculation:
 
-      - 0: use the rates read out from the input  [ default ]
+      - -1: set all dephasing rates to zero [ default ]
+      - 0: use the rates read out from the input 
       - 1: use the energy-based decoherence method (EDC)    
       - 2: Schwartz - mean-field Force-based decoherence
       - 3: Schwartz - pair-wise-based decoherences

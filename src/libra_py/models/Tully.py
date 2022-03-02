@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018-2020 Alexey V. Akimov                                                   
+#* Copyright (C) 2018-2022 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of
@@ -30,7 +30,7 @@ import libra_py.units as units
 class tmp:
     pass    
 
-def Tully1_py(q, params):
+def Tully1_py(q, params, full_id):
     """
    
     Pure Python implementation of the Tully model I = Simple Avoided Crossing (SAC):
@@ -70,6 +70,10 @@ def Tully1_py(q, params):
     C = params["C"]
     D = params["D"]
 
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
 
 
     Hdia = CMATRIX(2,2)
@@ -77,7 +81,7 @@ def Tully1_py(q, params):
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
   
-    x = q.get(0)
+    #x = q.get(0)
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
 
@@ -118,7 +122,7 @@ def Tully1_py(q, params):
 
 
 
-def Tully1(q, params):
+def Tully1(q, params, full_id):
     """
    
     The implementation that calls the C++ implementation of Tully model I = Simple Avoided Crossing (SAC):
@@ -158,6 +162,10 @@ def Tully1(q, params):
     D = params["D"]
 
 
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
     obj = tmp()
     obj.ham_dia = CMATRIX(2,2)
     obj.ovlp_dia = CMATRIX(2,2)
@@ -165,7 +173,7 @@ def Tully1(q, params):
     obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
 
     # Convert MATRIX to doubleList()
-    qq = doubleList();  qq.append(q.get(0))
+    qq = doubleList();  qq.append(x)
     prms = doubleList() # will use the default values
     prms.append(A); prms.append(B); prms.append(C); prms.append(D);
     
@@ -175,7 +183,7 @@ def Tully1(q, params):
 
 
 
-def Tully2(q, params):
+def Tully2(q, params, full_id):
     """
    
     The implementation that calls the C++ implementation of Tully model II = Double Avoided Crossing (DAC):
@@ -223,8 +231,12 @@ def Tully2(q, params):
     obj.d1ham_dia = CMATRIXList();  obj.d1ham_dia.append( CMATRIX(2,2) )
     obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
 
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
     # Convert MATRIX to doubleList()
-    qq = doubleList();  qq.append(q.get(0))
+    qq = doubleList();  qq.append(x)
     prms = doubleList() # will use the default values
     prms.append(A); prms.append(B); prms.append(C); prms.append(D);  prms.append(E);
     
@@ -234,7 +246,7 @@ def Tully2(q, params):
 
 
 
-def Tully3(q, params):
+def Tully3(q, params, full_id):
     """
    
     The implementation that calls the C++ implementation of Tully model III =
@@ -280,8 +292,12 @@ def Tully3(q, params):
     obj.d1ham_dia = CMATRIXList();  obj.d1ham_dia.append( CMATRIX(2,2) )
     obj.dc1_dia = CMATRIXList();  obj.dc1_dia.append( CMATRIX(2,2) )
 
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
     # Convert MATRIX to doubleList()
-    qq = doubleList();  qq.append(q.get(0))
+    qq = doubleList();  qq.append(x)
     prms = doubleList() # will use the default values
     prms.append(A); prms.append(B); prms.append(C)
     
