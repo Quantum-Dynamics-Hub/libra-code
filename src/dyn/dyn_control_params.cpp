@@ -65,7 +65,7 @@ dyn_control_params::dyn_control_params(){
   decoherence_algo = -1; 
   sdm_norm_tolerance = 0.0;
   dish_decoherence_event_option = 1;
-  decoherence_times_type = 0;
+  decoherence_times_type = -1;
   schwartz_decoherence_inv_alpha = NULL;
   decoherence_C_param = 1.0;
   decoherence_eps_param = 0.1;

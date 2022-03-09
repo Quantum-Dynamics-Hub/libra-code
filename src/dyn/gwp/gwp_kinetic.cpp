@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -33,7 +33,7 @@ namespace libgwp{
 complex<double> gwp_kinetic(double q1, double p1, double gamma1, double alp1,
                             double q2, double p2, double gamma2, double alp2){
 /**
-  This function computes a second derivative matrix element of two moving 1D Gaussians  <G_1|d^2/dr^2|G_2>, where:
+  This function computes a second derivative matrix element of two moving 1D Gaussians  <G_1|-0.5 * d^2/dr^2|G_2>, where:
 
   G_a(r; r_a, p_a, alp_a, gamma_a) = (2*alp_a/pi)^(1/4) * exp(-alp_a*(r-r_a)^2 + i*(p_a/hbar)*(r-r_a) + i*gamma_a/hbar)
 
@@ -60,7 +60,7 @@ complex<double> gwp_kinetic(double q1, double p1, double gamma1, double alp1,
  
   complex<double> ovlp = gwp_overlap(q1, p1, gamma1, alp1, q2, p2, gamma2, alp2);
 
-  return complex<double>( -pref1 + pref1 * pref1 * dq * dq - p_weighted * p_weighted,  2.0 * pref1 * p_weighted * dq) * ovlp;
+  return -0.5 * complex<double>( -pref1 + pref1 * pref1 * dq * dq - p_weighted * p_weighted,  2.0 * pref1 * p_weighted * dq) * ovlp;
 
 }
 
@@ -68,7 +68,7 @@ complex<double> gwp_kinetic(double q1, double p1, double gamma1, double alp1,
 complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
                             MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2){
 /**
-  This function computes a second derivative matrix elements of two moving N-dimensional Gaussians  <G_1|d^2/dr^2|G_2>, where:
+  This function computes a second derivative matrix elements of two moving N-dimensional Gaussians  <G_1|-1/2 * d^2/dr^2|G_2>, where:
 
   G_a(r; r_a, p_a, alp_a, gamma_a) = \product_s^Ndof { (2*alp_a/pi)^(1/4) * exp(-alp_a*(r-r_a)^2 + i*(p_a/hbar)*(r-r_a) + i*gamma_a/hbar)}_s
 
@@ -106,7 +106,7 @@ complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1
 
   res *= gwp_overlap(q1, p1, gamma1, alp1, q2, p2, gamma2, alp2);
 
-  return res;
+  return -0.5 * res;
 
 }
 
@@ -115,7 +115,7 @@ complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1
                             MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
                             MATRIX& iM){
 /**
-  This function computes a second derivative matrix elements of two moving N-dimensional Gaussians  <G_1|d^2/dr^2|G_2>, where:
+  This function computes a second derivative matrix elements of two moving N-dimensional Gaussians  <G_1| -0.5*M^{-1} d^2/dr^2|G_2>, where:
 
   G_a(r; r_a, p_a, alp_a, gamma_a) = \product_s^Ndof { (2*alp_a/pi)^(1/4) * exp(-alp_a*(r-r_a)^2 + i*(p_a/hbar)*(r-r_a) + i*gamma_a/hbar)}_s
 
@@ -157,7 +157,7 @@ complex<double> gwp_kinetic(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1
 
   res *= gwp_overlap(q1, p1, gamma1, alp1, q2, p2, gamma2, alp2);
 
-  return res;
+  return -0.5*res;
 
 }
 
@@ -216,7 +216,7 @@ complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1,
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar){
 /**
-  This function computes the kinetic energy matrix element between two moving Gaussians  <G_1|d^2/dr^2|G_2>, where:
+  This function computes the kinetic energy matrix element between two moving Gaussians  <G_1|- 0.5 * d^2/dr^2|G_2>, where:
 
   G_a(r; R_a, P_a, alp_a, gamma_a) = (2*alp_a/pi)^(Ndof/4) * exp(-alp_a*(r-R_a)^2 + i*(P_a/hbar)*(r-R_a) + i*gamma_a/hbar)
 
@@ -244,7 +244,7 @@ complex<double> gwp_kinetic(MATRIX& R1, MATRIX& P1, double gamma1,
 
   res *= ovlp;
   
-  return res;
+  return -0.5*res;
 
 }
 

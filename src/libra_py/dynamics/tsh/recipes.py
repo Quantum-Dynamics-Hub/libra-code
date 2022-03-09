@@ -230,7 +230,7 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
         params.update( {"force_method":1, "rep_force":1} )    # state-specific forces, compute them in the adiabatic rep
         params.update( {"nac_update_method":1} )              # update NACs based on derivative couplings and momenta
         params.update( {"time_overlap_method":0} )            # state-tracking based on the on-the-fly time-overlaps                         
-        params.update( {"hop_acceptance_algo":20, "momenta_rescaling_algo":200} )  # Tully-style velocity rescaling and frustr. hops
+        params.update( {"hop_acceptance_algo":20, "momenta_rescaling_algo":201} )  # Tully-style velocity rescaling and frustr. hops
 
     elif is_nbra == 1:  # file-based NBRA
         params.update( {"force_method":0 } )           # don't compute forces
