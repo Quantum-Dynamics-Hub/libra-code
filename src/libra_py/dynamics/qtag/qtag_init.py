@@ -346,7 +346,7 @@ def coeffs(dyn_params, qpas, active_state):
         a1 = avals_active.col(ii)
         s1 = svals_active.col(ii)
 
-        b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))   # This is a question!!!
+        b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))
         ii += 1
 
     return(b)
