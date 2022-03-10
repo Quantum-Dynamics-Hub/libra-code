@@ -45,7 +45,7 @@ def init_qtag_data(saver, output_level, _nsteps, _ntraj, _ndof, _nstates):
 
         # Trajectory basis coefficients
         if "coeffs" in saver.keywords: # and "coeffs" in saver.np_data.keys():
-            saver.add_dataset("coeffs", (_nsteps, _ntraj), "C")
+            saver.add_dataset("coeffs", (_nsteps, 1, _ntraj), "C")
 
     if output_level>=3:
 
