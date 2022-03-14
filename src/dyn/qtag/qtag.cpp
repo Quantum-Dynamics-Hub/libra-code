@@ -299,7 +299,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
   int ndof = q1.n_rows;
 
   vx1 = Ham1->get(n1, n2);
-  vx2 = Ham1->get(n1, n2);
+  vx2 = Ham2->get(n1, n2);
 
   v = 0.5 * (vx1 + vx2);
 
@@ -383,10 +383,10 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
 
       int j = traj_on_surf_n2[jtraj];
 
-      qj = q1.col(jtraj);
-      pj = p1.col(jtraj);
-      aj = alp1.col(jtraj);
-      sj = s1.col(jtraj);
+      qj = q2.col(jtraj);
+      pj = p2.col(jtraj);
+      aj = alp2.col(jtraj);
+      sj = s2.col(jtraj);
 
 
       if(method==0){ // BAT
@@ -541,19 +541,18 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           CMATRIX h12(ntraj_on_surf_n1, ntraj_on_surf_n2);
           CMATRIX pot(ntraj_on_surf_n1, ntraj_on_surf_n2);
           
-          pot = qtag_potential(q1, p1, s1, a1_half, n1, traj_on_surf[n1], q2, p2, s2, a2_half, n2, traj_on_surf[n2], ham, method);
+          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method);
           h12.dot_product(pot, s12);
 
           if(n1==n2){ // kinetic energy for the diagonal terms
             CMATRIX kin(ntraj_on_surf_n1, ntraj_on_surf_n1);
-            kin = gwp_kinetic_matrix(q1, p1, s1, a1_half, q1, p1, s1, a1_half, invM );
+            kin = gwp_kinetic_matrix(q1, p1, s1, a1_half, q2, p2, s2, a2_half, invM );
             h12 += kin;
           }
 
           push_submatrix(super_ham, h12, traj_on_surf[n1], traj_on_surf[n2]);
           if(n1 != n2){
             CMATRIX h21(ntraj_on_surf_n2, ntraj_on_surf_n1);  h21 = h12.H();
-
             push_submatrix(super_ham, h21, traj_on_surf[n2], traj_on_surf[n1]);
           }
 
