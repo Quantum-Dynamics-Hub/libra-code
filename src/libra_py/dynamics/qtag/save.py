@@ -75,6 +75,14 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         # Create an output directory, if not present
         if not os.path.isdir(prefix):
             os.mkdir(prefix)
+        else:
+            subdir=prefix+"/wfc"
+            for file in os.listdir(subdir):
+                os.remove(os.path.join(subdir,file))
+            os.rmdir(subdir)
+
+            for file in os.listdir(prefix):
+                os.remove(os.path.join(prefix,file))
 
         # Simulation parameters
         f = open(F"{prefix}/_dyn_params.txt","w")
