@@ -76,10 +76,11 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         if not os.path.isdir(prefix):
             os.mkdir(prefix)
         else:
-            subdir=prefix+"/wfc"
-            for file in os.listdir(subdir):
-                os.remove(os.path.join(subdir,file))
-            os.rmdir(subdir)
+            if os.path.isdir(prefix+"/wfc"):
+                subdir=prefix+"/wfc"
+                for file in os.listdir(subdir):
+                    os.remove(os.path.join(subdir,file))
+                os.rmdir(subdir)
 
             for file in os.listdir(prefix):
                 os.remove(os.path.join(prefix,file))
