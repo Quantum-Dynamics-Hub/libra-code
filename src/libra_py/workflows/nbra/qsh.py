@@ -151,7 +151,8 @@ def compute_freqs(H_vib, params):
 
                 fu = 0.0
                 for k in range(0,nfreqs):
-                    fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
+                    #fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
+                    fu = fu + freqs[i][j][k][3] * math.sin(conv*freqs[i][j][k][0]*r*dt)
 
                 fu_ave = fu_ave + fu
                 fu2_ave = fu2_ave + fu*fu
@@ -210,13 +211,17 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
                 nfreqs = len(freqs[i][j])
 
             for k in range(0,nfreqs):
-                fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
+                #fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
+                fu[i][j] = fu[i][j] + freqs[i][j][k][3] * math.sin(conv*freqs[i][j][k][0]*t)
 
 
     for i in range(0,nstates):
         for j in range(0,nstates):
             if i==j:
-                xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                xab = 0.0
+                if dev[i][j]>0.0:
+                    xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+
                 if xab < dw_Hvib_re.get(i,j):
                     xab = dw_Hvib_re.get(i,j)
                 elif xab > up_Hvib_re.get(i,j):
@@ -224,7 +229,10 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
                 Hvib_stoch_re.set(i,j,   xab )
 
             elif i<j:
-                xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                xab = 0.0
+                if dev[i][j]>0.0:
+                    xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+
                 if xab < dw_Hvib_im.get(i,j):
                     xab = dw_Hvib_im.get(i,j)
                 elif xab > up_Hvib_im.get(i,j):
