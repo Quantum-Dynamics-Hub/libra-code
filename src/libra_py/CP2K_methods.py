@@ -733,6 +733,29 @@ def read_energies_from_cp2k_md_log_file( params ):
     return KS_energies, total_energy
 
 
+def read_homo_index(filename: str):
+    """
+    This function extract the HOMO index from CP2K log file. This index starts from 1.
+    Args:
+
+        filename (string): The full path to the log file.
+
+    Returns:
+
+        homo_index (integer): The HOMO index (the number of occupied orbitals).
+    """
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+
+    for i in range(len(lines)):
+        if 'occupied' in lines[i].lower():
+            if 'number' in lines[i].lower():
+                homo_index = int(lines[i].split()[-1])
+
+    return homo_index
+
+
 def read_molog_file(filename: str):
     """
     This function reads the coefficiets of the molecular orbitals printed out
@@ -918,6 +941,71 @@ def read_molog_file(filename: str):
     print('Elapsed time:', time.time()-timer)
             
     return mo_energies, mo_coeffs
+
+
+def read_ao_matrices(filename):
+    """
+    This function reads the files printed by CP2K for atomic orbital matrices data.
+    If the AO_MATRICES keyword is activated in CP2K input, then all the specified 
+    matrices in that section will be appened in one file. This function reads all the
+    matrices and data.
+    Args:
+        filename (string): The name of the file that contains AO matrices data.
+    Returs:
+        data (list): A list that contains the AO matrices with the same order as in the file.
+    """    
+    
+    file = open(filename,'r')
+    lines = file.readlines()
+    file.close()
+    
+    mat_lines = []
+    data_lines = []
+    for i in range(len(lines)):
+        tmp = lines[i].split()
+        if 'MATRIX' in lines[i]:
+            mat_lines.append(i)
+            #print(lines[i])
+        if 0<len(tmp)<=4 and 'MATRIX' not in lines[i]:
+            data_lines.append(i)
+    data_lines = np.array(data_lines)
+    data = []
+    for i in range(len(mat_lines)):
+        print(lines[mat_lines[i]])
+        data_0 = []
+        start_line = mat_lines[i]
+        if i==len(mat_lines)-1:
+            end_line = len(lines)-1
+        else:
+            end_line = mat_lines[i+1]
+        #print(start_line, end_line)
+        ind = np.where(np.logical_and(start_line<data_lines, data_lines<end_line))# and data_lines.all()<end_line)
+        #print(ind[0])
+        #print(data_lines[ind])
+        for j in range(len(ind[0])):
+            start_line_1 = int(data_lines[int(ind[0][j])])            
+            if j==len(ind[0])-1:
+                end_line_1 = int(end_line)
+            else:
+                end_line_1 = int(data_lines[int(ind[0][j+1])])
+            #print(lines[start_line_1])
+            #print(lines[end_line_1])
+            for k1 in range(4):
+                tmp = []
+                try:
+                    for k2 in range(start_line_1+1,end_line_1):
+                        #print(lines[k2])
+                        if len(lines[k2].split())>0:
+                            #print(lines[k2])
+                            tmp.append(float(lines[k2].split()[4+k1]))
+
+                    data_0.append(tmp)
+                except:
+                    pass
+        data.append(np.array(data_0))
+        
+    return data
+
 
 def extract_coordinates(trajectory_xyz_file_name: str, time_step: int):
     """
@@ -1183,6 +1271,53 @@ def index_reorder(l_val):
     return np.array(new_order)-1
 
 
+def generate_translational_vectors(origin, N, periodicity_type):
+    """
+    This function generates the translational vectors for periodic systems.
+    For monolayers the generated vectors does not add the orthogonal axis but
+    for bulk all directions are added.
+
+    Args:
+        origin (list): The translational vectors are obtained with respect to this origin.
+        N (list): An array that contains the number of cells to be considered in 
+                     each of the X, Y, and Z directions.
+        periodicity_type (string): The periodicity type. It can only get these values:
+                                   'XY', 'XZ', and 'YZ' for monolayers and 'XYZ' for bulk systems.
+
+    Returns:
+        translational_vectors (numpy array): The translational vectors for that system.
+
+    """
+    # Basis vectors
+    i_vec = np.array([1,0,0])
+    j_vec = np.array([0,1,0])
+    k_vec = np.array([0,0,1])
+    # origin
+    origin = np.array(origin)
+    translational_vectors = []
+    x_range = [0]
+    y_range = [0]
+    z_range = [0]
+    Nx = N[0]
+    Ny = N[1]
+    Nz = N[2]
+    if 'x' in periodicity_type.lower():
+        x_range = range(-Nx,Nx+1)
+    if 'y' in periodicity_type.lower():
+        y_range = range(-Ny,Ny+1)
+    if 'z' in periodicity_type.lower():
+        z_range = range(-Nz,Nz+1)
+
+    for n_i in x_range:
+        for n_j in y_range:
+            for n_k in z_range:
+                vec = origin + n_i*i_vec+n_j*j_vec+n_k*k_vec
+                if not np.array_equal(vec,origin):
+                    translational_vectors.append(vec)
+                
+    return np.array(translational_vectors)
+
+
 def molog_lvals(filename:str):
     """
     This function returns all the angular momentum values in the order 
@@ -1371,22 +1506,23 @@ def run_cp2k_xtb(params):
     trajectory_xyz_filename = params['trajectory_xyz_filename']
     step = params['step']
     cp2k_exe = params['cp2k_exe']
+    mpi_executable = params['mpi_executable']
     nprocs = params['nprocs']
     ##### Run OT
     print('Step', step,'Computing the OT method wfn file...')
     cp2k_xtb_ot_inp(ot_input_template, trajectory_xyz_filename, step)
     t1 = time.time()
-    os.system('mpirun -np %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(nprocs, cp2k_exe, step, step))
+    os.system('%s -n %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(mpi_executable, nprocs, cp2k_exe, step, step))
     print('Done with OT wfn. Elapsed time:',time.time()-t1)
     ##### Run diagonalization
     t1 = time.time()
     print('Computing the wfn file using diagonalization method...')
     cp2k_xtb_diag_inp(diag_input_template, step)
-    os.system('mpirun -np %d %s -i xtb_diag_step_%d.inp -o OUT-diag_%d.log'%(nprocs, cp2k_exe, step, step))
+    os.system('%s -n %d %s -i xtb_diag_step_%d.inp -o OUT-diag_%d.log'%(mpi_executable, nprocs, cp2k_exe, step, step))
     print('Done with diagonalization. Elapsed time:', time.time()-t1)
 
 
-def distribute_cp2k_xtb_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
+def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
     """
     This function distributes the jobs to perform CP2K calculations and computing and saving the MO overlaps.
 

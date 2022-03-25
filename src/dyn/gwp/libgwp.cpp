@@ -72,9 +72,21 @@ void export_gwp_objects(){
   (MATRIX& R1, MATRIX& P1, double gamma1, 
    MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_overlap;
 
+  complex<double> (*expt_gwp_overlap_v4)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+   MATRIX& q3, MATRIX& p3, MATRIX& gamma3, MATRIX& alp3) = &gwp_overlap;
+
   def("gwp_overlap",  expt_gwp_overlap_v1);
   def("gwp_overlap",  expt_gwp_overlap_v2);
   def("gwp_overlap",  expt_gwp_overlap_v3);
+  def("gwp_overlap",  expt_gwp_overlap_v4);
+
+
+  CMATRIX (*expt_gwp_overlap_matrix_v1)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2) = &gwp_overlap_matrix;
+
 
 
   ///=============== Transition dipole moments ===================
@@ -124,13 +136,25 @@ void export_gwp_objects(){
    MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2) = &gwp_kinetic;
 
   complex<double> (*expt_gwp_kinetic_v3)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
+   MATRIX& iM) = &gwp_kinetic;
+
+  complex<double> (*expt_gwp_kinetic_v4)
   (MATRIX& R1, MATRIX& P1, double gamma1, MATRIX& R2, MATRIX& P2, double gamma2, double alp, double hbar) = &gwp_kinetic;
 
   def("gwp_kinetic",  expt_gwp_kinetic_v1);
   def("gwp_kinetic",  expt_gwp_kinetic_v2);
   def("gwp_kinetic",  expt_gwp_kinetic_v3);
+  def("gwp_kinetic",  expt_gwp_kinetic_v4);
 
 
+  CMATRIX (*expt_gwp_kinetic_matrix_v1)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2, 
+   MATRIX& invM) = &gwp_kinetic_matrix;
+
+  def("gwp_kinetic_matrix",  expt_gwp_kinetic_matrix_v1);
 
 }
 

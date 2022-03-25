@@ -68,16 +68,15 @@ void ForceField::extract_dictionary(boost::python::dict d){
     key = extract<std::string>(d.keys()[i]);
 
     if(key=="ForceField_Name"){ ForceField_Name = extract<std::string>(d.values()[i]); is_ForceField_Name = 1; }
-    else if(key=="bond_functional"){ bond_functional = extract<std::string>(d.values()[i]); is_bond_functional = 1;}
-    else if(key=="angle_functional"){ angle_functional = extract<std::string>(d.values()[i]); is_angle_functional = 1;}
-    else if(key=="dihedral_functional"){ dihedral_functional = extract<std::string>(d.values()[i]); is_dihedral_functional = 1;}
-    else if(key=="oop_functional"){ oop_functional = extract<std::string>(d.values()[i]); is_oop_functional = 1;}
-    else if(key=="vdw_functional"){ vdw_functional = extract<std::string>(d.values()[i]); is_vdw_functional = 1;}
-    else if(key=="elec_functional"){ elec_functional = extract<std::string>(d.values()[i]); is_elec_functional = 1;}
-    else if(key=="mb_functional"){ mb_functional = extract<std::string>(d.values()[i]); is_mb_functional = 1;}
-    else if(key=="cg_functional"){ cg_functional = extract<std::string>(d.values()[i]); is_cg_functional = 1;}
-    else if(key=="mb_excl_functional"){ mb_excl_functional = extract<std::string>(d.values()[i]); is_mb_excl_functional = 1;}
-
+    else if(key=="bond" || key=="bond_functional"){ bond_functional = extract<std::string>(d.values()[i]); is_bond_functional = 1;}
+    else if(key=="angle" || key=="angle_functional"){ angle_functional = extract<std::string>(d.values()[i]); is_angle_functional = 1;}
+    else if(key=="dihedral" || key=="dihedral_functional"){ dihedral_functional = extract<std::string>(d.values()[i]); is_dihedral_functional = 1;}
+    else if(key=="oop" || key=="oop_functional"){ oop_functional = extract<std::string>(d.values()[i]); is_oop_functional = 1;}
+    else if(key=="vdw" || key=="vdw_functional"){ vdw_functional = extract<std::string>(d.values()[i]); is_vdw_functional = 1;}
+    else if(key=="elec" ||  key=="elec_functional"){ elec_functional = extract<std::string>(d.values()[i]); is_elec_functional = 1;}
+    else if(key=="mb" || key=="mb_functional"){ mb_functional = extract<std::string>(d.values()[i]); is_mb_functional = 1;}
+    else if(key=="cg" || key=="cg_functional"){ cg_functional = extract<std::string>(d.values()[i]); is_cg_functional = 1;}
+    else if(key=="mb_excl" || key=="mb_excl_functional"){ mb_excl_functional = extract<std::string>(d.values()[i]); is_mb_excl_functional = 1;}
 
 //    else if(key=="stress_opt"){ stress_opt = extract<std::string>(d.values()[i]); is_stress_opt = 1;}
 

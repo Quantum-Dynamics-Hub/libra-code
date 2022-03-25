@@ -1,13 +1,32 @@
+import unittest
+import numpy as np
 from liblibra_core import *
 from libra_py.workflows.nbra.step3 import make_active_space
 
-print('You are in testing the make_active_space function test.')
-num_of_occ_orbital = input('number of occupied orbitals in the new active space:')
-num_of_unocc_orbital = input('number of unoccupied orbitals in the new active space:')
-ks_homo_index = input('the Kohn-Sham HOMO index in the raw data files:')
-data_dim = input('data dimension of the raw data files:')
-# The new active space and the KS HOMO index in that active space which again starts from 1
-new_active_space, new_ks_homo_index = make_active_space(int(num_of_occ_orbital), int(num_of_unocc_orbital), int(data_dim), int(ks_homo_index))
-print('The new active space is:', new_active_space)
-print('The new KS HOMO index is:', new_ks_homo_index)
+
+
+
+class Test_make_active_space(unittest.TestCase):
+
+    def test_full_active_pace(self):
+        """Test full active space"""
+
+        # Testing the full active space
+        # The new active space and the KS HOMO index in that active space which again starts from 1
+        new_active_space, new_ks_homo_index = make_active_space(2, 2, 8, 2)
+        self.assertEqual(new_active_space, list(range(8)) )
+        self.assertEqual(new_ks_homo_index, 2)
+
+    def test_partial_active_space(self):
+        """Test partial active space"""
+
+        # Testing the partial active space
+        # The new active space and the KS HOMO index in that active space which again starts from 1
+        new_active_space, new_ks_homo_index = make_active_space(3, 1, 10, 3)
+        self.assertEqual(new_active_space, [0, 1, 2, 3, 5, 6, 7, 8] )
+        self.assertEqual(new_ks_homo_index, 3)
+
+
+if __name__=='__main__':
+    unittest.main()
 

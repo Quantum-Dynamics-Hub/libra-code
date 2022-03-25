@@ -42,6 +42,7 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
        nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
 
+int hop(vector<double>& prob, double ksi);
 int hop(int initstate, MATRIX& g, double ksi);
 vector<int> propose_hops(vector<MATRIX>& g, vector<int>& act_states, Random& rnd);
 

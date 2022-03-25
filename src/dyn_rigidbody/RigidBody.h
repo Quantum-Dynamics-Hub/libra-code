@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2021 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -97,6 +97,11 @@ public:
   // Fixation (constraint) flags
   int is_fixed_translation;  ///< The flag showing whether the translation of this RB is forbidden (if = 1) or not (if = 0)
   int is_fixed_rotation;     ///< The flag showing whether the rotation of this RB is forbidden (if = 1) or not (if = 0)
+
+  // Orientation update option - controls how set_orientation function works
+  int set_orientation_option;  ///< if 1 - use the previous approach that is we convert the updated orientation matrix to the quaternions for the later use
+                               ///< if 0 - forget about updating quaternions
+  int is_set_orientation_option; /// the flag of the setting up
 
 
 private:
@@ -251,15 +256,15 @@ public:
   void Rotate_e_y(double);
   void Rotate_e_z(double);
 
-  void Rotate(MATRIX3x3& rot);
-  void Rotate(MATRIX3x3& rot, VECTOR& pivot);
-  void Rotate(QUATERNION& rot);
-  void Rotate(QUATERNION& quat, VECTOR& pivot);
-  void Rotate(double phi,VECTOR& dir);
-  void Rotate(double phi,VECTOR& dir, VECTOR& pivot);
+  void Rotate(const MATRIX3x3& rot);
+  void Rotate(const MATRIX3x3& rot, const VECTOR& pivot);
+  void Rotate(const QUATERNION& rot);
+  void Rotate(const QUATERNION& quat, const VECTOR& pivot);
+  void Rotate(double phi, const VECTOR& dir);
+  void Rotate(double phi, const VECTOR& dir, const VECTOR& pivot);
 
 
-  void Rotate_I(double,VECTOR&);
+  void Rotate_I(double, const VECTOR&);
 
 
   // Integrators

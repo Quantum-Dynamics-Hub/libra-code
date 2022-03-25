@@ -47,6 +47,7 @@ import os
 import multiprocessing as mp
 import time
 import numpy as np
+import scipy.sparse as sp
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -716,7 +717,17 @@ def run_tsh(common_params, compute_model, model_params):
 
     """
 
-    params = dict(common_params)            
+    params = dict(common_params) 
+
+    critical_params = [ ] 
+    default_params = { "wait_time":0.0, "ntraj":1, "nstates":1, "istate":[1, 0],
+                       "x0":[0.0], "p0":[0.0], "masses":[1.0], "k":[0.01], 
+                       "nucl_init_type":2, "elec_init_type":3
+                     }
+    comn.check_input(params, default_params, critical_params)
+  
+
+
     time.sleep( int(params["wait_time"]) )
 
     # Random numbers generator object
@@ -725,10 +736,11 @@ def run_tsh(common_params, compute_model, model_params):
     #============ Initialize dynamical variables ==================
     x0, p0, masses, k0 = params["x0"], params["p0"], params["masses"], params["k"]
     ntraj, nstates = params["ntraj"], params["nstates"]
+    inucl = params["nucl_init_type"]
+    ielec = params["elec_init_type"]
     
     # Nuclear
-    init_nucl = {"init_type":2, "force_constant":k0, "ntraj":ntraj}
-    #init_nucl = {"init_type":3, "force_constant":k0, "ntraj":ntraj}
+    init_nucl = {"init_type":inucl, "force_constant":k0, "ntraj":ntraj}
     q, p, iM = tsh_dynamics.init_nuclear_dyn_var(x0, p0, masses, init_nucl, rnd)
     
     # Electronic
@@ -737,7 +749,7 @@ def run_tsh(common_params, compute_model, model_params):
     for i in range(nstates):
         istates.append(0.0)
     istates[ istate[1] ] = 1.0    
-    _init_elec = { "init_type":3, "nstates":nstates, "istates":istates, "rep":istate[0],  "ntraj":ntraj   }
+    _init_elec = { "init_type":ielec, "nstates":nstates, "istates":istates, "rep":istate[0],  "ntraj":ntraj   }
     
 
     #============= Dynamical variables ==============
@@ -821,22 +833,7 @@ def make_var_pool(dyn_params, compute_model, model_params, _rnd,
 
                 # This instruction is made backward-compatible with the commented block
                 recipes.set_method(prms, ham_rep, is_nbra, method)
-                
-                """
-                if method==0:  # FSSH  = FSSH, ID, no informed                    
-                    prms.update( {"tsh_method":0, "decoherence_algo":-1, "dephasing_informed":0 } )  
-                elif method==1: # IDA = 
-                    prms.update( {"tsh_method":0, "decoherence_algo":1, "dephasing_informed":0 } )  
-                elif method==2: # mSDM = FSSH, mSDM, no informed
-                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":0 } )  
-                elif method==3: # DISH = DISH, no other decoherence, no informed
-                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":0 } )  
-                elif method==21: # mSDM = FSSH, mSDM, informed
-                    prms.update( {"tsh_method":0, "decoherence_algo":0, "dephasing_informed":1 } )  
-                elif method==31: # DISH = DISH, no other decoherence, informed
-                    prms.update( {"tsh_method":3, "decoherence_algo":-1, "dephasing_informed":1 } )  
-                """                    
-                
+                                
                 var_pool.append( (prms, compute_model, mdl_prms) )    
 
     return var_pool
@@ -938,7 +935,7 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
     plt.rc('figure.subplot', top=0.88)
     
     prefix = dyn_params["dir_prefix"]
-    all_time = np.array( list(range( dyn_params["nsteps"] ) ) ) #* units.au2fs
+    all_time = np.array( list(range( dyn_params["nsteps"] ) ) ) * dyn_params["dt"] * units.au2fs
     
     for istate in init_states:  # initial states       
         print(F"======= Running initial state {istate} =======")
@@ -1095,3 +1092,54 @@ def nice_plots(dyn_params, init_states, tsh_methods, methods, batches, fig_label
                 plt.savefig(F'{prefix}/_start_s{istate}_{name}.png', dpi=300)
 
             plt.show()                                                                                                            
+
+
+def get_Hvib_scipy(params):
+    """
+    This function is used to get the set of Hvibs (or any other set of data like 
+    St matrices) in scipy.sparse format and return them as CMATRIX format.
+    Args:
+        params (dictionary): parameters controlling the function execution [Required!]
+
+            Required parameter keys:
+
+            * **params["data_set_paths"]** ( list of strings ):
+                define the paths of the directories where the vibronic Hamiltonian files for
+                different data sets (e.g. independent MD trajectories) are located. 
+            .. note::
+                In addition, requires parameters described in
+                :func:`libra_py.workflows.nbra.step4.getHvib`
+
+    Returns:
+        list of lists of CMATRIX: Hvib: 
+            the time series of Hvib matrices for several data sets, such that
+            Hvib[idata][time] is a CMATRIX for the data set indexed by `idata`
+            at time `time`
+    """
+    hvib = []
+    for i in range(len(params['data_set_paths'])):
+        hvib.append([])
+        for step in range(params['nfiles']):
+            step += params['init_times']
+    
+            try:
+                file_name = params['data_set_paths'][0] + params['Hvib_re_prefix'] + str(step) + params['Hvib_re_suffix']
+                tmp_real = sp.load_npz(file_name).real
+            except:
+                print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
+                tmp_real = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
+    
+            try:
+                file_name = params['data_set_paths'][0] + params['Hvib_im_prefix'] + str(step) + params['Hvib_im_suffix']
+                tmp_imag = sp.load_npz(file_name).real
+            except:
+                print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
+                tmp_imag = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
+    
+            real_MATRIX = scipynpz2MATRIX(tmp_real)
+            imag_MATRIX = scipynpz2MATRIX(tmp_imag)
+            hvib[i].append( CMATRIX(real_MATRIX, imag_MATRIX)  )
+    
+    return hvib
+
+   

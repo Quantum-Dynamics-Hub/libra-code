@@ -348,7 +348,7 @@ def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_ra
 
     # Average adiabatic density matrices (dynamically-consistent)
     # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
-    if "D_adia" in saver.keywords and "D_adi" in saver.np_data.keys():
+    if "D_adi" in saver.keywords and "D_adi" in saver.np_data.keys():
         saver.save_matrix(t, "D_adi", dm_adi) 
 
     # Average adiabatic density matrices (raw)

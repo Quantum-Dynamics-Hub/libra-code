@@ -65,7 +65,8 @@ dyn_control_params::dyn_control_params(){
   decoherence_algo = -1; 
   sdm_norm_tolerance = 0.0;
   dish_decoherence_event_option = 1;
-  decoherence_times_type = 0;
+  decoherence_times_type = -1;
+  schwartz_decoherence_inv_alpha = NULL;
   decoherence_C_param = 1.0;
   decoherence_eps_param = 0.1;
   dephasing_informed = 0;
@@ -79,6 +80,9 @@ dyn_control_params::dyn_control_params(){
   ETHD3_alpha = 1.0;
   ETHD3_beta = 1.0;
 
+  ///============================ QTAG =============================================
+  qtag_pot_approx_method = 0;
+
   ///================= Bath, Constraints, and Dynamical controls ===================
 
   Temperature = 300.0;
@@ -90,6 +94,7 @@ dyn_control_params::dyn_control_params(){
   constrained_dofs = vector<int>();
 
   dt = 41.0;
+  num_electronic_substeps = 1;
 
 }
 
@@ -144,6 +149,12 @@ void dyn_control_params::sanity_check(){
   }// sz1!=0
 
 
+  if(num_electronic_substeps<=0){
+      cout<<"Error in dyn_control_params::sanity_check: num_electronic_substeps = "<<num_electronic_substeps
+          <<" should be a positive integer"<<endl;
+      cout<<"Exiting...\n";
+  }
+
 }
 
 
@@ -188,6 +199,13 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="sdm_norm_tolerance"){ sdm_norm_tolerance = bp::extract<double>(params.values()[i]); }
     else if(key=="dish_decoherence_event_option"){ dish_decoherence_event_option = bp::extract<int>(params.values()[i]); }
     else if(key=="decoherence_times_type"){ decoherence_times_type = bp::extract<int>(params.values()[i]); }
+    else if(key=="schwartz_decoherence_inv_alpha"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      schwartz_decoherence_inv_alpha = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ schwartz_decoherence_inv_alpha->set(a, b, x.get(a,b));   }
+      } 
+    }
     else if(key=="decoherence_C_param"){ decoherence_C_param = bp::extract<double>(params.values()[i]); }
     else if(key=="decoherence_eps_param"){ decoherence_eps_param = bp::extract<double>(params.values()[i]); }
     else if(key=="dephasing_informed"){ dephasing_informed = bp::extract<int>(params.values()[i]); }
@@ -213,6 +231,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="ETHD3_alpha") { ETHD3_alpha = bp::extract<double>(params.values()[i]);   }
     else if(key=="ETHD3_beta") { ETHD3_beta = bp::extract<double>(params.values()[i]);   }
 
+    ///================= Entanglement of trajectories ================================
+    else if(key=="qtag_pot_approx_method"){ qtag_pot_approx_method = bp::extract<int>(params.values()[i]); }
+
     ///================= Bath, Constraints, and Dynamical controls ===================
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }
     else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    
@@ -233,6 +254,7 @@ void dyn_control_params::set_parameters(bp::dict params){
       for(int j=0; j<len(tmp); j++){  constrained_dofs.push_back( extract<double>(tmp[j]) );  }
     }
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
+    else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
 
   }// for i
 

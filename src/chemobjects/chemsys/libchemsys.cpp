@@ -66,12 +66,12 @@ void (System::*expt_init_fragment_velocities_v2)(double Temp,VECTOR TOT_P,VECTOR
 void (System::*expt_init_atom_velocities_v1)(double Temp, Random& rnd) = &System::init_atom_velocities;
 void (System::*expt_init_atom_velocities_v2)(double Temp,VECTOR TOT_P, Random& rnd) = &System::init_atom_velocities;
 
-void (System::*expt_ROTATE_FRAGMENT_v1)(double phi, VECTOR dir, int Gr) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v2)(double phi, VECTOR dir, int Gr, VECTOR pivot) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v3)(double phi, VECTOR dir, int Gr, int center_indx) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v4)(MATRIX3x3& rot, int Gr) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v5)(MATRIX3x3& rot, int Gr, VECTOR pivot) = &System::ROTATE_FRAGMENT;
-void (System::*expt_ROTATE_FRAGMENT_v6)(MATRIX3x3& rot, int Gr, int center_indx) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v1)(double phi, const VECTOR& dir, int fr_id, const VECTOR& pivot) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v2)(double phi, const VECTOR& dir, int fr_id, int center_indx) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v3)(double phi, const VECTOR& dir, int fr_id) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v4)(const MATRIX3x3& rot, int fr_id, const VECTOR& pivot) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v5)(const MATRIX3x3& rot, int fr_id, int center_indx) = &System::ROTATE_FRAGMENT;
+void (System::*expt_ROTATE_FRAGMENT_v6)(const MATRIX3x3& rot, int fr_id) = &System::ROTATE_FRAGMENT;
 
 
   class_<System>("System",init<>())

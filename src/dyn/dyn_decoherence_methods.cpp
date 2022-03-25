@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2018-2019 Alexey V. Akimov
+* Copyright (C) 2018-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -14,8 +14,11 @@
     
 */
 
+#include "../hamiltonian/libhamiltonian.h"
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
+#include "dyn_hop_proposal.h"
+#include "dyn_hop_acceptance.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -365,6 +368,387 @@ void instantaneous_decoherence(CMATRIX& Coeff,
 
 
 }
+
+
+CMATRIX afssh_dzdt(CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state){
+/**
+  Right-hand side of Eqs. 15-16 in  J. Chem. Theory Comput. 2016, 12, 5256
+
+       (  dR    0  )
+  dz = (           )
+       (   0   dP  )
+
+
+    Args:
+        dz is a block-diagonal matrix of dR and dP, which are:
+          dR ( CMATRIX(nstates, nstates) ): moment matrix for position, for just 1 DOF and 1 trajectory
+          dP ( CMATRIX(nstates, nstates) ): moment matrix for momentum, for just 1 DOF and 1 trajectory
+        Hvib ( CMATRIX(nstates, nstates) ): vibronic Hamiltonian matrix, for 1 trajectory
+        F ( CMATRIX(nstates, nstates) ): diagonal matrix of forces for all states, for a given DOF and for 1 trajectory
+        C ( CMATRIX(nstates, 1) ): amplitudes of electronic states, for 1 trajectory
+        mass ( double ): mass of the given DOF
+        act_state ( int ): index of the currently active state for given trajectory
+
+    Returns:
+        None: dz/dt  matrix of the same dimension and structure as dz
+
+*/
+
+  int i;  
+
+  complex<double> one(0.0, 1.0);
+  int nst = dz.n_rows/2;
+
+  vector<int> t1(nst); for(i=0; i<nst; i++){ t1[i] = i; }
+  vector<int> t2(nst); for(i=0; i<nst; i++){ t2[i] = nst + i; }
+  
+
+  
+  CMATRIX res(2*nst, 2*nst);
+  CMATRIX tmp(nst, nst);
+  CMATRIX dR(nst, nst);
+  CMATRIX dP(nst, nst);
+
+  // Unpack dz
+  pop_submatrix(dz, dR, t1);
+  pop_submatrix(dz, dP, t2);
+
+
+  // dR/dt
+  tmp = -one*(Hvib * dR - dR * Hvib) - dP/mass; 
+  push_submatrix(res, tmp, t1);
+
+
+  // dP/dt
+  CMATRIX dF(nst, nst);
+  CMATRIX id(nst, nst); id.identity();
+  dF = F - id * F.get(act_state, act_state);
+
+  CMATRIX sigma(nst, nst);
+  sigma = C * C.H();
+  
+  tmp = -one*(Hvib * dP - dP * Hvib) - 0.5*(dF * sigma + sigma * dF); 
+  push_submatrix(res, tmp, t2);
+
+  
+  return res;
+
+}
+
+void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state, double dt, int nsteps){
+/**
+
+   RK4 integration for 1 DOF and 1 trajectory but the matrices are for all states
+
+    Args:
+        dR ( CMATRIX(nstates, nstates) ): moment matrix for position, for just 1 DOF and 1 trajectory
+        dP ( CMATRIX(nstates, nstates) ): moment matrix for momentum, for just 1 DOF and 1 trajectory
+        Hvib ( CMATRIX(nstates, nstates) ): vibronic Hamiltonian matrix, for 1 trajectory
+        F ( CMATRIX(nstates, nstates) ): diagonal matrix of forces for all states, for a given DOF and for 1 trajectory
+        C ( CMATRIX(nstates, 1) ): amplitudes of electronic states, for 1 trajectory
+        mass ( double ): mass of the given DOF
+        act_state ( int ): active electronic state index
+        dt ( double ): integration timestep
+        nsteps ( int ): how many integration steps to take
+
+    Returns:
+        None: but changes the input variables `dR` and `dP`
+
+*/
+
+  int i;  
+
+  int nst = dR.n_rows;
+
+  vector<int> t1(nst); for(i=0; i<nst; i++){ t1[i] = i; }
+  vector<int> t2(nst); for(i=0; i<nst; i++){ t2[i] = nst + i; }
+
+  CMATRIX der1(2*nst, 2*nst);
+  CMATRIX der2(2*nst, 2*nst);
+  CMATRIX der3(2*nst, 2*nst);
+  CMATRIX der4(2*nst, 2*nst);
+  CMATRIX dz(2*nst, 2*nst);
+  CMATRIX tmp(2*nst, 2*nst);
+
+  push_submatrix(dz, dR, t1);  
+  push_submatrix(dz, dP, t2);  
+  
+  for(int istep=0; istep<nsteps; istep++){
+
+    // Call the Python function with such arguments
+    der1 = afssh_dzdt(dz, Hvib, F, C, mass, act_state);
+
+    tmp = dz + 0.5*dt*der1;
+    der2 = afssh_dzdt(tmp, Hvib, F, C, mass, act_state);
+
+    tmp = dz + 0.5*dt*der2;
+    der3 = afssh_dzdt(tmp, Hvib, F, C, mass, act_state);
+
+    tmp = dz + dt*der3;
+    der4 = afssh_dzdt(tmp, Hvib, F, C, mass, act_state);
+
+    dz = dz + (dt/6.0)*(der1 + 2.0*der2 + 2.0*der3 + der4);
+ 
+  }// for istep
+
+  pop_submatrix(dz, dR, t1);
+  pop_submatrix(dz, dP, t2);
+
+
+}
+
+
+
+MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt){
+/**
+   This function computes the flags to decide on whether WP on any given surface of every trajectory
+   reflects (1) or not (0).
+
+   This is according to:
+   Xu, J.; Wang, L. "Branching corrected surface hopping: Resetting wavefunction coefficients based
+   on judgement of wave packet reflection" J. Chem. Phys. 2019,  150,  164101
+  
+*/
+
+
+  int ntraj = p.n_cols;
+  int nadi = ham.nadi;
+  int ndof = ham.nnucl;
+
+  CMATRIX E(nadi, nadi);
+  CMATRIX dE(nadi, nadi);
+  MATRIX pa(ndof, 1);
+  MATRIX pi(ndof, 1);
+  MATRIX pi_adv(ndof, 1);
+  MATRIX F(ndof, nadi);
+  MATRIX fi(ndof, 1);
+
+  MATRIX res(nadi, ntraj);  res = 0.0;
+
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+
+    int a = act_states[itraj]; // active state index
+    
+    pa = p.col(itraj); // this is momentum on the active state
+//    exit(0);
+
+    double T_a = compute_kinetic_energy(pa, invM); // kinetic energy on the active state
+
+    // Energy
+    E = ham.children[itraj]->get_ham_adi();
+    E = projectors[itraj].H() * E * projectors[itraj];      
+    double E_a = E.get(a, a).real();  // potential energy on the active state
+
+//    exit(0);
+
+    // Forces
+    for(int idof=0; idof<ndof; idof++){
+      dE = ham.children[itraj]->get_d1ham_adi(idof);
+      dE = -1.0 * projectors[itraj].H() * dE * projectors[itraj];
+
+      for(int i=0; i<nadi; i++){
+        F.set(idof, i,  dE.get(i,i).real() );
+      }
+    }
+
+
+    for(int i=0; i<nadi; i++){
+
+      if(i!=a){
+
+        double E_i = E.get(i, i).real();  // potential energy on all other states
+        double T_i = T_a + E_a - E_i;        // predicted kinetic energy on other state i
+
+        // WP momenta on all surfaces
+        if(T_i<0){  pi = 0.0000001 * pa; }   // infinitesimally small along pa
+        else{   pi = sqrt(T_i/T_a) * pa; }   // just along pa, conserving energy
+        
+      }// i != a
+      else{ pi = pa; }
+
+      // Compute the advanced momentum
+      fi = F.col(i);
+      pi_adv = pi + fi * dt; 
+
+      // Compute the old and new dot products:
+      double dp_old = (pi.T() * fi).get(0,0);
+      double dp_new = (pi_adv.T() * fi).get(0,0);
+
+      // Different signs: reflection on the i-th surface takes place
+      if(dp_old * dp_new < 0.0){
+         res.set(i, itraj, 1.0);
+      }
+
+
+    }// for i
+  }// for itraj
+
+  return res;
+
+}
+
+
+CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events){
+    /**
+    \brief Branching corrected surface hopping decoherence algorithm
+  
+    This function performs the wavefunction amplitudes collapses according to:
+
+    Xu, J.; Wang, L. "Branching corrected surface hopping: Resetting wavefunction coefficients based
+    on judgement of wave packet reflection" J. Chem. Phys. 2019,  150,  164101
+    
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+    \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    \param[in]      act_st [ list of integer ] The active state indices for all trajectories
+    \param[in]      reversal_events [ MATRIX(nadi, ntraj) ]  > 0 - wp on that state reverses
+
+    The function returns:
+    C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
+
+    */
+
+    int nadi = Coeff.n_rows;
+    int ntraj = Coeff.n_cols;
+
+    CMATRIX C(Coeff);
+
+    for(int itraj=0; itraj<ntraj; itraj++){    
+
+      // First handle the active state:
+      int a = act_states[itraj];
+
+      // If it reverses, we collapse wfc on that state
+      if(reversal_events.get(a, itraj) > 0 ){    collapse(C, itraj, a, 0);    }
+
+      else{ // Otherwise, let's project out the all the nonactive states that reflect
+
+        for(int i=0; i<nadi; i++){
+          if(i!=a){
+            if(reversal_events.get(i, itraj) > 0){ project_out(C, itraj, i);  }
+          }// if
+        }// for i
+ 
+      }// else
+
+    }// for itraj
+
+  return C;
+
+}
+
+
+
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
+    /**
+    \brief Mean field with stochastic decoherence
+  
+    This function performs the wavefunction amplitudes collapses according to:
+
+    Bedard-Hearn, M. J.; Larsen, R. E.; Schwartz, B. J. "Mean-field dynamics with
+    stochastic decoherence (MF-SD): A new algorithm for nonadiabatic mixed quantum/classical
+    molecular-dynamics simulations with nuclear-induced decoherence" 
+    J. Chem. Phys. 123, 234106, 2005.
+    
+    \param[in]       Coeff [ CMATRIX(nadi, ntraj) ] An object containig electronic DOFs. 
+    \param[in]          dt [ float ] The integration timestep. Units = a.u. of time
+    \param[in]      act_st [ list of integer ] The active state indices for all trajectories
+    \param[in]      decoherence_rates [ MATRIX(nadi, nadi) x ntraj ]  - decoherence rates (1/tau_i)
+
+    The function returns:
+    C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
+
+    */
+
+    int i, idof;
+    int nadi = Coeff.n_rows;
+    int ntraj = Coeff.n_cols;
+    int ndof = ham.nnucl;
+
+    CMATRIX C(Coeff);
+    
+    for(int itraj=0; itraj<ntraj; itraj++){    
+
+      //================ Determine states onto which we could potentially collapse ===========
+      double ksi = rnd.uniform(0.0, 1.0);
+      vector<int> proposed_states;
+      vector<double> hopping_prob;
+      double summ_prob = 0.0;
+ 
+      for(i=0; i<nadi; i++){
+           
+        complex<double> c_i = C.get(i, itraj); 
+  
+        // Probability of decoherence on state i
+        // Here, we assume that the state-only decoherence rates are on the diagonal
+        double P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[itraj].get(i, i) * dt;
+
+        if(ksi<P_i){ 
+          proposed_states.push_back(i);
+          hopping_prob.push_back(P_i);
+          summ_prob += P_i;
+        }
+
+      }// for i
+
+
+      // There is a decoherence for at least 1 state
+      if(summ_prob>0.0){ 
+
+        // Renormalize relative probabilities of the collapse on any of non-unique states
+        for(i=0; i<proposed_states.size(); i++){
+           hopping_prob[i] /= summ_prob;
+        }
+
+        // Select one of the possible states
+        int indx_i = hop(hopping_prob, rnd.uniform(0.0, 1.0) );
+        int decohered_state = proposed_states[indx_i];
+
+        vector<int> _id(2, 0);  _id[1] = itraj;
+        double E_old = ham.Ehrenfest_energy_adi(Coeff, _id).real();
+        double E_new = ham.get_ham_adi(_id).get(decohered_state, decohered_state).real();
+
+        MATRIX nac_eff(ndof, 1);
+        MATRIX p_i(ndof, 1);
+
+        for(i=0; i<nadi; i++){
+
+          complex<double> c_i = C.get(i, itraj); 
+  
+          // Probability of decoherence on state i
+          double P_i = (std::conj(c_i) * c_i).real();
+
+          p_i = p.col(itraj); /// momentum
+          for(idof=0; idof<ndof; idof++){
+            nac_eff = nac_eff + P_i * ham.get_dc1_adi(idof, _id).real();
+          }// idof
+
+        }// i
+        
+        if(  can_rescale_along_vector(E_old, E_new, p_i, invM, nac_eff) ){
+
+          // Adjust velocities 
+          int do_reverse = 0;
+          rescale_along_vector(E_old, E_new, p_i, invM, nac_eff, do_reverse);
+
+          for(idof=0; idof<ndof; idof++){ p.set(idof, itraj, p_i.get(idof, 0)); }
+
+          // And collapse the coherent superposition on the decohered state 
+          collapse(C, itraj, decohered_state, 0);
+
+        }// can rescale
+
+      }// possible collapse
+        
+    }// for itraj
+
+    return C;
+
+}
+
+
+
 
 
 }// namespace libdyn

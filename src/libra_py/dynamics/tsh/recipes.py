@@ -157,6 +157,9 @@ def adiabatic_md_interfaces_params():
     # integration timestep [units: a.u., default: 41 a.u. = 1 fs]
     dyn_params["dt"] = 1.0 * units.fs2au
 
+    # how many electronic substeps to do per each nuclear timestep
+    dyn_params["num_electronic_substeps"] = 1
+
     # how many nuclear dynamics steps to perform
     dyn_params["nsteps"] = 1
 
@@ -212,7 +215,8 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
           3 - DISH
           21 - mSDM, deph-informed
           31 - DISH, deph-informed
-
+          4 - AFSSH
+          5 - BC-FSSH
           
     """
 
@@ -226,7 +230,7 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
         params.update( {"force_method":1, "rep_force":1} )    # state-specific forces, compute them in the adiabatic rep
         params.update( {"nac_update_method":1} )              # update NACs based on derivative couplings and momenta
         params.update( {"time_overlap_method":0} )            # state-tracking based on the on-the-fly time-overlaps                         
-        params.update( {"hop_acceptance_algo":20, "momenta_rescaling_algo":200} )  # Tully-style velocity rescaling and frustr. hops
+        params.update( {"hop_acceptance_algo":20, "momenta_rescaling_algo":201} )  # Tully-style velocity rescaling and frustr. hops
 
     elif is_nbra == 1:  # file-based NBRA
         params.update( {"force_method":0 } )           # don't compute forces
@@ -262,5 +266,13 @@ def set_method(params, ham_rep=0, is_nbra=0, method=0):
 
     elif method==31:  # DISH
         params.update( {"tsh_method": 3, "decoherence_algo":-1, "dephasing_informed":1 } )   # DISH, no other decoherence, yes deph-informed
+
+    elif method==4:  # AFSSH
+        params.update( {"tsh_method": 0, "decoherence_algo":2, "dephasing_informed":0 } )   # AFSSH
+
+    elif method==5:  # BC-FSSH
+        params.update( {"tsh_method": 0, "decoherence_algo":3, "dephasing_informed":0 } )   # BC-FSSH, no decoherence, no deph-informed
+
+
 
 

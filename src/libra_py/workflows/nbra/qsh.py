@@ -25,6 +25,12 @@ import cmath
 import math
 import os
 import sys
+import json
+
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -38,6 +44,7 @@ import util.libutil as comn
 import libra_py.units as units
 import libra_py.influence_spectrum as influence_spectrum
 import libra_py.data_stat as data_stat
+import libra_py.data_conv as data_conv
 
 
 def compute_freqs(H_vib, params):
@@ -49,6 +56,8 @@ def compute_freqs(H_vib, params):
             H_vib[istep].get(i,j) - i,j matrix element for the step `istep`
     
         params ( dictionary ): the parameters that control the execution of this function
+
+                * nsteps: the number of the QSH-MD steps to do
 
             SeeAlso: influence_spectrum.compute_mat_elt for the description of other parameters:
 
@@ -80,15 +89,45 @@ def compute_freqs(H_vib, params):
 
     # Set defaults and check critical parameters
     critical_params = [ ] 
-    default_params = {  }
+    default_params = { "output_files_prefix":"_qsh", "nsteps":len(H_vib)     }
     comn.check_input(params, default_params, critical_params)
 
 
-    # Local variables and dimensions
-    nsteps = len(H_vib)    
+    output_files_prefix = params["output_files_prefix"]
+
+
+    # Local variables and dimensions    
     nstates = H_vib[0].num_of_rows
 
     freqs, T,  norm_acf,  raw_acf,  W,  J, J2 = influence_spectrum.compute_all(H_vib, params)  # T in fs, W and freqs in cm^-1
+
+
+
+    ## ============ Plot the spectra =============
+    nsteps = params["nsteps"]
+    nstates = len(freqs)
+
+    for i in range(nstates):
+        for j in range(i, nstates):
+
+            figure = plt.figure(num=None, figsize=(3.21*2, 2.41), dpi=300, edgecolor='black', frameon=True)
+            
+            plt.subplot(1,2,1)
+            plt.xlabel('Time, fs',fontsize=10)
+            plt.ylabel('normalized ACF',fontsize=10)
+            plt.plot(T[i][j], norm_acf[i][j], color="blue", label="", linewidth=2)
+            
+            plt.subplot(1,2,2)
+            plt.xlabel('Wavenumber, $cm^{-1}$',fontsize=10)
+            plt.ylabel('Influence spectrum',fontsize=10)
+            plt.plot(W[i][j], J2[i][j], color="blue", label=F"", linewidth=2)
+            
+            plt.tight_layout()
+            plt.savefig(F"{output_files_prefix}-{i}-{j}-acf-ifs.png", dpi=300)
+            plt.show()
+
+
+
 
     dt = params["dt"]
     conv = units.wavn2au * units.fs2au
@@ -108,16 +147,20 @@ def compute_freqs(H_vib, params):
 
             # Compute the variation of the QSH terms
             fu_ave, fu2_ave = 0.0, 0.0
-            for r in range(0,1000000):
+            for r in range(0, nsteps):
 
                 fu = 0.0
                 for k in range(0,nfreqs):
-                    fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
+                    #fu = fu + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*r*dt)
+                    fu = fu + freqs[i][j][k][3] * math.sin(conv*freqs[i][j][k][0]*r*dt)
 
                 fu_ave = fu_ave + fu
                 fu2_ave = fu2_ave + fu*fu
 
-            dev[i][j] = math.sqrt( (fu2_ave - fu_ave**2) / 1000000.0 ) 	
+            fu_ave = fu_ave / nsteps
+            fu2_ave = fu2_ave / nsteps
+
+            dev[i][j] = math.sqrt( (fu2_ave - fu_ave**2) ) 	
     
     return freqs, dev
 
@@ -168,13 +211,17 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
                 nfreqs = len(freqs[i][j])
 
             for k in range(0,nfreqs):
-                fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
+                #fu[i][j] = fu[i][j] + freqs[i][j][k][2] * math.sin(conv*freqs[i][j][k][0]*t)
+                fu[i][j] = fu[i][j] + freqs[i][j][k][3] * math.sin(conv*freqs[i][j][k][0]*t)
 
 
     for i in range(0,nstates):
         for j in range(0,nstates):
             if i==j:
-                xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                xab = 0.0
+                if dev[i][j]>0.0:
+                    xab = H_vib_re_ave.get(i,j) + H_vib_re_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+
                 if xab < dw_Hvib_re.get(i,j):
                     xab = dw_Hvib_re.get(i,j)
                 elif xab > up_Hvib_re.get(i,j):
@@ -182,7 +229,10 @@ def compute_qs_Hvib(Nfreqs, freqs, t,
                 Hvib_stoch_re.set(i,j,   xab )
 
             elif i<j:
-                xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+                xab = 0.0
+                if dev[i][j]>0.0:
+                    xab = H_vib_im_ave.get(i,j) + H_vib_im_std.get(i,j) * (fu[i][j]/dev[i][j] ) 
+
                 if xab < dw_Hvib_im.get(i,j):
                     xab = dw_Hvib_im.get(i,j)
                 elif xab > up_Hvib_im.get(i,j):
@@ -257,13 +307,15 @@ def run(H_vib, params):
                        "do_QSH_output":False,
                        "output_set_paths":output_set_paths,
                        "qsh_Hvib_re_prefix":"qsh_Hvib_", "qsh_Hvib_im_prefix":"qsh_Hvib_",
-                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im" }
+                       "qsh_Hvib_re_suffix":"_re",   "qsh_Hvib_im_suffix":"_im",
+                       "meta_info":"qsh-meta" }
     comn.check_input(params, default_params, critical_params)
 
     # Local parameters
     nfreqs = params["nfreqs"]
     nsteps = params["nsteps"]
     dt = params["dt"]
+    meta_info_file = params["meta_info"]
 
     # Parameters for the undelying functions
     params1 = dict(params)
@@ -292,6 +344,25 @@ def run(H_vib, params):
         
         freqs, dev = compute_freqs(H_vib[idata], params1)   # freqs are in cm^-1
 
+
+
+        ## ============= Now save meta-information and the data ==========
+        meta_info = { "freqs": freqs, "dev":dev, 
+                      "H_vib_re_ave":data_conv.matrix2list(H_vib_re_ave),
+                      "H_vib_im_ave":data_conv.matrix2list(H_vib_im_ave),
+                      "H_vib_re_std":data_conv.matrix2list(H_vib_re_std),
+                      "H_vib_im_std":data_conv.matrix2list(H_vib_im_std),
+                      "dw_Hvib_re":data_conv.matrix2list(dw_Hvib_re),
+                      "dw_Hvib_im":data_conv.matrix2list(dw_Hvib_im),
+                      "up_Hvib_re":data_conv.matrix2list(up_Hvib_re),
+                      "up_Hvib_im":data_conv.matrix2list(up_Hvib_im)
+                    }
+
+        with open(F"{meta_info_file}.json", 'w') as outfile:
+            json.dump(meta_info, outfile)
+
+
+
         
         #============= Output the resulting QSH Hamiltonians ===========================
         Hvib = []
@@ -304,8 +375,8 @@ def run(H_vib, params):
 
             if params["do_QSH_output"]==True:
                 #============= Output the resulting QSH Hamiltonians ===========================
-                re_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_re_prefix"] + str(i) + prms["qsh_Hvib_re_suffix"]
-                im_filename = prms["output_set_paths"][idata] + prms["qsh_Hvib_im_prefix"] + str(i) + prms["qsh_Hvib_im_suffix"]        
+                re_filename = params["output_set_paths"][idata] + params["qsh_Hvib_re_prefix"] + str(i) + params["qsh_Hvib_re_suffix"]
+                im_filename = params["output_set_paths"][idata] + params["qsh_Hvib_im_prefix"] + str(i) + params["qsh_Hvib_im_suffix"]        
                 qs_Hvib.real().show_matrix(re_filename)
                 qs_Hvib.imag().show_matrix(im_filename)
 

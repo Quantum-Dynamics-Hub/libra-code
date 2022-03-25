@@ -304,6 +304,9 @@ class dyn_control_params{
       - [-1]: no decoherence [ default ]
       - 0: SDM and alike
       - 1: instantaneous decoherence options (ID-S, ID-A, ID-C)
+      - 2: AFSSH
+      - 3: BCSH of Linjun Wang
+      - 4: MF-SD of Bedard-Hearn, Larsen, Schwartz
   */
   double decoherence_algo;
 
@@ -335,10 +338,20 @@ class dyn_control_params{
   /**
     Type of dephasing times/rates calculation:
 
-      - 0: use the rates read out from the input  [ default ]
+      - -1: set all dephasing rates to zero [ default ]
+      - 0: use the rates read out from the input 
       - 1: use the energy-based decoherence method (EDC)    
+      - 2: Schwartz - mean-field Force-based decoherence
+      - 3: Schwartz - pair-wise-based decoherences
   */  
   int decoherence_times_type;
+
+
+  /**
+    MATRIX(ndof, 1) of 1/alpha - the parameters used in GWP in
+    computing decoherence rates [ default: NULL ]
+  */
+  MATRIX* schwartz_decoherence_inv_alpha;
 
 
   /**
@@ -432,6 +445,21 @@ class dyn_control_params{
 
 
   ///===============================================================================
+  ///================= QTAG parameters =============================================
+  ///===============================================================================
+
+  /**
+    How to approximate the Hamiltonian matrix elements for trajectories that belong 
+    to different (or same) surfaces
+
+    Options:
+      - 0 : BAT [ default ]
+      - 1 : LHA 
+  */
+  int qtag_pot_approx_method;
+
+
+  ///===============================================================================
   ///================= Bath, Constraints, and Dynamical controls ===================
   ///===============================================================================
 
@@ -494,6 +522,12 @@ class dyn_control_params{
   double dt;
 
 
+  /**
+    the number of electronic integration substeps per a nuclear step, such that dt_el = dt_nucl / num_electronic_substeps
+  */
+  int num_electronic_substeps; 
+
+
 
 
   dyn_control_params();
@@ -501,6 +535,7 @@ class dyn_control_params{
     *this = x;
     decoherence_rates = new MATRIX( *x.decoherence_rates );  
     ave_gaps = new MATRIX( *x.ave_gaps );
+    schwartz_decoherence_inv_alpha = new MATRIX( *x.schwartz_decoherence_inv_alpha );
   }
   ~dyn_control_params() {  
     delete decoherence_rates;  
