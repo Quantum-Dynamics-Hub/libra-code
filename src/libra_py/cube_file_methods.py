@@ -401,4 +401,76 @@ def plot_cubes( params ):
             os.system('vmd < vmd_cube_plot_%d.tcl' % curr_step)
             #os.system('rm vmd_cube_plot_%d.tcl' % curr_step)
 
- 
+
+def plot_cube_v2(params, cube_file_name, phase_factor):
+    """
+    This function plots the cube files using VMD
+
+    Args:
+
+        params (dictionary):
+
+            vmd_input_template (string): The name of the VMD input template for visualizing the cube files.
+     
+            states_to_plot (list): The list of states that need to be plot.
+     
+            plot_phase_corrected (bool): Flag for plotting the molecular orbitals phase-corrected for the running job.
+     
+            vmd_exe (string): The VMD executable.
+     
+            tachyon_exe (string): The VMD Tachyon executable for rendering high-quality images.
+     
+            x_pixels (integer): Number of pixels in the X direction of the image.
+     
+            y_pixels (integer): Number of pixels in the Y direction of the image.
+     
+            remove_cube (bool): Flag for removing the cube files after plotting the molecular orbitals.
+
+        cube_file_name (string): The name of the cube file
+
+        phase_factor (integer): The phase factor for plotting the phase-corrected molecular orbital
+
+    Returns: 
+
+        None
+    """
+
+    print(F'Plotting cube file {cube_file_name}...')
+    file = open(params['vmd_input_template'], 'r')
+    tcl_lines = file.readlines()
+    file.close()
+    vmd_exe = params['vmd_exe']
+    tachyon_exe = params['tachyon_exe']
+    x_pixels = params['x_pixels']
+    y_pixels = params['y_pixels']
+
+    state_name = cube_file_name.replace('.cube','')
+    new_tcl_name = state_name+'.tcl'
+    file = open(new_tcl_name, 'w')
+
+    for i in range(len(tcl_lines)):
+        if 'load cube' in tcl_lines[i]:
+            file.write(F'mol load cube {cube_file_name}\n')
+        elif 'Isosurface' in tcl_lines[i]:
+            tmp = tcl_lines[i].split()
+            for k in range(len(tmp)):
+                if tmp[k]=='Isosurface':
+                    break
+            tmp[k+1] = str(float(tmp[k+1]) * phase_factor)
+            tcl_lines[i] = ' '.join(tmp) + '\n'
+            file.write(tcl_lines[i])
+        elif 'render' in tcl_lines[i]:
+            file.write(F'render Tachyon {state_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
+        else:
+            file.write(tcl_lines[i])
+
+    file.close()
+
+    os.system(F'{vmd_exe} < {new_tcl_name}')
+    os.system(F'rm {state_name}')
+    if params['remove_cube']:
+        os.system(F'rm {cube_file_name}')
+
+
+
+

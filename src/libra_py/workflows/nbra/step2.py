@@ -32,6 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 from libra_py import QE_methods
 from libra_py import QE_utils
 from libra_py import CP2K_methods
+from libra_py import cube_file_methods
 from libra_py import molden_methods
 from libra_py import data_conv
 from libra_py import units
@@ -368,13 +369,36 @@ def run_cp2k_libint_step2(params):
 
                              trajectory_xyz_filename (string): The trajectory xyz file name.
 
-                             step (integer): The time step.
-
                              cp2k_exe (string): The full path to CP2K executable.
 
                              mpi_executable (string): The mpi run executable for CP2K. It can be mpiexe, mpirun, or srun.
 
+                             cube_visualization (bool): Flag for plotting the molecular orbitals using VMD.
+ 
+                             vmd_input_template (string): The name of the VMD input template for visualizing the cube files.
+
+                             states_to_plot (list): The list of states that need to be plot.
+
+                             plot_phase_corrected (bool): Flag for plotting the molecular orbitals phase-corrected for the running job.
+
+                             vmd_exe (string): The VMD executable.
+
+                             tachyon_exe (string): The VMD Tachyon executable for rendering high-quality images.
+
+                             x_pixels (integer): Number of pixels in the X direction of the image.
+
+                             y_pixels (integer): Number of pixels in the Y direction of the image.
+
+                             remove_cube (bool): Flag for removing the cube files after plotting the molecular orbitals.
+
     """
+
+    # Now try to get parameters from the input
+    critical_params = [ "cp2k_ot_input_template", "cp2k_diag_input_template", "trajectory_xyz_filename" ]
+    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True}
+    comn.check_input(params, default_params, critical_params)
+
+
     # Making the required directories for gatherig all the information needed
     # including the overlap data and pdos files. The logfiles do not contain
     # specific data but we finally move them to all_logfiles
@@ -401,6 +425,16 @@ def run_cp2k_libint_step2(params):
     isxTB = params['isxTB']
     # Periodic calculation falg
     is_periodic = params['is_periodic']
+    # Cube visualization
+    cube_visualization = params['cube_visualization']
+    if cube_visualization:
+    # Read the tcl file data
+        states_to_plot = params['states_to_plot']
+        if isUKS:
+            phase_factors_alpha = np.ones(( len(states_to_plot), 1 ))
+            phase_factors_beta = np.ones(( len(states_to_plot), 1 ))
+        else:
+            phase_factors_alpha = np.ones(( len(states_to_plot), 1 ))
     # the counter for a job steps, this counter is needed for not reading
     # the data of a molden file twice
     counter = 0
@@ -620,6 +654,40 @@ def run_cp2k_libint_step2(params):
                 os.system(F'rm Diag_{step-1}-RESTART*')
             else:
                 os.system(F'rm Diag_libra-{step-1}-RESTART*')
+            if params['cube_visualization']:
+                print('Plotting cube files using VMD...')
+                num_orbitals = E_step.shape[0]
+                for c_plot, state_to_plot in enumerate(states_to_plot):
+                    if isUKS:
+                        state_index = state_to_plot-params['lowest_orbital']
+                        # Alpha orbitals
+                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_alpha[c_plot,0])
+                        # Beta orbitals
+                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_2-1_0.cube'
+                        cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_beta[c_plot,0])
+                        if params['plot_phase_corrected']:
+                            if St_step[state_index, state_index]>0:
+                                f_alpha = 1
+                            else:
+                                f_alpha = -1
+                            if St_step[state_index+num_orbitals, state_index+num_orbitals]>0:
+                                f_beta = 1
+                            else:
+                                f_beta = -1
+                            phase_factors_alpha[c_plot,0] *= f_alpha
+                            phase_factors_alpha[c_plot,0] *= f_beta
+                    else:
+                        # Only alpha orbitals
+                        state_index = state_to_plot-params['lowest_orbital']
+                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_alpha[c_plot,0])
+                        if params['plot_phase_corrected']:
+                            if St_step[state_index, state_index]>0:
+                                f_alpha = 1
+                            else:
+                                f_alpha = -1
+                            phase_factors_alpha[c_plot,0] *= f_alpha
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
         counter += 1
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
