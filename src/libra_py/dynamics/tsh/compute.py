@@ -37,7 +37,7 @@ import os
 import sys
 import math
 import copy
-
+import time
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -994,10 +994,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
-        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors)
-
-
+        t1 = time.time()
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
+        #dm_adi.real().show_matrix(F"dm_adi_{i}")
+        print('Computing density matrix took ', time.time()-t1, ' seconds')
+        t1 = time.time()
+        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, dyn_params["isNBRA"])
+        print('Computing SH statistics took ', time.time()-t1, ' seconds')
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
@@ -1491,7 +1494,7 @@ def run_dynamics_old(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_param
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
+        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])
         pops = tsh_stat.compute_sh_statistics(nadi, states)
 
 

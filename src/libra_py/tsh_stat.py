@@ -32,6 +32,7 @@ import os
 import sys
 import math
 import copy
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -42,7 +43,7 @@ import util.libutil as comn
 
 from . import units
 from . import probabilities
-
+from libra_py import data_conv
 
 def compute_etot(ham, p, Cdia, Cadi, projectors, iM, rep):
     """Computes the Ehrenfest potential energy
@@ -221,7 +222,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, projectors, act_states, iM, rep):
 
 
 
-def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
+def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
     """
 
     Compute the trajectory-averaged density matrices in diabatic
@@ -314,6 +315,9 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
 
             # Dia raw
             dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()            
+        #S.show_matrix()
+        #if isNBRA==1:
+        #    break
 
     
     dm_dia = dm_dia / float(ntraj)        
@@ -324,8 +328,160 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl):
     return dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
 
 
+def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
+    """
 
-def compute_sh_statistics(nstates, istate, projectors):
+    Compute the trajectory-averaged density matrices in diabatic
+    or adiabatic representations
+
+    Args: 
+        ham ( nHamiltonian ): object that handles Hamiltonian-related calculations with many trajectories
+        Cdia ( CMATRIX(ndia, ntraj) ): amplitudes of diabatic states in the TD wavefunction expansion
+        Cadi ( CMATRIX(ndia, ntraj) ): amplitudes of adiabatic states in the TD wavefunction expansion
+        projectors ( list of CMATRIX(nst, nst)): dynamically-consistent corrections   
+        rep ( int ): a selector of which representation is considered main (being propagated)
+            E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation 
+            of the diabatic density matrix is straightforward, but we need to involve some transformations 
+            to compute the adiabatic density matrix and vice versa, if rep = 1, the propagation is done according
+            to the adiabatic properties and we'd need to convert to the diabatic representation in the end
+             
+            - 0: diabatic
+            - 1: adiabatic
+
+        lvl ( int ): The level of the Hamiltonian that treats the transformations:
+            - 0: ham is the actual Hamiltonian to use (use with single trajectory),
+            - 1: ham is the parent of the Hamiltonians to use (use with multiple trajectories)
+
+    Returns:
+        tuple: ( dm_dia, dm_adi ):
+
+            * dm_dia ( CMATRIX(ndia, ndia) ): the trajectory-averaged density matrix in
+                the diabatic representation. Here, ndia - is the number of diabatic basis
+                states
+            * dm_adi ( CMATRIX(nadi, nadi) ): the trajectory-averaged density matrix in
+                the adiabatic representation. Here, nadi - is the number of adiabatic basis
+                states
+
+    """
+
+    ntraj = Cdia.num_of_cols
+    ndia = Cdia.num_of_rows
+    nadi = Cadi.num_of_rows
+
+    # Dynamically-consistent
+    dm_dia, dm_adi = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
+
+    # Raw
+    dm_dia_raw, dm_adi_raw = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
+
+    if isNBRA==1:
+        traj = 0
+        indx = None
+        if lvl==0:
+            indx = Py2Cpp_int([0])
+        elif lvl==1:
+            indx = Py2Cpp_int([0,traj])
+
+        S = ham.get_ovlp_dia(indx)
+        U = ham.get_basis_transform(indx)
+
+        if rep==0:
+
+            dm_tmp = S * Cdia * Cdia.H() * S
+
+            # Dia dyn-consistent
+            dm_dia = dm_dia + dm_tmp
+
+            # Dia raw - i'm not sure about that one, so lets keep it just zero for now
+
+            # Adi dyn-consistent
+            tmp = U.H() * dm_tmp * U
+            dm_adi = dm_adi + tmp
+
+            # Adi raw
+            dm_adi_raw = dm_adi_raw + projectors[traj] * tmp * projectors[traj].H()
+
+
+        elif rep==1:
+            su = S * U
+
+            # Raw
+            #c = Cadi.col(traj)
+            dm_tmp = Cadi * Cadi.H()
+
+            # Adi dynamically-consistent DM
+            dm_adi = dm_adi + dm_tmp
+
+            # Adi raw
+            dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
+            dm_adi_raw = dm_adi_raw + dm_tmp_raw
+
+            # Dia dynamically-consistent DM
+            dm_dia = dm_dia + su * dm_tmp * su.H()
+
+            # Dia raw
+            dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()
+    else:
+        for traj in range(0,ntraj):
+            indx = None
+            if lvl==0:
+                indx = Py2Cpp_int([0])
+            elif lvl==1:
+                indx = Py2Cpp_int([0,traj])
+    
+            S = ham.get_ovlp_dia(indx)
+            U = ham.get_basis_transform(indx) 
+        
+            if rep==0:
+        
+                dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
+    
+                # Dia dyn-consistent
+                dm_dia = dm_dia + dm_tmp
+    
+                # Dia raw - i'm not sure about that one, so lets keep it just zero for now
+    
+                # Adi dyn-consistent
+                tmp = U.H() * dm_tmp * U
+                dm_adi = dm_adi + tmp
+    
+                # Adi raw
+                dm_adi_raw = dm_adi_raw + projectors[traj] * tmp * projectors[traj].H()
+                       
+        
+            elif rep==1:
+                su = S * U
+    
+                # Raw
+                c = Cadi.col(traj)            
+                dm_tmp = c * c.H()
+                            
+                # Adi dynamically-consistent DM
+                dm_adi = dm_adi + dm_tmp
+                
+                # Adi raw
+                dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
+                dm_adi_raw = dm_adi_raw + dm_tmp_raw
+    
+                # Dia dynamically-consistent DM
+                dm_dia = dm_dia + su * dm_tmp * su.H()            
+    
+                # Dia raw
+                dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()            
+            #S.show_matrix()
+            #if isNBRA==1:
+            #    break
+
+    
+    dm_dia = dm_dia / float(ntraj)        
+    dm_adi = dm_adi / float(ntraj)
+    dm_dia_raw = dm_dia_raw / float(ntraj)        
+    dm_adi_raw = dm_adi_raw / float(ntraj)
+
+    return dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
+
+
+def compute_sh_statistics(nstates, istate, projectors, isNBRA):
     """
 
     This function computes the SH statistics for an ensemble of trajectories
@@ -348,20 +504,38 @@ def compute_sh_statistics(nstates, istate, projectors):
     ntraj = len(istate)    
     coeff_sh = MATRIX(nstates, 1)        
     coeff_sh_raw = MATRIX(nstates, 1)        
-    
-    for i in range(0,ntraj):
-        st = istate[i]
-        pop = CMATRIX(nstates, nstates)
-        pop.set(st, st, 1.0+0.0j)
+    if isNBRA==1:
         
-        pop_raw = projectors[i] * pop * projectors[i].H()
+        istate_1 = list(istate)
+        pops_numpy = np.zeros((nstates, ntraj))
+        for i1 in range(len(istate_1)):
+            pops_numpy[istate_1[i1], i1] = 1
+        coeff_sh_numpy = np.average(pops_numpy, axis=1).reshape(nstates,1)
+        coeff_sh = data_conv.nparray2MATRIX(coeff_sh_numpy)
+        coeff_sh_raw = coeff_sh
+
+        #pops_CMATRIX = data_conv.nparray2CMATRIX(pops_numpy)
+        #pops_raw_CMATRIX = projectors[0] * pops_CMATRIX * projectors[0].H()
+        #pops_raw_numpy = data_conv.MATRIX2nparray(pops_raw_CMATRIX.real())
+        #coeff_sh_raw_numpy = np.average(pops_raw_numpy, axis=1).reshape(nstates,1)
+        #coeff_sh_raw = data_conv.nparray2MATRIX(coeff_sh_raw_numpy)
         
-        for j in range(nstates):
-            coeff_sh.add(j, 0, pop.get(j,j).real)
-            coeff_sh_raw.add(j, 0, pop_raw.get(j,j).real)
+    else:
+
+        for i in range(0,ntraj):
+            st = istate[i]
+            #print(st)
+            pop = CMATRIX(nstates, nstates)
+            pop.set(st, st, 1.0+0.0j)
+            #projectors[i].show_matrix()
+            pop_raw = projectors[i] * pop * projectors[i].H()
             
-    coeff_sh.scale(-1,0, 1.0/float(ntraj))
-    coeff_sh_raw.scale(-1,0, 1.0/float(ntraj))
+            for j in range(nstates):
+                coeff_sh.add(j, 0, pop.get(j,j).real)
+                coeff_sh_raw.add(j, 0, pop_raw.get(j,j).real)
+                
+        coeff_sh.scale(-1,0, 1.0/float(ntraj))
+        coeff_sh_raw.scale(-1,0, 1.0/float(ntraj))
  
     return coeff_sh, coeff_sh_raw
 

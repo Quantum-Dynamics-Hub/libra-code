@@ -569,6 +569,10 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
   CMATRIX ist(nst, nst);
   CMATRIX projector_old(nst, nst); 
 
+  if(prms.isNBRA==1){
+     ntraj = 1;
+  }
+
   for(int traj=0; traj<ntraj; traj++){
 
     projector_old = projectors[traj];

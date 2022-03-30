@@ -71,6 +71,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
       .def_readwrite("convergence", &dyn_control_params::convergence)
       .def_readwrite("max_number_attempts", &dyn_control_params::max_number_attempts)
+      .def_readwrite("isNBRA", &dyn_control_params::isNBRA)
 
       ///================= Surface hopping: proposal, acceptance =======================
       .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
