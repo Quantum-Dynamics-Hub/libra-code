@@ -487,7 +487,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
   // Set up a timer 
-  clock_t timer = clock();
+  //clock_t timer = clock();
 
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
@@ -501,7 +501,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   int n_therm_dofs;
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
-  cout << "Flag 1 isNBRA " << prms.isNBRA << endl;
+  //cout << "Flag 1 isNBRA " << prms.isNBRA << endl;
 
   //dyn_variables dyn_var(nst, nst, ndof, ntraj);
 
@@ -515,7 +515,12 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));  
   vector<MATRIX> decoherence_rates(ntraj, MATRIX(nst, nst)); 
   vector<double> Ekin(ntraj, 0.0);  
+  //if(prms.isNBRA==1){
+  //vector<MATRIX> prev_ham_dia(1, MATRIX(nst, nst));
+  //}
+  //else{
   vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
+  //}
   MATRIX gamma(ndof, ntraj);
   MATRIX p_traj(ndof, 1);
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
@@ -536,13 +541,18 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 
-
-  if(prms.tsh_method == 3){ // DISH
+  cout << "Flag before prev_ham_dia" << endl;
+ if(prms.tsh_method == 3){ // DISH
+ if(prms.isNBRA!=1){
+  //    prev_ham_dia[0] = ham.children[0]->get_ham_dia().real();
+  //}
+  //else{
     for(traj=0; traj<ntraj; traj++){
       prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
     }
   }
-
+  }
+  cout << "Flag after prev_ham_dia" << endl;
   //============ Update the Hamiltonian object =============
   // In case, we may need phase correction & state reordering
   // prepare the temporary files
@@ -563,16 +573,16 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  clock_t timer1 = clock();
+  //clock_t timer1 = clock();
   for(i=0; i<num_el; i++){
     propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);   
   }
-  cout << "Electronic propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Electronic propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
   //============== Nuclear propagation ===================
   // NVT dynamics
-  timer1 = clock();
-  clock_t timer2 = clock();
+  //timer1 = clock();
+  //clock_t timer2 = clock();
   if(prms.ensemble==1){  
     for(idof=0; idof<n_therm_dofs; idof++){
       dof = prms.thermostat_dofs[idof];
@@ -581,9 +591,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       }// traj
     }// idof 
   }
-  cout << "NVT dynamics in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "NVT dynamics in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
-  timer2 = clock();
+  //timer2 = clock();
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
     p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
@@ -594,7 +604,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   if(prms.entanglement_opt==22){
     gamma = ETHD3_friction(q, p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
   }
-  cout << "Kinetic constraint in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Kinetic constraint in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
@@ -609,40 +619,40 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
   // Recompute the matrices at the new geometry and apply any necessary fixes 
-  timer2 = clock();
+  //timer2 = clock();
   update_Hamiltonian_q(prms, q, projectors, ham, py_funct, params);
   update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
-  cout << "Recomputing the matrices for the new geometry in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Recomputing the matrices for the new geometry in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
 
 
   // Apply phase correction and state reordering as needed
-  timer2 = clock();
-  clock_t timer3;
+  //timer2 = clock();
+  //clock_t timer3;
   if(prms.rep_tdse==1){
 
     if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
       if(prms.time_overlap_method==0){    
-        timer3 = clock();
+        //timer3 = clock();
         St = compute_St(ham, Uprev);    
-        cout << "-- compute_ST in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
+        //cout << "-- compute_ST in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
       }
       else if(prms.time_overlap_method==1){    St = compute_St(ham);      }
-      timer3 = clock();
+      //timer3 = clock();
       Eadi = get_Eadi(ham);           // these are raw properties
-      cout << "-- get_Eadi in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
-      timer3 = clock();
+      //cout << "-- get_Eadi in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
+      //timer3 = clock();
       update_projectors(prms, projectors, Eadi, St, rnd);
-      cout << "-- update_projectors in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
+      //cout << "-- update_projectors in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
 
     }
   }// rep_tdse == 1
 
-  cout << "Apply phase-correction in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Apply phase-correction in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
 
 
   // NVT dynamics
-  timer2 = clock();
+  //timer2 = clock();
   if(prms.ensemble==1){  
     for(traj=0; traj<ntraj; traj++){
       t2[0] = traj; 
@@ -655,18 +665,18 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
-  cout << "NVT dynamics 2 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "NVT dynamics 2 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
 
   // Kinetic constraint
-  timer2 = clock();
+  //timer2 = clock();
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
     p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
 
-  cout << "Kinetic constraint 2 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Kinetic constraint 2 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
 
   // NVT dynamics
-  timer2 = clock();
+  //timer2 = clock();
   if(prms.ensemble==1){  
     for(idof=0; idof<n_therm_dofs; idof++){
       dof = prms.thermostat_dofs[idof];
@@ -675,24 +685,24 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       }// traj
     }// idof 
   }
-  cout << "NVT dynamics 3 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
-  cout << "Nuclear propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "NVT dynamics 3 in the C++ took " << (float)(clock()-timer2)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Nuclear propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  timer1 = clock();
+  //timer1 = clock();
   update_Hamiltonian_p(prms, ham, p, invM);
   for(i=0; i<num_el; i++){
     propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);
   }
-  cout << "Electronic propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Electronic propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
 
   //============== Begin the TSH part ===================
 
   // To be able to compute transition probabilities, compute the corresponding amplitudes
   // This transformation is between diabatic and raw adiabatic representations
-  timer1 = clock();
+  //timer1 = clock();
   CMATRIX Coeff(nst,ntraj); 
   Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
 
@@ -707,13 +717,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     ;;
   }
 
-  cout << "The TSH part in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "The TSH part in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
 
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
 //    exit(0);
-  timer1 = clock();
+  //timer1 = clock();
   if(prms.decoherence_times_type==-1){
     for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = 0.0;   }
   }
@@ -748,11 +758,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
   }
 
-  cout << "Update decoherence rates and times in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Update decoherence rates and times in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
   //============ Apply decoherence corrections ==================
   // SDM and alike methods
-  timer1 = clock();
+  //timer1 = clock();
   if(prms.decoherence_algo==0){
     Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance);
   }
@@ -768,11 +778,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 //  exit(0);
-  cout << "Apply decoherence corrections in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Apply decoherence corrections in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
   //========= Use the resulting amplitudes to do the hopping =======
   // Adiabatic dynamics
-  timer1 = clock();
+  //timer1 = clock();
   if(prms.tsh_method==-1){ ;; } 
 
   // FSSH, GFSH, MSSH
@@ -830,6 +840,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     /// New version, as of 8/3/2020
     vector<int> old_states(act_states);
+    cout << "Flag before dish" << endl;
     act_states = dish(prms, q, p, invM, Coeff, projectors, ham, act_states, coherence_time, decoherence_rates, rnd);
 
     /// Velocity rescaling
@@ -868,7 +879,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       if(prms.time_overlap_method==0){  Uprev.clear();  }
     }
   }
-  cout << "Us the resulting amplitudes to hop in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Us the resulting amplitudes to hop in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
 //    exit(0);
 
@@ -882,7 +893,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 //    exit(0);
-  cout << "Total dynamics for this step in the C++ took " << (float)(clock()-timer)/CLOCKS_PER_SEC << " seconds" << endl;
+  //cout << "Total dynamics for this step in the C++ took " << (float)(clock()-timer)/CLOCKS_PER_SEC << " seconds" << endl;
 }
 
 
