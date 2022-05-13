@@ -12,6 +12,9 @@ ADD_LIBRARY(libint2_wrappers SHARED ${LIBINT2_WRAPPERS_SRC})
 ADD_LIBRARY(libint2_wrappers_stat STATIC ${LIBINT2_WRAPPERS_SRC})
 
 
+target_link_libraries(libint2_wrappers PRIVATE Libint2::int2)
+target_link_libraries(libint2_wrappers_stat PRIVATE Libint2::int2)
+
 #
 #  Link to external libraries
 #
