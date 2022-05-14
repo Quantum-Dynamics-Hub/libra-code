@@ -902,7 +902,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
                              "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
-                             "progress_frequency":0.1,
+                             "progress_frequency":0.1, "icond": 0, "nfiles": 1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
                                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
@@ -956,7 +956,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     ham = nHamiltonian(ndia, nadi, nnucl)
     ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)
-    model_params.update({"timestep":0})
+    icond = dyn_params["icond"]
+    nfiles = dyn_params["nfiles"]
+    model_params.update({"timestep":icond})
+    #model_params.update({"timestep":0})
 
     
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
@@ -1069,7 +1072,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             #    del U[tr]
 
         #============ Propagate ===========        
-        model_params.update({"timestep":i})        
+        index = i+icond
+        while index>=nfiles:
+            index -= nfiles
+        model_params.update({"timestep":index})
+
+        #model_params.update({"timestep":i})        
 
         if rep_tdse==0:            
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
@@ -1153,7 +1161,7 @@ def run_dynamics_nbra(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_para
     default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
                              "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
-                             "progress_frequency":0.1,
+                             "progress_frequency":0.1, "icond": 0, "nfiles": 1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
                                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
@@ -1207,7 +1215,9 @@ def run_dynamics_nbra(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_para
     ham = nHamiltonian(ndia, nadi, nnucl)
     ham.add_new_children(ndia, nadi, nnucl, 1)
     ham.init_all(2,1)
-    model_params.update({"timestep":0})
+    icond = dyn_params["icond"]
+    nfiles = dyn_params["nfiles"]
+    model_params.update({"timestep":icond})
 
     
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
@@ -1239,6 +1249,7 @@ def run_dynamics_nbra(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_para
     
         #============ Compute and output properties ===========        
         # Amplitudes, Density matrix, and Populations
+
 
         t1 = time.time()
         dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
@@ -1310,8 +1321,17 @@ def run_dynamics_nbra(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_para
         #    del U[tr]
 
         #============ Propagate ===========        
-        model_params.update({"timestep":i})        
-
+        index = i+icond
+        while index>=nfiles:
+            index -= nfiles
+        model_params.update({"timestep":index})
+        ##step = params["istep"]+timestep
+        ##path_to_npz_files = params["path_to_npz_files"]
+        ##active_space = params["active_space"]
+        ##hvib_im = np.array(sp.load_npz(F'{path_to_npz_files}/Hvib_sd_{step}_im.npz').todense()[active_space,:][:,active_space].real)
+        ##hvib_im_MATRIX = data_conv.nparray2MATRIX(hvib_im)
+        ##params["NAC_CI"] = CMATRIX(hvib_re_MATRIX, hvib_im_MATRIX) 
+        #print('Flag decoherence rates', dyn_params["decoherence_rates"])
         compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
             
 #        sys.exit(0)        

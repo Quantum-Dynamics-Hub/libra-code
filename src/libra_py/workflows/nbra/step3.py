@@ -1981,7 +1981,8 @@ def run_step3_ks_nacs_libint(params):
             St_ks = np.array( sp.load_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz').todense().real )
             St_ks_cmatrix = data_conv.nparray2CMATRIX(St_ks)
             St_ks_cmatrices.append(St_ks_cmatrix)
-            E_ks = np.array( sp.load_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz').todense().real )
+            ###E_ks = np.array( sp.load_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz').todense().real )
+            E_ks = np.array( sp.load_npz(F'{res_dir_2}/E_ks_{step}.npz').todense().real )
             E_ks_cmatrix = data_conv.nparray2CMATRIX(E_ks)
             E_ks_cmatrices.append(E_ks_cmatrix)
         # Now apply the state-reordering
@@ -1992,7 +1993,8 @@ def run_step3_ks_nacs_libint(params):
             St_ks_sparse = data_conv.MATRIX2scipynpz( St_ks_cmatrices[step-start_time].real() )
             sp.save_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz', St_ks_sparse)
             E_ks_sparse = data_conv.MATRIX2scipynpz( E_ks_cmatrices[step-start_time].real() )
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz', E_ks_sparse)
+            ###sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_re.npz', E_ks_sparse)
+            sp.save_npz(F'{res_dir_2}/E_ks_{step}.npz', E_ks_sparse)
         print('Done with state-reordering of the KS orbitals. Elapsed time:',time.time()-t2)
 
     # Applying phase correction
@@ -2012,18 +2014,28 @@ def run_step3_ks_nacs_libint(params):
             St_step_phase_corrected, cum_phase_aa, cum_phase_bb = \
                 apply_phase_correction_scipy(St_step, step, cum_phase_aa, cum_phase_bb, two_spinor_format=True)
             Hvib_ks = 0.5/dt * (St_step_phase_corrected.todense().T - St_step_phase_corrected.todense())
-            sp.save_npz(F'{res_dir_2}/St_ks_{step-start_time}_re.npz', St_step_phase_corrected )
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+            ###sp.save_npz(F'{res_dir_2}/St_ks_{step-start_time}_re.npz', St_step_phase_corrected )
+            ###sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+            sp.save_npz(F'{res_dir_2}/St_ks_{step}.npz', St_step_phase_corrected )
+            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step}_im.npz', sp.csc_matrix( Hvib_ks ))
             os.system(F'rm {res_dir_2}/St_ks_orthonormalized_{step}.npz')
     else:
         for step in range(start_time, finish_time):
             St_step = sp.load_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz')
             Hvib_ks = 0.5/dt * (St_step.todense().T - St_step.todense())
-            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
-            os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step-start_time}_re.npz')
+            ###sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
+            sp.save_npz(F'{res_dir_2}/Hvib_ks_{step}_im.npz', sp.csc_matrix( Hvib_ks ))
+            ###os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step-start_time}_re.npz')
+            os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step}.npz')
 
     print('Done with phase correction. Elapsed time:', time.time()-t2)
-
+    ##for step in range(start_time,finish_time):
+    ##    os.system(F'mv {res_dir_2}/St_ks_{step-start_time}_re.npz {res_dir_2}/St_ks_{step}.npz')
+    ##    os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_re.npz {res_dir_2}/E_ks_{step}.npz') 
+    ###for step in range(finish_time,start_time-1,-1):
+       ### os.system(F'mv {res_dir_2}/St_ks_{step-start_time}_re.npz {res_dir_2}/St_ks_{step}.npz')
+       ### os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_re.npz {res_dir_2}/E_ks_{step}.npz')
+      ###  os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_im.npz {res_dir_2}/Hvib_ks_{step}_im.npz')
 
 
 def orthonormalize_ks_overlaps(step, params):
@@ -2055,7 +2067,9 @@ def orthonormalize_ks_overlaps(step, params):
     S_step_sparse  = sp.csc_matrix(S_step)
 
     sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/St_ks_orthonormalized_{step}.npz', St_step_sparse)
-    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step-start_time}_re.npz', E_step)
+    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/S_ks_{step}.npz', S_step_sparse)
+    ###sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/Hvib_ks_{step-start_time}_re.npz', E_step)
+    sp.save_npz(F'{params["path_to_save_ks_Hvibs"]}/E_ks_{step}.npz', E_step)
     print('Done with step', step,'. Elapsed time:', time.time()-t2)
 
 

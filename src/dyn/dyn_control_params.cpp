@@ -217,6 +217,7 @@ void dyn_control_params::set_parameters(bp::dict params){
       decoherence_rates = new MATRIX(x.n_rows, x.n_cols);      
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){ decoherence_rates->set(a, b, x.get(a,b));   }
+
       } 
     }
     else if(key=="ave_gaps"){ 

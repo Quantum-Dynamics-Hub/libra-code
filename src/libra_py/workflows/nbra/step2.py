@@ -613,10 +613,10 @@ def run_cp2k_libint_step2(params):
             print('Computing and saving molecular orbital overlaps...')
             if isUKS:
                 S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_St, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
 
                 S_beta = np.linalg.multi_dot([beta_eigenvectors_2, AO_S, beta_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St_beta = np.linalg.multi_dot([beta_eigenvectors_1, AO_St, beta_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
 
                 S_step = data_conv.form_block_matrix(S_alpha,zero_mat,zero_mat.T,S_beta)
                 St_step = data_conv.form_block_matrix(St_alpha,zero_mat,zero_mat.T,St_beta)
@@ -630,7 +630,7 @@ def run_cp2k_libint_step2(params):
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             else:
                 S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                St = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                St = np.linalg.multi_dot([eigenvectors_1, AO_St, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
                 St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
                 S_step_sparse = scipy.sparse.csc_matrix(S_step)

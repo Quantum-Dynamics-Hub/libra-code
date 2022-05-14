@@ -29,6 +29,11 @@
 #include "Dynamics.h"
 #include "dyn_control_params.h"
 #include "dyn_variables.h"
+#include "sys/types.h"
+#include "sys/sysinfo.h"
+
+struct sysinfo memInfo;
+
 
 
 /// liblibra namespace
@@ -248,7 +253,7 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
 
 
 //vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
@@ -258,16 +263,19 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
   int ntraj = ham.children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-
+  if(isNBRA==1){
+    St[0] = Uprev[0].H() * ham.children[0]->get_basis_transform();
+  }
+  else{
   for(int traj=0; traj<ntraj; traj++){
     St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
   }
-
+  }
   return St;
 
 }
 
-vector<CMATRIX> compute_St(nHamiltonian& ham){
+vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
@@ -277,11 +285,14 @@ vector<CMATRIX> compute_St(nHamiltonian& ham){
   int ntraj = ham.children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-
+  if(isNBRA==1){
+    St[0] = ham.children[0]->get_time_overlap_adi();
+  }
+  else{
   for(int traj=0; traj<ntraj; traj++){
     St[traj] = ham.children[traj]->get_time_overlap_adi();
   }
-
+  }
   return St;
 
 }
@@ -496,6 +507,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   int cdof;
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
+  int ntraj1;
   int nst = C.n_rows;    
   int traj, dof, idof;
   int n_therm_dofs;
@@ -511,15 +523,21 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   vector<int> project_out_states(ntraj); // for DISH
 
   vector<CMATRIX> Uprev;
-  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-  vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));  
-  vector<MATRIX> decoherence_rates(ntraj, MATRIX(nst, nst)); 
-  vector<double> Ekin(ntraj, 0.0);  
+  if(prms.isNBRA==1){
+  ntraj1 = 1;
+  }
+  else{
+  ntraj1 = ntraj;
+  }
+  vector<CMATRIX> St(ntraj1, CMATRIX(nst, nst));
+  vector<CMATRIX> Eadi(ntraj1, CMATRIX(nst, nst));  
+  vector<MATRIX> decoherence_rates(ntraj1, MATRIX(nst, nst)); 
+  vector<double> Ekin(ntraj1, 0.0);  
   //if(prms.isNBRA==1){
   //vector<MATRIX> prev_ham_dia(1, MATRIX(nst, nst));
   //}
   //else{
-  vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
+  vector<MATRIX> prev_ham_dia(ntraj1, MATRIX(nst, nst));
   //}
   MATRIX gamma(ndof, ntraj);
   MATRIX p_traj(ndof, 1);
@@ -543,14 +561,12 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   cout << "Flag before prev_ham_dia" << endl;
  if(prms.tsh_method == 3){ // DISH
- if(prms.isNBRA!=1){
   //    prev_ham_dia[0] = ham.children[0]->get_ham_dia().real();
   //}
   //else{
-    for(traj=0; traj<ntraj; traj++){
+    for(traj=0; traj<ntraj1; traj++){
       prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
     }
-  }
   }
   cout << "Flag after prev_ham_dia" << endl;
   //============ Update the Hamiltonian object =============
@@ -634,10 +650,10 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
       if(prms.time_overlap_method==0){    
         //timer3 = clock();
-        St = compute_St(ham, Uprev);    
+        St = compute_St(ham, Uprev, prms.isNBRA);
         //cout << "-- compute_ST in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
       }
-      else if(prms.time_overlap_method==1){    St = compute_St(ham);      }
+      else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);      }
       //timer3 = clock();
       Eadi = get_Eadi(ham);           // these are raw properties
       //cout << "-- get_Eadi in the C++ took " << (float)(clock()-timer3)/CLOCKS_PER_SEC << " seconds" << endl;
@@ -695,6 +711,8 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   for(i=0; i<num_el; i++){
     propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);
   }
+  CMATRIX Hvib(ham.children[0]->nadi, ham.children[0]->nadi);  Hvib = ham.children[0]->get_hvib_adi();
+  //cout << "Flag Ham" << Hvib  << endl;
   //cout << "Electronic propagation in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
 
@@ -725,21 +743,21 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 //    exit(0);
   //timer1 = clock();
   if(prms.decoherence_times_type==-1){
-    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = 0.0;   }
+    for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = 0.0;   }
   }
 
   /// mSDM
   /// Just use the plain times given from the input, usually the
   /// mSDM formalism
   else if(prms.decoherence_times_type==0){
-    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
+    for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
   }
 
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
     Eadi = get_Eadi(ham); 
     Ekin = compute_kinetic_energies(p, invM);
-    decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param);       
+    decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
 
   else if(prms.decoherence_times_type==2){
@@ -755,7 +773,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   if(prms.dephasing_informed==1){
     Eadi = get_Eadi(ham); 
     MATRIX ave_gaps(*prms.ave_gaps);
-    dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
+    dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps, prms.isNBRA);
   }
 
   //cout << "Update decoherence rates and times in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
@@ -764,7 +782,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   // SDM and alike methods
   //timer1 = clock();
   if(prms.decoherence_algo==0){
-    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance);
+    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
   }
   // BCSH
   else if(prms.decoherence_algo==3){ 
@@ -774,7 +792,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   else if(prms.decoherence_algo==4){
 //    MATRIX decoh_rates(ndof, ntraj);
-    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd);
+    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
   }
 
 //  exit(0);
@@ -882,12 +900,29 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   //cout << "Us the resulting amplitudes to hop in the C++ took " << (float)(clock()-timer1)/CLOCKS_PER_SEC << " seconds" << endl;
 
 //    exit(0);
+  cout << "Flag children size of ham children.size()= " << ham.children.size()  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(decoherence_rates)  << endl;
+  //cout << "Flag size of decoherence_rates in bytes " <<  sizeof(old_states)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(act_states)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(prms)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(prev_ham_dia[0])  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(ham.children)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(projectors)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(Coeff)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(q)  << endl;
+  cout << "Flag size of decoherence_rates in bytes " <<  sizeof(p)  << endl;
 
+sysinfo (&memInfo);
+//long long virtualMemUsed = memInfo.totalram - memInfo.freeram;
+long long virtualMemUsed = memInfo.freeram;
+cout << "Flag TOtal memory used " << virtualMemUsed/1000000 << " MB" << endl;
   St.clear();
   Eadi.clear();
   decoherence_rates.clear();
   Ekin.clear();
   prev_ham_dia.clear();
+  //delete prms.decoherence_rates;
+  //delete ave_gaps;
 //  t1.clear();
 //  t2.clear();
 
@@ -895,6 +930,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 //    exit(0);
   //cout << "Total dynamics for this step in the C++ took " << (float)(clock()-timer)/CLOCKS_PER_SEC << " seconds" << endl;
 }
+
 
 
 

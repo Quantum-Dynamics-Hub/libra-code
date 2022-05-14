@@ -484,7 +484,6 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, bp::object q, bp::obje
     // Call the Python function with such arguments
     bp::object obj = py_funct(q, params, get_full_id() );  
 
-
  
     // Extract all the computed properties
     int has_attr=0;

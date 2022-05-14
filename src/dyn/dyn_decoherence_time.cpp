@@ -24,7 +24,7 @@ namespace liblibra{
 namespace libdyn{
 
 
-MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param){
+MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param, int isNBRA){
 /**
     This function computes the decoherence rates matrix used in the 
     energy-based decoherence scheme of Granucci-Persico and Truhlar
@@ -55,11 +55,21 @@ MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param){
 }
 
 
-vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param){
+vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param, int isNBRA){
 
   int ntraj = Hvib.size();
   int nst = Hvib[0].n_cols;
+  int ntraj1;
 
+  if(isNBRA==1){
+  ntraj1 = 1;
+  }
+  else{
+  ntraj1 = Hvib.size();
+  }
+
+  vector<MATRIX> res(ntraj1, MATRIX(nst, nst));
+  if(isNBRA==1){
   if(Ekin.size()!=ntraj){
     cout<<"ERROR in edc_rates: the sizes of the input variables Hvib and Ekin are inconsistent\n";
     cout<<"Hvib.size() = "<<Hvib.size()<<"\n";
@@ -67,18 +77,16 @@ vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_p
     cout<<"exiting...\n";
     exit(0);
   }
-
-  vector<MATRIX> res(ntraj, MATRIX(nst, nst));
-  for(int traj=0; traj<ntraj; traj++){
-    res[traj] = edc_rates(Hvib[traj], Ekin[traj], C_param, eps_param);
   }
-
+  for(int traj=0; traj<ntraj1; traj++){
+    res[traj] = edc_rates(Hvib[traj], Ekin[traj], C_param, eps_param, isNBRA);
+  }
   return res;
 
 }
 
 
-void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps){
+void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps, int isNBRA){
 /**
     This function computes the corrected dephasing rates  
     The correction is based on the instnataneous energy levels and on the average
@@ -117,10 +125,14 @@ void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& a
 }
 
 
-void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps){
+void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps, int isNBRA){
 
   int ntraj = Hvib.size();
 
+  if(isNBRA==1){
+    dephasing_informed_correction(decoh_rates[0], Hvib[0], ave_gaps, isNBRA);
+  }
+  else{
   if(decoh_rates.size()!=ntraj){
     cout<<"ERROR in dephasing_informed_correction: the sizes of the input variables \
     decoh_rates and Hvib are inconsistent\n";
@@ -132,10 +144,10 @@ void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>&
 
   for(int traj=0; traj<ntraj; traj++){
 
-    dephasing_informed_correction(decoh_rates[traj], Hvib[traj], ave_gaps);
+    dephasing_informed_correction(decoh_rates[traj], Hvib[traj], ave_gaps, isNBRA);
 
   }
-
+  }
 }
 
 

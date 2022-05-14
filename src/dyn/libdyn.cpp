@@ -155,19 +155,19 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v2);
 
   CMATRIX (*expt_sdm_v3)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v3);
 
   CMATRIX (*expt_sdm_v4)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v4);
 
 
@@ -203,21 +203,21 @@ void export_dyn_decoherence_objects(){
   ///================  In dyn_decoherence_time.cpp  ===================================
 
   MATRIX (*expt_edc_rates_v1)
-  (CMATRIX& Hvib, double Ekin, double C_param, double eps_param) = &edc_rates;
+  (CMATRIX& Hvib, double Ekin, double C_param, double eps_param, int isNBRA) = &edc_rates;
   def("edc_rates", expt_edc_rates_v1);
 
   vector<MATRIX> (*expt_edc_rates_v2)
   (vector<CMATRIX>& Hvib, vector<double>& Ekin, 
-  double C_param, double eps_param) = &edc_rates;
+  double C_param, double eps_param, int isNBRA) = &edc_rates;
   def("edc_rates", expt_edc_rates_v2);
 
 
   void (*expt_dephasing_informed_correction_v1)
-  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps, int isNBRA) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v1);
 
   void (*expt_dephasing_informed_correction_v2)
-  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps, int isNBRA) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v2);
 
   
@@ -646,9 +646,9 @@ void export_Dyn_objects(){
 
 
 
-  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v1);
-  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v2);
 
 

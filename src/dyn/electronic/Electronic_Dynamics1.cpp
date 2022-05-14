@@ -137,7 +137,7 @@ void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
   \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
 
 */ 
-  cout << "Flag P1\n" << endl;
+  //cout << "Flag P1\n" << endl;
   libdyn::libelectronic::propagate_electronic(dt,this,ham);
 }
 
@@ -156,7 +156,7 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
   \param[in] ham The reference to Hamiltonian object, that affects the dynamics
 
 */ 
-  cout << "Flag P2\n" << endl;
+  //cout << "Flag P2\n" << endl;
   libdyn::libelectronic::propagate_electronic(dt,this,&ham);
 }
 
@@ -178,7 +178,7 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
 
 */ 
 
-  cout << "Flag P3\n" << endl;
+  //cout << "Flag P3\n" << endl;
   int i,j;
 
   double dt_half = 0.5*dt;
@@ -248,7 +248,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
   This is the Python-friendly function
 */ 
 
-  cout << "Flag P4\n" << endl;
+  //cout << "Flag P4\n" << endl;
 
   int i,j;
 
@@ -479,7 +479,7 @@ void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 }// propagate_electronic
 
 void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
-  cout << "Flag P5\n" << endl;
+  //cout << "Flag P5\n" << endl;
 
   int i,j;
   // Faster and more robust solver:
@@ -600,7 +600,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
   This integrator is fully unitary (the norm is conserved exactly)
   This is the Python-friendly function
 */ 
-  cout << "Flag P6\n" << endl;
+  //cout << "Flag P6\n" << endl;
 
   int i,j;
 
@@ -686,7 +686,7 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S){
   void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S)
 
 */ 
-  cout << "Flag P7\n" << endl;
+  //cout << "Flag P7\n" << endl;
   CMATRIX* Hvib; Hvib = new CMATRIX(nstates, nstates);
 
   for(int i=0;i<nstates;i++){
@@ -719,7 +719,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
   This integrator is fully unitary (the norm is conserved exactly)
   This is the Python-friendly function
 */ 
-  cout << "Flag P8\n" << endl;
+  //cout << "Flag P8\n" << endl;
 
   int i,j;
  
@@ -834,7 +834,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
   This is the Python-friendly function
 */ 
 
-  cout << "Flag P9\n" << endl;
+  //cout << "Flag P9\n" << endl;
 
   int i,j;
  
@@ -914,7 +914,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
-   cout << "Flag P10\n" << endl;
+   //cout << "Flag P10\n" << endl;
  if(rep==0){  // diabatic
 
     CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
@@ -934,7 +934,7 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 }
 
 void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep){
-  cout << "Flag P11\n" << endl;
+  //cout << "Flag P11\n" << endl;
 
   if(rep==0){  // diabatic
 
@@ -959,7 +959,7 @@ void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonia
 
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
-  cout << "Flag P12\n" << endl;
+  //cout << "Flag P12\n" << endl;
 
   if(rep==0){  // diabatic
 
@@ -980,7 +980,7 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
 }
 
 void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep){
-  cout << "Flag P13\n" << endl;
+  //cout << "Flag P13\n" << endl;
 
   if(rep==0){  // diabatic
 
@@ -1018,7 +1018,7 @@ void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonia
 
 
 void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
-  cout << "Flag P14\n" << endl;
+  //cout << "Flag P14\n" << endl;
 
   if(C.n_cols!=ham.size()){
     cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
@@ -1044,7 +1044,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 }
 
 void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA){
-  cout << "Flag P15\n" << endl;
+  //cout << "Flag P15\n" << endl;
   if(isNBRA!=1){
   if(C.n_cols!=ham.size()){
     cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
@@ -1058,17 +1058,12 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
   int i,j;
   CMATRIX Hvib(ham[0]->nadi, ham[0]->nadi);  Hvib = ham[0]->get_hvib_adi();
   int sz = Hvib.n_cols;
-
   CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
   CMATRIX* C1; C1 = new CMATRIX(sz, sz);  *C1 = complex<double>(0.0, 0.0); // eigenvectors
   CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
   CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);
-
-
-
+ 
   libmeigen::solve_eigen(Hvib, *I, *Heig, *C1, 0);  // Hvib_eff * C1 = I * C1 * Heig  ==>  ham[0] = C1 * Heig * C.H()
-
-
 
   complex<double> one(0.0, 1.0);
   for(i=0;i<sz;i++){
@@ -1082,6 +1077,10 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
   
 
   C = *expH * C;
+  delete expH;
+  delete I;
+  delete C1;
+  delete Heig;
 
   }
   else {
@@ -1105,7 +1104,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
 
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
-  cout << "Flag P16\n" << endl;
+  //cout << "Flag P16\n" << endl;
 
   vector<nHamiltonian*> branches; 
   branches = ham.get_branches(level);
@@ -1135,7 +1134,7 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int
 
 
 void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level){
-  cout << "Flag P17\n" << endl;
+  //cout << "Flag P17\n" << endl;
 
   vector<nHamiltonian*> branches; 
   branches = ham.get_branches(level);
