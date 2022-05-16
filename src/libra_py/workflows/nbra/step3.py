@@ -2029,13 +2029,6 @@ def run_step3_ks_nacs_libint(params):
             os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step}.npz')
 
     print('Done with phase correction. Elapsed time:', time.time()-t2)
-    ##for step in range(start_time,finish_time):
-    ##    os.system(F'mv {res_dir_2}/St_ks_{step-start_time}_re.npz {res_dir_2}/St_ks_{step}.npz')
-    ##    os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_re.npz {res_dir_2}/E_ks_{step}.npz') 
-    ###for step in range(finish_time,start_time-1,-1):
-       ### os.system(F'mv {res_dir_2}/St_ks_{step-start_time}_re.npz {res_dir_2}/St_ks_{step}.npz')
-       ### os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_re.npz {res_dir_2}/E_ks_{step}.npz')
-      ###  os.system(F'mv {res_dir_2}/Hvib_ks_{step-start_time}_im.npz {res_dir_2}/Hvib_ks_{step}_im.npz')
 
 
 def orthonormalize_ks_overlaps(step, params):

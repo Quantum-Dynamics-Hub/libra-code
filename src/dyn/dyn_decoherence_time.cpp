@@ -34,7 +34,7 @@ MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param, i
     \param[in]        Ekin [ float ] The classical kinetic energy of nuclei. Units = Ha
     \param[in]     C_param [ float ] The method parameter, typically set to 1.0 Ha
     \param[in]   eps_param [ float ] The method parameter, typically set to 0.1 Ha
-
+    \param[in]      isNBRA [ int   ] The method for considering NBRA-type calculations
 */
 
   int i,j;
@@ -59,6 +59,7 @@ vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_p
 
   int ntraj = Hvib.size();
   int nst = Hvib[0].n_cols;
+  // A new variable instead of ntraj
   int ntraj1;
 
   if(isNBRA==1){
@@ -97,6 +98,7 @@ void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& a
     \param[in, out]  decoh_rates [ MATRIX ] uncorrected decoherence rates [units: a.u.t.^-1]
     \param[in]             Hvib  [ CMATRIX ] Instantaneous vibronic Hamiltonian [units: Ha]
     \param[in]          ave_gaps [ MATRIX ] time-averaged module of the energy level gaps: <|E_i - E_j|>  [units: Ha]
+    \param[in]            isNBRA [ int    ] The method for considering NBRA-type calculations
 
 */
 

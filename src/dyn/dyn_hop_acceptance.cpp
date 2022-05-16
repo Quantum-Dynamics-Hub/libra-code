@@ -476,15 +476,16 @@ vector<int> accept_hops(dyn_control_params& prms,
 
         p_tr = p.col(traj);
         double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+        // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
         if(itraj==0){
-        hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+          hvib = ham.children[traj]->get_ham_adi();
+          hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         }
         else{
-        hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+          hvib = ham.children[traj]->get_ham_adi();
+          hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
@@ -548,6 +549,7 @@ vector<int> accept_hops(dyn_control_params& prms,
       int new_st = proposed_states[traj];
 
       if(old_st != new_st){
+        // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
         if(itraj==0){
         hvib = ham.children[traj]->get_ham_adi();
@@ -610,6 +612,7 @@ vector<int> accept_hops(dyn_control_params& prms,
       int new_st = proposed_states[traj];
 
       if(old_st != new_st){
+        // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
         if(itraj==0){
         hvib = ham.children[traj]->get_ham_adi();
@@ -657,6 +660,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
@@ -691,6 +695,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
@@ -726,6 +731,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
@@ -876,6 +882,7 @@ void handle_hops_nuclear(dyn_control_params& prms,
       p_tr = p.col(traj);
 
       double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();
@@ -952,6 +959,7 @@ void handle_hops_nuclear(dyn_control_params& prms,
 
       int old_st = old_states[traj];
       int new_st = new_states[traj];
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();
@@ -1011,6 +1019,7 @@ void handle_hops_nuclear(dyn_control_params& prms,
 
       int old_st = old_states[traj];
       int new_st = new_states[traj];
+      // Do the calculations only for itraj=0 if isNBRA is 1
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();

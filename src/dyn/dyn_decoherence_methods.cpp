@@ -27,7 +27,7 @@ namespace liblibra{
 namespace libdyn{
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA){
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol){
     /**
     \brief Generic framework of Simplified Decay of Mixing (SDM) method of 
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
@@ -37,7 +37,6 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double t
     \param[in]      act_st [ integer ] The active state index
     \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
     \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0 
-
     The function returns:
     C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
 
@@ -144,15 +143,15 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double t
 
 }
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA){
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
 
   double tol = 0.0;
 
-  return sdm(Coeff, dt, act_st, decoh_rates, tol, isNBRA);
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
 }
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA){
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol){
     /**
     \brief The generic framework of the Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
@@ -181,35 +180,23 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
   CMATRIX coeff(nadi, 1);
   CMATRIX res(nadi, ntraj);
 
-  if(isNBRA==1){
+
   for(traj=0; traj<ntraj; traj++){
 
     stenc_y[0] = traj;
     pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
-    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[0], tol, isNBRA);
+    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol);
     push_submatrix(res, coeff, stenc_x, stenc_y);
 
   }// for traj
-  }
-  else{
- 
-  for(traj=0; traj<ntraj; traj++){
-
-    stenc_y[0] = traj;
-    pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
-    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol, isNBRA);
-    push_submatrix(res, coeff, stenc_x, stenc_y);
-
-  }// for traj
-  }
   return res;
 
 }
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA){
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
              
   double tol = 0.0;
-  return sdm(Coeff, dt, act_st, decoh_rates, tol, isNBRA);
+  return sdm(Coeff, dt, act_st, decoh_rates, tol);
 }
 
 
@@ -653,7 +640,7 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 
 
 
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA){
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
     /**
     \brief Mean field with stochastic decoherence
   
@@ -696,13 +683,7 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
         // Probability of decoherence on state i
         // Here, we assume that the state-only decoherence rates are on the diagonal
         double P_i;
-        if(isNBRA==1){
-        P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[0].get(i, i) * dt;
-        }
-        else
-        {
         P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[itraj].get(i, i) * dt;
-        }
 
         if(ksi<P_i){ 
           proposed_states.push_back(i);
