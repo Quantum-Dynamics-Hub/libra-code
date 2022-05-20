@@ -155,19 +155,19 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v2);
 
   CMATRIX (*expt_sdm_v3)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v3);
 
   CMATRIX (*expt_sdm_v4)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v4);
 
 
@@ -197,7 +197,7 @@ void export_dyn_decoherence_objects(){
 
   CMATRIX (*expt_mfsd_v1)
   (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
-   nHamiltonian& ham, Random& rnd) = &mfsd;
+   nHamiltonian& ham, Random& rnd, int isNBRA) = &mfsd;
 
 
   ///================  In dyn_decoherence_time.cpp  ===================================

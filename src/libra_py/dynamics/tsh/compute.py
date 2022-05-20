@@ -852,18 +852,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     dyn_params = dict(_dyn_params)
 
 
-    q = MATRIX(_q)
-    p = MATRIX(_p)
-    iM = MATRIX(_iM)
-    Cdia = CMATRIX(_Cdia)
-    Cadi = CMATRIX(_Cadi)
-    states = intList()
-    projectors = CMATRIXList()       
-    for i in range(len(_states)):
-        states.append(_states[i])
-        projectors.append(CMATRIX(_projectors[i]))
-
-
     # Parameters and dimensions
     critical_params = [  ] 
     default_params = {}
@@ -914,6 +902,23 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     comn.check_input(dyn_params, default_params, critical_params)
                
+    q = MATRIX(_q)
+    p = MATRIX(_p)
+    iM = MATRIX(_iM)
+    Cdia = CMATRIX(_Cdia)
+    Cadi = CMATRIX(_Cadi)
+    states = intList()
+    projectors = CMATRIXList()       
+    if dyn_params["isNBRA"]==1:
+        for i in range(len(_states)):
+            states.append(_states[i])
+        projectors.append(CMATRIX(_projectors[0]))
+    else:
+        for i in range(len(_states)):
+            states.append(_states[i])
+            projectors.append(CMATRIX(_projectors[i]))
+
+
     prefix = dyn_params["prefix"] 
     prefix2 = dyn_params["prefix2"] 
     rep_tdse = dyn_params["rep_tdse"]
@@ -1002,23 +1007,22 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     
         #============ Compute and output properties ===========        
         # Amplitudes, Density matrix, and Populations
-        if rep_tdse==0:
-            # Diabatic to raw adiabatic
-            ham.ampl_dia2adi(Cdia, Cadi, 0, 1) 
-            # Raw adiabatic to dynamically-consistent adiabatic
-            Cadi = dynconsyst_to_raw(Cadi, projectors)
-
-        elif rep_tdse==1:
-            ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
-
-        t1 = time.time()
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
-        t1 = time.time()
-        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, dyn_params["isNBRA"])
         if dyn_params["isNBRA"]!=1:
-            # Energies 
-            Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
-            Etherm, E_NHC = 0.0, 0.0
+            if rep_tdse==0:
+                # Diabatic to raw adiabatic
+                ham.ampl_dia2adi(Cdia, Cadi, 0, 1) 
+                # Raw adiabatic to dynamically-consistent adiabatic
+                Cadi = dynconsyst_to_raw(Cadi, projectors)
+    
+            elif rep_tdse==1:
+                ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
+
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
+        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, dyn_params["isNBRA"])
+        # Energies 
+        Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
+        Etherm, E_NHC = 0.0, 0.0
+        if dyn_params["isNBRA"]!=1:
             if force_method in [0, 1]:
                 Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, projectors, states, iM, rep_tdse)
             elif force_method in [2]:
@@ -1038,8 +1042,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         del dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
         del pops, pops_raw
 
-    
-        for tr in range(ntraj):
+        if dyn_params["isNBRA"] ==1:
+            tr_range = [0]
+        else:
+            tr_range = range(ntraj)
+        for tr in tr_range:
             if time_overlap_method==0:
                 x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
                 St = U[tr].H() * x

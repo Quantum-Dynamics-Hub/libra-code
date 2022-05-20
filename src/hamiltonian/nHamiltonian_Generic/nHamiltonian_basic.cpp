@@ -56,7 +56,7 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
 /** Constructor of the nHamiltonian class
 */
 
-  cout<<"nHamiltonian constructor at"<<this<<endl;
+  //cout<<"nHamiltonian constructor at"<<this<<endl;
 
 //  nHamiltonian();
 

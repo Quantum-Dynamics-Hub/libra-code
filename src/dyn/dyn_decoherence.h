@@ -37,10 +37,10 @@ namespace libdyn{
 
 ///================  In dyn_decoherence_methods.cpp  ===================================
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol);
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates);
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol);
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates);
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA);
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA);
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA);
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA);
 
 void project_out(CMATRIX& Coeff, int traj, int i);
 void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option);
@@ -61,16 +61,16 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 
 
 // For MF-SD of Schwartz
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA);
 
 
 ///================  In dyn_decoherence_time.cpp  ===================================
 
-MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param);
-vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param);
+MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param, int isNBRA);
+vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param, int isNBRA);
 
-void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps);
-void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps);
+void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps, int isNBRA);
+void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps, int isNBRA);
 
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
