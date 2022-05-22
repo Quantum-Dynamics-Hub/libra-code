@@ -155,37 +155,25 @@ void export_dyn_decoherence_objects(){
   ///=================== dyn_decoherence_methods.cpp =======================
 
   CMATRIX (*expt_sdm_v1)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v1);
 
   CMATRIX (*expt_sdm_v2)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA) = &sdm;
+  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
   def("sdm", expt_sdm_v2);
+
 
   CMATRIX (*expt_sdm_v3)
   (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v3);
 
   CMATRIX (*expt_sdm_v4)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v4);
 
-
   CMATRIX (*expt_sdm_v5)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol) = &sdm;
-  def("sdm", expt_sdm_v5);
-
-  CMATRIX (*expt_sdm_v6)
-  (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
-  def("sdm", expt_sdm_v6);
-
-  CMATRIX (*expt_sdm_v7)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
-  def("sdm", expt_sdm_v7);
-
-  CMATRIX (*expt_sdm_v8)
   (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
-  def("sdm", expt_sdm_v8);
+  def("sdm", expt_sdm_v5);
 
 
 
