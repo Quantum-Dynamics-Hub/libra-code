@@ -568,6 +568,10 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
   CMATRIX st(nst, nst);
   CMATRIX ist(nst, nst);
   CMATRIX projector_old(nst, nst); 
+  // Instead of setting many of-else in the for loop we can set ntraj=1
+  if(prms.isNBRA==1){
+     ntraj = 1;
+  }
 
   for(int traj=0; traj<ntraj; traj++){
 

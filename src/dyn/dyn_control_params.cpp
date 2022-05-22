@@ -54,12 +54,12 @@ dyn_control_params::dyn_control_params(){
   max_number_attempts = 100;
   min_probability_reordering = 0.0;
 
-
   ///================= Surface hopping: proposal, acceptance =======================
   tsh_method = 0;
   hop_acceptance_algo = 0;
   momenta_rescaling_algo = 0;
   use_boltz_factor = 0;
+  isNBRA = 1;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -187,6 +187,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="convergence") { convergence = bp::extract<int>(params.values()[i]);  }
     else if(key=="max_number_attempts") { max_number_attempts = bp::extract<int>(params.values()[i]);  }
     else if(key=="min_probability_reordering") { min_probability_reordering = bp::extract<double>(params.values()[i]);  }
+    else if(key=="isNBRA") { isNBRA = bp::extract<int>(params.values()[i]);   }
 
     ///================= Surface hopping: proposal, acceptance =======================
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }

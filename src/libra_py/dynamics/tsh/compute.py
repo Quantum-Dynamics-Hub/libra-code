@@ -13,7 +13,7 @@
    :synopsis: This module implements a wrapper function for doing Ehrenfest/TSH/Verlet/etc. dynamics
        List of functions:  
            * init_nuclear_dyn_var(Q, P, M, params, rnd)
-           * init_electronic_dyn_var(params, rnd)
+           * init_electronic_dyn_var(params, isNBRA, rnd)
            * init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0)
            * run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _states, _dyn_params, compute_model, _model_params, rnd)
            * generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd)
@@ -37,7 +37,7 @@ import os
 import sys
 import math
 import copy
-
+import time
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -190,7 +190,7 @@ def init_nuclear_dyn_var(Q, P, M, params, rnd):
 
 
 
-def init_electronic_dyn_var(params, rnd):
+def init_electronic_dyn_var(params, isNBRA, rnd):
     """
     Args:
 
@@ -237,6 +237,9 @@ def init_electronic_dyn_var(params, rnd):
 
             * **params["ntraj"]** ( int ): the number of trajectories - the parameter defines the
                 number of columns the output matrices will have [ default: 1]
+
+            * **params["isNBRA"]** (int): A flag for NBRA type calculations. If it is set to 1 then
+                                          the Hamiltonian related properties are only computed for one trajectory
 
         rnd ( Random ): random numbers generator object
 
@@ -357,9 +360,13 @@ def init_electronic_dyn_var(params, rnd):
             states.append(tsh.set_random_state(istates, ksi)) 
 
     projections = CMATRIXList()
-    for traj in range(ntraj):
+    if isNBRA==1:
         projections.append( CMATRIX(nstates, nstates) )
-        projections[traj].identity()
+        projections[0].identity()
+    else:
+        for traj in range(ntraj):
+            projections.append( CMATRIX(nstates, nstates) )
+            projections[traj].identity()
 
 
     return Cdia, Cadi, projections, states
@@ -845,18 +852,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     dyn_params = dict(_dyn_params)
 
 
-    q = MATRIX(_q)
-    p = MATRIX(_p)
-    iM = MATRIX(_iM)
-    Cdia = CMATRIX(_Cdia)
-    Cadi = CMATRIX(_Cadi)
-    states = intList()
-    projectors = CMATRIXList()       
-    for i in range(len(_states)):
-        states.append(_states[i])
-        projectors.append(CMATRIX(_projectors[i]))
-
-
     # Parameters and dimensions
     critical_params = [  ] 
     default_params = {}
@@ -898,7 +893,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
                              "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
-                             "progress_frequency":0.1,
+                             "progress_frequency":0.1, "icond": 0, "nfiles": 1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
                                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
@@ -907,6 +902,23 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     comn.check_input(dyn_params, default_params, critical_params)
                
+    q = MATRIX(_q)
+    p = MATRIX(_p)
+    iM = MATRIX(_iM)
+    Cdia = CMATRIX(_Cdia)
+    Cadi = CMATRIX(_Cadi)
+    states = intList()
+    projectors = CMATRIXList()       
+    if dyn_params["isNBRA"]==1:
+        for i in range(len(_states)):
+            states.append(_states[i])
+        projectors.append(CMATRIX(_projectors[0]))
+    else:
+        for i in range(len(_states)):
+            states.append(_states[i])
+            projectors.append(CMATRIX(_projectors[i]))
+
+
     prefix = dyn_params["prefix"] 
     prefix2 = dyn_params["prefix2"] 
     rep_tdse = dyn_params["rep_tdse"]
@@ -950,9 +962,16 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
     # ======= Hierarchy of Hamiltonians =======
     ham = nHamiltonian(ndia, nadi, nnucl)
-    ham.add_new_children(ndia, nadi, nnucl, ntraj)
+    if dyn_params["isNBRA"]==1:
+        ham.add_new_children(ndia, nadi, nnucl, 1)
+    else:
+        ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)
-    model_params.update({"timestep":0})
+    # Setting the initial geoemtry in the dynamics
+    icond = dyn_params["icond"]
+    # The number of loaded Ham files
+    nfiles = dyn_params["nfiles"]
+    model_params.update({"timestep":icond})
 
     
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
@@ -960,8 +979,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
 
     U = []
-    for tr in range(ntraj):
-        U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
+    if dyn_params["isNBRA"]==1:
+        U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
+    else:
+        for tr in range(ntraj):
+            U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
 
 
     therm = ThermostatList();
@@ -985,31 +1007,31 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     
         #============ Compute and output properties ===========        
         # Amplitudes, Density matrix, and Populations
-        if rep_tdse==0:
-            # Diabatic to raw adiabatic
-            ham.ampl_dia2adi(Cdia, Cadi, 0, 1) 
-            # Raw adiabatic to dynamically-consistent adiabatic
-            Cadi = dynconsyst_to_raw(Cadi, projectors)
+        if dyn_params["isNBRA"]!=1:
+            if rep_tdse==0:
+                # Diabatic to raw adiabatic
+                ham.ampl_dia2adi(Cdia, Cadi, 0, 1) 
+                # Raw adiabatic to dynamically-consistent adiabatic
+                Cadi = dynconsyst_to_raw(Cadi, projectors)
+    
+            elif rep_tdse==1:
+                ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        elif rep_tdse==1:
-            ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
-
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
-        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors)
-
-
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
+        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, dyn_params["isNBRA"])
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
-        if force_method in [0, 1]:
-            Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, projectors, states, iM, rep_tdse)
-        elif force_method in [2]:
-            Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot(ham, p, Cdia, Cadi, projectors, iM, rep_tdse)
-
-        for bath in therm:
-            Etherm += bath.energy()
-        Etherm = Etherm / float(ntraj)
-        E_NHC = Etot + Etherm
+        if dyn_params["isNBRA"]!=1:
+            if force_method in [0, 1]:
+                Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, projectors, states, iM, rep_tdse)
+            elif force_method in [2]:
+                Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot(ham, p, Cdia, Cadi, projectors, iM, rep_tdse)
+    
+            for bath in therm:
+                Etherm += bath.energy()
+            Etherm = Etherm / float(ntraj)
+            E_NHC = Etot + Etherm
 
         
 
@@ -1020,8 +1042,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         del dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
         del pops, pops_raw
 
-    
-        for tr in range(ntraj):
+        if dyn_params["isNBRA"] ==1:
+            tr_range = [0]
+        else:
+            tr_range = range(ntraj)
+        for tr in tr_range:
             if time_overlap_method==0:
                 x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
                 St = U[tr].H() * x
@@ -1062,15 +1087,17 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             #    del U[tr]
 
         #============ Propagate ===========        
-        model_params.update({"timestep":i})        
+        index = i+icond
+        while index>=nfiles:
+            index -= nfiles
+        model_params.update({"timestep":index})
+        #model_params.update({"timestep":i})        
 
         if rep_tdse==0:            
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
             
-#        sys.exit(0)        
-
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)
 
@@ -1082,8 +1109,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     if _savers["mem_saver"]!=None:
         _savers["mem_saver"].save_data( F"{prefix}/mem_data.hdf", properties_to_save, "w")
         return _savers["mem_saver"]
-
-
 
 
 
@@ -1491,7 +1516,7 @@ def run_dynamics_old(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_param
         elif rep_tdse==1:
             ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1)        
+        dm_dia, dm_adi = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])
         pops = tsh_stat.compute_sh_statistics(nadi, states)
 
 
@@ -1616,7 +1641,7 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
     nnucl, ntraj = q.num_of_rows, q.num_of_cols
 
     # Initialize electronic variables - either diabatic or adiabatic
-    Cdia, Cadi, projectors, states = init_electronic_dyn_var(_init_elec, rnd)
+    Cdia, Cadi, projectors, states = init_electronic_dyn_var(_init_elec, _dyn_params["isNBRA"], rnd)
     ndia, nadi = Cdia.num_of_rows, Cadi.num_of_rows
 
 
@@ -1624,7 +1649,10 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
     # compute the diabatic-to-adiabatic transformation matrices and
     # transform the amplitudes accordingly
     ham = nHamiltonian(ndia, nadi, nnucl)
-    ham.add_new_children(ndia, nadi, nnucl, ntraj)
+    if _dyn_params["isNBRA"]==1:
+        ham.add_new_children(ndia, nadi, nnucl, 1)
+    else:
+        ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)     
 
     if _init_elec["rep"]==0:
@@ -1643,6 +1671,9 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
 
             Cdia = transform_amplitudes(1, 0, Cdia, ham) 
 
+    #if _dyn_params["isNBRA"]==1:
+    #    res = run_dynamics_nbra(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
+    #else:
     res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
 
     return res

@@ -248,7 +248,7 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
 
 
 //vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
@@ -258,16 +258,19 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
   int ntraj = ham.children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-
+  if(isNBRA==1){
+    St[0] = Uprev[0].H() * ham.children[0]->get_basis_transform();
+  }
+  else{
   for(int traj=0; traj<ntraj; traj++){
     St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
   }
-
+  }
   return St;
 
 }
 
-vector<CMATRIX> compute_St(nHamiltonian& ham){
+vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
@@ -277,11 +280,14 @@ vector<CMATRIX> compute_St(nHamiltonian& ham){
   int ntraj = ham.children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-
+  if(isNBRA==1){
+    St[0] = ham.children[0]->get_time_overlap_adi();
+  }
+  else{
   for(int traj=0; traj<ntraj; traj++){
     St[traj] = ham.children[traj]->get_time_overlap_adi();
   }
-
+  }
   return St;
 
 }
@@ -487,7 +493,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 
-
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
@@ -495,12 +500,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   int cdof;
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
+  int ntraj1;
   int nst = C.n_rows;    
   int traj, dof, idof;
   int n_therm_dofs;
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
-
+  //cout << "Flag 1 isNBRA " << prms.isNBRA << endl;
 
   //dyn_variables dyn_var(nst, nst, ndof, ntraj);
 
@@ -510,11 +516,22 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   vector<int> project_out_states(ntraj); // for DISH
 
   vector<CMATRIX> Uprev;
-  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
-  vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));  
-  vector<MATRIX> decoherence_rates(ntraj, MATRIX(nst, nst)); 
-  vector<double> Ekin(ntraj, 0.0);  
-  vector<MATRIX> prev_ham_dia(ntraj, MATRIX(nst, nst));
+  // Defining ntraj1 as a reference for making these matrices
+  // ntraj is defined as q.n_cols as since it would be large in NBRA
+  // we can define another variable like ntraj1 and build the matrices based on that.
+  // We can make some changes where q is generated but this seems to be a bit easier
+  if(prms.isNBRA==1){
+  ntraj1 = 1;
+  }
+  else{
+  ntraj1 = ntraj;
+  }
+  // Defining matrices based on ntraj1
+  vector<CMATRIX> St(ntraj1, CMATRIX(nst, nst));
+  vector<CMATRIX> Eadi(ntraj1, CMATRIX(nst, nst));  
+  vector<MATRIX> decoherence_rates(ntraj1, MATRIX(nst, nst)); 
+  vector<double> Ekin(ntraj1, 0.0);  
+  vector<MATRIX> prev_ham_dia(ntraj1, MATRIX(nst, nst));
   MATRIX gamma(ndof, ntraj);
   MATRIX p_traj(ndof, 1);
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
@@ -535,13 +552,14 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 
-
-  if(prms.tsh_method == 3){ // DISH
-    for(traj=0; traj<ntraj; traj++){
+ if(prms.tsh_method == 3){ // DISH
+  //    prev_ham_dia[0] = ham.children[0]->get_ham_dia().real();
+  //}
+  //else{
+    for(traj=0; traj<ntraj1; traj++){
       prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
     }
   }
-
   //============ Update the Hamiltonian object =============
   // In case, we may need phase correction & state reordering
   // prepare the temporary files
@@ -562,13 +580,12 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
+  // Adding the prms.isNBRA to the propagate electronic
   for(i=0; i<num_el; i++){
-    propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse);   
+    propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);   
   }
 
-
   //============== Nuclear propagation ===================
-
   // NVT dynamics
   if(prms.ensemble==1){  
     for(idof=0; idof<n_therm_dofs; idof++){
@@ -578,9 +595,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       }// traj
     }// idof 
   }
- 
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
-
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
     p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
@@ -591,7 +606,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   if(prms.entanglement_opt==22){
     gamma = ETHD3_friction(q, p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
   }
-
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
@@ -615,9 +629,10 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
-      if(prms.time_overlap_method==0){    St = compute_St(ham, Uprev);    }
-      else if(prms.time_overlap_method==1){    St = compute_St(ham);      }
-
+      if(prms.time_overlap_method==0){    
+        St = compute_St(ham, Uprev, prms.isNBRA);
+      }
+      else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);      }
       Eadi = get_Eadi(ham);           // these are raw properties
       update_projectors(prms, projectors, Eadi, St, rnd);
 
@@ -645,7 +660,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
 
-
   // NVT dynamics
   if(prms.ensemble==1){  
     for(idof=0; idof<n_therm_dofs; idof++){
@@ -656,13 +670,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     }// idof 
   }
 
-
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   update_Hamiltonian_p(prms, ham, p, invM);
   for(i=0; i<num_el; i++){
-    propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse);   
+    propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);
   }
+  CMATRIX Hvib(ham.children[0]->nadi, ham.children[0]->nadi);  Hvib = ham.children[0]->get_hvib_adi();
 
 
   //============== Begin the TSH part ===================
@@ -684,27 +698,25 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 
-
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
 //    exit(0);
-  
   if(prms.decoherence_times_type==-1){
-    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = 0.0;   }
+    for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = 0.0;   }
   }
 
   /// mSDM
   /// Just use the plain times given from the input, usually the
   /// mSDM formalism
   else if(prms.decoherence_times_type==0){
-    for(traj=0; traj<ntraj; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
+    for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
   }
 
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
     Eadi = get_Eadi(ham); 
     Ekin = compute_kinetic_energies(p, invM);
-    decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param);       
+    decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
 
   else if(prms.decoherence_times_type==2){
@@ -720,14 +732,13 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   if(prms.dephasing_informed==1){
     Eadi = get_Eadi(ham); 
     MATRIX ave_gaps(*prms.ave_gaps);
-    dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps);
+    dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps, prms.isNBRA);
   }
-
 
   //============ Apply decoherence corrections ==================
   // SDM and alike methods
   if(prms.decoherence_algo==0){
-    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance);
+    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
   }
   // BCSH
   else if(prms.decoherence_algo==3){ 
@@ -737,7 +748,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   else if(prms.decoherence_algo==4){
 //    MATRIX decoh_rates(ndof, ntraj);
-    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd);
+    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
   }
 
 //  exit(0);
@@ -801,6 +812,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     /// New version, as of 8/3/2020
     vector<int> old_states(act_states);
+    cout << "Flag before dish" << endl;
     act_states = dish(prms, q, p, invM, Coeff, projectors, ham, act_states, coherence_time, decoherence_rates, rnd);
 
     /// Velocity rescaling
@@ -841,7 +853,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 //    exit(0);
-
   St.clear();
   Eadi.clear();
   decoherence_rates.clear();
@@ -852,8 +863,8 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 //    exit(0);
-
 }
+
 
 
 

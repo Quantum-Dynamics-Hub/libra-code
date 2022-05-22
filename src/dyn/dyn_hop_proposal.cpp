@@ -327,6 +327,7 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
   int ntraj = q.n_cols;
   int nst = C.n_rows;    
   int traj, dof, i;
+  int isNBRA = prms.isNBRA;
 
 
   vector<int> nucl_stenc_x(ndof, 0); for(i=0;i<ndof;i++){  nucl_stenc_x[i] = i; }
@@ -353,11 +354,22 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 
     pop_submatrix(C, coeff, el_stenc_x, el_stenc_y);
 
+    if(isNBRA==1){
+    // Only compute the Hvib for one traj, traj==0
+    if(traj==0){
     Hvib = ham.children[traj]->get_hvib_adi();
 
     //Transform Hamiltonian to the dynamically-consistent form:
     Hvib = projectors[traj].H() * Hvib * projectors[traj];
+    }
+    }
+    else{
+    // Compute the Hvib for all traj
+    Hvib = ham.children[traj]->get_hvib_adi();
 
+    //Transform Hamiltonian to the dynamically-consistent form:
+    Hvib = projectors[traj].H() * Hvib * projectors[traj];
+    }
 
     if(prms.tsh_method == 0){ // FSSH
 

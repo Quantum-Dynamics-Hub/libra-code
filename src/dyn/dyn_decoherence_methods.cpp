@@ -27,7 +27,7 @@ namespace liblibra{
 namespace libdyn{
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol){
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol, int isNBRA){
     /**
     \brief Generic framework of Simplified Decay of Mixing (SDM) method of 
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114
@@ -37,7 +37,7 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double t
     \param[in]      act_st [ integer ] The active state index
     \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
     \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0 
-
+    \param[in]      isNBRA [integer] If this flag is set to 1, then the Hamiltonian related properties are only computed for one of the trajectories.
     The function returns:
     C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
 
@@ -144,15 +144,15 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double t
 
 }
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, int isNBRA){
 
   double tol = 0.0;
 
-  return sdm(Coeff, dt, act_st, decoh_rates, tol);
+  return sdm(Coeff, dt, act_st, decoh_rates, tol, isNBRA);
 }
 
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol){
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA){
     /**
     \brief The generic framework of the Simplified Decay of Mixing (SDM) method of
     Granucci, G.; Persico, M. J. Chem. Phys. 2007, 126, 134114)
@@ -164,6 +164,7 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
     \param[in]      act_st [ integer ] The active state index
     \param[in]      decoh_rates [ MATRIX ] The matrix of decoherence (pure dephasing) rates between all pairs of states
     \param[in]         tol [double] The maximal acceptable deviation of the p_aa_old from 1. If the p_aa_old < 1.0 + tol, then renormalize it to 1.0 
+    \param[in]      isNBRA [integer] If this flag is set to 1, then the Hamiltonian related properties are only computed for one of the trajectories.
 
     The function returns:
     # C [ CMATRIX ] - the updated state of the electronic DOF, in the same data type as the input
@@ -180,23 +181,35 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
   CMATRIX coeff(nadi, 1);
   CMATRIX res(nadi, ntraj);
- 
+
+  if(isNBRA==1){
   for(traj=0; traj<ntraj; traj++){
 
     stenc_y[0] = traj;
     pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
-    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol);
+    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[0], tol, isNBRA);
     push_submatrix(res, coeff, stenc_x, stenc_y);
 
   }// for traj
+  }
+  else{
+  for(traj=0; traj<ntraj; traj++){
+
+    stenc_y[0] = traj;
+    pop_submatrix(Coeff, coeff, stenc_x, stenc_y);
+    coeff = sdm(coeff, dt, act_st[traj], decoh_rates[traj], tol, isNBRA);
+    push_submatrix(res, coeff, stenc_x, stenc_y);
+
+  }// for traj
+  }
   return res;
 
 }
 
-CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, int isNBRA){
              
   double tol = 0.0;
-  return sdm(Coeff, dt, act_st, decoh_rates, tol);
+  return sdm(Coeff, dt, act_st, decoh_rates, tol, isNBRA);
 }
 
 
@@ -640,7 +653,7 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 
 
 
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA){
     /**
     \brief Mean field with stochastic decoherence
   
@@ -682,8 +695,14 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
   
         // Probability of decoherence on state i
         // Here, we assume that the state-only decoherence rates are on the diagonal
-        double P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[itraj].get(i, i) * dt;
-
+        double P_i;
+        if(isNBRA==1){
+        P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[0].get(i, i) * dt;
+        }
+        else
+        {
+        P_i = (std::conj(c_i) * c_i).real() * decoherence_rates[itraj].get(i, i) * dt;
+        }
         if(ksi<P_i){ 
           proposed_states.push_back(i);
           hopping_prob.push_back(P_i);

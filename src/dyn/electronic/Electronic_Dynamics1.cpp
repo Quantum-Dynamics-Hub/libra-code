@@ -137,7 +137,6 @@ void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
   \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
 
 */ 
-
   libdyn::libelectronic::propagate_electronic(dt,this,ham);
 }
 
@@ -156,7 +155,6 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
   \param[in] ham The reference to Hamiltonian object, that affects the dynamics
 
 */ 
-
   libdyn::libelectronic::propagate_electronic(dt,this,&ham);
 }
 
@@ -177,7 +175,6 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
 
 */ 
-
 
   int i,j;
 
@@ -908,7 +905,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
-  if(rep==0){  // diabatic
+ if(rep==0){  // diabatic
 
     CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
     CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
@@ -1032,15 +1029,44 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 
 }
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep){
-
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA){
+  if(isNBRA!=1){
   if(C.n_cols!=ham.size()){
     cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
     cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
     cout<<"Exiting...\n";
     exit(0);
   }
+  }
 
+  if(isNBRA==1){
+  int i,j;
+  CMATRIX Hvib(ham[0]->nadi, ham[0]->nadi);  Hvib = ham[0]->get_hvib_adi();
+  int sz = Hvib.n_cols;
+  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
+  CMATRIX* C1; C1 = new CMATRIX(sz, sz);  *C1 = complex<double>(0.0, 0.0); // eigenvectors
+  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
+  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);
+ 
+  libmeigen::solve_eigen(Hvib, *I, *Heig, *C1, 0);  // Hvib_eff * C1 = I * C1 * Heig  ==>  ham[0] = C1 * Heig * C.H()
+
+  complex<double> one(0.0, 1.0);
+  for(i=0;i<sz;i++){
+    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
+    expH->set(i,i,val);
+  }
+
+  *expH = (*C1) * (*expH) * ((*C1).H());
+  // Instead of the for loop
+  C = *expH * C;
+
+  delete expH;
+  delete I;
+  delete C1;
+  delete Heig;
+
+  }
+  else {
   int nst = C.n_rows;
   int ntraj = C.n_cols;
   
@@ -1054,7 +1080,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
     for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
 
   }
-
+ }//isNBRA
 }
 
 
