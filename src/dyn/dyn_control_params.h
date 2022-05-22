@@ -418,6 +418,11 @@ class dyn_control_params{
   we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
   If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
   are computed for all trajectories.
+
+  Options:
+      - 0: no NBRA - Hamiltonians for all trajectories are computed explicitly [ default ]
+      - 1: the NBRA is involved - the calculations of the Hamiltonian are conducted for only 1 trajectory, 
+           and re-used by all other SH trajectories.  
   */
   int isNBRA;
 

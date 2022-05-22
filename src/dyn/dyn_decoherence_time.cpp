@@ -55,6 +55,13 @@ MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param, i
 }
 
 
+MATRIX edc_rates(CMATRIX& Hvib, double Ekin, double C_param, double eps_param){
+  int is_nbra = 0;
+  return edc_rates(Hvib, Ekin, C_param, eps_param, is_nbra);
+}
+
+
+
 vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param, int isNBRA){
 
   int ntraj = Hvib.size();
@@ -85,6 +92,13 @@ vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_p
   return res;
 
 }
+
+vector<MATRIX> edc_rates(vector<CMATRIX>& Hvib, vector<double>& Ekin, double C_param, double eps_param){
+  int is_nbra = 0;
+  return edc_rates(Hvib, Ekin, C_param, eps_param, is_nbra); 
+}
+
+
 
 
 void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps, int isNBRA){
@@ -127,6 +141,14 @@ void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& a
 }
 
 
+void dephasing_informed_correction(MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps){
+
+  int is_nbra = 0;
+  dephasing_informed_correction(decoh_rates, Hvib, ave_gaps, is_nbra);
+}
+
+
+
 void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps, int isNBRA){
 
   int ntraj = Hvib.size();
@@ -150,6 +172,14 @@ void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>&
 
   }
   }
+}
+
+
+void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps){
+
+  int is_nbra = 0;
+  dephasing_informed_correction(decoh_rates, Hvib, ave_gaps, is_nbra);
+
 }
 
 

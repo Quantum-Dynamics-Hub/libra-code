@@ -212,6 +212,28 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
   return sdm(Coeff, dt, act_st, decoh_rates, tol, isNBRA);
 }
 
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double tol){
+  int is_nbra = 0;
+  return sdm(Coeff, dt, act_st, decoh_rates, tol, is_nbra);
+}
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates){
+  int is_nbra = 0;
+  return sdm(Coeff, dt, act_st, decoh_rates, is_nbra);
+}
+
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol){
+  int is_nbra = 0;
+  return sdm(Coeff, dt, act_st, decoh_rates, tol, is_nbra);
+
+}
+CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates){
+  int is_nbra = 0;
+  return sdm(Coeff, dt, act_st, decoh_rates, is_nbra);
+
+}
+
+
 
 void project_out(CMATRIX& Coeff, int traj, int i){
     /** Projects the state `i` out of a coherent superposition of states
@@ -766,6 +788,14 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
+
+
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
+
+ int is_nbra = 0;
+ return mfsd(p, Coeff, invM, dt, decoherence_rates, ham, rnd, is_nbra);
+
+}
 
 
 
