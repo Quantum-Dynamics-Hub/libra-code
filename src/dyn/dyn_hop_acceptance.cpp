@@ -476,13 +476,15 @@ vector<int> accept_hops(dyn_control_params& prms,
 
         p_tr = p.col(traj);
         double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+
         // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
-        if(itraj==0){
-          hvib = ham.children[traj]->get_ham_adi();
-          hvib = projectors[traj].H() * hvib * projectors[traj];
+          if(itraj==0){
+            hvib = ham.children[traj]->get_ham_adi();
+            hvib = projectors[traj].H() * hvib * projectors[traj];
+          }
         }
-        }
+
         else{
           hvib = ham.children[traj]->get_ham_adi();
           hvib = projectors[traj].H() * hvib * projectors[traj];

@@ -270,6 +270,13 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA
 
 }
 
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+
+  int is_nbra = 0;
+  return compute_St(ham, Uprev, is_nbra);
+
+}
+
 vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
@@ -292,7 +299,11 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
 
 }
 
+vector<CMATRIX> compute_St(nHamiltonian& ham){
+  int is_nbra = 1;
 
+  return compute_St(ham, is_nbra);
+}
 
 
 void apply_afssh(dyn_variables& dyn_var, CMATRIX& C, vector<int>& act_states, MATRIX& invM,
@@ -812,7 +823,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     /// New version, as of 8/3/2020
     vector<int> old_states(act_states);
-    cout << "Flag before dish" << endl;
+    //cout << "Flag before dish" << endl;
     act_states = dish(prms, q, p, invM, Coeff, projectors, ham, act_states, coherence_time, decoherence_rates, rnd);
 
     /// Velocity rescaling

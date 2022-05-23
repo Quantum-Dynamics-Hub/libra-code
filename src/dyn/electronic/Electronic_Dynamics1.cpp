@@ -1030,6 +1030,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 }
 
 void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA){
+
   if(isNBRA!=1){
   if(C.n_cols!=ham.size()){
     cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
@@ -1084,6 +1085,12 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
 }
 
 
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep){
+
+  int is_nbra = 0;
+  propagate_electronic(dt, C, projector, ham, rep);
+
+}
 
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){

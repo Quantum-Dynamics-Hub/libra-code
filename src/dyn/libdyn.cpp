@@ -681,8 +681,13 @@ void export_Dyn_objects(){
 
   vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v1);
-  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham) = &compute_St;
   def("compute_St", expt_compute_St_v2);
+  vector<CMATRIX> (*expt_compute_St_v3)(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA) = &compute_St;
+  def("compute_St", expt_compute_St_v3);
+  vector<CMATRIX> (*expt_compute_St_v4)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  def("compute_St", expt_compute_St_v4);
+
 
 
 

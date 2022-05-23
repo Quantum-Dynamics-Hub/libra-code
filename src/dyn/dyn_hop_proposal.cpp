@@ -356,13 +356,14 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 
     if(isNBRA==1){
     // Only compute the Hvib for one traj, traj==0
-    if(traj==0){
-    Hvib = ham.children[traj]->get_hvib_adi();
+      if(traj==0){
+      Hvib = ham.children[traj]->get_hvib_adi();
 
-    //Transform Hamiltonian to the dynamically-consistent form:
-    Hvib = projectors[traj].H() * Hvib * projectors[traj];
+      //Transform Hamiltonian to the dynamically-consistent form:
+      Hvib = projectors[traj].H() * Hvib * projectors[traj];
+      }
     }
-    }
+
     else{
     // Compute the Hvib for all traj
     Hvib = ham.children[traj]->get_hvib_adi();
