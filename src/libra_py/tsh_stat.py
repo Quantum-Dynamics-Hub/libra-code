@@ -222,7 +222,7 @@ def compute_etot_tsh(ham, p, Cdia, Cadi, projectors, act_states, iM, rep):
 
 
 
-def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
+def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA=0):
     """
 
     Compute the trajectory-averaged density matrices in diabatic
@@ -247,7 +247,7 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
             - 1: ham is the parent of the Hamiltonians to use (use with multiple trajectories)
 
         isNBRA ( int ): The flag for NBRA type calculations:
-            - 0: the Hamiltonian related properties are computed for all of the trajectories
+            - 0: the Hamiltonian related properties are computed for all of the trajectories [default]
             - 1: the Hamiltonian related properties are computed only for one trajectory 
 
     Returns:
@@ -273,7 +273,9 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
     dm_dia_raw, dm_adi_raw = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
 
     if isNBRA==1:
+
         traj = 0
+
         indx = None
         if lvl==0:
             indx = Py2Cpp_int([0])
@@ -285,7 +287,7 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
 
         if rep==0:
 
-            dm_tmp = S * Cdia * Cdia.H() * S
+            dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
 
             # Dia dyn-consistent
             dm_dia = dm_dia + dm_tmp
@@ -305,7 +307,7 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
 
             # Raw
             #c = Cadi.col(traj)
-            dm_tmp = Cadi * Cadi.H()
+            dm_tmp = Cadi.col(traj) * Cadi.col(traj).H()
 
             # Adi dynamically-consistent DM
             dm_adi = dm_adi + dm_tmp
@@ -319,6 +321,7 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
 
             # Dia raw
             dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()
+
     else:
         for traj in range(0,ntraj):
             indx = None
@@ -376,7 +379,7 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA):
     return dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
 
 
-def compute_sh_statistics(nstates, istate, projectors, isNBRA):
+def compute_sh_statistics(nstates, istate, projectors, isNBRA=0):
     """
 
     This function computes the SH statistics for an ensemble of trajectories
@@ -390,7 +393,7 @@ def compute_sh_statistics(nstates, istate, projectors, isNBRA):
             In other words, istate[0] is the quantum state for a trajectory 0, 
             istate[1] is the quantum state for a trajectory 1, etc.
         isNBRA ( int ): The flag for NBRA type calculations:
-            - 0: the Hamiltonian related properties are computed for all of the trajectories
+            - 0: the Hamiltonian related properties are computed for all of the trajectories [ default ]
             - 1: the Hamiltonian related properties are computed only for one trajectory 
 
     Returns: 
@@ -402,19 +405,21 @@ def compute_sh_statistics(nstates, istate, projectors, isNBRA):
     ntraj = len(istate)    
     coeff_sh = MATRIX(nstates, 1)        
     coeff_sh_raw = MATRIX(nstates, 1)        
-    if isNBRA==1:
-        
-        istate_1 = list(istate)
+
+    if isNBRA==1:        
+
         pops_numpy = np.zeros((nstates, ntraj))
-        for i1 in range(len(istate_1)):
-            pops_numpy[istate_1[i1], i1] = 1
+        for i in range(ntraj):
+            pops_numpy[istate[i], i] = 1
+
         coeff_sh_numpy = np.average(pops_numpy, axis=1).reshape(nstates,1)
-        coeff_sh = data_conv.nparray2MATRIX(coeff_sh_numpy)
+        coeff_sh = data_conv.nparray2MATRIX(coeff_sh_numpy)        
         coeff_sh_raw = coeff_sh
 
     else:
 
         for i in range(0,ntraj):
+
             st = istate[i]
             #print(st)
             pop = CMATRIX(nstates, nstates)
