@@ -925,14 +925,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     decoherence_algo = dyn_params["decoherence_algo"]
     is_nbra = dyn_params["is_nbra"]
     
-    ndia = Cdia.num_of_rows
-    nadi = Cadi.num_of_rows
-    nnucl= q.num_of_rows
-    ntraj= q.num_of_cols
-
-    if(dyn_params["quantum_dofs"]==None):
-        dyn_params["quantum_dofs"] = list(range(nnucl))
-
 
     q = MATRIX(_q)
     p = MATRIX(_p)
@@ -941,13 +933,23 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     Cadi = CMATRIX(_Cadi)
     states = intList()
     projectors = CMATRIXList() 
+
+    ndia = Cdia.num_of_rows
+    nadi = Cadi.num_of_rows
+    nnucl= q.num_of_rows
+    ntraj= q.num_of_cols
+    nstates = len(_states)
+
+    if(dyn_params["quantum_dofs"]==None):
+        dyn_params["quantum_dofs"] = list(range(nnucl))
+
       
     if is_nbra == 1:
-        for i in range(len(_states)):
+        for i in range(nstates):
             states.append(_states[i])
         projectors.append(CMATRIX(_projectors[0]))
     else:
-        for i in range(len(_states)):
+        for i in range(nstates):
             states.append(_states[i])
             projectors.append(CMATRIX(_projectors[i]))
 
@@ -1024,8 +1026,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             elif rep_tdse==1:
                 ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, dyn_params["isNBRA"])        
-        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, dyn_params["isNBRA"])
+        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, is_nbra)        
+        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, is_nbra)
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
@@ -1161,16 +1163,23 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
 
     """
 
-    comn.check_input(_model_params, {  }, [ "model0" ] )
-    comn.check_input(_dyn_params, { "rep_tdse":1 }, [  ] )
+    model_params = dict(_model_params)
+    dyn_params = dict(_dyn_params)
+    init_elec = dict(_init_elec)    
 
+    comn.check_input( model_params, {  }, [ "model0" ] )
+    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0 }, [  ] )
+
+    is_nbra =  dyn_params["is_nbra"]
+
+    init_elec.update({"is_nbra":is_nbra})
 
 
     # Internal parameters
     nnucl, ntraj = q.num_of_rows, q.num_of_cols
 
     # Initialize electronic variables - either diabatic or adiabatic
-    Cdia, Cadi, projectors, states = init_electronic_dyn_var(_init_elec, _dyn_params["isNBRA"], rnd)
+    Cdia, Cadi, projectors, states = init_electronic_dyn_var(init_elec, rnd)
     ndia, nadi = Cdia.num_of_rows, Cadi.num_of_rows
 
 
@@ -1178,32 +1187,32 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
     # compute the diabatic-to-adiabatic transformation matrices and
     # transform the amplitudes accordingly
     ham = nHamiltonian(ndia, nadi, nnucl)
-    if _dyn_params["isNBRA"]==1:
+    if is_nbra == 1:
         ham.add_new_children(ndia, nadi, nnucl, 1)
     else:
         ham.add_new_children(ndia, nadi, nnucl, ntraj)
     ham.init_all(2,1)     
 
-    if _init_elec["rep"]==0:
-        if _dyn_params["rep_tdse"]==1:
-            model_params = dict(_model_params)
-            model_params.update({"model":_model_params["model0"]})
-            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params )
+    if init_elec["rep"]==0:
+        if dyn_params["rep_tdse"]==1:
+            model_params1 = dict(model_params)
+            model_params1.update({"model":model_params["model0"]})
+            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
 
             Cadi = transform_amplitudes(0, 1, Cdia, ham) 
 
-    elif _init_elec["rep"]==1:    
-        if _dyn_params["rep_tdse"]==0:
-            model_params = dict(_model_params)
-            model_params.update({"model":_model_params["model0"]})
-            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params )
+    elif init_elec["rep"]==1:    
+        if dyn_params["rep_tdse"]==0:
+            model_params1 = dict(model_params)
+            model_params1.update({"model":model_params["model0"]})
+            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
 
             Cdia = transform_amplitudes(1, 0, Cdia, ham) 
 
     #if _dyn_params["isNBRA"]==1:
     #    res = run_dynamics_nbra(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
     #else:
-    res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
+    res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, model_params, rnd)
 
     return res
 
