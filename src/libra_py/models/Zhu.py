@@ -32,7 +32,7 @@ import libra_py.units as units
 class tmp:
     pass    
 
-def dual_RZD(q, params):
+def dual_RZD(q, params, full_id):
     """
    
     Dual Rosen-Zener-Demkov model
@@ -81,8 +81,12 @@ def dual_RZD(q, params):
     Sdia = CMATRIX(2,2)
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
-  
-    x = q.get(0)
+
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
+
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
 
@@ -119,7 +123,7 @@ def dual_RZD(q, params):
 
 
 
-def dual_LZS(q, params):
+def dual_LZS(q, params, full_id):
     """
    
     Dual Landau-Zener-Stuckelberg model
@@ -170,8 +174,11 @@ def dual_LZS(q, params):
     Sdia = CMATRIX(2,2)
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
+
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
   
-    x = q.get(0)
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
 
@@ -211,7 +218,7 @@ def dual_LZS(q, params):
 
 
 
-def Renner_Teller(q, params):
+def Renner_Teller(q, params, full_id):
     """
    
     Renner-Teller
@@ -257,8 +264,11 @@ def Renner_Teller(q, params):
     Sdia = CMATRIX(2,2)
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(2,2) )
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(2,2) )
-  
-    x = q.get(0)
+
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x = q.get(0, indx)
+
     Sdia.set(0,0, 1.0+0.0j);  Sdia.set(0,1, 0.0+0.0j);
     Sdia.set(1,0, 0.0+0.0j);  Sdia.set(1,1, 1.0+0.0j);
 
