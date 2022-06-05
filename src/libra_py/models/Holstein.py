@@ -413,6 +413,8 @@ def Holstein5(q, params, full_id):
             * obj.ovlp_dia ( CMATRIX(4,4) ): overlap of the basis (diabatic) states [ identity ]
             * obj.d1ham_dia ( list of 1 CMATRIX(4,4) objects ):
                 derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.d2ham_dia ( list of 1 CMATRIX(4,4) objects ):
+                second derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
             * obj.dc1_dia ( list of 1 CMATRIX(4,4) objects ): derivative coupling in the diabatic basis [ zero ]
 
     """
@@ -439,6 +441,7 @@ def Holstein5(q, params, full_id):
     Hdia = CMATRIX(n,n)
     Sdia = CMATRIX(n,n)
     d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
+    d2ham_dia = CMATRIXList();  d2ham_dia.append( CMATRIX(n,n) )
     dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
 
     Id = Cpp2Py(full_id)
@@ -467,12 +470,23 @@ def Holstein5(q, params, full_id):
                 if i!=j:
                     d1ham_dia[k].set(i,j,  -2.0*alpha[i][j] * (x-x_nm[i][j]) * V[i][j] * math.exp(-alpha[i][j] * (x-x_nm[i][j])**2 ) * (1.0+0.0j) )
 
+    for k in [0]:
+        #  d2 Hdia / dR_0 2
+        for i in range(n):
+            d2ham_dia[k].set(i,i, k_n[i]*(1.0+0.0j) )
+
+    for k in [0]:
+        for i in range(n):
+            for j in range(n):
+                if i!=j:
+                    d2ham_dia[k].set(i,j, -2.0*alpha[i][j] * V[i][j] * math.exp(-alpha[i][j] * (x-x_nm[i][j])**2 )*(1.0-2.0*alpha[i][j]*(x-x_nm[i][j])**2)*(1.0+0.0j) )
 
 
     obj = tmp()
     obj.ham_dia = Hdia
     obj.ovlp_dia = Sdia
     obj.d1ham_dia = d1ham_dia
+    obj.d2ham_dia = d2ham_dia
     obj.dc1_dia = dc1_dia
 
     return obj

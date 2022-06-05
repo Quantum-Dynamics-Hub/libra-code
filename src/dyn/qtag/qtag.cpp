@@ -349,6 +349,188 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 
 }// LHA
 
+complex<double> LHAe(int i, int j, 
+                     MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
+                     MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
+                     nHamiltonian& ham){
+/**
+    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
+       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
+       Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives.
+       The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
+
+    Args:
+        univ (dictionary): Dictionary containing various system parameters.
+
+        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+
+        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+
+        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+
+        params (dictionary): Dictionary containing the potential parameters.
+
+        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+
+    Returns:
+        v (complex): The complex potential v computed via the local harmonic approximation between basis functions i and j.
+    """
+*/
+
+  complex<double> v;
+  int ndof = q1.n_rows;
+
+//Holstein coupling
+  double A = 1.0;
+  double B = 1.5811;
+  double C = 2.0;
+
+//Tully1 coupling
+//  double A = 0.005;
+//  double B = 1.0;
+//  double C = 0.0;
+
+//Tully2 coupling
+//  double A = 0.015;
+//  double B = 0.06;
+//  double C = 0.0;
+
+  if(n1==n2){// LHA for single-surface elements
+
+    v = LHA(ham.children[i]->ham_dia, ham.children[j]->ham_dia,
+            ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
+            ham.children[i]->d2ham_dia, ham.children[j]->d2ham_dia,
+            q1, p1, s1, alp1, n1, q2, p2, s2, alp2, n2);
+
+  }
+  else if(n1!=n2){// Exact integral for Gaussian coupling
+
+    v = (0.0, 0.0);
+
+    for(int dof=0; dof<ndof; dof++){
+
+      double q1i = q1.get(dof);
+      double q2i = q2.get(dof);
+
+      double p1i = p1.get(dof);
+      double p2i = p2.get(dof);
+
+      double a1i = alp1.get(dof);
+      double a2i = alp2.get(dof);
+
+      double dCq1 = C - q1i;
+      double dCq2 = C - q2i;
+
+      double aCq1 = dCq1*a1i;
+      double aCq2 = dCq2*a2i;
+
+      double dp = p1i - p2i;
+      double as = a1i + a2i;
+      double aB = a1i + 2*B + a2i;
+      
+
+      double prefac1 = A*sqrt(as)/sqrt(aB);
+      double prefac2 = -B/(aB*as);
+
+      complex<double> expt(aCq1*aCq1+aCq2*aCq2-dp*dp+2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
+      v += prefac1*exp(prefac2*expt);
+    }// for  dof
+  }//end if
+
+  return v;
+
+}//LHAe
+
+complex<double> BATe(int i, int j,
+                     MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
+                     MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
+                     nHamiltonian& ham){
+/**
+    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
+       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
+       Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives.
+       The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
+
+    Args:
+        univ (dictionary): Dictionary containing various system parameters.
+
+        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+
+        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+
+        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+
+        params (dictionary): Dictionary containing the potential parameters.
+
+        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+
+    Returns:
+        v (complex): The complex potential v computed via the local harmonic approximation between basis functions i and j.
+    """
+*/
+
+  complex<double> v;
+  int ndof = q1.n_rows;
+
+//Holstein coupling
+  double A = 1.0;
+  double B = 1.5811;
+  double C = 2.0;
+
+//Tully1 coupling
+//  double A = 0.005;
+//  double B = 1.0;
+//  double C = 0.0;
+
+//Tully2 coupling
+//  double A = 0.015;
+//  double B = 0.06;
+//  double C = 0.0;
+
+  if(n1==n2){// BAT for single-surface elements
+
+    v = BAT(ham.children[i]->ham_dia, ham.children[j]->ham_dia,
+            ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
+            q1, p1, s1, alp1, n1, q2, p2, s2, alp2, n2);
+
+  }
+  else if(n1!=n2){// Exact integral for Gaussian coupling
+
+    v = (0.0, 0.0);
+
+    for(int dof=0; dof<ndof; dof++){
+
+      double q1i = q1.get(dof);
+      double q2i = q2.get(dof);
+
+      double p1i = p1.get(dof);
+      double p2i = p2.get(dof);
+
+      double a1i = alp1.get(dof);
+      double a2i = alp2.get(dof);
+
+      double dCq1 = C - q1i;
+      double dCq2 = C - q2i;
+
+      double aCq1 = dCq1*a1i;
+      double aCq2 = dCq2*a2i;
+
+      double dp = p1i - p2i;
+      double as = a1i + a2i;
+      double aB = a1i + 2*B + a2i;
+
+
+      double prefac1 = A*sqrt(as)/sqrt(aB);
+      double prefac2 = -B/(aB*as);
+
+      complex<double> expt(aCq1*aCq1+aCq2*aCq2-dp*dp+2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
+      v += prefac1*exp(prefac2*expt);
+    }// for  dof
+  }//end if
+
+  return v;
+
+}//BATe
 
 CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
                        MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
@@ -402,8 +584,14 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                 ham.children[i]->d2ham_dia, ham.children[j]->d2ham_dia,
                 qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
       }// LHA
-
-      //cout<<"i= "<<i<<" j= "<<j<<" v= "<<v<<endl;
+      else if(method==2){// LHAe
+        v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, 
+                 ham);
+      }// LHAe
+      else if(method==3){// BATe
+        v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2,
+                 ham);
+      }// BATe
 
       res.set(itraj, jtraj, v);
 
@@ -530,12 +718,6 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           if(n1==n2){
              push_submatrix(super_ovlp, s12, traj_on_surf[n1], traj_on_surf[n2]);
           }
-
-          if(n1 != n2){
-            //CMATRIX s21(ntraj_on_surf_n2, ntraj_on_surf_n1);  s21 = s12.H();
-            //push_submatrix(super_ovlp, s21, traj_on_surf[n2], traj_on_surf[n1]);
-          }
-
 
           // Hamiltonian 
           CMATRIX h12(ntraj_on_surf_n1, ntraj_on_surf_n2);

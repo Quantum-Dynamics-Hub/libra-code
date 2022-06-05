@@ -26,6 +26,20 @@ for all users with the intent:
    knowledge and skills with others;
 
 
+## Installation Videotutorials (as of 5/16/2022)
+
+* [Installing WSL2](https://ub.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=02184b70-7745-4eb4-a776-ae92014c652a&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all)
+
+* [Installing WSL2: After reboot](https://ub.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=972aef79-e235-4a90-9ce1-ae92014d34db&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all)
+
+* [Installing Ubuntu on Windows 11](https://ub.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=31a63536-f333-4242-9b56-ae92015ece64&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all)
+
+* [Creating Conda environment for Libra](https://ub.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=d6ada23e-7e16-4b7a-b290-ae920188627c&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all)
+
+* [Installing Libra](https://ub.hosted.panopto.com/Panopto/Pages/Embed.aspx?id=7f8dd8c4-9f58-4ca0-a8cb-ae930166b7ec&autoplay=false&offerviewer=true&showtitle=true&showbrand=true&captions=false&interactivity=all)
+
+
+
 ## Installation (as of after 5/14/2021)
 
 ### 1. Install miniconda (for Python 3.8) and activate Conda
@@ -131,7 +145,7 @@ We need to downgrade Python version here to 3.6 to enable Psi4 installation
 You can install Jupyter notebook using the following command. This will be useful and you can set up and access the Jupyter notebook 
 remotely from a cluster and load the tutorials
 
-    conda install -c conda-forge jupyterlab
+    conda install -c anaconda jupyter
     
 
 Used in some of the tutorials
