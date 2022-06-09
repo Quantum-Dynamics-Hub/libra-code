@@ -454,10 +454,16 @@ class dyn_control_params{
 
     Options:
       - 0 : BAT [ default ]
-      - 1 : LHA 
+      - 1 : LHA
+      - 2 : LHAe
+      - 3 : BATe 
   */
   int qtag_pot_approx_method;
 
+  /**
+    The list of electronic state labels ([0,1,2,...]) to be used in the calculation
+  */
+  vector<int> states;
 
   ///===============================================================================
   ///================= Bath, Constraints, and Dynamical controls ===================
