@@ -199,7 +199,7 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
 
           * **dyn_params[`nsteps`]** (int) : the number of simulation steps
 
-          * **dyn_params[`nstates`]** (int) : the number of states [ default: 2 ]
+          * **dyn_params[`states`]** (int) : the list of states
 
           * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
               placed on each surface. For Gaussian, the list has only one element, specifying the
