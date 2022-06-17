@@ -98,10 +98,12 @@ MATRIX nac_npi(MATRIX& St, double dt){
       double Wlj = sqrt(abs(1.0 - (W00 * W00) - (W10 * W10)));
 
       double E; 
-      if(Wlj < 1.0e-6){   E = 0.0; }
+      double Wlk = Wlk = -1.0 * (W01 * W00 + W11 * W10) / Wlj;
+      if(Wlk > 1.00){   E = 0.0; }
+      //if(Wlj < 1.0e-6){   E = 0.0; }
       else{
 
-        double Wlk = -1.0 * (W01 * W00 + W11 * W10) / Wlj;
+        //double Wlk = -1.0 * (W01 * W00 + W11 * W10) / Wlj;
 
         double sWlj = asin(Wlj);
         double sWlk = asin(Wlk);
