@@ -57,6 +57,11 @@ MATRIX nac_npi(MATRIX& St, double dt){
       double W10 = St.get(j,i);
       double W11 = St.get(j,j);
 
+      //if( (W00>1.0) && (W00<1.01)) { W00 = 0.99999; }
+      //if( (W00>-1.01) && (W00<-1.0)) { W00 = -0.99999; }
+      //if( (W11>1.0) && (W11<1.01)) { W11 = 0.99999; }
+      //if( (W11>-1.01) && (W11<-1.0)) { W11 = -0.99999; }
+
       if( (W00>1.0) && (W00<1.01)) { W00 = 1.0; }
       if( (W00>-1.01) && (W00<-1.0)) { W00 = -1.0; }
       if( (W11>1.0) && (W11<1.01)) { W11 = 1.0; }
@@ -68,8 +73,8 @@ MATRIX nac_npi(MATRIX& St, double dt){
       double D = acos(W11) + asin(W10);
 
       // Not sure what is this
-      //  if Wlj != Wlj:
-      //      Wlj = 0.0
+      //  if (Wlj != Wlj){
+      //      Wlj = 0.0;}
 
       if( fabs(A) < 1.0e-6){ A = -1.0; }
       else{  A = -1.0 * sin(A) / A; }
@@ -83,7 +88,14 @@ MATRIX nac_npi(MATRIX& St, double dt){
       if(fabs(D) < 1.0e-6){  D = 1.0; }
       else{   D = sin(D) / D; }
 
-      double Wlj = sqrt(1.0 - W00 * W00 - W10 * W10);
+      cout << "Flag A:" << A << endl;
+      cout << "Flag B:" << B << endl;
+      cout << "Flag C:" << C << endl;
+      cout << "Flag D:" << D << endl;
+      cout << "Flag W00:" << W00 << endl;
+      cout << "Flag W10:" << W10 << endl;
+
+      double Wlj = sqrt(abs(1.0 - (W00 * W00) - (W10 * W10)));
 
       double E; 
       if(Wlj < 1.0e-6){   E = 0.0; }
@@ -91,17 +103,25 @@ MATRIX nac_npi(MATRIX& St, double dt){
 
         double Wlk = -1.0 * (W01 * W00 + W11 * W10) / Wlj;
 
-        double sWlj = sin(Wlj);
-        double sWlk = sin(Wlk);
+        double sWlj = asin(Wlj);
+        double sWlk = asin(Wlk);
+        cout << "Flag Wlj:" << Wlj << " , sWlj: " << sWlj << endl;
+        cout << "Flag Wlk:" << Wlk << " , sWlk: " << sWlk << endl;
+        //cout << "Flag Wlk:" << Wlk << endl;
 
         E = sqrt((1.0 - Wlj * Wlj) * (1.0 - Wlk * Wlk));
         double denom = sWlj * sWlj - sWlk * sWlk;
-        E = 2.0 * Wlj * (Wlj * Wlk * sWlj + (E - 1.0) * sWlk) / denom;
+        //cout << "Flag NPI, denom:" << denom << endl;
+        E = 2.0 * asin(Wlj) * (Wlj * Wlk * sWlj + (E - 1.0) * sWlk) / denom;
 
       }     
+      cout << "Flag E:" << E << endl;
+      cout << "Flag W00:" << W00 << endl;
+      cout << "Flag W10:" << W10 << endl;
+      cout << "----------------" << endl;
 
       double tdc = (0.5 / dt) * ( acos(W00) * (A + B)  + asin(W10) * (C + D) + E);
-      
+      //cout << "Flag NPI:" << tdc << endl;
       nac.set(j, i, tdc);
       nac.set(i, j,-tdc);
     
