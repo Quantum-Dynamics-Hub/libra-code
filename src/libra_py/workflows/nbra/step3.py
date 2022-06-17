@@ -1897,7 +1897,9 @@ def run_step3_ks_nacs_libint(params):
                     - 0: no state reordering - same as in Pyxaid
                     - 1: older method (is not robust, may or may not work) 
                     - 2: Hungarian algorithm [default]
-
+            * **params['nac_algo']** ( int ): selection of a method to compute NACs
+                    - 0 : Hamess-Shiffer-Tully (HST), finite difference [ default ]
+                    - 1 : Meek-Levine NPI
     Returns:
 
         None    
@@ -1909,7 +1911,8 @@ def run_step3_ks_nacs_libint(params):
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
                       'apply_phase_correction': True, 'apply_orthonormalization': True, 
-                      'do_state_reordering': 0, 'state_reordering_alpha': 0, 'es_software': 'cp2k'
+                      'do_state_reordering': 0, 'state_reordering_alpha': 0, 'es_software': 'cp2k',
+                      'nac_algo':0
                      }
     comn.check_input(params, default_params, critical_params)
     if params['es_software'].lower()=='cp2k':
@@ -1942,11 +1945,13 @@ def run_step3_ks_nacs_libint(params):
     nprocs = params['nprocs']
     # The dt value is in fs and will be turned into atomic unit
     dt = params['time_step'] * units.fs2au
+    # Algorithm to compute NACs:
+    nac_algo = params["nac_algo"]
     # The path to raw npz files that are produced in step2
     res_dir_1 = params['path_to_npz_files']
     # The path to save the KS Hvibs that will be calculated in this function
     res_dir_2 = params['path_to_save_ks_Hvibs']
-    # Creat the path
+    # Create the path
     try:
         os.system(F'mkdir {res_dir_2}')
     except:
@@ -1967,6 +1972,8 @@ def run_step3_ks_nacs_libint(params):
         for step in range(start_time, finish_time):
             orthonormalize_ks_overlaps(step, params)
     print('Done with orthonormalization step. Elapsed time:', time.time()-t2)
+
+    zero = MATRIX(nstates, nstates)
 
     # Whether to perform state reordering or not
     if params['do_state_reordering']==2 or params['do_state_reordering']==1:
@@ -2022,7 +2029,13 @@ def run_step3_ks_nacs_libint(params):
     else:
         for step in range(start_time, finish_time):
             St_step = sp.load_npz(F'{res_dir_2}/St_ks_orthonormalized_{step}.npz')
-            Hvib_ks = 0.5/dt * (St_step.todense().T - St_step.todense())
+            if nac_algo==0:
+                Hvib_ks = -0.5/dt * (St_step.todense().T - St_step.todense())  # note - a factor of -1 is added because this is
+                                                                               # what we have in the vibronic Hamiltonian
+            elif nac_algo==1:
+                St_step_real = St_step.real() 
+                nac = nac_npi(St_step_real, dt)
+                Hvib_ks = -1.0 * CMATRIX(nac, zero)
             ###sp.save_npz(F'{res_dir_2}/Hvib_ks_{step-start_time}_im.npz', sp.csc_matrix( Hvib_ks ))
             sp.save_npz(F'{res_dir_2}/Hvib_ks_{step}_im.npz', sp.csc_matrix( Hvib_ks ))
             ###os.system(F'mv {res_dir_2}/St_ks_orthonormalized_{step}.npz {res_dir_2}/St_ks_{step-start_time}_re.npz')
