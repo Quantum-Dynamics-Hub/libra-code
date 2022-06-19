@@ -443,33 +443,60 @@ def plot_cube_v2(params, cube_file_name, phase_factor):
     tachyon_exe = params['tachyon_exe']
     x_pixels = params['x_pixels']
     y_pixels = params['y_pixels']
-
-    state_name = cube_file_name.replace('.cube','')
-    new_tcl_name = state_name+'.tcl'
-    file = open(new_tcl_name, 'w')
-
-    for i in range(len(tcl_lines)):
-        if 'load cube' in tcl_lines[i]:
-            file.write(F'mol load cube {cube_file_name}\n')
-        elif 'Isosurface' in tcl_lines[i]:
-            tmp = tcl_lines[i].split()
-            for k in range(len(tmp)):
-                if tmp[k]=='Isosurface':
-                    break
-            tmp[k+1] = str(float(tmp[k+1]) * phase_factor)
-            tcl_lines[i] = ' '.join(tmp) + '\n'
-            file.write(tcl_lines[i])
-        elif 'render' in tcl_lines[i]:
-            file.write(F'render Tachyon {state_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
-        else:
-            file.write(tcl_lines[i])
-
-    file.close()
+    together_mode = params['together_mode']
+    if together_mode:
+        new_tcl_name = 'vmd_tmode.tcl'
+        file = open(new_tcl_name, 'w')
+        cube_file_names = []
+        for state in params['states_to_plot']:
+            cube_file_names.append(cube_file_name.split('WFN')[0]+F'WFN_{str(state).zfill(5)}_1-1_0.cube')
+        print(cube_file_names)
+        state_counter = 0
+        for i in range(len(tcl_lines)):
+            if 'load cube' in tcl_lines[i]:
+                tmp_name = cube_file_names[state_counter]
+                file.write(F'mol load cube {tmp_name}\n')
+                print(tmp_name)
+                state_counter += 1
+            elif 'render' in tcl_lines[i]:
+                tmp_name = cube_file_name.split('WFN')[0]
+                file.write(F'render Tachyon {tmp_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
+            else:
+                file.write(tcl_lines[i])
+    
+        file.close()
+    else:
+        state_name = cube_file_name.replace('.cube','')
+        new_tcl_name = state_name+'.tcl'
+        file = open(new_tcl_name, 'w')
+    
+        for i in range(len(tcl_lines)):
+            if 'load cube' in tcl_lines[i]:
+                file.write(F'mol load cube {cube_file_name}\n')
+            elif 'Isosurface' in tcl_lines[i]:
+                tmp = tcl_lines[i].split()
+                for k in range(len(tmp)):
+                    if tmp[k]=='Isosurface':
+                        break
+                tmp[k+1] = str(float(tmp[k+1]) * phase_factor)
+                tcl_lines[i] = ' '.join(tmp) + '\n'
+                file.write(tcl_lines[i])
+            elif 'render' in tcl_lines[i]:
+                file.write(F'render Tachyon {state_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
+            else:
+                file.write(tcl_lines[i])
+    
+        file.close()
 
     os.system(F'{vmd_exe} < {new_tcl_name}')
-    os.system(F'rm {state_name}')
+    #os.system(F'rm {state_name}')
     if params['remove_cube']:
-        os.system(F'rm {cube_file_name}')
+        if together_mode:
+            for name in cube_file_names:
+                os.system(F'rm {name}')
+        else:
+            os.system(F'rm {cube_file_name}')
+    
 
 
 

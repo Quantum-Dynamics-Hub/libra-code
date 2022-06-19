@@ -395,7 +395,7 @@ def run_cp2k_libint_step2(params):
 
     # Now try to get parameters from the input
     critical_params = [ "cp2k_ot_input_template", "cp2k_diag_input_template", "trajectory_xyz_filename" ]
-    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True}
+    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True, 'together_mode': False}
     comn.check_input(params, default_params, critical_params)
 
 
@@ -715,6 +715,8 @@ def run_cp2k_libint_step2(params):
                             else:
                                 f_alpha = -1
                             phase_factors_alpha[c_plot,0] *= f_alpha
+                    if params['together_mode']:
+                        break
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
         counter += 1
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
