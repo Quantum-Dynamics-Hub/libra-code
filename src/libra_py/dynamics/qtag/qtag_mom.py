@@ -1,9 +1,18 @@
+#*********************************************************************************
+#* Copyright (C) 2021-2022 Matthew Dutra, Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#***********************************************************************************
 """
 ..module:: qtag_mom
   :platform: Unix, Windows
   :synopsis: This module contains functions for computing basis momentum.
 
-..moduleauthors :: Matthew Dutra
+..moduleauthors :: Matthew Dutra, Alexey Akimov
 """
 
 from liblibra_core import *
@@ -76,7 +85,7 @@ def momentum(dyn_params,qpas,coeff_on_surf,*args):
     a_on_surf = MATRIX(qpas[2])
     s_on_surf = MATRIX(qpas[3])
 
-#Calculate momentum for each trajectory (i) as Im(grad(psi)/psi)...
+    #Calculate momentum for each trajectory (i) as Im(grad(psi)/psi)...
     for i in range(ntraj_on_surf):
         psi_sum = complex(0.0,0.0)
         for dof in range(ndof):
@@ -118,7 +127,7 @@ def momentum(dyn_params,qpas,coeff_on_surf,*args):
             gmom.set(dof,i,0.0)
             gr.set(dof,i,0.0)
 
-#For linear fitting of momentum, procedure is least squares fitting of type Ax=B...
+    #For linear fitting of momentum, procedure is least squares fitting of type Ax=B...
     if mom_calc_type == 1:
         for dof in range(ndof):
             A=MATRIX(2,2);B=MATRIX(2,2);x=MATRIX(2,2)
