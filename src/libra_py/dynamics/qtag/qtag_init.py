@@ -91,7 +91,6 @@ def grid(dyn_params):
 
     params = dict(dyn_params)
 
-    critical_params = [ "states" ]
     default_params = { "grid_dims":[5], "rho_cut":1e-12, "alp_scl":[8.0], 
                        "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0]
                      }
@@ -260,7 +259,57 @@ def gaussian(dyn_params):
     qpas=[qvals,pvals,avals,svals,surf_ids]
     return ntraj,qpas
 
+#def restart(dyn_params):
 
+#    prefix = dyn_params['prefix']
+#    states = dyn_params['states']
+#    grid_dims = dyn_params['grid_dims']
+    
+#    nstates = len(states)
+
+#    ntraj_on_state = 1
+#    for i in range(len(grid_dims)):
+#        ntraj_on_state *= grid_dims[i]
+
+#    ntraj = ntraj_on_state*nstates
+
+#    qfile = f"{prefix}/q.txt"
+#    try:
+#        os.path.exists(qfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'q.txt' is missing from "+prefix+" directory!"
+
+#    pfile = f"{prefix}/p.txt"
+#    try: 
+#        os.path.exists(pfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'p.txt' is missing from "+prefix+" directory!"
+
+#    afile = f"{prefix}/a.txt"
+#    try: 
+#        os.path.exists(afile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'a.txt' is missing from "+prefix+" directory!"
+
+#    sfile = f"{prefix}/s.txt"
+#    try: 
+#        os.path.exists(sfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 's.txt' is missing from "+prefix+" directory!"
+
+#    cfile = f"{prefix}/coeffs.txt"
+#    try: 
+#        os.path.exists(cfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'coeffs.txt' is missing from "+prefix+" directory!"
+
+#    qdata = data_read.get_data_from_file2(qfile, [traj for traj in range(ntraj)])
+#    pdata = data_read.get_data_from_file2(pfile, [traj for traj in range(ntraj)])
+#    adata = data_read.get_data_from_file2(afile, [traj for traj in range(ntraj)])
+#    sdata = data_read.get_data_from_file2(sfile, [traj for traj in range(ntraj)])
+#    cdata = data_read.get_data_from_file2(cfile, [traj for traj in range(ntraj)])
+
+#    return ntraj,qpas
 
 def coeffs(dyn_params, qpas, active_state):
     """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict 

@@ -82,7 +82,6 @@ dyn_control_params::dyn_control_params(){
 
   ///============================ QTAG =============================================
   qtag_pot_approx_method = 0;
-  states = vector<int>();
   ///================= Bath, Constraints, and Dynamical controls ===================
 
   Temperature = 300.0;
