@@ -1,9 +1,18 @@
+#*********************************************************************************
+#* Copyright (C) 2021-2022 Matthew Dutra, Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#***********************************************************************************
 """
 ..module:: qtag_calc
   :platform: Unix, Windows
   :synopsis: This module contains "ground-level" functions for calculations, mostly output things like energy, norm, etc.
 
-..moduleauthors :: Matthew Dutra
+..moduleauthors :: Matthew Dutra, Alexey Akimov
 """
 
 import os, sys
@@ -89,14 +98,23 @@ def norm(surf_ids,c,ov,states):
     return(pops)
 
 
-def new_old_overlap(ndof,ntraj,states,qpaso,qpasn):
-    new_old_ov = CMATRIX(ntraj,ntraj)
+#def new_old_overlap(ndof,ntraj,states,qpaso,qpasn):
+#    new_old_ov = CMATRIX(ntraj,ntraj)
+
+def time_overlap(ndof,ntraj,states,qpasn,qpaso):
+    """
+    Computes the time-overlap <G_new|G_old>
+
+    qpasn - new 
+    qpaso - old
+    """
+    St = CMATRIX(ntraj,ntraj)
 
     for i in range(ntraj):
         for j in range(ntraj):
             new_old_ov.set(i,j,complex(0.0,0.0))
 
-#Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
+    #Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
     qvals_old = MATRIX(qpaso[0]); qvals_new = MATRIX(qpasn[0])
     pvals_old = MATRIX(qpaso[1]); pvals_new = MATRIX(qpasn[1])
     avals_old = MATRIX(qpaso[2]); avals_new = MATRIX(qpasn[2])
@@ -104,9 +122,10 @@ def new_old_overlap(ndof,ntraj,states,qpaso,qpasn):
     surf_ids=qpasn[4]
 
     itot = 0; jtot = 0
+
     for n1 in states:
 
-#Extract the relevent trajectories for the n1-th state...
+        #Extract the relevent trajectories for the n1-th state...
         traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
         ntraj_on_surf_n1 = len(traj_on_surf_n1)
 
@@ -156,11 +175,14 @@ def new_old_overlap(ndof,ntraj,states,qpaso,qpasn):
         itot += ii
         jtot += jj
 
-    return(new_old_ov)
+    return St
 
 
-def basis_diag(m,dt,H,ov,b):
-    """Returns the updated basis coefficients for both surfaces, stored in a single vector *c_new*, computed as c_new=Z*exp(-i*dt*eps)*Z_dagger*b. The variables eps and Z are the eigenvalues and eigenvectors obtained from diagonalizing the full *m*-by-*m* Hamiltonian matrix *H* using the solve_eigen internal function. Note that the projection vector *b* and the full overlap matrix *ov* are required.
+def basis_diag(m, dt, H, S, b):
+    """Returns the updated basis coefficients for both surfaces, stored in a single vector *c_new*, 
+       computed as `c_new=Z*exp(-i*dt*eps)*Z_dagger*b`. The variables eps and Z are the eigenvalues 
+       and eigenvectors obtained from diagonalizing the full *m*-by-*m* Hamiltonian matrix *H* using the 
+       solve_eigen internal function. Note that the projection vector *b* and the full overlap matrix *ov* are required.
 
     Args:
         m (integer): Dimension of the eigenvalue and eigenvector matrices. Usually equal to 2*ntraj.

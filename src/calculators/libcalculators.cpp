@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -149,6 +149,11 @@ void export_calculators_objects(){
   def("update_Mull_charges", expt_update_Mull_charges_v1);
 
 
+  //----------------- NPI.cpp ---------------------------------
+  
+  MATRIX (*expt_nac_npi_v1)(MATRIX& St, double dt) = &nac_npi;
+
+  def("nac_npi", expt_nac_npi_v1);
 
 
  

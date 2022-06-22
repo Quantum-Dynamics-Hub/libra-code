@@ -74,8 +74,11 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
 
 CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham);
 
-
+// Adding the NBRA flag to the functions in the header
+vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham);
+
+vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
 

@@ -71,6 +71,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
       .def_readwrite("convergence", &dyn_control_params::convergence)
       .def_readwrite("max_number_attempts", &dyn_control_params::max_number_attempts)
+      .def_readwrite("isNBRA", &dyn_control_params::isNBRA)
 
       ///================= Surface hopping: proposal, acceptance =======================
       .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
@@ -161,13 +162,19 @@ void export_dyn_decoherence_objects(){
   (CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates) = &sdm;
   def("sdm", expt_sdm_v2);
 
+
   CMATRIX (*expt_sdm_v3)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol, int isNBRA) = &sdm;
   def("sdm", expt_sdm_v3);
 
   CMATRIX (*expt_sdm_v4)
-  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates, double tol) = &sdm;
   def("sdm", expt_sdm_v4);
+
+  CMATRIX (*expt_sdm_v5)
+  (CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& decoh_rates) = &sdm;
+  def("sdm", expt_sdm_v5);
+
 
 
 
@@ -196,30 +203,57 @@ void export_dyn_decoherence_objects(){
 
   CMATRIX (*expt_mfsd_v1)
   (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+   nHamiltonian& ham, Random& rnd, int isNBRA) = &mfsd;
+  def("mfsd", expt_mfsd_v1);
+
+  CMATRIX (*expt_mfsd_v2)
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd) = &mfsd;
+  def("mfsd", expt_mfsd_v2);
 
 
   ///================  In dyn_decoherence_time.cpp  ===================================
 
   MATRIX (*expt_edc_rates_v1)
-  (CMATRIX& Hvib, double Ekin, double C_param, double eps_param) = &edc_rates;
+  (CMATRIX& Hvib, double Ekin, double C_param, double eps_param, int isNBRA) = &edc_rates;
   def("edc_rates", expt_edc_rates_v1);
 
-  vector<MATRIX> (*expt_edc_rates_v2)
-  (vector<CMATRIX>& Hvib, vector<double>& Ekin, 
-  double C_param, double eps_param) = &edc_rates;
+  MATRIX (*expt_edc_rates_v2)
+  (CMATRIX& Hvib, double Ekin, double C_param, double eps_param) = &edc_rates;
   def("edc_rates", expt_edc_rates_v2);
 
 
+  vector<MATRIX> (*expt_edc_rates_v3)
+  (vector<CMATRIX>& Hvib, vector<double>& Ekin, 
+  double C_param, double eps_param, int isNBRA) = &edc_rates;
+  def("edc_rates", expt_edc_rates_v3);
+
+  vector<MATRIX> (*expt_edc_rates_v4)
+  (vector<CMATRIX>& Hvib, vector<double>& Ekin, 
+  double C_param, double eps_param, int isNBRA) = &edc_rates;
+  def("edc_rates", expt_edc_rates_v4);
+
+
+
   void (*expt_dephasing_informed_correction_v1)
-  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps, int isNBRA) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v1);
 
   void (*expt_dephasing_informed_correction_v2)
-  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  (MATRIX& decoh_rates, CMATRIX& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
   def("dephasing_informed_correction", expt_dephasing_informed_correction_v2);
 
+
+  void (*expt_dephasing_informed_correction_v3)
+  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps, int isNBRA) = &dephasing_informed_correction;
+  def("dephasing_informed_correction", expt_dephasing_informed_correction_v3);
+
+  void (*expt_dephasing_informed_correction_v4)
+  (vector<MATRIX>& decoh_rates, vector<CMATRIX>& Hvib, MATRIX& ave_gaps) = &dephasing_informed_correction;
+  def("dephasing_informed_correction", expt_dephasing_informed_correction_v4);
+
   
+
   MATRIX (*expt_coherence_intervals_v1)(CMATRIX& Coeff, MATRIX& rates) = &coherence_intervals;
   def("coherence_intervals", expt_coherence_intervals_v1);
 
@@ -645,10 +679,15 @@ void export_Dyn_objects(){
 
 
 
-  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v1);
-  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham) = &compute_St;
   def("compute_St", expt_compute_St_v2);
+  vector<CMATRIX> (*expt_compute_St_v3)(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA) = &compute_St;
+  def("compute_St", expt_compute_St_v3);
+  vector<CMATRIX> (*expt_compute_St_v4)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
+  def("compute_St", expt_compute_St_v4);
+
 
 
 

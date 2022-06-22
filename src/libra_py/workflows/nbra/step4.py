@@ -741,7 +741,6 @@ def run_tsh(common_params, compute_model, model_params):
     
     # Nuclear
     init_nucl = {"init_type":inucl, "force_constant":k0, "ntraj":ntraj}
-    #init_nucl = {"init_type":3, "force_constant":k0, "ntraj":ntraj}
     q, p, iM = tsh_dynamics.init_nuclear_dyn_var(x0, p0, masses, init_nucl, rnd)
     
     # Electronic
