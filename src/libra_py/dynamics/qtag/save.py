@@ -173,9 +173,6 @@ def save_qtag_data(_savers, params,
     nstates = len(params["states"])
     print_freq = int(params["progress_frequency"]*nsteps)
 
-    if step%print_freq==0:
-        print(F" step= {step}")
-
 #======LEVEL 1======
     if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
         save_qtag_hdf5_1D(_savers["hdf5_saver"], params['dt'], step, Etot, dEtot)
