@@ -1522,7 +1522,7 @@ def run_cp2k_xtb(params):
     print('Done with diagonalization. Elapsed time:', time.time()-t1)
 
 
-def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
+def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool, submission_exe='sbatch'):
     """
     This function distributes the jobs to perform CP2K calculations and computing and saving the MO overlaps.
 
@@ -1540,6 +1540,8 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
         njobs (integer): The number of jobs.
 
         run_slurm (bool): The flag for running the computations either as bash or submitting through sbatch.
+
+        submission_exe (string): The submission executable. For slurm envs, it is 'sbatch' and for pbs envs, it is 'qsub'.
     """
     file = open(run_python_file,'r')
     lines = file.readlines()
@@ -1567,7 +1569,7 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
                 file.write(lines[i])
         file.close()
         if run_slurm:
-            os.system('sbatch %s'%submit_template)
+            os.system('%s %s'%(submission_exe,submit_template))
         else:
             # Just in case you want to use a bash file and not submitting
             os.system('sh %s'%submit_template)

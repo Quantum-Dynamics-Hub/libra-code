@@ -443,6 +443,7 @@ def plot_cube_v2(params, cube_file_name, phase_factor):
     tachyon_exe = params['tachyon_exe']
     x_pixels = params['x_pixels']
     y_pixels = params['y_pixels']
+    image_format = params['image_format']
     together_mode = params['together_mode']
     if together_mode:
         new_tcl_name = 'vmd_tmode.tcl'
@@ -460,7 +461,7 @@ def plot_cube_v2(params, cube_file_name, phase_factor):
                 state_counter += 1
             elif 'render' in tcl_lines[i]:
                 tmp_name = cube_file_name.split('WFN')[0]
-                file.write(F'render Tachyon {tmp_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
+                file.write(F'render Tachyon {tmp_name} "{tachyon_exe} -aasamples 12 %s -format {image_format.upper()} -res {x_pixels} {y_pixels} -o %s.{image_format.lower()}"\n')
             else:
                 file.write(tcl_lines[i])
     
@@ -482,20 +483,21 @@ def plot_cube_v2(params, cube_file_name, phase_factor):
                 tcl_lines[i] = ' '.join(tmp) + '\n'
                 file.write(tcl_lines[i])
             elif 'render' in tcl_lines[i]:
-                file.write(F'render Tachyon {state_name} "{tachyon_exe} -aasamples 12 %s -format TGA -res {x_pixels} {y_pixels} -o %s.tga"\n')
+                file.write(F'render Tachyon {state_name} "{tachyon_exe} -aasamples 12 %s -format {image_format.upper()} -res {x_pixels} {y_pixels} -o %s.{image_format.lower()}"\n')
             else:
                 file.write(tcl_lines[i])
     
         file.close()
 
     os.system(F'{vmd_exe} < {new_tcl_name}')
-    #os.system(F'rm {state_name}')
     if params['remove_cube']:
         if together_mode:
             for name in cube_file_names:
                 os.system(F'rm {name}')
+            os.system(F'rm {tmp_name}')
         else:
             os.system(F'rm {cube_file_name}')
+            os.system(F'rm {state_name}')
     
 
 

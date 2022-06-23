@@ -395,7 +395,7 @@ def run_cp2k_libint_step2(params):
 
     # Now try to get parameters from the input
     critical_params = [ "cp2k_ot_input_template", "cp2k_diag_input_template", "trajectory_xyz_filename" ]
-    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True, 'together_mode': False}
+    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "all_images": os.getcwd() + "/all_images", "image_format": 'bmp', "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True, 'together_mode': False}
     comn.check_input(params, default_params, critical_params)
 
 
@@ -408,6 +408,8 @@ def run_cp2k_libint_step2(params):
         os.system(F"mkdir {params['all_logfiles']}")
     if not os.path.exists(params['all_pdosfiles']):
         os.system(F"mkdir {params['all_pdosfiles']}")
+    if not os.path.exists(params['all_images']):
+        os.system(F"mkdir {params['all_images']}")
 
     # setting up the initial step and final step
     istep = params['istep']
@@ -684,10 +686,16 @@ def run_cp2k_libint_step2(params):
                     if isUKS:
                         state_index = state_to_plot-params['lowest_orbital']
                         # Alpha orbitals
-                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        if isxTB:
+                            cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        else:
+                            cube_file_name = F'Diag_libra-{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
                         cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_alpha[c_plot,0])
                         # Beta orbitals
-                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_2-1_0.cube'
+                        if isxTB:
+                            cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_2-1_0.cube'
+                        else:
+                            cube_file_name = F'Diag_libra-{step-1}-WFN_{str(state_to_plot).zfill(5)}_2-1_0.cube'
                         cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_beta[c_plot,0])
 
                         if params['plot_phase_corrected']:
@@ -706,7 +714,10 @@ def run_cp2k_libint_step2(params):
                     else:
                         # Only alpha orbitals
                         state_index = state_to_plot-params['lowest_orbital']
-                        cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        if isxTB:
+                            cube_file_name = F'Diag_{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
+                        else:
+                            cube_file_name = F'Diag_libra-{step-1}-WFN_{str(state_to_plot).zfill(5)}_1-1_0.cube'
                         cube_file_methods.plot_cube_v2(params, cube_file_name, phase_factors_alpha[c_plot,0])
 
                         if params['plot_phase_corrected']:
@@ -722,7 +733,10 @@ def run_cp2k_libint_step2(params):
     # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
     os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
     os.system(F'mv *log {params["all_logfiles"]}/.')
+    os.system(F'mv *{params["image_format"].lower()} {params["all_images"]}/.')
     os.system('rm *.wfn* *.tdwfn*')
+    if params["remove_cube"]:
+        os.system("rm *.cube")
     print('Done with the job!!!')
 
 
