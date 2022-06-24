@@ -233,11 +233,7 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     ///================= Entanglement of trajectories ================================
     else if(key=="qtag_pot_approx_method"){ qtag_pot_approx_method = bp::extract<int>(params.values()[i]); }
-    else if(key=="states"){
-      states.clear();
-      boost::python::list tmp = extract<boost::python::list>(params.values()[i]);
-      for(int j=0; j<len(tmp); j++){ states.push_back( extract<int>(tmp[j]) );  }
-    }
+    
     ///================= Bath, Constraints, and Dynamical controls ===================
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }
     else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    
