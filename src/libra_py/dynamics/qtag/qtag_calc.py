@@ -15,7 +15,7 @@
 ..moduleauthors :: Matthew Dutra, Alexey Akimov
 """
 
-import sys
+import os, sys
 import numpy as np
 
 from liblibra_core import *
@@ -79,7 +79,7 @@ def norm(surf_ids,c,ov,states):
         states (list): List of states for which the norm should be calculated.
 
     Returns:
-        n (float): Surface population. The imaginary part should be zero.
+        pops (list of floats): Surface population. The imaginary part should be zero.
     """
 
     pops = []
@@ -98,7 +98,10 @@ def norm(surf_ids,c,ov,states):
     return(pops)
 
 
-def time_overlap(ndof,ntraj,nstates,qpasn,qpaso):
+#def new_old_overlap(ndof,ntraj,states,qpaso,qpasn):
+#    new_old_ov = CMATRIX(ntraj,ntraj)
+
+def time_overlap(ndof,ntraj,states,qpasn,qpaso):
     """
     Computes the time-overlap <G_new|G_old>
 
@@ -119,7 +122,9 @@ def time_overlap(ndof,ntraj,nstates,qpasn,qpaso):
     surf_ids=qpasn[4]
 
     itot = 0; jtot = 0
-    for n1 in range(nstates):
+
+    for n1 in states:
+
         #Extract the relevent trajectories for the n1-th state...
         traj_on_surf_n1 = [index for index, traj_id in enumerate(surf_ids) if traj_id == n1]
         ntraj_on_surf_n1 = len(traj_on_surf_n1)
@@ -204,58 +209,115 @@ def basis_diag(m, dt, H, S, b):
 
     return(c_new)
 
-
-
-def wf_print_1D(ntraj,qpas,c,fileobj):
-    """Writes a 1D single-surface wavefunction to a file specified by *fileobj*, computed using the internal function psi(qpas,c,x0) with basis parameters *qpas* and coefficients *c*.
-
-    Args:
-        ntraj (integer): Number of trajectories per surface.
-
-        qpas (list): List of {q,p,a,s} MATRIX objects.
-
-        c (CMATRIX): The ntraj-by-1 complex matrix of basis coefficients.
-
-        fileobj (object): An open file object for printing wavefunction data to.
-
-    Returns:
-        None.
-    """
-
-    x0=MATRIX(1,1)
-
-    for i in np.linspace(-10.0,12.0,num=1000):
-        x0.set(0,0,i)
-        z=psi(1,ntraj,qpas,c,x0);zstar=np.conj(z)
-        print(x0.get(0,0),np.abs(z),(zstar*z).real,z.real,z.imag,sep=' ', end='\n', file=fileobj)
-
-    print(file=fileobj)
-    return()
-
-def wf_print_2D(ntraj,qpas,c,fileobj):
-    """Writes a 2D single-surface wavefunction to a file specified by *fileobj*, computed using the internal function psi(qpas,c,x0) with basis parameters *qpas* and coefficients *c*.
+def wf_calc_nD(dyn_params, plt_params, prefix):
+    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*,
+       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a
+       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*,
+       and each surface has the same number of trajectories. The corresponding Gaussian-distributed
+       momenta are ordered so that the wavepacket spreads as x increases.
 
     Args:
-        ntraj (integer): Number of trajectories per surface.
+        dyn_params (dict): Dictionary containing simulation parameters.
 
-        qpas (list): List of {q,p,a,s} MATRIX objects.
+          * **dyn_params[`nsteps`]** (int) : the number of simulation steps
 
-        c (CMATRIX): The ntraj-by-1 complex matrix of basis coefficients.
+          * **dyn_params[`states`]** (int) : the list of states
 
-        fileobj (object): An open file object for printing wavefunction data to.
+          * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
+              placed on each surface. For Gaussian, the list has only one element, specifying the
+              number of basis functions per surface. Note that the total number of basis functions
+              will then be *nstates*-by-*prod(grid_dims)*
 
-    Returns:
-        None.
+          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+
+        prefix (str): The name of the directory containing the q, p, a, and s trajectory data.
     """
 
-    x0=MATRIX(2,1)
+#Collect simulation parameters from dyn_params dict...
+    nsteps = dyn_params["nsteps"]
+    states = dyn_params["states"]
+    grid_dims = dyn_params["grid_dims"]
+    ndof = dyn_params["ndof"]
 
-    for i in np.linspace(-6.0,6.0,num=100):
-        for j in np.linspace(-6.0,6.0,num=100):
-            x0.set(0,0,i);x0.set(1,0,j)
-            z=psi(2,ntraj,qpas,c,x0);zstar=np.conj(z)
-            print(x0.get(0,0),x0.get(1,0),np.abs(z),(zstar*z).real,sep=' ',end='\n', file=fileobj)
+    nstates = len(states)
+    xmin = plt_params["xmin"]
+    xmax = plt_params["xmax"]
+    npoints = plt_params["npoints"]
 
-    print(file=fileobj)
-    return()
+#This is standard Libra convention for wf files...
+    data_type1="wfcr"; data_type2="dens"; data_type3="rep_0"
+
+#Determine ntraj from dyn_params grid_dims variable...
+    ntraj = 1
+    for i in range(len(grid_dims)):
+        ntraj *= grid_dims[i]
+
+#Define which timesteps to calculate the wf for...
+    lines = plt_params['snaps']
+
+#Open directory with coeffs, q, p, a, s data...
+    qfile = open(prefix+"/q.txt")
+    pfile = open(prefix+"/p.txt")
+    afile = open(prefix+"/a.txt")
+    cfile = open(prefix+"/coeffs.txt")
+
+#Make the output directory...
+    if not os.path.isdir(prefix+"/wfc"):
+        os.mkdir(prefix+"/wfc")
+
+#Create the mesh to calculate the wf on...
+    grid_bounds = np.mgrid[tuple(slice(xmin[dof],xmax[dof],complex(0,npoints[dof])) for dof in range(ndof))]
+
+    elems = 1
+    for i in npoints:
+        elems *= i
+
+    b = grid_bounds.flatten()
+    wfpts = []
+    for i in range(elems):
+        index = i
+        coords = []
+
+        while index < len(b):
+            coords.append(b[index])
+            index += elems
+        wfpts.append(coords)
+
+#Read the trajectory data and compute the wf on the mesh...
+    iline=0
+    for line in range(nsteps):
+        qdata = qfile.readline().strip().split()
+        pdata = pfile.readline().strip().split()
+        adata = afile.readline().strip().split()
+        coeffs = cfile.readline().strip().split()
+
+        if iline in lines:
+            outfile = open(prefix+"/wfc/"+data_type1+"_snap_"+str(line)+"_"+data_type2+"_"+data_type3,"w")
+
+            for pt in wfpts:
+                for nn in pt:
+                    outfile.write(str(nn)+" ")
+                idata = 0
+                for state in range(nstates):
+                    wf = 0+0j
+                    for j in range(ntraj):
+                        coeff = complex(float(coeffs[2*(j+state*ntraj)]),
+                                        float(coeffs[2*(j+state*ntraj)+1]))
+
+                        gaus = 1.0+0.0j
+                        for dof in range(ndof):
+                            qj = float(qdata[idata])
+                            pj = float(pdata[idata])
+                            aj = float(adata[idata])
+                            idata +=1
+
+                            val = pt[dof]
+                            gaus*=(aj/np.pi)**0.25*np.exp(-aj/2.0* \
+                                (val-qj)**2+1j*(pj*(val-qj)))
+
+                        wf+=coeff*gaus
+                    outfile.write(str(abs(wf)**2)+" ")
+                    #outfile.write(str(np.imag(wf))+" ")
+                outfile.write("\n")
+        iline+=1
 

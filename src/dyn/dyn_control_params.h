@@ -479,10 +479,11 @@ class dyn_control_params{
 
     Options:
       - 0 : BAT [ default ]
-      - 1 : LHA 
+      - 1 : LHA
+      - 2 : LHAe
+      - 3 : BATe 
   */
   int qtag_pot_approx_method;
-
 
   ///===============================================================================
   ///================= Bath, Constraints, and Dynamical controls ===================
