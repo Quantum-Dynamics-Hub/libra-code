@@ -473,11 +473,6 @@ class dyn_control_params{
   */
   int qtag_pot_approx_method;
 
-  /**
-    The list of electronic state labels ([0,1,2,...]) to be used in the calculation
-  */
-  vector<int> states;
-
   ///===============================================================================
   ///================= Bath, Constraints, and Dynamical controls ===================
   ///===============================================================================
