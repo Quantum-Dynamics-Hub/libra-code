@@ -215,8 +215,8 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
     qpas_new = [q_new, p_new, a_new, s_new, surf_ids]
 
 #    ov_no = qtag_calc.new_old_overlap(ndof, ntraj, states, qpas, qpas_new)
-    ov_no = qtag_calc.time_overlap(ndof, ntraj, states, qpas_new, qpas)
-    btot = ov_no*coeff
+    st = qtag_calc.time_overlap(ndof, ntraj, states, qpas_new, qpas)
+    btot = st*coeff
 
     return qpas_new, btot
 
@@ -282,8 +282,8 @@ def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,nor
             svalsn.set(i,j,sn.get(j))
 
     qpas1n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)  ## AVA: should this be time_overlap maybe?
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)  ## AVA: should this be time_overlap maybe?
+    b1=st*c1_new
 
     if norm2 < decpl:
         qvals,pvals=MATRIX(qpas2[0]),MATRIX(qpas2[1])
@@ -307,8 +307,8 @@ def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,nor
 
         qpas2n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)  ### AVA: again - maybe time-overlap?
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)  ### AVA: again - maybe time-overlap?
+    b2=st*c2_new
 
     return(qpas1n,qpas2n,b1,b2)
 
@@ -377,11 +377,11 @@ def mean_field(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,no
     qpas1n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
     qpas2n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)
+    b1=st*c1_new
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)
+    b2=st*c2_new
 
     return(qpas1n,qpas2n,b1,b2)
 
@@ -458,10 +458,10 @@ def two_surf(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm
     qpas1n=[MATRIX(qvals1n),MATRIX(pvals1n),MATRIX(avals1n),MATRIX(svals1n)]
     qpas2n=[MATRIX(qvals2n),MATRIX(pvals2n),MATRIX(avals2n),MATRIX(svals2n)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)
+    b1=st*c1_new
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)
+    b2=st*c2_new
 	
     return(qpas1n,qpas2n,b1,b2)
