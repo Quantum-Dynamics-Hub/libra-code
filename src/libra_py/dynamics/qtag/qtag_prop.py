@@ -60,7 +60,7 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
     dt = params["dt"]
     decpl = params["decpl_den"] 
     iM = params["iM"]  # MATRIX(ndof, 1)
-
+    states = params["states"]
 
     q_update_method = params["q_update_method"]  # 0 - frozen, 1 - move
     p_update_method = params["p_update_method"]  # 0 - frozen, 1 - move
@@ -81,7 +81,7 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
 
     ndof = q_old.num_of_rows
     ntraj = q_old.num_of_cols
-    nstates = len(set(surf_ids))
+    nstates = len(states)
 
     x_dofs = list(range(ndof))
     invM = MATRIX(ndof, ndof)
@@ -94,20 +94,23 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
     a_new = MATRIX(a_old)
     s_new = MATRIX(s_old)
 
-    unsorted_pairs = []
-    for i in range(nstates):
-        unsorted_pairs.append([i, surf_pops[i]])
+#    int ii = 0
+#    unsorted_pairs = []
+#    for i in states:
+#        unsorted_pairs.append([n, surf_pops[i]])
+#        ii += 1
 
-    sorted_pairs = merge_sort(unsorted_pairs) 
+#    sorted_pairs = merge_sort(unsorted_pairs) 
 
-    sorted_states = [0]*nstates
-    for i in range(nstates):
-        sorted_states[nstates-1-i] = sorted_pairs[i][0]
+#    sorted_states = [0]*nstates
+#    for i in range(nstates):
+#        sorted_states[nstates-1-i] = sorted_pairs[i][0]
 
-    #sorted_pops = sorted(surf_pops, reverse = True)
-    #sorted_states = []
-    #for n in range(nstates):
-    #    sorted_states.append(surf_pops.index(sorted_pops[n]))
+    sorted_pops = sorted(surf_pops, reverse = True)
+    sorted_states = []
+    for n in range(nstates):
+        indx = surf_pops.index(sorted_pops[n])
+        sorted_states.append(states[indx])
 
    
     # The properties for the trajectories on the most populated surface - reference for synchronizing
@@ -121,6 +124,7 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
 
         traj_on_surf = [index for index, traj_id in enumerate(surf_ids) if traj_id == n]
         ntraj_on_surf = len(traj_on_surf)  
+        surf_pop_ref = sorted_pops[nindex]
 
         q_on_surf = MATRIX(ndof, ntraj_on_surf)
         p_on_surf = MATRIX(ndof, ntraj_on_surf)
@@ -132,9 +136,13 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
         pop_submatrix(a_old, a_on_surf, x_dofs, traj_on_surf)
         pop_submatrix(s_old, s_on_surf, x_dofs, traj_on_surf)
 
+#Forcing sync'ed trajectories for q_sync_method = 2, regardless of pop
+#        if q_sync_method == 2:
+#            if n>0:
+#                surf_pop_ref = 0.0
 
         # "Independent" evolution of trajectories
-        if surf_pops[n] > decpl:
+        if surf_pop_ref > decpl:
             coeff_on_surf = CMATRIX(ntraj_on_surf,1)  # coefficients for the TBFs on the surface n
             pop_submatrix(coeff, coeff_on_surf, traj_on_surf, [0])
 
@@ -194,20 +202,21 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
 
         else:
             # For this to work, we need that all surfaces have equal number of trajectories
-            if q_sync_method == 1:
+            if q_sync_method >= 1:
                 push_submatrix(q_new, q_new_on_surf_ref, x_dofs, traj_on_surf)
-            if p_sync_method == 1:
+            if p_sync_method >= 1:
                 push_submatrix(p_new, p_new_on_surf_ref, x_dofs, traj_on_surf)
-            if a_sync_method == 1:
+            if a_sync_method >= 1:
                 push_submatrix(a_new, a_new_on_surf_ref, x_dofs, traj_on_surf)
-            if s_sync_method == 1:
+            if s_sync_method >= 1:
                 push_submatrix(s_new, s_new_on_surf_ref, x_dofs, traj_on_surf)
 
 
     qpas_new = [q_new, p_new, a_new, s_new, surf_ids]
 
-    ov_no = qtag_calc.time_overlap(ndof, ntraj, nstates, qpas_new, qpas)
-    btot = ov_no*coeff
+#    ov_no = qtag_calc.new_old_overlap(ndof, ntraj, states, qpas, qpas_new)
+    st = qtag_calc.time_overlap(ndof, ntraj, states, qpas_new, qpas)
+    btot = st*coeff
 
     return qpas_new, btot
 
@@ -273,8 +282,8 @@ def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,nor
             svalsn.set(i,j,sn.get(j))
 
     qpas1n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)  ## AVA: should this be time_overlap maybe?
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)  ## AVA: should this be time_overlap maybe?
+    b1=st*c1_new
 
     if norm2 < decpl:
         qvals,pvals=MATRIX(qpas2[0]),MATRIX(qpas2[1])
@@ -298,8 +307,8 @@ def cls_force(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,nor
 
         qpas2n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)  ### AVA: again - maybe time-overlap?
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)  ### AVA: again - maybe time-overlap?
+    b2=st*c2_new
 
     return(qpas1n,qpas2n,b1,b2)
 
@@ -368,11 +377,11 @@ def mean_field(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,no
     qpas1n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
     qpas2n=[MATRIX(qvalsn),MATRIX(pvalsn),MATRIX(avalsn),MATRIX(svalsn)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)
+    b1=st*c1_new
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)
+    b2=st*c2_new
 
     return(qpas1n,qpas2n,b1,b2)
 
@@ -449,10 +458,10 @@ def two_surf(univ,mss,mom_calc,props,model_params,qpas1,c1_new,qpas2,c2_new,norm
     qpas1n=[MATRIX(qvals1n),MATRIX(pvals1n),MATRIX(avals1n),MATRIX(svals1n)]
     qpas2n=[MATRIX(qvals2n),MATRIX(pvals2n),MATRIX(avals2n),MATRIX(svals2n)]
 
-    ov_no=qtag_calc.overlap(ntraj,qpas1n,qpas1)
-    b1=ov_no*c1_new
+    st=qtag_calc.overlap(ntraj,qpas1n,qpas1)
+    b1=st*c1_new
 
-    ov_no=qtag_calc.overlap(ntraj,qpas2n,qpas2)
-    b2=ov_no*c2_new
+    st=qtag_calc.overlap(ntraj,qpas2n,qpas2)
+    b2=st*c2_new
 	
     return(qpas1n,qpas2n,b1,b2)

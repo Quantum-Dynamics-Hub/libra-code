@@ -13,7 +13,6 @@ import numpy as np
 from liblibra_core import *
 import util.libutil as comn
 
-
 def initialize(dyn_params):
     """Places the basis functions on all surfaces according to the `init_placement' parameter and
        initializes their qpas MATRIX objects.
@@ -92,13 +91,13 @@ def grid(dyn_params):
 
     params = dict(dyn_params)
 
-    critical_params = [ "nstates" ]
     default_params = { "grid_dims":[5], "rho_cut":1e-12, "alp_scl":[8.0], 
                        "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0]
                      }
     comn.check_input(params, default_params, critical_params)
 
-    nstates = params["nstates"]
+    ndof = params['ndof']
+    states = params['states']
     grid_dims = params['grid_dims']
     rho_cut = params['rho_cut']
     q0 = params['wfc_q0']
@@ -107,7 +106,7 @@ def grid(dyn_params):
     alp_scl = params['alp_scl']
     s0 = params['wfc_s0']
 
-    ndof = len(q0)
+    nstates = len(states)
 
     ntraj_on_state = 1
     for i in range(len(grid_dims)):
@@ -115,12 +114,10 @@ def grid(dyn_params):
 
     ntraj = ntraj_on_state*nstates
 
-
     qvals=MATRIX(ndof,ntraj)
     pvals=MATRIX(ndof,ntraj)
     avals=MATRIX(ndof,ntraj)
     svals=MATRIX(ndof,ntraj)
-
 
     surf_ids = []
     qlo,qhi = [], []
@@ -157,7 +154,7 @@ def grid(dyn_params):
                 avals.set(dof,j+n*ntraj_on_state, a0[dof]*alp_scl[dof])
                 svals.set(dof,j+n*ntraj_on_state,0.0)
 
-    for n in range(nstates):
+    for n in states:
         for j in range(ntraj_on_state):
             surf_ids.append(n)
 
@@ -210,7 +207,6 @@ def gaussian(dyn_params):
 
     params = dict(dyn_params)
 
-    critical_params = [ "nstates" ]
     default_params = { "grid_dims":[5], "rho_cut":1e-12, 
                        "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "alp_scl":[1.0], "wfc_s0":[0.0]
                      }
@@ -218,7 +214,8 @@ def gaussian(dyn_params):
 
 
 
-    nstates = params["nstates"]
+    states = params["states"]
+    nstates = len(states)
     grid_dims = params['grid_dims']
     rho_cut = params['rho_cut']
     q0 = params['wfc_q0']
@@ -254,14 +251,64 @@ def gaussian(dyn_params):
             avals.set(dof,traj, a0[dof]*alp_scl[dof])
             svals.set(dof,traj, 0.0)
 
-    for n in range(nstates):
+    for n in states:
         for j in range(ntraj_on_state):
             surf_ids.append(n)
 
     qpas=[qvals,pvals,avals,svals,surf_ids]
     return ntraj,qpas
 
+#def restart(dyn_params):
 
+#    prefix = dyn_params['prefix']
+#    states = dyn_params['states']
+#    grid_dims = dyn_params['grid_dims']
+    
+#    nstates = len(states)
+
+#    ntraj_on_state = 1
+#    for i in range(len(grid_dims)):
+#        ntraj_on_state *= grid_dims[i]
+
+#    ntraj = ntraj_on_state*nstates
+
+#    qfile = f"{prefix}/q.txt"
+#    try:
+#        os.path.exists(qfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'q.txt' is missing from "+prefix+" directory!"
+
+#    pfile = f"{prefix}/p.txt"
+#    try: 
+#        os.path.exists(pfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'p.txt' is missing from "+prefix+" directory!"
+
+#    afile = f"{prefix}/a.txt"
+#    try: 
+#        os.path.exists(afile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'a.txt' is missing from "+prefix+" directory!"
+
+#    sfile = f"{prefix}/s.txt"
+#    try: 
+#        os.path.exists(sfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 's.txt' is missing from "+prefix+" directory!"
+
+#    cfile = f"{prefix}/coeffs.txt"
+#    try: 
+#        os.path.exists(cfile)
+#    except:
+#        sys.exit("ERROR in qtag_init.restart() -- necessary file 'coeffs.txt' is missing from "+prefix+" directory!"
+
+#    qdata = data_read.get_data_from_file2(qfile, [traj for traj in range(ntraj)])
+#    pdata = data_read.get_data_from_file2(pfile, [traj for traj in range(ntraj)])
+#    adata = data_read.get_data_from_file2(afile, [traj for traj in range(ntraj)])
+#    sdata = data_read.get_data_from_file2(sfile, [traj for traj in range(ntraj)])
+#    cdata = data_read.get_data_from_file2(cfile, [traj for traj in range(ntraj)])
+
+#    return ntraj,qpas
 
 def coeffs(dyn_params, qpas, active_state):
     """Returns the projection vector *b* of the initial wavefunction with parameters stored in the dict 
@@ -289,16 +336,12 @@ def coeffs(dyn_params, qpas, active_state):
                      }
     comn.check_input(params, default_params, critical_params)
 
-
-#    nstates = params["nstates"]
     q0 = params['wfc_q0']
     p0 = params['wfc_p0']
     a0 = params['wfc_a0']
     s0 = params['wfc_s0']
 
     ndof = len(q0)
-
-
 
     qvals = qpas[0]
     pvals = qpas[1]
@@ -314,7 +357,9 @@ def coeffs(dyn_params, qpas, active_state):
     p2 = MATRIX(ndof,1)
     a2 = MATRIX(ndof,1)
     s2 = MATRIX(ndof,1)
+
     b = CMATRIX(ntraj,1)
+    c0 = CMATRIX(ntraj,1)
 
     for dof in range(ndof):
         q2.set(dof,0, q0[dof])
@@ -324,6 +369,7 @@ def coeffs(dyn_params, qpas, active_state):
 
     for i in range(ntraj):
         b.set(i,complex(0.0,0.0))
+        c0.set(i,complex(0.0,0.0))
 
     traj_active = [index for index, traj_id in enumerate(surf_ids) if traj_id == active_state]
     ntraj_active = len(traj_active)
@@ -332,6 +378,10 @@ def coeffs(dyn_params, qpas, active_state):
     pvals_active = MATRIX(ndof,ntraj_active)
     avals_active = MATRIX(ndof,ntraj_active)
     svals_active = MATRIX(ndof,ntraj_active)
+    bvals_active = CMATRIX(ntraj_active,1)
+    ctemp = CMATRIX(ntraj_active,1)
+
+    basis_ovlp = CMATRIX(ntraj_active,ntraj_active)
 
     pop_submatrix(qvals,qvals_active,[dof for dof in range(ndof)],traj_active)
     pop_submatrix(pvals,pvals_active,[dof for dof in range(ndof)],traj_active)
@@ -349,5 +399,29 @@ def coeffs(dyn_params, qpas, active_state):
         b.set(i,0,gwp_overlap(q1,p1,s1,a1/2,q2,p2,s2,a2))
         ii += 1
 
-    return(b)
+    for i in range(ntraj_active):
+        qi = qvals_active.col(i)
+        pi = pvals_active.col(i)
+        ai = avals_active.col(i)
+        si = svals_active.col(i)
+
+        for j in range(ntraj_active):
+            qj = qvals_active.col(j)
+            pj = pvals_active.col(j)
+            aj = avals_active.col(j)
+            sj = svals_active.col(j)
+            basis_ovlp.set(i,j,gwp_overlap(qi,pi,si,ai/2,qj,pj,sj,aj/2))
+
+#    basis_ovlp = gwp_overlap_matrix(qvals_active, pvals_active, svals_active, 0.5*avals_active, 
+#                                    qvals_active, pvals_active, svals_active, 0.5*avals_active)
+
+    pop_submatrix(b,bvals_active,traj_active,[0])
+    ctemp = basis_ovlp * bvals_active
+
+    ii = 0
+    for i in traj_active:
+        c0.set(i,0,ctemp.get(ii))
+        ii += 1
+
+    return(b, c0)
 

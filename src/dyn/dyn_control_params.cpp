@@ -82,7 +82,6 @@ dyn_control_params::dyn_control_params(){
 
   ///============================ QTAG =============================================
   qtag_pot_approx_method = 0;
-
   ///================= Bath, Constraints, and Dynamical controls ===================
 
   Temperature = 300.0;
@@ -234,7 +233,7 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     ///================= Entanglement of trajectories ================================
     else if(key=="qtag_pot_approx_method"){ qtag_pot_approx_method = bp::extract<int>(params.values()[i]); }
-
+    
     ///================= Bath, Constraints, and Dynamical controls ===================
     else if(key=="Temperature") { Temperature = bp::extract<double>(params.values()[i]);  }
     else if(key=="ensemble"){ ensemble = bp::extract<int>(params.values()[i]); }    

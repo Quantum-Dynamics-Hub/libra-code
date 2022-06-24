@@ -187,10 +187,8 @@ def save_qtag_data(_savers, params,
     txt2_output_level = params["txt2_output_level"]
 
     nsteps = params["nsteps"]
+    nstates = len(params["states"])
     print_freq = int(params["progress_frequency"]*nsteps)
-
-    if step%print_freq==0:
-        print(F" step= {step}")
 
     #======LEVEL 1======
     if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
@@ -201,10 +199,10 @@ def save_qtag_data(_savers, params,
 
     #======LEVEL 2======
     if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
-        save_qtag_hdf5_2D(_savers["hdf5_saver"], params["nstates"], step, pops, coeffs)
+        save_qtag_hdf5_2D(_savers["hdf5_saver"], nstates, step, pops, coeffs)
 
     if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
-        save_qtag_hdf5_2D(_savers["txt2_saver"], params["nstates"], step, pops, coeffs, 1)
+        save_qtag_hdf5_2D(_savers["txt2_saver"], nstates, step, pops, coeffs, 1)
 
     #======LEVEL 3======
     if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None:
