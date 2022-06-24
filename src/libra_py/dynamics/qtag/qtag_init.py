@@ -207,7 +207,6 @@ def gaussian(dyn_params):
 
     params = dict(dyn_params)
 
-    critical_params = [ "states" ]
     default_params = { "grid_dims":[5], "rho_cut":1e-12, 
                        "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "alp_scl":[1.0], "wfc_s0":[0.0]
                      }
