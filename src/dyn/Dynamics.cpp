@@ -29,13 +29,17 @@
 #include "Dynamics.h"
 #include "dyn_control_params.h"
 #include "dyn_variables.h"
+#include "../calculators/NPI.h"
 
 
 /// liblibra namespace
 namespace liblibra{
 
+using namespace libcalculators;
+
 /// libdyn namespace
 namespace libdyn{
+
 
 
 namespace bp = boost::python;
@@ -183,6 +187,62 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
 }
 
 
+void update_nacs(dyn_control_params& prms, nHamiltonian& ham){
+/**
+  This function updates the internal (time-derivative, scalar) NACs in the hierarchy of 
+  Hamiltonians
+*/
+
+  int isNBRA = prms.isNBRA;
+  double dt = prms.dt;
+  int nst = ham.nadi;
+  int ntraj = ham.children.size();
+  CMATRIX st(nst,nst);
+  MATRIX st_re(nst, nst);
+  MATRIX st_im(nst, nst);
+
+  CMATRIX nac(nst, nst);
+  MATRIX nac_re(nst, nst);
+  MATRIX nac_im(nst, nst);
+
+
+
+  if(isNBRA==1){
+    st = ham.children[0]->get_time_overlap_adi();
+
+    if(prms.nac_update_method==2){
+      if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
+      else if(prms.nac_algo==1){   
+        st_re = st.real();
+        nac_re = nac_npi(st_re, dt); 
+        nac = CMATRIX(nac_re, nac_im);
+      } 
+ 
+      ham.children[0]->set_nac_adi_by_val(nac);
+    }
+        
+  }
+  else{
+    for(int traj=0; traj<ntraj; traj++){
+
+      st = ham.children[traj]->get_time_overlap_adi();
+
+      if(prms.nac_update_method==2){
+        if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
+        else if(prms.nac_algo==1){   
+          st_re = st.real();
+          nac_re = nac_npi(st_re, dt); 
+          nac = CMATRIX(nac_re, nac_im);
+        } 
+ 
+        ham.children[traj]->set_nac_adi_by_val(nac);
+      }
+
+    }// for traj
+  }// else
+
+}
+
 
 CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham){
 /**
@@ -260,10 +320,12 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
   if(isNBRA==1){
     St[0] = Uprev[0].H() * ham.children[0]->get_basis_transform();
+    ham.children[0]->set_time_overlap_adi_by_val(St[0]);
   }
   else{
   for(int traj=0; traj<ntraj; traj++){
     St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
+    ham.children[traj]->set_time_overlap_adi_by_val(St[0]);
   }
   }
   return St;
@@ -588,6 +650,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     }// do_phase_correction || state_tracking_algo > 0
   }// rep == 1
 
+  // In case, we select to compute scalar NACs from time-overlaps
+  update_nacs(prms, ham);
+
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
@@ -606,6 +671,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       }// traj
     }// idof 
   }
+
   p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -640,9 +706,11 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
+      /// Compute the time-overlap directly, using previous MO vectors
       if(prms.time_overlap_method==0){    
         St = compute_St(ham, Uprev, prms.isNBRA);
       }
+      /// Read the existing time-overlap
       else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);      }
       Eadi = get_Eadi(ham);           // these are raw properties
       update_projectors(prms, projectors, Eadi, St, rnd);

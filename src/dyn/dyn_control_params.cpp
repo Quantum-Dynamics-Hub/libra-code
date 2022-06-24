@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2020 Alexey V. Akimov
+* Copyright (C) 2019-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -45,6 +45,7 @@ dyn_control_params::dyn_control_params(){
   enforced_state_index = 0; 
   time_overlap_method = 0;
   nac_update_method = 1;
+  nac_algo = -1;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = 2;
@@ -179,6 +180,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="enforced_state_index") { enforced_state_index = bp::extract<int>(params.values()[i]);  }
     else if(key=="time_overlap_method"){ time_overlap_method = bp::extract<double>(params.values()[i]); }
     else if(key=="nac_update_method") { nac_update_method = bp::extract<int>(params.values()[i]);  }
+    else if(key=="nac_algo") { nac_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }

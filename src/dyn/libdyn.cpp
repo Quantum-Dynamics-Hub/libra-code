@@ -64,6 +64,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("force_method", &dyn_control_params::force_method)
       .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
       .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
+      .def_readwrite("nac_algo", &dyn_control_params::nac_algo)
       .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
       .def_readwrite("phase_correction_tol", &dyn_control_params::phase_correction_tol)
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
@@ -670,6 +671,10 @@ void export_Dyn_objects(){
 
   def("update_Hamiltonian_p", expt_update_Hamiltonian_p_v1);
   def("update_Hamiltonian_p", expt_update_Hamiltonian_p_v2);
+
+
+  void (*expt_update_nacs_v1)(dyn_control_params& prms, nHamiltonian& ham) = &update_nacs;
+  def("update_nacs", expt_update_nacs_v1);
 
 
   CMATRIX (*expt_transform_amplitudes_v1)
