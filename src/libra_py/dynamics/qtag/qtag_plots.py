@@ -13,7 +13,7 @@ from matplotlib import cm
 
 from libra_py import data_read
 
-def _plot_wf_1D(plt_params, data, *ref_data):
+def plot_wf_1D(plt_params, data, *ref_data):
 
     fig = plt.figure(figsize=plt_params['size'])
     nsnaps = len(data)
@@ -47,7 +47,7 @@ def _plot_wf_1D(plt_params, data, *ref_data):
 
 #    plt.subplots()
 
-def _plot_wf_2D(plt_params, data, *ref_data):
+def plot_wf_2D(plt_params, data, *ref_data):
 
     fig = plt.figure(figsize=plt_params['size'])
     nsnaps = len(data)
@@ -121,9 +121,9 @@ def wf_plot(dyn_params, plt_params):
 
     print("Number of files = " + str(len(filenames)))
     if ndof == 1:
-        _plot_wf_1D(plt_params, data)
+        plot_wf_1D(plt_params, data)
     elif ndof == 2:
-        _plot_wf_2D(plt_params, data)
+        plot_wf_2D(plt_params, data)
     else:
         print("Plotting for ndof > 2 not yet supported!")
 
