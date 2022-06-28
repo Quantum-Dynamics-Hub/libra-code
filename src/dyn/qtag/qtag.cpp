@@ -645,7 +645,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   //int ntraj = active_states.size();
   int i, j, itraj, n1, n2, indx;
 
-  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
+//  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
 
   vector<int> dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
