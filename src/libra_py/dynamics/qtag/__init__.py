@@ -7,10 +7,13 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["qtag_calc",
-           "qtag_init",
+__all__ = ["compute",
+           "initialize",
+           "plot",
+           "qtag_calc",
            "qtag_mom",
            "qtag_prop",
-           "save"
+           "save",
+           
           ]
 

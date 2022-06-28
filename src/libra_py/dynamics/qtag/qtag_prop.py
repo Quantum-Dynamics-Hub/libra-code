@@ -26,7 +26,29 @@ from . import qtag_mom
 
 import util.libutil as comn
 
-def propagate(dyn_params, qpas, coeff, surf_pops):
+
+def time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate):
+    """
+    Computes the time-overlap <G_new|G_old>
+
+    n - new 
+    o - old
+    """
+
+    ndof = nQ.num_of_rows
+    ntraj = nQ.num_of_cols
+    nstates = len(set(nstate))
+
+    nA_half = 0.5*nA
+    oA_half = 0.5*oA    
+
+    St = gwp_overlap_matrix(nQ, nP, nS, nA_half, Py2Cpp_int(nstate), oQ, oP, oS, oA_half, Py2Cpp_int(ostate))
+
+
+    return St
+
+
+def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
     """Makes the trajectories on surfaces with low populations (where quantum momentum
        is ill-defined) move as the trajectories on the surface with the highest population
 
@@ -73,11 +95,11 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
     s_sync_method = params["s_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
 
     # The original set
-    q_old = MATRIX(qpas[0])
-    p_old = MATRIX(qpas[1])
-    a_old = MATRIX(qpas[2])
-    s_old = MATRIX(qpas[3])    
-    surf_ids = qpas[4]
+    q_old = MATRIX(_q)
+    p_old = MATRIX(_p)
+    a_old = MATRIX(_alp)
+    s_old = MATRIX(_s)    
+    surf_ids = _states
 
     ndof = q_old.num_of_rows
     ntraj = q_old.num_of_cols
@@ -212,12 +234,24 @@ def propagate(dyn_params, qpas, coeff, surf_pops):
                 push_submatrix(s_new, s_new_on_surf_ref, x_dofs, traj_on_surf)
 
 
-    qpas_new = [q_new, p_new, a_new, s_new, surf_ids]
+    #========= Re-expansion of coeffients =====================
+    a_new_half = 0.5* a_new    
+    GG = gwp_overlap_matrix(q_new, p_new, s_new, a_new_half, Py2Cpp_int(surf_ids), 
+                            q_new, p_new, s_new, a_new_half, Py2Cpp_int(surf_ids))
 
-#    ov_no = qtag_calc.new_old_overlap(ndof, ntraj, states, qpas, qpas_new)
-    st = qtag_calc.time_overlap(ndof, ntraj, states, qpas_new, qpas)
-    btot = st*coeff
+    tmp = FullPivLU_rank_invertible(GG)
+    if tmp[1]==0:
+        print("GBF overlap matrix is not invertible.\n Exiting...\n")
+        sys.exit(0)
 
-    return qpas_new, btot
+    invGG = CMATRIX(ntraj, ntraj)
+    FullPivLU_inverse(GG, invGG)
+
+
+    st = time_overlap(q_new, p_new, a_new, s_new, surf_ids, q_old, p_old, a_old, s_old, surf_ids )
+    coeff = st * coeff
+    coeff = invGG * coeff
+
+    return q_new, p_new, a_new, s_new, surf_ids , coeff
 
 

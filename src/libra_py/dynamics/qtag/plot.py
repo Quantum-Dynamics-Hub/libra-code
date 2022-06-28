@@ -45,6 +45,8 @@ def plot_wf_1D(plt_params, data, *ref_data):
 #                ax1.plot(ref_data[0], ref_data[1+j], 'o', color=colors[j],markersize=2)
 #            ax1.plot(data[0], data[1+j],label=F"{labels[j]}")
 
+    plt.tight_layout()
+
 #    plt.subplots()
 
 def plot_wf_2D(plt_params, data, *ref_data):
@@ -201,6 +203,10 @@ def energy_and_pops(dyn_params, plt_params):
 
     ax1.legend(loc = plt_params['legend_loc'], prop={'size' : plt_params['legend_size']})
 
+    plt.tight_layout()
+
+
+
 def trajectories(dyn_params, plt_params):
 
     prefix = plt_params['prefix']
@@ -268,3 +274,5 @@ def trajectories(dyn_params, plt_params):
         ax.axes.set_xlim(xlimits[0],xlimits[1])
         ax.axes.set_ylim(ylimits[0],ylimits[1])
         ax.text(6,6.5,labels[state],fontsize=12)
+
+    plt.tight_layout()
