@@ -112,7 +112,7 @@ def time_overlap(ndof,ntraj,states,qpasn,qpaso):
 
     for i in range(ntraj):
         for j in range(ntraj):
-            new_old_ov.set(i,j,complex(0.0,0.0))
+            St.set(i,j,complex(0.0,0.0))
 
     #Extract the components of the qpas object into their constituent parts: q, p, a, s, surface IDs.
     qvals_old = MATRIX(qpaso[0]); qvals_new = MATRIX(qpasn[0])
@@ -170,7 +170,7 @@ def time_overlap(ndof,ntraj,states,qpasn,qpaso):
 
         for i in range(ii):
             for j in range(jj):
-                new_old_ov.set(i+itot,j+jtot,n12_mat.get(i,j))
+                St.set(i+itot,j+jtot,n12_mat.get(i,j))
 
         itot += ii
         jtot += jj
@@ -203,7 +203,7 @@ def basis_diag(m, dt, H, S, b):
 
     evals = CMATRIX(m,m)
     evecs = CMATRIX(m,m)
-    solve_eigen(H,ov,evals,evecs,0)
+    solve_eigen(H,S,evals,evecs,0)
     ct = evecs.H()
     c_new = evecs*(exp_(evals,-dt*1.0j))*ct*b
 
