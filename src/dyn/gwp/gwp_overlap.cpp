@@ -147,6 +147,58 @@ CMATRIX gwp_overlap_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
 
 }
 
+
+CMATRIX gwp_overlap_matrix(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1, vector<int>& state1,
+                           MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2, vector<int>& state2){
+/**
+  Returns the Gaussian overlaps across GWPs belonging to different sets
+
+  Args:
+  \param[in] q1, q2  ndof x ntraj1 and ndof x ntraj2 Coordinates of the Gaussians in a given dimension
+  \param[in] p1, p2  ndof x ntraj1 and ndof x ntraj2 Momenta of the Gaussians in a given dimension
+  \param[in] gamma1, gamma2 ndof x ntraj1 and ndof x ntraj2 The phase factors of the overall Gaussians
+  \param[in] alp1, alp2 ndof x ntraj1 and ndof x ntraj2 The Gaussian width factors for given dimension. 
+  \param[in] state1, state2 electronic state ket of the corresponding GWP. The electronic basis is assumed to be orthonormal
+
+  Returns:
+  CMATRIX(ntraj1, ntraj2) - the overlap matrix of basis functions defined by two sets 
+
+*/
+  int i,j;
+  int ndof = q1.n_rows;
+  int ntraj1 = q1.n_cols;
+  int ntraj2 = q2.n_cols;
+  CMATRIX ovlp(ntraj1, ntraj2);
+
+  MATRIX q1_i(ndof, ntraj1);
+  MATRIX p1_i(ndof, ntraj1);
+  MATRIX g1_i(ndof, ntraj1);
+  MATRIX a1_i(ndof, ntraj1);
+
+  MATRIX q2_j(ndof, ntraj1);
+  MATRIX p2_j(ndof, ntraj1);
+  MATRIX g2_j(ndof, ntraj1);
+  MATRIX a2_j(ndof, ntraj1);
+
+
+  for(i=0; i<ntraj1; i++){
+    q1_i = q1.col(i); p1_i = p1.col(i); g1_i = gamma1.col(i); a1_i = alp1.col(i);
+
+    for(j=0; j<ntraj2; j++){
+      q2_j = q2.col(j); p2_j = p2.col(j); g2_j = gamma2.col(j); a2_j = alp2.col(j);
+
+      
+      complex<double> sij(0.0, 0.0);
+      if(state1[i]==state2[j]){ sij  = gwp_overlap(q1_i, p1_i, g1_i, a1_i,  q2_j, p2_j, g2_j, a2_j); }
+
+      ovlp.set(i, j,  sij);
+    }
+  }
+  return ovlp;
+
+}
+
+
 complex<double> gwp_overlap(MATRIX& R1, MATRIX& P1, double gamma1, 
                             MATRIX& R2, MATRIX& P2, double gamma2, 
                             double alp, double hbar){
