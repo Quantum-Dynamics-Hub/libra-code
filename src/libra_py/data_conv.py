@@ -418,7 +418,7 @@ def MATRIX2scipynpz(data):
     return res
 
 
-def MATRIX2nparray( data ):
+def MATRIX2nparray( data, _dtype=np.complex128 ):
     """
     Converts both Libra MATRIX ( N, M ) object and CMATRIX ( N, M ) object 
     into a 2D np.array of shape( N, M )
@@ -433,7 +433,7 @@ def MATRIX2nparray( data ):
     N = data.num_of_rows
     M = data.num_of_cols
 
-    res = np.zeros( (N, M), dtype=np.complex128 )
+    res = np.zeros( (N, M), dtype=_dtype )
 
     for n in range(0,N):
         for m in range(0,M):
