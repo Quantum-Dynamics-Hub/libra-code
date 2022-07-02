@@ -520,12 +520,20 @@ def run_cp2k_libint_step2(params):
                 eigenvectors_1.append(eigenvector_1)
             eigenvectors_1 = np.array(eigenvectors_1)
             if isUKS:
+                ## Alpha spin channel
+                #alpha_eigenvectors_1 = eigenvectors_1[0::2]
+                #alpha_energies_1 = energies_1[0::2]
+                ## Beta spin channel
+                #beta_eigenvectors_1 = eigenvectors_1[1::2]
+                #beta_energies_1 = energies_1[1::2]
+                eig_vec_shape = int(eigenvectors_1.shape[0]/2)
                 # Alpha spin channel
-                alpha_eigenvectors_1 = eigenvectors_1[0::2]
-                alpha_energies_1 = energies_1[0::2]
+                alpha_eigenvectors_1 = eigenvectors_1[0:eig_vec_shape]
+                alpha_energies_1 = energies_1[0:eig_vec_shape]
                 # Beta spin channel
-                beta_eigenvectors_1 = eigenvectors_1[1::2]
-                beta_energies_1 = energies_1[1::2]
+                beta_eigenvectors_1 = eigenvectors_1[eig_vec_shape:]
+                beta_energies_1 = energies_1[eig_vec_shape:]
+
 
             print('Done with resorting eigenvectors elements. Elapsed time:',time.time()-t1)
             ##
