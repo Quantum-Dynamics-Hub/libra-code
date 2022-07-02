@@ -249,14 +249,23 @@ def read_cp2k_tddfpt_log_file( params ):
                 r_tddfpt_line = i
 
     excitation_energies = []
+    # Old version
+    ## Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
+    ## This is because they contain the energies from that line.
+    ##for i in range( r_tddfpt_line+5, len( lines ) ):
+    ##    tmp_line = lines[i].split()
+    ##    if len( tmp_line ) == 0:
+    ##        break
+    ##    excitation_energies.append( float( tmp_line[2] ) )
 
-    # Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
-    # This is because they contain the energies from that line.
-    for i in range( r_tddfpt_line+5, len( lines ) ):
-        tmp_line = lines[i].split()
-        if len( tmp_line ) == 0:
-            break
-        excitation_energies.append( float( tmp_line[2] ) )
+    for i in range(len(lines)):
+        if 'TDDFPT|' in lines[i]:
+            try:
+                tmp = lines[i].split()
+                exc_ener = float(tmp[2])
+                excitation_energies.append(exc_ener)
+            except:
+                pass
 
     # Start from 5 lines after finding the line contaning 'Excitation analysis'
     # From that point we have the state numbers with their configurations.
