@@ -643,31 +643,30 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   int ntraj = q.n_cols;
   int nstates = Coeff.n_rows;
   //int ntraj = active_states.size();
-  int i, j, itraj, n1, n2;
+  int i, j, itraj, n1, n2, indx;
 
-  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
-
-
+//  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
 
   vector<int> dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
 
 
-
-
+  indx = 0;
+  n1 = active_states[0];
   for(itraj = 0; itraj<ntraj; itraj++){
-    traj_on_surf[ active_states[itraj] ].push_back(itraj);
-  }// for itraj
+    if(n1 != active_states[itraj]){
+      indx+=1;
+      }//if n1 != active_states[itraj]
 
+    traj_on_surf[indx].push_back(itraj);
+    n1 = active_states[itraj];
+  }// for itraj
 
 
   // Compute Hamiltonians for all the trajectories
   ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
 
-
 //  exit(0);
-
-
 
   // State blocks
   for(n1=0; n1<nstates; n1++){
@@ -744,7 +743,6 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
     }// if ntraj_on_surf_n1 > 0     
   }// for n1
-
 
 }
 

@@ -169,6 +169,28 @@ void nHamiltonian::compute_nac_dia(MATRIX& p, const MATRIX& invM, int lvl, int s
 
 
 
+void nHamiltonian::compute_nac_adi(double dt, int method){
+/***
+  One of the ways to update scalar NAC matrix, using the time-overlap info
+
+*/ 
+
+  if(time_overlap_adi_mem_status==0){ cout<<"Error in compute_nac_adi(): the memory is not allocated for \
+  time_overlap_adi but is needed for the calculations \n"; exit(0); }
+
+  if(nac_adi_mem_status==0){ cout<<"Error in compute_nac_adi(): the memory is not allocated for \
+  nac_adi but is needed for the calculations \n"; exit(0); }
+
+  nac_adi->set(-1, std::complex<double>(0.0, 0.0));
+
+
+  // HST formula
+  if(method==0){  
+
+ //   nac_adi->
+  }
+
+}
 
 
 void nHamiltonian::compute_nac_adi(MATRIX& p, const MATRIX& invM){

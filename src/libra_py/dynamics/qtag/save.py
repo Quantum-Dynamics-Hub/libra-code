@@ -1,3 +1,20 @@
+#*********************************************************************************
+#* Copyright (C) 2021-2022 Matthew Dutra, Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
+#***********************************************************************************
+"""
+..module:: save
+  :platform: Unix, Windows
+  :synopsis: This module contains functions for saving variables of QTAG workflow
+
+..moduleauthors :: Matthew Dutra, Alexey Akimov
+"""
+
 import os
 import sys
 import math
@@ -170,26 +187,24 @@ def save_qtag_data(_savers, params,
     txt2_output_level = params["txt2_output_level"]
 
     nsteps = params["nsteps"]
+    nstates = len(params["states"])
     print_freq = int(params["progress_frequency"]*nsteps)
 
-    if step%print_freq==0:
-        print(F" step= {step}")
-
-#======LEVEL 1======
+    #======LEVEL 1======
     if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
         save_qtag_hdf5_1D(_savers["hdf5_saver"], params['dt'], step, Etot, dEtot)
 
     if txt2_output_level>=1 and _savers["txt2_saver"]!=None:
         save_qtag_hdf5_1D(_savers["txt2_saver"], params['dt'], step, Etot, dEtot, 1)
 
-#======LEVEL 2======
+    #======LEVEL 2======
     if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
-        save_qtag_hdf5_2D(_savers["hdf5_saver"], params["nstates"], step, pops, coeffs)
+        save_qtag_hdf5_2D(_savers["hdf5_saver"], nstates, step, pops, coeffs)
 
     if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
-        save_qtag_hdf5_2D(_savers["txt2_saver"], params["nstates"], step, pops, coeffs, 1)
+        save_qtag_hdf5_2D(_savers["txt2_saver"], nstates, step, pops, coeffs, 1)
 
-#======LEVEL 3======
+    #======LEVEL 3======
     if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None:
         save_qtag_hdf5_3D(_savers["hdf5_saver"], step, qvals, pvals, avals, svals)
 

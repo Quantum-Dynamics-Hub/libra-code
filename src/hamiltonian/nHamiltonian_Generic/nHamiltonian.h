@@ -483,6 +483,7 @@ public:
   void compute_nac_dia(MATRIX& p, const MATRIX& invM);
   void compute_nac_dia(MATRIX& p, const MATRIX& invM, vector<int>& id_);
   void compute_nac_dia(MATRIX& p, const MATRIX& invM, int lvl, int split);
+  void compute_nac_adi(double dt, int method);
   void compute_nac_adi(MATRIX& p, const MATRIX& invM);
   void compute_nac_adi(MATRIX& p, const MATRIX& invM, vector<int>& id_);
   void compute_nac_adi(MATRIX& p, const MATRIX& invM, int lvl, int split);

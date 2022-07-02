@@ -150,8 +150,20 @@ class dyn_control_params{
     Options:
       - 0: don't update them (e.g. for simplest NAC)
       - 1: update according to changed momentum and existing derivative couplings [ default ]
+      - 2: update according to time-overlaps (only time-derivative NACs)
   */
   int nac_update_method;
+
+
+  /**
+    How to compute time-derivative NACs
+ 
+    Options:
+      - -1: don't, e.g. we use NACs from somewhere else [ default ]
+      -  0: use HST formula (if nac_update_method==2)
+      -  1: use NPI of Meek and Levine (if nac_update_method==2)
+  */
+  int nac_algo;
 
 
   /** 
@@ -467,10 +479,11 @@ class dyn_control_params{
 
     Options:
       - 0 : BAT [ default ]
-      - 1 : LHA 
+      - 1 : LHA
+      - 2 : LHAe
+      - 3 : BATe 
   */
   int qtag_pot_approx_method;
-
 
   ///===============================================================================
   ///================= Bath, Constraints, and Dynamical controls ===================

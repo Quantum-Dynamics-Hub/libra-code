@@ -87,6 +87,12 @@ void export_gwp_objects(){
   (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1,
    MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2) = &gwp_overlap_matrix;
 
+  CMATRIX (*expt_gwp_overlap_matrix_v2)
+  (MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX& alp1, vector<int>& state1,
+   MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2, vector<int>& state2) = &gwp_overlap_matrix;
+
+  def("gwp_overlap_matrix",  expt_gwp_overlap_matrix_v1);
+  def("gwp_overlap_matrix",  expt_gwp_overlap_matrix_v2);
 
 
   ///=============== Transition dipole moments ===================
