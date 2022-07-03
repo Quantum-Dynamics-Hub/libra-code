@@ -249,14 +249,23 @@ def read_cp2k_tddfpt_log_file( params ):
                 r_tddfpt_line = i
 
     excitation_energies = []
+    # Old version
+    ## Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
+    ## This is because they contain the energies from that line.
+    ##for i in range( r_tddfpt_line+5, len( lines ) ):
+    ##    tmp_line = lines[i].split()
+    ##    if len( tmp_line ) == 0:
+    ##        break
+    ##    excitation_energies.append( float( tmp_line[2] ) )
 
-    # Start from 5 lines after finding the line contaning 'R-TDDFPT states of multiplicity 1'
-    # This is because they contain the energies from that line.
-    for i in range( r_tddfpt_line+5, len( lines ) ):
-        tmp_line = lines[i].split()
-        if len( tmp_line ) == 0:
-            break
-        excitation_energies.append( float( tmp_line[2] ) )
+    for i in range(len(lines)):
+        if 'TDDFPT|' in lines[i]:
+            try:
+                tmp = lines[i].split()
+                exc_ener = float(tmp[2])
+                excitation_energies.append(exc_ener)
+            except:
+                pass
 
     # Start from 5 lines after finding the line contaning 'Excitation analysis'
     # From that point we have the state numbers with their configurations.
@@ -1522,7 +1531,7 @@ def run_cp2k_xtb(params):
     print('Done with diagonalization. Elapsed time:', time.time()-t1)
 
 
-def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool):
+def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, istep: int, fstep: int, njobs: int, run_slurm: bool, submission_exe='sbatch'):
     """
     This function distributes the jobs to perform CP2K calculations and computing and saving the MO overlaps.
 
@@ -1540,6 +1549,8 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
         njobs (integer): The number of jobs.
 
         run_slurm (bool): The flag for running the computations either as bash or submitting through sbatch.
+
+        submission_exe (string): The submission executable. For slurm envs, it is 'sbatch' and for pbs envs, it is 'qsub'.
     """
     file = open(run_python_file,'r')
     lines = file.readlines()
@@ -1567,7 +1578,7 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
                 file.write(lines[i])
         file.close()
         if run_slurm:
-            os.system('sbatch %s'%submit_template)
+            os.system('%s %s'%(submission_exe,submit_template))
         else:
             # Just in case you want to use a bash file and not submitting
             os.system('sh %s'%submit_template)

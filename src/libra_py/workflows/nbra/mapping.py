@@ -320,7 +320,7 @@ def ovlp_arb_mo(SD1, SD2, S):
         s = S.get( res[1], res[2])  
     # For similar SDs
     if sd1==sd2:
-        """         TEST on June 16, 2022 - AVA
+        #         TEST on June 16, 2022 - AVA
         # Forming the overlap of the SDs
         x = CMATRIX(len(sd1),len(sd2))
         for i in range(0,len(sd1)):
@@ -329,8 +329,8 @@ def ovlp_arb_mo(SD1, SD2, S):
                     x.set(i,j,S.get(sd1[i],sd2[j]))
         
         s = det(x)
-        """
-        s = 1.0+0.0j 
+        
+        #s = 1.0+0.0j 
     return s
 
 
