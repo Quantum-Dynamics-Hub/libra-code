@@ -924,7 +924,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     time_overlap_method = dyn_params["time_overlap_method"]
     decoherence_algo = dyn_params["decoherence_algo"]
     is_nbra = dyn_params["is_nbra"]
-    
 
     q = MATRIX(_q)
     p = MATRIX(_p)
@@ -1117,7 +1116,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "a", 0)
 
 
-
     if _savers["mem_saver"]!=None:
         _savers["mem_saver"].save_data( F"{prefix}/mem_data.hdf", properties_to_save, "w")
         return _savers["mem_saver"]
@@ -1208,6 +1206,7 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
             update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
 
             Cdia = transform_amplitudes(1, 0, Cdia, ham) 
+
 
     #if _dyn_params["isNBRA"]==1:
     #    res = run_dynamics_nbra(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)

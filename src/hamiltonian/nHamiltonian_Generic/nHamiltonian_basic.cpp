@@ -123,8 +123,9 @@ nHamiltonian::~nHamiltonian(){
 /**
   Deallocate memory only if it was allocated internally
 */
-
-  cout<<"nHamiltonian destructor"<<this<<endl;
+  if(this!=NULL){
+  
+  cout<<"nHamiltonian destructor at level "<<level<<" address "<<this<<endl;
   
 //  id = 0;
 //  level = 0;
@@ -189,10 +190,16 @@ nHamiltonian::~nHamiltonian(){
 
   if(cum_phase_corr_mem_status == 1){ delete cum_phase_corr; cum_phase_corr = NULL; cum_phase_corr_mem_status = 0;}
 
-//  if(next!=NULL){
-//    for(n=0;n<next.size();n++){  next[n]->~nHamiltonian(); }
-//  }
-//  next = NULL;
+
+  /// Deallocate children if they aren't deallocated yet
+  for(n=0; n<children.size(); n++){  
+    if(children[n]!=NULL){  children[n]->~nHamiltonian(); }    
+  }// for n 
+  children.clear();
+
+  }// if this!=NULL
+
+//  this = NULL;
 
 }
 
@@ -203,60 +210,68 @@ void nHamiltonian::init_all(int der_lvl){
 
 }
 
-void nHamiltonian::init_all(int der_lvl, int lvl){ 
+void nHamiltonian::init_all(int der_lvl, int target_lvl){ 
 /**
   This function will allocate memory for all the variables - in case, we don't need to 
   set them up in Python. This may lead to a simpler and cleaner Python code and may
   also be a bit more efficient in terms of performance
 */
 
-  if(level==lvl){
+  if(level <= target_lvl){
 
-  if(der_lvl>=0){
-    init_ovlp_dia();
-    init_ham_dia();
-    init_nac_dia();
-    init_hvib_dia();
+    /**
+    In all cases, we allocate memory for all level lower than the target level
+    */
 
-    init_ham_adi();
-    init_nac_adi();
-    init_hvib_adi();
+    if(der_lvl>=0){
+      init_ovlp_dia();
+      init_ham_dia();
+      init_nac_dia();
+      init_hvib_dia();
 
-    init_basis_transform();
-    init_time_overlap_adi();
-    init_time_overlap_dia();
-    init_cum_phase_corr();
-  }
+      init_ham_adi();
+      init_nac_adi();
+      init_hvib_adi();
 
-  if(der_lvl>=1){
-    init_dc1_dia();
-    init_d1ham_dia();
+      init_basis_transform();
+      init_time_overlap_adi();
+      init_time_overlap_dia();
+      init_cum_phase_corr();
+    }
 
-    init_dc1_adi();
-    init_d1ham_adi();
-  }
+    if(der_lvl>=1){
+      init_dc1_dia();
+      init_d1ham_dia();
 
-  if(der_lvl>=2){
-    init_d2ham_dia();
-    init_d2ham_adi();
-  }
+      init_dc1_adi();
+      init_d1ham_adi();
+    }
 
+    if(der_lvl>=2){
+      init_d2ham_dia();
+      init_d2ham_adi();
+    }
 
   }// level == lvl
 
-  else if(lvl>level){
+  if(level < target_lvl){
+
+    /**
+    If we haven't reached the target level yet, we need to propagate the initialization 
+    to the children nodes
+    */
   
     for(int i=0;i<children.size();i++){
-      children[i]->init_all(der_lvl, lvl);
+      children[i]->init_all(der_lvl, target_lvl);
     }
 
-  }// lvl >level
+  }// level < target_lvl
 
-  else{
-    cout<<"WARNING in nHamiltonian::init_all\n"; 
-    cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
-     child node\n";    
-  }
+  //else{
+  //  cout<<"WARNING in nHamiltonian::init_all\n"; 
+  //  cout<<"Can not run evaluation of function in the parent Hamiltonian from the\
+  //   child node\n";    
+  //}
 
 
 }

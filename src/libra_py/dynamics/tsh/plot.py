@@ -141,8 +141,8 @@ def common_defaults(plot_params_):
                                         "sh_pop", "se_pop_adi", "se_pop_dia",
                                         "sh_pop_raw", "se_pop_adi_raw", "se_pop_dia_raw",
                                         "time_overlaps", "projectors", "basis_transform"
-                                       ]
-                      
+                                       ],
+                        "no_label":0                      
                      }
     comn.check_input(plot_params, default_params, critical_params)
 
@@ -180,6 +180,7 @@ def add_energies(plt, hdf_file, plot_params_, property_type):
     colors = plot_params["colors"]
     clrs_index = plot_params["clrs_index"]   
     which_energies = plot_params["which_energies"]
+
             
     if xlim!=None:
         plt.xlim( xlim[0], xlim[1])
@@ -227,8 +228,8 @@ def add_energies(plt, hdf_file, plot_params_, property_type):
         #             label="Extended energy", linewidth=Lw, color = colors[ clrs_index[3] ])                    
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
-        
-        
+
+                
 
 def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_property_type):
     """
@@ -263,10 +264,12 @@ def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_proper
     Lw = plot_params["linewidth"]
     colors = plot_params["colors"]
     clrs_index = plot_params["clrs_index"]   
-    
-        
+            
     which_trajectories = plot_params["which_trajectories"]
     which_states, nstates, ntraj = [], 0, 0
+    no_label = plot_params["no_label"]
+
+
     if ham_property_type == "hvib_adi":
         which_states = plot_params["which_adi_states"]
         ntraj = hdf_file["hvib_adi/data"].shape[1] 
@@ -298,11 +301,18 @@ def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_proper
         if istate in which_states:
             indx = indx + 1
             for tr in range(ntraj):
-                if tr in which_trajectories:
-                    plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                             hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
-                             label=F"traj={tr}, state={istate}",
-                             linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+                if tr in which_trajectories:                    
+                    if no_label:
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                 label="",
+                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+
+                    else:
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                 label=F"traj={tr}, state={istate}",
+                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
     
@@ -329,7 +339,10 @@ def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
     
     which_trajectories = plot_params["which_trajectories"]
     which_dofs   = plot_params["which_dofs"]
-            
+
+    no_label = plot_params["no_label"]
+    
+        
     if xlim!=None:
         plt.xlim( xlim[0], xlim[1])
     if ylim!=None:
@@ -349,9 +362,14 @@ def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
         if tr in which_trajectories:
             for dof in range(ndofs):
                 if dof in which_dofs:
-                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
-                             label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[dof] ]) 
+                    if no_label:
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                 label="", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
+                    else: 
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
         
@@ -378,6 +396,9 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
     
     which_trajectories = plot_params["which_trajectories"]
     which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+
             
     if xlim!=None:
         plt.xlim( xlim[0], xlim[1])
@@ -398,9 +419,14 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
         if tr in which_trajectories:
             for dof in range(ndofs):
                 if dof in which_dofs:
-                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
-                             label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[dof] ]) 
+                    if no_label:
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                 label="", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
+                    else:
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
         
@@ -427,6 +453,9 @@ def add_phase_space(plt, hdf_file, plot_params_):
     
     which_trajectories = plot_params["which_trajectories"]
     which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+
             
     if xlim!=None:
         plt.xlim( xlim[0], xlim[1])
@@ -447,9 +476,14 @@ def add_phase_space(plt, hdf_file, plot_params_):
         if tr in which_trajectories:
             for dof in range(ndofs):
                 if dof in which_dofs:
-                    plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
-                             label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                             color = colors[ clrs_index[dof] ]) 
+                    if no_label:
+                        plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                 label="", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
+                    else:
+                        plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                 color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
                 

@@ -229,7 +229,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     }
 
     ///================= Entanglement of trajectories ================================
-    else if(key=="entangelment_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
+    else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
     else if(key=="ETHD3_alpha") { ETHD3_alpha = bp::extract<double>(params.values()[i]);   }
     else if(key=="ETHD3_beta") { ETHD3_beta = bp::extract<double>(params.values()[i]);   }
 

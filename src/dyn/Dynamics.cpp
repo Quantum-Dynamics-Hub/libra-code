@@ -105,6 +105,8 @@ void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, v
                           nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params, MATRIX& invM){
 
+//  cout<<"updating_Hamiltonian_q_ethd\n Option = "<<prms.entanglement_opt<<endl;
+
   if(prms.entanglement_opt==0){    /* Nothing to do */   }
   else if(prms.entanglement_opt==1){   ham.add_ethd_adi(q, invM, 1);  }
   else if(prms.entanglement_opt==2){   ham.add_ethd3_adi(q, invM, prms.ETHD3_alpha, 1);  }
@@ -113,7 +115,7 @@ void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, v
     cout<<"ERROR in update_Hamiltonian_q_ethd: The entanglement option = "<<prms.entanglement_opt<<" is not avaialable\n";
     exit(0);
   }
-
+  //cout<<"Stop here: \n"; exit(0);
 }
 
 void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
@@ -698,8 +700,10 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   update_Hamiltonian_q(prms, q, projectors, ham, py_funct, params);
-  update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
 
+  //cout<<"Adding ETHD\n";
+  update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
+  //exit(0);
 
   // Apply phase correction and state reordering as needed
   if(prms.rep_tdse==1){

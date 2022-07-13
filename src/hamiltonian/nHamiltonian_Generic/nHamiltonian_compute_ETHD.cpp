@@ -82,7 +82,7 @@ double ETHD_energy(const MATRIX& q, const MATRIX& invM){
 
   } 
 
-//  cout<<"ETHD energy = "<<en<<endl;
+  //cout<<"ETHD energy = "<<en<<endl;
   
   return en;
 
@@ -203,17 +203,27 @@ void nHamiltonian::add_ethd_adi(const MATRIX& q, const MATRIX& invM, int der_lvl
   complex<double> minus_one(-1.0, 0.0);
 
   if(der_lvl>=0){
+
+//    cout<<"In add_ethd_adi\n";
+//    cout<<"nadi = "<<nadi<<endl;
     CMATRIX ethd_en(nadi, nadi);
     ethd_en.identity();
     ethd_en *= ETHD_energy(q, invM);
 
     *ham_adi = ethd_en; 
 
+//    cout<<"ham_adi = "<<ham_adi<<endl;
+//    cout<<"Added ETHD energy = \n";
+//    exit(0);
+
+//    ethd_en.show_matrix();
 
     if(der_lvl>=1){
       MATRIX ethd_frcs(q.n_rows, q.n_cols);
       ethd_frcs = ETHD_forces(q, invM);
 
+//      cout<<"ethd forces = \n"; ethd_frcs.show_matrix();
+//      exit(0);
       for(int traj=0; traj<children.size(); traj++){
 
         for(int dof=0; dof<nnucl; dof++){
