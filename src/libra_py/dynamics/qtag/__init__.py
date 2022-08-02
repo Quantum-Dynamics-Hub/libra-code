@@ -10,10 +10,6 @@
 __all__ = ["compute",
            "initialize",
            "plot",
-           "qtag_calc",
-           "qtag_mom",
-           "qtag_prop",
-           "save",
-           
+           "save",           
           ]
 

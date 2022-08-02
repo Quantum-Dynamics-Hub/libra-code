@@ -107,6 +107,11 @@ void Wfcgrid2::allocate(){
   PSI_adi = vector<CMATRIX>(Npts, CMATRIX(nstates, 1));          ///< wavefunction  Npts x nstates x 1
   reciPSI_adi = vector<CMATRIX>(Npts, CMATRIX(nstates,1));      ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin
 
+  nabla_PSI_dia = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_dia/dR_dof ( r[ipt]) - nstates x 1 matrix
+  nabla_PSI_adi = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_adi/dR_dof ( r[ipt]) - nstates x 1 matrix
+  nabla_reciPSI_dia = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_dia/dR_dof ( r[ipt]) - nstates x 1 matrix in k-space
+  nabla_reciPSI_adi = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_adi/dR_dof ( r[ipt]) - nstates x 1 matrix in k-space
+
   Hdia = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  diabatic Hamiltoninans for all the Npts points
   Hadi = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  adiabatic Hamiltoninans for all the Npts points
   U = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));      ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
