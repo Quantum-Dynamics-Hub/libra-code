@@ -235,7 +235,6 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     critical_params = []
     comn.check_input(dyn_params, default_params, critical_params)
 
-
     ndof = Q.num_of_rows
     ntraj = Q.num_of_cols  # total number of trajectories 
     nstates = len( set(_states) )
