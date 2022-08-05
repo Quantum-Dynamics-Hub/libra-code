@@ -258,6 +258,118 @@ void Wfcgrid2::normalize(int rep){
 }
 
 
+void Wfcgrid2::reshape_wfc_1D(int _rep, int _r_or_k, int _dir, vector<CMATRIX>& _tmp){
+// reshape wfc into/from the nstates x CMATRIX(Nx, 1) format
+
+  for(int istate=0;istate<nstates;istate++){
+    for(int ipt=0; ipt<npts[0]; ipt++){
+
+
+      if(_dir==1){ // from internal to external      
+        if(_r_or_k==0){ // r-case      
+          if(_rep == 0){ // diabatic      
+            _tmp[istate].set(ipt, 0, PSI_dia[ipt].get(istate,0) ); 
+          }
+          else if(_rep==1){ // adiabatic
+            _tmp[istate].set(ipt, 0, PSI_adi[ipt].get(istate,0) ); 
+          }
+        }// r-case
+        else if(_r_or_k==1){ // k-case
+          if(_rep == 0){ // diabatic      
+            _tmp[istate].set(ipt, 0, reciPSI_dia[ipt].get(istate,0) ); 
+          }
+          else if(_rep==1){ // adiabatic
+            _tmp[istate].set(ipt, 0, reciPSI_adi[ipt].get(istate,0) ); 
+          }      
+        }// k-case
+      
+      }// internal -> external
+
+      else if(_dir==-1){  // from external to internal
+        if(_r_or_k==0){ // r-case      
+          if(_rep == 0){ // diabatic      
+            PSI_dia[ipt].set(istate, 0, _tmp[istate].get(ipt,0) );
+          }
+          else if(_rep==1){ // adiabatic
+            PSI_adi[ipt].set(istate, 0, _tmp[istate].get(ipt,0) );
+          }
+        }// r-case
+        else if(_r_or_k==1){ // k-case
+          if(_rep == 0){ // diabatic      
+            reciPSI_dia[ipt].set(istate, 0, _tmp[istate].get(ipt,0) );
+          }
+          else if(_rep==1){ // adiabatic
+            reciPSI_adi[ipt].set(istate, 0, _tmp[istate].get(ipt,0) );
+          }      
+        }// k-case
+      
+      }// external -> internal
+
+    }// for ipt - points
+  }// for i - states
+
+}
+
+void Wfcgrid2::reshape_wfc_2D(int _rep, int _r_or_k, int _dir, vector<CMATRIX>& _tmp){
+// reshape wfc into/from the nstates x CMATRIX(Nx, Ny) format
+
+  for(int istate=0;istate<nstates;istate++){
+    for(int ipt1=0; ipt1<npts[0]; ipt1++){
+      for(int ipt2=0; ipt2<npts[1]; ipt2++){
+
+        int ipt = ipt1 * npts[1] + ipt2;
+  
+        if(_dir==1){ // from internal to external      
+
+            
+          if(_r_or_k==0){ // r-case      
+            if(_rep == 0){ // diabatic      
+              _tmp[istate].set(ipt1, ipt2, PSI_dia[ipt].get(istate,0) ); 
+            }
+            else if(_rep==1){ // adiabatic
+              _tmp[istate].set(ipt1, ipt2, PSI_adi[ipt].get(istate,0) ); 
+            }
+          }// r-case
+          else if(_r_or_k==1){ // k-case
+            if(_rep == 0){ // diabatic      
+              _tmp[istate].set(ipt1, ipt2, reciPSI_dia[ipt].get(istate,0) ); 
+            }
+            else if(_rep==1){ // adiabatic
+              _tmp[istate].set(ipt1, ipt2, reciPSI_adi[ipt].get(istate,0) ); 
+            }      
+          }// k-case
+        
+        }// internal -> external
+  
+        else if(_dir==-1){  // from external to internal          
+
+          if(_r_or_k==0){ // r-case      
+            if(_rep == 0){ // diabatic      
+              PSI_dia[ipt].set(istate, 0, _tmp[istate].get(ipt1, ipt2) );
+            }
+            else if(_rep==1){ // adiabatic
+              PSI_adi[ipt].set(istate, 0, _tmp[istate].get(ipt1, ipt2) );
+            }
+          }// r-case
+          else if(_r_or_k==1){ // k-case
+            if(_rep == 0){ // diabatic      
+              reciPSI_dia[ipt].set(istate, 0, _tmp[istate].get(ipt1, ipt2) );
+            }
+            else if(_rep==1){ // adiabatic
+              reciPSI_adi[ipt].set(istate, 0, _tmp[istate].get(ipt1, ipt2) );
+            }      
+          }// k-case
+        
+        }// external -> internal
+  
+      }// for ipt2 - points
+    }// for ipt1 - points
+  }// for i - states
+
+
+}
+
+
 
 
 }// namespace libwfcgrid2

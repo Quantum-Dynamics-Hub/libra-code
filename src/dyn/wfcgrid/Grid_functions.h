@@ -41,8 +41,10 @@ namespace libwfcgrid{
 
 //--------------------- General ---------------------
 
-vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts);
 int compute_imapping(vector<int>& inp, vector<int>& npts);
+vector<int> compute_mapping(int indx, vector<int>& npts);
+vector<int> compute_hyperplane(vector<int>& npts, int idim_const, int ipt_const);
+vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts);
 int find_grid_size(double xmin,double xmax, double dx);
 CMATRIX init_grid(double xmin,double xmax, double dx);
 

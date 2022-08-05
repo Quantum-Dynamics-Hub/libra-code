@@ -409,7 +409,97 @@ MATRIX Wfcgrid2::get_pops(int rep, vector<double>& bmin, vector<double>& bmax){
 }
 
 
+void Wfcgrid2::compute_wfc_gradients(int rep, int idof, double mass){
+// Compute wfc derivatives: first compute them in the k-space, then 
+// FT to the real space
+// Form Kx * reciPSI and Ky * reciPSI, etc.
 
+  for(int ipt=0; ipt<Npts; ipt++){
+
+//    nabla_reciPSI_dia[idof][ipt]  =  reciPSI_dia[ipt];
+
+  }// for ipt
+
+/*
+  for(int nst=0;nst<nstates;nst++){
+    KxreciPSI[nst] = reciPSI[nst];
+
+    for(int kx=0;kx<Nx;kx++){  
+      KxreciPSI[nst].M[kx] *= Kx->M[kx];
+    }// kx
+  }// for nst
+
+  // Kxrec(k) -> DxPSI(r)
+  ft_1D(KxreciPSI,DxPSI,2,xmin,kxmin,dx);
+
+*/
+
+}
+
+
+
+//MATRIX void Wfcgrid2::flux(double xf, int fdim){
+/**
+  \brief Compute the population flux in 1D case
+  \param[in] xf The point at which flux is computed
+  \param[in] fdim index of the dimension for which the xf is set 
+  \param[out] res The collector of the fluxes (for each electronic state projection of the wfc)
+  \param[in] m0 The effective mass of the quantum particle (DOF)
+
+
+  MATRIX res(nstates, 1);
+  if(xf < rmin[fdim]) { 
+    cout<<"The flux point is outside the grid boundaries xf = "<<xf<<" rmin = "<<rmin[fdim]<<"  for fdim = "<< fdim <<endl; 
+    cout<<"Exiting\n";
+    exit(0);
+  }
+  if(xf > rmax[fdim]) { 
+    cout<<"The flux point is outside the grid boundaries xf = "<<xf<<" rmax = "<<rmax[fdim]<<"  for fdim = "<< fdim <<endl; 
+    cout<<"Exiting\n";
+    exit(0);
+  }
+
+
+  // index of the grid point at which the counting plane is installed  
+  int ipt_const = (xf - rmin[fdim])/dr[fdim];
+
+  vector<int> hplane;
+  hplane = libwfcgrid::compute_hyperplane(npts, int fdim,ipt_const);
+
+
+  // Compute wfc derivatives:
+  // Form Kx * reciPSI and Ky * reciPSI
+  for(int nst=0;nst<nstates;nst++){
+    KxreciPSI[nst] = reciPSI[nst];
+
+    for(int kx=0;kx<Nx;kx++){  
+      KxreciPSI[nst].M[kx] *= Kx->M[kx];
+    }// kx
+  }// for nst
+
+  // Kxrec(k) -> DxPSI(r)
+  ft_1D(KxreciPSI,DxPSI,2,xmin,kxmin,dx);
+
+
+  // Im(i*z) = Im(i(re+i*im)) = re = Re(z)
+  // z - z* = (re + i*im) - (re - i*im) = 2*i*im
+  // Im(z - z*) = 2 * im
+  for(int nst=0;nst<nstates;nst++){  
+
+    // Original expression
+//    res[nst] = 2.0*M_PI*(0.5*hbar/m0)*imag(std::conj(PSI[nst].M[i])*one*DxPSI[nst].M[i] - 
+//                                           std::conj(one*DxPSI[nst].M[i])*PSI[nst].M[i] );
+    // Simplified 1
+//    res[nst] = 4.0*M_PI*(0.5*hbar/m0)*imag(std::conj(PSI[nst].M[i])*one*DxPSI[nst].M[i] );
+
+    // Simplified 2
+    res[nst] = (2.0*M_PI/m0) * real(std::conj(PSI[nst].M[i])*DxPSI[nst].M[i] );
+
+  }
+
+}// flux_1D
+
+*/
 
 
 

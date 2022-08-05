@@ -200,30 +200,32 @@ void export_Wfcgrid2_objects(){
       .def("add_wfc_ARB", expt_add_wfc_ARB_v1)
 
       /**  Wfcgrid2_properties    */
-      .def("norm",              &Wfcgrid2::norm)
-      .def("e_kin",             &Wfcgrid2::e_kin)
-      .def("e_pot",             &Wfcgrid2::e_pot)
-      .def("e_tot",             &Wfcgrid2::e_tot)
-      .def("get_pow_q",         &Wfcgrid2::get_pow_q)
-      .def("get_pow_p",         &Wfcgrid2::get_pow_p)
-      .def("get_den_mat",       &Wfcgrid2::get_den_mat)
-      .def("get_pops",          expt_get_pops_v1)
-      .def("get_pops",          expt_get_pops_v2)
+      .def("norm", &Wfcgrid2::norm)
+      .def("e_kin", &Wfcgrid2::e_kin)
+      .def("e_pot", &Wfcgrid2::e_pot)
+      .def("e_tot", &Wfcgrid2::e_tot)
+      .def("get_pow_q", &Wfcgrid2::get_pow_q)
+      .def("get_pow_p", &Wfcgrid2::get_pow_p)
+      .def("get_den_mat", &Wfcgrid2::get_den_mat)
+      .def("get_pops", expt_get_pops_v1)
+      .def("get_pops", expt_get_pops_v2)
 
       /**  Wfcgrid2_SOFT    */
       .def("update_propagator_H", &Wfcgrid2::update_propagator_H)
       .def("update_propagator_K", &Wfcgrid2::update_propagator_K)
-      .def("SOFT_propagate",      &Wfcgrid2::SOFT_propagate)
+      .def("SOFT_propagate", &Wfcgrid2::SOFT_propagate)
 
       /**  Wfcgrid2_transforms    */
       .def("update_reciprocal", &Wfcgrid2::update_reciprocal)
-      .def("update_real",       &Wfcgrid2::update_real)
-      .def("normalize",         &Wfcgrid2::normalize)
+      .def("update_real", &Wfcgrid2::update_real)
+      .def("normalize", &Wfcgrid2::normalize)
+      .def("reshape_wfc_1D", &Wfcgrid2::reshape_wfc_1D)
+      .def("reshape_wfc_2D", &Wfcgrid2::reshape_wfc_2D)
 
       /**  Wfcgrid2_updates    */
       .def("update_Hamiltonian", &Wfcgrid2::update_Hamiltonian)
-      .def("update_adiabatic",  &Wfcgrid2::update_adiabatic)
-      .def("update_diabatic",   &Wfcgrid2::update_diabatic)
+      .def("update_adiabatic", &Wfcgrid2::update_adiabatic)
+      .def("update_diabatic", &Wfcgrid2::update_diabatic)
 
       /**  Wfcgrid2_io    */
       .def("print_wfc_1D", &Wfcgrid2::print_wfc_1D)

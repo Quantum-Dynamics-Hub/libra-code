@@ -121,14 +121,14 @@ public:
   vector<CMATRIX> PSI_adi;       ///< wavefunction:  list of Npts matrices  nstates x 1
   vector<CMATRIX> reciPSI_adi;   ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin 
 
-
+  /// Wavefunction spatial derivatives
+  vector< vector<CMATRIX> > nabla_PSI_dia;  /// d/dR PSI_dia in real space; nablaPSI_dia[dof][ipt].get(istate, 0)   dPSI_dia/dR_dof ( r[ipt]) - nstates x 1 matrix
+  vector< vector<CMATRIX> > nabla_PSI_adi;  /// d/dR PSI_adi in real space; nablaPSI_adi[dof][ipt].get(istate, 0)   dPSI_adi/dR_dof ( r[ipt]) - nstates x 1 matrix
+  vector< vector<CMATRIX> > nabla_reciPSI_dia; /// d/dR PSI_dia in k-space - same structure as nabla_PSI_dia;
+  vector< vector<CMATRIX> > nabla_reciPSI_adi; /// d/dR PSI_adi in k-space - same structure as nabla_PSI_adi;
 
 /*
   vector<CMATRIX> DtreciPSI; ///< d/dt * reciPSI - time derivative of PSI in reciprocal space 
-  vector<CMATRIX> DxPSI;     ///< d/dx * PSI in real space (up to a factor) - nstates x Nx x Ny
-  vector<CMATRIX> DyPSI;     ///< d/dx * PSI in real space (up to a factor)  - nstates x Nx x Ny
-  vector<CMATRIX> KxreciPSI; ///< Kx * reciPSI  -  d/dx * PSI in k space (up to a factor) - nstates x Nx x Ny
-  vector<CMATRIX> KyreciPSI; ///< Ky * reciPSI  -  d/dy * PSI in k space (up to a factor) - nstates x Nx x Ny
 */
 
   /// Hamiltonian and Propagator
@@ -204,6 +204,8 @@ public:
   MATRIX get_pops(int rep);
   MATRIX get_pops(int rep, vector<double>& bmin, vector<double>& bmax);
 
+  void compute_wfc_gradients(int rep, int idof, double mass);
+
 
   ///=============== In the Wfcgrid2_SOFT.cpp ====================  
   void update_propagator_H(double dt);
@@ -218,6 +220,11 @@ public:
 
   ///< Normalize the wfc
   void normalize(int rep);
+
+  ///< Reshape wfc from the internal format to something more suitable for the 1D or 2D FFTs
+  void reshape_wfc_1D(int _rep, int _r_or_k, int _dir, vector<CMATRIX>& _tmp); // reshape wfc into/from the nstates x CMATRIX(Nx, 1) format
+  void reshape_wfc_2D(int _rep, int _r_or_k, int _dir, vector<CMATRIX>& _tmp); // reshape wfc into/from the nstates x CMATRIX(Nx, Ny) format
+
 
 
   ///=============== In the Wfcgrid2_updates.cpp ====================  

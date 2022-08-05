@@ -228,9 +228,7 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
   vx2 = Ham2->get(n1, n2);
 
   v = 0.5 * (vx1 + vx2);
-
-  //cout<<"average pot = "<<v<<endl;
-
+  
   for(int dof=0; dof<ndof; dof++){
 
     dvx1 = dHam1[dof]->get(n1,n2);
@@ -251,9 +249,6 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
 
     complex<double> q1_rr1_q2(a2i*dq, dp); 
     complex<double> q1_rr2_q2(-a1i*dq, dp);
-
-    //cout<<"dof = "<<dof<<" a1= "<<a1i<<" a2= "<<a2i<<endl;
-    //cout<<"dof = "<<dof<<" denom = "<<denom<<" dvx1 = "<<dvx1<<" q1_rr1_q2 = "<<q1_rr1_q2<<" dvx2 = "<<dvx2<<" q1_rr2_q2= "<<q1_rr2_q2<<endl;
 
     v += 0.5 * (dvx1*q1_rr1_q2 + dvx2*q1_rr2_q2)/denom;
 
@@ -303,15 +298,10 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 
   v = 0.5 * (vx1 + vx2);
 
-
   for(int dof=0; dof<ndof; dof++){
 
     dvx1 = dHam1[dof]->get(n1,n2);
     dvx2 = dHam2[dof]->get(n1,n2);
-
-    d2vx1 = d2Ham1[dof]->get(n1,n2);
-    d2vx2 = d2Ham2[dof]->get(n1,n2);
-
 
     double q1i = q1.get(dof);
     double q2i = q2.get(dof);
@@ -326,6 +316,26 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
     double dp = p2i - p1i;
     double denom = a1i + a2i; 
 
+    complex<double> q1_rr1_q2(a2i*dq, dp); 
+    complex<double> q1_rr2_q2(-a1i*dq, dp);
+
+    v += 0.5 * (dvx1*q1_rr1_q2 + dvx2*q1_rr2_q2)/denom;   // BAT terms
+
+
+    // Now let's do the second-order terms
+    double X_ij = (a1i * q1i + a2i * q2i)/denom;
+    double P_ij = dp/denom;
+
+    complex<double> Q2_i( 1.0/denom + X_ij*X_ij - P_ij*P_ij - 2.0*X_ij*q1i + q1i*q1i, 2.0*P_ij*(X_ij - q1i) );
+    complex<double> Q2_j( 1.0/denom + X_ij*X_ij - P_ij*P_ij - 2.0*X_ij*q2i + q2i*q2i, 2.0*P_ij*(X_ij - q2i) );
+
+
+    d2vx1 = d2Ham1[dof]->get(n1,n2);
+    d2vx2 = d2Ham2[dof]->get(n1,n2);
+
+    v += 0.25 * (d2vx1 * Q2_i + d2vx2 * Q2_j);
+
+/*
     double aqp = a1i * q1i + a2i * q2i;
 
     complex<double> z(aqp, dp); z = z/denom;
@@ -342,6 +352,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
     v += 0.5 * (vv11 + vv12)*z;
 
     v += 0.25 * (d2vx1 + d2vx2) * (z*z + 1.0/denom);
+*/
 
   }// for  dof
 
@@ -428,11 +439,10 @@ complex<double> LHAe(int i, int j,
       double as = a1i + a2i;
       double aB = a1i + 2*BB + a2i;
       
-
-      double prefac1 = AA*sqrt(as)/sqrt(aB);
+      double prefac1 = AA*sqrt(as/aB);
       double prefac2 = -BB/(aB*as);
 
-      complex<double> expt(aCq1*aCq1+aCq2*aCq2-dp*dp+2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
+      complex<double> expt(aCq1*aCq1 + aCq2*aCq2 - dp*dp + 2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
       v += prefac1*exp(prefac2*expt);
     }// for  dof
   }//end if
@@ -524,8 +534,7 @@ complex<double> BATe(int i, int j,
       double as = a1i + a2i;
       double aB = a1i + 2*BB + a2i;
 
-
-      double prefac1 = AA*sqrt(as)/sqrt(aB);
+      double prefac1 = AA*sqrt(as/aB);
       double prefac2 = -BB/(aB*as);
 
       complex<double> expt(aCq1*aCq1+aCq2*aCq2-dp*dp+2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
@@ -737,6 +746,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           
           pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, AA, BB, CC);
           h12.dot_product(pot, s12);
+          
 
           if(n1==n2){ // kinetic energy for the diagonal terms
             CMATRIX kin(ntraj_on_surf_n1, ntraj_on_surf_n1);
@@ -813,8 +823,6 @@ CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coe
   return mom;
 
 }
-
-
 
 }// namespace libqtag
 }// namespace libdyn

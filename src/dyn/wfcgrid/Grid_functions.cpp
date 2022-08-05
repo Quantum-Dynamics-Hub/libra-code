@@ -65,6 +65,68 @@ int compute_imapping(vector<int>& inp, vector<int>& npts){
   return i;
 }
 
+
+
+vector<int> compute_mapping(int indx, vector<int>& npts){
+/** 
+  Maps an integer to a vector according to the grid dimensions   
+*/
+
+  int i;
+  int ndof = npts.size();
+  vector<int> sizes;
+
+  int sz = 1;
+  for(i=0; i<ndof; i++){
+    sizes.push_back(sz);
+    sz = sz * npts[ndof-1-i];
+  }
+
+  vector<int> res;
+  int _indx = indx;
+  for(i=0; i<ndof; i++){
+    int rem = _indx % sizes[ndof-1-i];
+    int ni = int((_indx - rem) / sizes[ndof-1-i]);
+    _indx = _indx - ni*sizes[ndof-1-i];
+
+    res.push_back(ni);
+  }
+ 
+  return res;
+
+}
+
+vector<int> compute_hyperplane(vector<int>& npts, int idim_const, int ipt_const){
+/**
+  This function computes the set of grid points (their indices) that
+  belong to a given hyperplan of a multi-dimensional grid.
+
+  npts - grid dimensions
+  idim_const - index of the constrainted dimension
+  ipt_const - index of the point on the constrained dimension
+*/
+
+  int i;
+  int ndof = npts.size();
+
+  // Compute the total number of point on the grid
+  int tot_npts = 1;
+  for(i=0; i<ndof; i++){
+    tot_npts = tot_npts * npts[i];
+  }
+
+  // Now compute the indices of the points belonging to the hyperplane
+  vector<int> res;
+  vector<int> vec;
+  for(i=0; i<tot_npts; i++){
+    vec = compute_mapping(i, npts);
+    if(vec[idim_const] == ipt_const){ res.push_back(i); }
+  }
+
+  return res;
+}
+
+
 vector<vector<int> > compute_mapping(vector<vector<int> >& inp, vector<int>& npts){
 /**
      The ordering is like this...

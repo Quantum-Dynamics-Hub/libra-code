@@ -1,5 +1,14 @@
+#*********************************************************************************                     
+#* Copyright (C) 2022 Matthew Dutra and Alexey V. Akimov                                                   
+#*                                                                                                     
+#* This file is distributed under the terms of the GNU General Public License                          
+#* as published by the Free Software Foundation, either version 3 of                                   
+#* the License, or (at your option) any later version.                                                 
+#* See the file LICENSE in the root directory of this distribution   
+#* or <http://www.gnu.org/licenses/>.          
+#***********************************************************************************
 """
-..module:: qtag_plots
+..module:: plot
   :platform: Unix, Windows
   :synopsis: This module contains functions for plotting various qtag outputs.
 

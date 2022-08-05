@@ -10,11 +10,16 @@
 """
 .. module:: compute
    :platform: Unix, Windows
-   :synopsis: This module implements a wrapper function for doing QTAG dynamics
+   :synopsis: This module implements functions for doing QTAG dynamics
        List of functions:  
-           * init_nuclear_dyn_var(Q, P, M, params, rnd)
-           * init_electronic_dyn_var(params, isNBRA, rnd)
-           * init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0)
+           * time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate)
+           * qtag_momentum(dyn_params,qpas,coeff_on_surf)
+           * propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops)
+           * qtag_pops(surf_ids, coeff, S, target_states)
+           * qtag_energy(coeff, H)
+           * psi(ndof, ntraj_on_surf, qpas, c, x0)
+           * wf_calc_nD(dyn_params, plt_params, prefix)
+           * run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model, _model_params)
 
 .. moduleauthor:: Matthew Dutra and Alexey V. Akimov
 
@@ -35,6 +40,8 @@ import sys
 import math
 import copy
 import time
+import numpy as np
+
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
@@ -46,7 +53,383 @@ import libra_py.data_outs as data_outs
 import libra_py.data_savers as data_savers
 
 from . import save
-from . import qtag_prop
+
+
+def time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate):
+    """
+    Computes the time-overlap <G_new|G_old>
+
+    n - new 
+    o - old
+    """
+
+    ndof = nQ.num_of_rows
+    ntraj = nQ.num_of_cols
+    nstates = len(set(nstate))
+
+    nA_half = 0.5*nA
+    oA_half = 0.5*oA    
+
+    St = gwp_overlap_matrix(nQ, nP, nS, nA_half, Py2Cpp_int(nstate), oQ, oP, oS, oA_half, Py2Cpp_int(ostate))
+
+
+    return St
+
+
+def qtag_momentum(_q, _p, _a, _s, coeff_on_surf, dyn_params):
+    """Calculates the single-surface momentum for a set of basis functions, received from
+       the `propagate( )' function.
+
+    Args:
+
+        dyn_params (dict): Dictionary containing simulation parameters.
+
+          * **dyn_params[`d_weight`]** (int) : parameter used to specify whether the fitted
+              momentum values should be density-weighted in the linear fitting function. It
+              is highly recommended to leave this value as 1 (on).  [ default: 1 ]
+
+          * **dyn_params[`linfit_beta`]** (float) : parameter used to specify the convergence
+              criterion for the linear fitting algorithm. A smaller value indicates a
+              stricter fit, although convergence issues may arise when going below 1e-5  
+              [ default: 1e-1 ]
+
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+
+        coeff_on_surf (CMATRIX(ntraj_on_surf x 1)): The complex coefficient matrix for the TBF
+        on the relevant surface.
+
+    Returns:
+        mom (MATRIX(ndof x ntraj)): Matrix containing trajectory momenta.
+
+        r (MATRIX(ndof x ntraj)): Matrix containing the real complement to the trajectory momenta.
+
+        gmom (MATRIX(ndof x ntraj)): Matrix containing the momentum gradients at each trajectory
+        location.
+
+        gr (MATRIX(ndof x ntraj)): Matrix containing the real complement to *gmom*.
+    """
+
+    params = dict(dyn_params)
+
+    critical_params = [ ]
+    default_params = { "d_weight":1, "linfit_beta":1e-1, "mom_calc_type":1 }
+    comn.check_input(params, default_params, critical_params)
+ 
+    #Extract parameters from params dict...
+    mom_calc_type = params['mom_calc_type']
+    beta = params['linfit_beta']
+    d_weight = params['d_weight']
+
+    ndof = _q.num_of_rows
+    ntraj_on_surf = _q.num_of_cols
+
+    #Assign MATRIX and CMATRIX objects...
+    mom = MATRIX(ndof, ntraj_on_surf)
+    r = MATRIX(ndof, ntraj_on_surf)
+    gmom = MATRIX(ndof, ntraj_on_surf)
+    gr = MATRIX(ndof, ntraj_on_surf)
+
+    psi_tot = CMATRIX(ntraj_on_surf,1)
+    grad_psi = CMATRIX(ndof,1)
+    deriv_term = CMATRIX(ndof,1)
+
+    q_on_surf = MATRIX(_q)
+    p_on_surf = MATRIX(_p)
+    a_on_surf = MATRIX(_a)
+    s_on_surf = MATRIX(_s)
+
+    #Calculate momentum for each trajectory (i) as Im(grad(psi)/psi)...
+    for i in range(ntraj_on_surf):
+        psi_sum = complex(0.0,0.0)
+        for dof in range(ndof):
+            grad_psi.set(dof,0,0+0j)
+
+        for j in range(ntraj_on_surf):
+            pre_exp_full = 1.0
+            exp_full = 1.0
+            c2 = coeff_on_surf.get(j)
+
+            for dof in range(ndof):
+                q1 = q_on_surf.get(dof,i)
+                q2 = q_on_surf.get(dof,j)
+                dq = q1-q2
+
+                p1 = p_on_surf.get(dof,i)
+                p2 = p_on_surf.get(dof,j)
+
+                a1 = a_on_surf.get(dof,i)
+                a2 = a_on_surf.get(dof,j)
+
+                s1 = s_on_surf.get(dof,i)
+                s2 = s_on_surf.get(dof,j)
+
+                pre_exp_full *= (a2/np.pi)**0.25
+                exp_full *= np.exp(-0.5*a2*dq**2+1.0j*(p2*dq+s2))
+                deriv_term.set(dof, complex(-a2*dq,p2) )
+
+            psi_at_j = c2*pre_exp_full*exp_full
+            psi_sum += psi_at_j
+
+            for dof in range(ndof):
+                grad_psi.set(dof, grad_psi.get(dof)+psi_at_j*deriv_term.get(dof))
+
+        psi_tot.set(i, psi_sum)
+        for dof in range(ndof):
+            mom.set(dof,i,(grad_psi.get(dof)/psi_sum).imag)
+            r.set(dof,i,(grad_psi.get(dof)/psi_sum).real)
+            gmom.set(dof,i,0.0)
+            gr.set(dof,i,0.0)
+
+    #For linear fitting of momentum, procedure is least squares fitting of type Ax=B...
+    if mom_calc_type == 1:
+        for dof in range(ndof):
+            A=MATRIX(2,2);B=MATRIX(2,2);x=MATRIX(2,2)
+
+            for m in range(2):
+                for n in range(2):
+                    elem_A = 0; elem_B = 0
+
+                    for i in range(ntraj_on_surf):
+                        q = q_on_surf.get(dof,i)
+                        pimag = mom.get(dof,i)
+                        preal = r.get(dof,i)
+
+                        if d_weight == 1:
+                            z = psi_tot.get(i)
+                            zstar = np.conj(z)
+                        else:
+                            z=1+0j; zstar=1-0j
+
+                        elem_A += q**(m+n)*(z*zstar).real
+                        if n == 0:
+                            elem_B += pimag*q**(m)*(z*zstar).real
+                        elif n == 1:
+                            elem_B += preal*q**(m)*(z*zstar).real
+
+                    A.set(m,n,elem_A)
+                    B.set(m,n,elem_B)
+
+            solve_linsys(A,B,x,beta,200000)
+            for i in range(ntraj_on_surf):
+                q = q_on_surf.get(dof,i)
+                aa=x.get(0,0)+x.get(1,0)*q
+                bb=x.get(0,1)+x.get(1,1)*q
+
+                mom.set(dof,i,aa); r.set(dof,i,bb)
+                gmom.set(dof,i,x.get(1,0)); gr.set(dof,i,x.get(1,1))
+
+    return mom, r, gmom, gr
+
+
+
+def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
+    """Makes the trajectories on surfaces with low populations (where quantum momentum
+       is ill-defined) move as the trajectories on the surface with the highest population
+
+    Args:
+
+        dyn_params (dict): Dictionary containing simulation parameters.
+ 
+          * **dyn_params[`decpl_den`]** (float) : a parameter controlling independence of trajectories. If the population
+              on a given state is larger that this parameter, the trajectories evolve according to their own
+              quantum momentum. If the population is less than this number, the trajectories evolve according
+              to the quantum momentum for the most populated state.  [ default: 0.25 ]
+
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+
+        coeff (CMATRIX(ntraj x 1)): The complex coefficient matrix for the TBF on all surfaces.
+
+        surf_pops (list): List of surface populations.
+
+    Returns:
+        qpas_new (list): List of updated {q,p,a,s} MATRIX objects for active surface
+
+        btot (CMATRIX(ntraj x 1)): The complex projection vector for the TBF on all surfaces.
+    """
+
+    params = dict(dyn_params)
+
+    critical_params = [  ]
+    default_params = {"decpl_den":0.25}
+    comn.check_input(params, default_params, critical_params)
+
+    dt = params["dt"]
+    decpl = params["decpl_den"] 
+    iM = params["iM"]  # MATRIX(ndof, 1)
+    states = params["states"]
+
+    q_update_method = params["q_update_method"]  # 0 - frozen, 1 - move
+    p_update_method = params["p_update_method"]  # 0 - frozen, 1 - move
+    a_update_method = params["a_update_method"]  # 0 - frozen, 1 - move
+    s_update_method = params["s_update_method"]  # 0 - frozen, 1 - move
+
+    q_sync_method = params["q_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    p_sync_method = params["p_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    a_sync_method = params["a_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+    s_sync_method = params["s_sync_method"] # 0 - use the current value, 1 - use the value from the most populated surface
+
+    # The original set
+    q_old = MATRIX(_q)
+    p_old = MATRIX(_p)
+    a_old = MATRIX(_alp)
+    s_old = MATRIX(_s)    
+    surf_ids = _states
+
+    ndof = q_old.num_of_rows
+    ntraj = q_old.num_of_cols
+    nstates = len(states)
+
+    x_dofs = list(range(ndof))
+    invM = MATRIX(ndof, ndof)
+    for i in x_dofs:
+        invM.set(i, i,  iM.get(i, 0))
+
+    # The new set (propagated)
+    q_new = MATRIX(q_old)
+    p_new = MATRIX(p_old)
+    a_new = MATRIX(a_old)
+    s_new = MATRIX(s_old)
+
+#    int ii = 0
+#    unsorted_pairs = []
+#    for i in states:
+#        unsorted_pairs.append([n, surf_pops[i]])
+#        ii += 1
+
+#    sorted_pairs = merge_sort(unsorted_pairs) 
+
+#    sorted_states = [0]*nstates
+#    for i in range(nstates):
+#        sorted_states[nstates-1-i] = sorted_pairs[i][0]
+
+    sorted_pops = sorted(surf_pops, reverse = True)
+    sorted_states = []
+    for n in range(nstates):
+        indx = surf_pops.index(sorted_pops[n])
+        sorted_states.append(states[indx])
+
+   
+    # The properties for the trajectories on the most populated surface - reference for synchronizing
+    q_new_on_surf_ref = None
+    p_new_on_surf_ref = None
+    a_new_on_surf_ref = None
+    s_new_on_surf_ref = None
+
+#    iref_pop_state = True
+    for nindex, n in enumerate(sorted_states): # over all states, but starting with the most populated one
+
+        traj_on_surf = [index for index, traj_id in enumerate(surf_ids) if traj_id == n]
+        ntraj_on_surf = len(traj_on_surf)  
+        surf_pop_ref = sorted_pops[nindex]
+
+        q_on_surf = MATRIX(ndof, ntraj_on_surf)
+        p_on_surf = MATRIX(ndof, ntraj_on_surf)
+        a_on_surf = MATRIX(ndof, ntraj_on_surf)
+        s_on_surf = MATRIX(ndof, ntraj_on_surf)
+
+        pop_submatrix(q_old, q_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(p_old, p_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(a_old, a_on_surf, x_dofs, traj_on_surf)
+        pop_submatrix(s_old, s_on_surf, x_dofs, traj_on_surf)
+
+#Forcing sync'ed trajectories for q_sync_method = 2, regardless of pop
+#        if q_sync_method == 2:
+#            if n>0:
+#                surf_pop_ref = 0.0
+
+        # "Independent" evolution of trajectories
+        if surf_pop_ref > decpl:
+            coeff_on_surf = CMATRIX(ntraj_on_surf,1)  # coefficients for the TBFs on the surface n
+            pop_submatrix(coeff, coeff_on_surf, traj_on_surf, [0])
+
+#            qpas_on_surf = [q_on_surf, p_on_surf, a_on_surf, s_on_surf] # variables for the TBFs on the surface n
+            mom, r, gmom, gr = qtag_momentum(q_on_surf, p_on_surf, a_on_surf, s_on_surf, coeff_on_surf, dyn_params)
+
+            # mom - MATRIX(ndof, ntraj_on_surf) - quantum momentum for q -  Im( nabla_{\alp} \psi / \psi)
+            # r - MATRIX(ndof, ntraj_on_surf) - quantum momentum for s   -  Re( nabla_{\alp} \psi / \psi)
+            # gmom - MATRIX(ndof, ntraj_on_surf) - gradient of the fit of mom ~ nabla_{\alp} Im( nubla_{\alp} \psi / \psi) - to update alphas
+            # gr - MATRIX(ndof, ntraj_on_surf) - gradient of the fit of r ~ nubla_{\alp} Re( nubla_{\alp} \psi / \psi)  - to update alphas
+
+            # mom_tmp = momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff);
+            # mom = mom_tmp.imag() 
+            # r = mom_tmp.real()
+
+            if q_update_method==0:
+                q_new_on_surf = MATRIX(q_on_surf)
+            elif q_update_method==1:
+                q_new_on_surf = q_on_surf + invM * mom * dt 
+            else:
+                print(F"q_update_method = {q_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
+
+            if p_update_method==0:
+                p_new_on_surf = MATRIX(p_on_surf)
+            elif p_update_method==1:
+                p_new_on_surf = MATRIX(mom)
+            else:
+                print(F"p_update_method = {p_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
+
+
+            if a_update_method==0:
+                a_new_on_surf = MATRIX(a_on_surf)
+            elif a_update_method==1:
+                a_tmp = MATRIX(ndof, ntraj_on_surf)
+                a_tmp.dot_product(a_on_surf, gmom)
+                a_new_on_surf = a_on_surf - 2.0*dt * invM * a_tmp
+            else:
+                print(F"a_update_method = {a_update_method} is not implemented. Exiting...\n")
+                sys.exit(0)
+
+            s_new_on_surf = MATRIX(s_on_surf)
+
+            # Put the surface-specific variables in the global variables
+            push_submatrix(q_new, q_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(p_new, p_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(a_new, a_new_on_surf, x_dofs, traj_on_surf)
+            push_submatrix(s_new, s_new_on_surf, x_dofs, traj_on_surf)
+
+             # Save it for later - for the "dependent" trajectories
+            if nindex == 0:
+                q_new_on_surf_ref = MATRIX(q_new_on_surf)
+                p_new_on_surf_ref = MATRIX(p_new_on_surf)
+                a_new_on_surf_ref = MATRIX(a_new_on_surf)
+                s_new_on_surf_ref = MATRIX(s_new_on_surf)
+
+        else:
+            # For this to work, we need that all surfaces have equal number of trajectories
+            if q_sync_method >= 1:
+                push_submatrix(q_new, q_new_on_surf_ref, x_dofs, traj_on_surf)
+            if p_sync_method >= 1:
+                push_submatrix(p_new, p_new_on_surf_ref, x_dofs, traj_on_surf)
+            if a_sync_method >= 1:
+                push_submatrix(a_new, a_new_on_surf_ref, x_dofs, traj_on_surf)
+            if s_sync_method >= 1:
+                push_submatrix(s_new, s_new_on_surf_ref, x_dofs, traj_on_surf)
+
+
+    #========= Re-expansion of coeffients =====================
+    a_new_half = 0.5* a_new    
+    GG = gwp_overlap_matrix(q_new, p_new, s_new, a_new_half, Py2Cpp_int(surf_ids), 
+                            q_new, p_new, s_new, a_new_half, Py2Cpp_int(surf_ids))
+
+    tmp = FullPivLU_rank_invertible(GG)
+    if tmp[1]==0:
+        print("GBF overlap matrix is not invertible.\n Exiting...\n")
+        sys.exit(0)
+
+    invGG = CMATRIX(ntraj, ntraj)
+    FullPivLU_inverse(GG, invGG)
+
+
+    st = time_overlap(q_new, p_new, a_new, s_new, surf_ids, q_old, p_old, a_old, s_old, surf_ids )
+    coeff = st * coeff
+    coeff = invGG * coeff
+
+    return q_new, p_new, a_new, s_new, surf_ids , coeff
+
+
+
 
 def qtag_pops(surf_ids, coeff, S, target_states):
     """Returns a single-surface population *n*, calculated from the single-surface basis coefficients *c* 
@@ -105,6 +488,154 @@ def qtag_energy(coeff, H):
     e = (coeff.H() * H * coeff).get(0).real
 
     return e
+
+
+
+# CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
+def psi(ndof, ntraj_on_surf, qpas, c, x0):
+    """Returns the (complex) wavefunction value *wf* at a given point *x0*, calculated using the single-surface basis parameters stored in *qpas* and coefficients *c*.
+
+    Args:
+        ndof (integer): Number of degrees of freedom.
+
+        ntraj_on_surf (integer): Number of trajectories per surface.
+
+        qpas (list): List of {q,p,a,s} MATRIX objects.
+
+        c (CMATRIX): The ntraj_on_surf-by-1 complex matrix of basis coefficients.
+
+        x0 (MATRIX): The matrix of coordinates [x_1,...,x_ndof] at which the wavefunction value should be calculated.
+
+    Returns:
+        wf (complex): Complex value of the wavefunction at x0.
+    """
+
+    qvals,pvals,avals,svals=qpas[0],qpas[1],qpas[2],qpas[3]
+
+    wf=0+0j
+    for i in range(ntraj_on_surf):
+        prod=1.0
+        for j in range(ndof):
+            q1,p1,a1,s1=qvals.get(j,i),pvals.get(j,i),avals.get(j,i),svals.get(j,i)
+            prod*=(a1/np.pi)**0.25*np.exp(-a1/2.0*(x0.get(j)-q1)**2+1j*(p1*(x0.get(j)-q1)+s1))
+        wf+=c.get(i)*prod
+    return(wf)
+
+
+
+def wf_calc_nD(dyn_params, plt_params, prefix):
+    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*,
+       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a
+       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*,
+       and each surface has the same number of trajectories. The corresponding Gaussian-distributed
+       momenta are ordered so that the wavepacket spreads as x increases.
+
+    Args:
+        dyn_params (dict): Dictionary containing simulation parameters.
+
+          * **dyn_params[`nsteps`]** (int) : the number of simulation steps
+
+          * **dyn_params[`states`]** (int) : the list of states
+
+          * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
+              placed on each surface. For Gaussian, the list has only one element, specifying the
+              number of basis functions per surface. Note that the total number of basis functions
+              will then be *nstates*-by-*prod(grid_dims)*
+
+          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+
+        prefix (str): The name of the directory containing the q, p, a, and s trajectory data.
+    """
+
+    #Collect simulation parameters from dyn_params dict...
+    nsteps = dyn_params["nsteps"]
+    states = dyn_params["states"]
+    grid_dims = dyn_params["grid_dims"]
+    ndof = dyn_params["ndof"]
+
+    nstates = len(states)
+    xmin = plt_params["xmin"]
+    xmax = plt_params["xmax"]
+    npoints = plt_params["npoints"]
+
+    #This is standard Libra convention for wf files...
+    data_type1="wfcr"; data_type2="dens"; data_type3="rep_0"
+
+    #Determine ntraj from dyn_params grid_dims variable...
+    ntraj = 1
+    for i in range(len(grid_dims)):
+        ntraj *= grid_dims[i]
+
+    #Define which timesteps to calculate the wf for...
+    lines = plt_params['snaps']
+
+    #Open directory with coeffs, q, p, a, s data...
+    qfile = open(prefix+"/q.txt")
+    pfile = open(prefix+"/p.txt")
+    afile = open(prefix+"/a.txt")
+    cfile = open(prefix+"/coeffs.txt")
+
+    #Make the output directory...
+    if not os.path.isdir(prefix+"/wfc"):
+        os.mkdir(prefix+"/wfc")
+
+    #Create the mesh to calculate the wf on...
+    grid_bounds = np.mgrid[tuple(slice(xmin[dof],xmax[dof],complex(0,npoints[dof])) for dof in range(ndof))]
+
+    elems = 1
+    for i in npoints:
+        elems *= i
+
+    b = grid_bounds.flatten()
+    wfpts = []
+    for i in range(elems):
+        index = i
+        coords = []
+
+        while index < len(b):
+            coords.append(b[index])
+            index += elems
+        wfpts.append(coords)
+
+    #Read the trajectory data and compute the wf on the mesh...
+    iline=0
+    for line in range(nsteps):
+        qdata = qfile.readline().strip().split()
+        pdata = pfile.readline().strip().split()
+        adata = afile.readline().strip().split()
+        coeffs = cfile.readline().strip().split()
+
+        if iline in lines:
+            outfile = open(prefix+"/wfc/"+data_type1+"_snap_"+str(line)+"_"+data_type2+"_"+data_type3,"w")
+
+            for pt in wfpts:
+                for nn in pt:
+                    outfile.write(str(nn)+" ")
+                idata = 0
+                for state in range(nstates):
+                    wf = 0+0j
+                    for j in range(ntraj):
+                        coeff = complex(float(coeffs[2*(j+state*ntraj)]),
+                                        float(coeffs[2*(j+state*ntraj)+1]))
+
+                        gaus = 1.0+0.0j
+                        for dof in range(ndof):
+                            qj = float(qdata[idata])
+                            pj = float(pdata[idata])
+                            aj = float(adata[idata])
+                            idata +=1
+
+                            val = pt[dof]
+                            gaus*=(aj/np.pi)**0.25*np.exp(-aj/2.0* \
+                                (val-qj)**2+1j*(pj*(val-qj)))
+
+                        wf+=coeff*gaus
+                    outfile.write(str(abs(wf)**2)+" ")
+                    #outfile.write(str(np.imag(wf))+" ")
+                outfile.write("\n")
+        iline+=1
+
+
 
 
 
@@ -300,7 +831,7 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
 
 
         #Update the basis parameters according to the new wavefunction (ct_new)...
-        Q, P, A, S, active_states, C = qtag_prop.propagate_basis(Q, P, A, S, active_states, C, dyn_params, pops)
+        Q, P, A, S, active_states, C = propagate_basis(Q, P, A, S, active_states, C, dyn_params, pops)
 
         #Compute the Hamiltonian and overlap matrix elements using the C++ routine 'qtag_ham_and_ovlp'...
         qtag_hamiltonian_and_overlap(Q, P, A, S, Coeff, Py2Cpp_int(active_states), iM, ham, 
