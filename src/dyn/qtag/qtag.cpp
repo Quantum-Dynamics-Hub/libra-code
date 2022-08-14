@@ -363,7 +363,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 complex<double> LHAe(int i, int j, 
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham){
+                     nHamiltonian& ham, bp::dict& model_params){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -455,7 +455,7 @@ complex<double> LHAe(int i, int j,
 complex<double> BATe(int i, int j,
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham){
+                     nHamiltonian& ham, bp::dict& model_params){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -545,7 +545,7 @@ complex<double> BATe(int i, int j,
 
 CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
                        MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
-                       nHamiltonian& ham, int method){
+                       nHamiltonian& ham, int method, bp::dict& model_params){
 
   int ntraj_on_surf_n1 = q1.n_cols;
   int ntraj_on_surf_n2 = q2.n_cols;
@@ -596,12 +596,10 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                 qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
       }// LHA
       else if(method==2){// LHAe
-        v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, 
-                 ham);
+        v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, ham, model_params);
       }// LHAe
       else if(method==3){// BATe
-        v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2,
-                 ham);
+        v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, ham, model_params);
       }// BATe
 
       res.set(itraj, jtraj, v);
@@ -733,7 +731,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           CMATRIX h12(ntraj_on_surf_n1, ntraj_on_surf_n2);
           CMATRIX pot(ntraj_on_surf_n1, ntraj_on_surf_n2);
           
-          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method);
+          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, compute_ham_params);
           h12.dot_product(pot, s12);
           
 

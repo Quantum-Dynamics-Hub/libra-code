@@ -48,19 +48,23 @@ void export_qtag_objects(){
   (MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s) = &qtag_overlap_elementary;
   def("qtag_overlap_elementary",  expt_qtag_overlap_elementary_v1);
 
+
   CMATRIX (*expt_qtag_kinetic_elementary_v1)
   (MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, MATRIX& invM) = &qtag_kinetic_elementary;
   def("qtag_kinetic_elementary", expt_qtag_kinetic_elementary_v1);
 
+
   CMATRIX (*expt_qtag_overlap_v1)
   (vector<int>& active_states, CMATRIX& ovlp, int nstates) = &qtag_overlap;
   def("qtag_overlap", expt_qtag_overlap_v1);
+
 
   CMATRIX (*expt_qtag_potential_v1)
   (MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
    nHamiltonian& ham, int method) = &qtag_potential;
   def("qtag_potential", expt_qtag_potential_v1);
+
 
   void (*expt_qtag_hamiltonian_and_overlap_v1)
   (MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coeff,
