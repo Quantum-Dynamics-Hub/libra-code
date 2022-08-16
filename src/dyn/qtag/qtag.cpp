@@ -219,8 +219,6 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
     """
 */
 
-  //cout<<"In BAT\n";
-
   complex<double> vx1, vx2, dvx1, dvx2, v;
   int ndof = q1.n_rows;
 
@@ -363,7 +361,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 complex<double> LHAe(int i, int j, 
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham, bp::dict& model_params){
+                     double AA, double BB, double CC, nHamiltonian& ham){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -390,21 +388,6 @@ complex<double> LHAe(int i, int j,
 
   complex<double> v;
   int ndof = q1.n_rows;
-
-//Holstein coupling
-  double A = 1.0;
-  double B = 1.5811;
-  double C = 2.0;
-
-//Tully1 coupling
-//  double A = 0.005;
-//  double B = 1.0;
-//  double C = 0.0;
-
-//Tully2 coupling
-//  double A = 0.015;
-//  double B = 0.06;
-//  double C = 0.0;
 
   if(n1==n2){// LHA for single-surface elements
 
@@ -429,19 +412,19 @@ complex<double> LHAe(int i, int j,
       double a1i = alp1.get(dof);
       double a2i = alp2.get(dof);
 
-      double dCq1 = C - q1i;
-      double dCq2 = C - q2i;
+      double dCq1 = CC - q1i;
+      double dCq2 = CC - q2i;
 
       double aCq1 = dCq1*a1i;
       double aCq2 = dCq2*a2i;
 
       double dp = p1i - p2i;
       double as = a1i + a2i;
-      double aB = a1i + 2*B + a2i;
+      double aB = a1i + 2*BB + a2i;
       
 
-      double prefac1 = A*sqrt(as/aB);
-      double prefac2 = -B/(aB*as);
+      double prefac1 = AA*sqrt(as/aB);
+      double prefac2 = -BB/(aB*as);
 
       complex<double> expt(aCq1*aCq1 + aCq2*aCq2 - dp*dp + 2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
       v += prefac1*exp(prefac2*expt);
@@ -455,7 +438,7 @@ complex<double> LHAe(int i, int j,
 complex<double> BATe(int i, int j,
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham, bp::dict& model_params){
+                     double AA, double BB, double CC, nHamiltonian& ham){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -483,21 +466,6 @@ complex<double> BATe(int i, int j,
   complex<double> v;
   int ndof = q1.n_rows;
 
-//Holstein coupling
-  double A = 1.0;
-  double B = 1.5811;
-  double C = 2.0;
-
-//Tully1 coupling
-//  double A = 0.005;
-//  double B = 1.0;
-//  double C = 0.0;
-
-//Tully2 coupling
-//  double A = 0.015;
-//  double B = 0.06;
-//  double C = 0.0;
-
   if(n1==n2){// BAT for single-surface elements
 
     v = BAT(ham.children[i]->ham_dia, ham.children[j]->ham_dia,
@@ -520,19 +488,19 @@ complex<double> BATe(int i, int j,
       double a1i = alp1.get(dof);
       double a2i = alp2.get(dof);
 
-      double dCq1 = C - q1i;
-      double dCq2 = C - q2i;
+      double dCq1 = CC - q1i;
+      double dCq2 = CC - q2i;
 
       double aCq1 = dCq1*a1i;
       double aCq2 = dCq2*a2i;
 
       double dp = p1i - p2i;
       double as = a1i + a2i;
-      double aB = a1i + 2*B + a2i;
+      double aB = a1i + 2*BB + a2i;
 
 
-      double prefac1 = A*sqrt(as/aB);
-      double prefac2 = -B/(aB*as);
+      double prefac1 = AA*sqrt(as/aB);
+      double prefac2 = -BB/(aB*as);
 
       complex<double> expt(aCq1*aCq1+aCq2*aCq2-dp*dp+2.0*aCq1*aCq2, 2.0*dp*(aCq1+aCq2));
       v += prefac1*exp(prefac2*expt);
@@ -545,7 +513,7 @@ complex<double> BATe(int i, int j,
 
 CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
                        MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
-                       nHamiltonian& ham, int method, bp::dict& model_params){
+                       nHamiltonian& ham, int method, double AA, double BB, double CC){
 
   int ntraj_on_surf_n1 = q1.n_cols;
   int ntraj_on_surf_n2 = q2.n_cols;
@@ -596,10 +564,12 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                 qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
       }// LHA
       else if(method==2){// LHAe
-        v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, ham, model_params);
+        v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, 
+                 AA, BB, CC, ham);
       }// LHAe
       else if(method==3){// BATe
-        v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, ham, model_params);
+        v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2,
+                 AA, BB, CC, ham);
       }// BATe
 
       res.set(itraj, jtraj, v);
@@ -646,7 +616,19 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
   int method = prms.qtag_pot_approx_method; 
 
-//  int method = 0;
+  double AA = 0.0;
+  double BB = 0.0;
+  double CC = 0.0;
+  if(method==2||method==3){
+    std::string key;
+    for(int i=0;i<len(compute_ham_params.values());i++){
+      key = bp::extract<string>(compute_ham_params.keys()[i]);
+      if(key=="A") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="B") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="C") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
+    }
+  }
+
 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
@@ -731,7 +713,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           CMATRIX h12(ntraj_on_surf_n1, ntraj_on_surf_n2);
           CMATRIX pot(ntraj_on_surf_n1, ntraj_on_surf_n2);
           
-          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, compute_ham_params);
+          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, AA, BB, CC);
           h12.dot_product(pot, s12);
           
 
