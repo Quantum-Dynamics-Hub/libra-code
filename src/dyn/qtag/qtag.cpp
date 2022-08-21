@@ -625,9 +625,9 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
     std::string key;
     for(int i=0;i<len(compute_ham_params.values());i++){
       key = bp::extract<string>(compute_ham_params.keys()[i]);
-      if(key=="A") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
-      else if(key=="B") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
-      else if(key=="C") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
+      if(key=="AA") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="BB") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="CC") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
     }
   }
 
