@@ -219,8 +219,6 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
     """
 */
 
-  //cout<<"In BAT\n";
-
   complex<double> vx1, vx2, dvx1, dvx2, v;
   int ndof = q1.n_rows;
 
@@ -363,7 +361,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
 complex<double> LHAe(int i, int j, 
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham, double& AA, double& BB, double& CC){
+                     double AA, double BB, double CC, nHamiltonian& ham){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -390,21 +388,6 @@ complex<double> LHAe(int i, int j,
 
   complex<double> v;
   int ndof = q1.n_rows;
-
-//Holstein coupling
-//  double A = 1.0;
-//  double B = 1.5811;
-//  double C = 2.0;
-
-//Tully1 coupling
-//  double A = 0.005;
-//  double B = 1.0;
-//  double C = 0.0;
-
-//Tully2 coupling
-//  double A = 0.015;
-//  double B = 0.06;
-//  double C = 0.0;
 
   if(n1==n2){// LHA for single-surface elements
 
@@ -454,7 +437,7 @@ complex<double> LHAe(int i, int j,
 complex<double> BATe(int i, int j,
                      MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
-                     nHamiltonian& ham, double& AA, double& BB, double& CC){
+                     double AA, double BB, double CC, nHamiltonian& ham){
 /**
     """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
        functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
@@ -481,26 +464,6 @@ complex<double> BATe(int i, int j,
 
   complex<double> v;
   int ndof = q1.n_rows;
-
-//Holstein coupling
-//  double A = 1.0;
-//  double B = 1.5811;
-//  double C = 2.0;
-
-//Tully1 coupling
-//  double A = 0.005;
-//  double B = 1.0;
-//  double C = 0.0;
-
-//Tully2 coupling
-//  double A = 0.015;
-//  double B = 0.06;
-//  double C = 0.0;
-
-//NaI coupling
-//  double A = 0.002208492126202225;
-//  double B = 7.14213534517;
-//  double C = 13.2281;
 
   if(n1==n2){// BAT for single-surface elements
 
@@ -548,7 +511,7 @@ complex<double> BATe(int i, int j,
 
 CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
                        MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
-                       nHamiltonian& ham, int method, double& AA, double& BB, double& CC){
+                       nHamiltonian& ham, int method, double AA, double BB, double CC){
 
   int ntraj_on_surf_n1 = q1.n_cols;
   int ntraj_on_surf_n2 = q2.n_cols;
@@ -606,11 +569,11 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
       }// LHA
       else if(method==2){// LHAe
         v = LHAe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2, 
-                 ham, AA, BB, CC);
+                 AA, BB, CC, ham);
       }// LHAe
       else if(method==3){// BATe
         v = BATe(i, j, qi, pi, si, ai, n1, qj, pj, sj, aj, n2,
-                 ham, AA, BB, CC);
+                 AA, BB, CC, ham);
       }// BATe
 
       res.set(itraj, jtraj, v);
@@ -658,14 +621,16 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   double AA = 0.0;
   double BB = 0.0;
   double CC = 0.0;
+  if(method==2||method==3){
+    std::string key;
+    for(int i=0;i<len(compute_ham_params.values());i++){
+      key = bp::extract<string>(compute_ham_params.keys()[i]);
+      if(key=="A") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="B") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="C") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
+    }
+  }
 
-//  std::string key;
-//    for(int i=0;i<len(compute_ham_params.values());i++){
-//    key = bp::extract<std::string>(compute_ham_params.keys()[i]);
-//    if(key=="A"){ AA = bp::extract<double>(compute_ham_params.values()[i]); }
-//    else if(key=="B"){ BB = bp::extract<double>(compute_ham_params.values()[i]); }
-//    else if(key=="C"){ CC = bp::extract<double>(compute_ham_params.values()[i]); }
-//  }
 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
