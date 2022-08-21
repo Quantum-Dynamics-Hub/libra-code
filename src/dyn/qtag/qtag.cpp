@@ -554,13 +554,6 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                 qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
 
       }// BAT
-      else if(method==10){ // BAT adiabatic
-
-        v = BAT(ham.children[i]->ham_adi, ham.children[j]->ham_adi,
-                ham.children[i]->d1ham_adi, ham.children[j]->d1ham_adi,
-                qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
-
-      }// BAT adiabatic
       else if(method==1){// LHA
         v = LHA(ham.children[i]->ham_dia, ham.children[j]->ham_dia, 
                 ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
