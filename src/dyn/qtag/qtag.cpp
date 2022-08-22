@@ -422,7 +422,6 @@ complex<double> LHAe(int i, int j,
       double as = a1i + a2i;
       double aB = a1i + 2*BB + a2i;
       
-
       double prefac1 = AA*sqrt(as/aB);
       double prefac2 = -BB/(aB*as);
 
@@ -498,7 +497,6 @@ complex<double> BATe(int i, int j,
       double as = a1i + a2i;
       double aB = a1i + 2*BB + a2i;
 
-
       double prefac1 = AA*sqrt(as/aB);
       double prefac2 = -BB/(aB*as);
 
@@ -530,7 +528,6 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
   MATRIX aj(ndof, 1);
   MATRIX sj(ndof, 1);
 
-
   for(int itraj=0; itraj<ntraj_on_surf_n1; itraj++){
 
     int i = traj_on_surf_n1[itraj];
@@ -557,6 +554,13 @@ CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1,
                 qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
 
       }// BAT
+      else if(method==10){ // BAT adiabatic
+
+        v = BAT(ham.children[i]->ham_adi, ham.children[j]->ham_adi,
+                ham.children[i]->d1ham_adi, ham.children[j]->d1ham_adi,
+                qi, pi, si, ai, n1, qj, pj, sj, aj, n2);
+
+      }// BAT adiabatic
       else if(method==1){// LHA
         v = LHA(ham.children[i]->ham_dia, ham.children[j]->ham_dia, 
                 ham.children[i]->d1ham_dia, ham.children[j]->d1ham_dia,
@@ -609,8 +613,6 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
 */
 
-//  exit(0);
-
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
@@ -623,9 +625,9 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
     std::string key;
     for(int i=0;i<len(compute_ham_params.values());i++){
       key = bp::extract<string>(compute_ham_params.keys()[i]);
-      if(key=="A") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
-      else if(key=="B") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
-      else if(key=="C") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
+      if(key=="ex_cpl_A") { AA = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="ex_cpl_B") { BB = bp::extract<double>(compute_ham_params.values()[i]);}
+      else if(key=="ex_cpl_C") { CC = bp::extract<double>(compute_ham_params.values()[i]);}
     }
   }
 
@@ -633,10 +635,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   int ndof = q.n_rows;
   int ntraj = q.n_cols;
   int nstates = Coeff.n_rows;
-  //int ntraj = active_states.size();
   int i, j, itraj, n1, n2, indx;
-
-//  cout<<"ndof= "<<ndof<<" nstates= "<<nstates<<" ntraj= "<<ntraj<<endl;
 
   vector<int> dof_dim(ndof); for(i=0;i<ndof;i++){ dof_dim[i] = i; }
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
@@ -653,11 +652,8 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
     n1 = active_states[itraj];
   }// for itraj
 
-
   // Compute Hamiltonians for all the trajectories
   ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
-
-//  exit(0);
 
   // State blocks
   for(n1=0; n1<nstates; n1++){
@@ -792,8 +788,6 @@ CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coe
   return mom;
 
 }
-
-
 
 }// namespace libqtag
 }// namespace libdyn
