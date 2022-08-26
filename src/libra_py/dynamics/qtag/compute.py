@@ -766,7 +766,6 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     critical_params = []
     comn.check_input(dyn_params, default_params, critical_params)
 
-
     ndof = Q.num_of_rows
     ntraj = Q.num_of_cols  # total number of trajectories 
     nstates = len( set(_states) )
@@ -797,7 +796,6 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     properties_to_save = dyn_params['properties_to_save']
     _savers = save.init_qtag_savers(dyn_params, _model_params, nsteps, ntraj, ndof, nstates)
 
-            
     #Start simulation and walltime variables...
     walltime_start = time.time()
     t=0.0

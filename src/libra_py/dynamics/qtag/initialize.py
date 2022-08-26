@@ -125,7 +125,7 @@ def grid(_params):
     critical_params = [ ]
     default_params = { "grid_dims":[5], "rho_cut":1e-12, "alp_scl":[8.0], 
                        "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0],
-                       "grid_mix":[-1.0], "grid_max":[1.0]
+                       "grid_min":[-1.0], "grid_max":[1.0]
                      }
     comn.check_input(params, default_params, critical_params)
 
