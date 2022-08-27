@@ -130,6 +130,68 @@ void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATR
 }
 
 
+
+void update_nacs(dyn_control_params& prms, nHamiltonian& ham){
+/**
+  This function updates the internal (time-derivative, scalar) NACs in the hierarchy of 
+  Hamiltonians
+*/
+
+  int isNBRA = prms.isNBRA;
+  double dt = prms.dt;
+  int nst = ham.nadi;
+  int ntraj = ham.children.size();
+  CMATRIX st(nst,nst);
+  MATRIX st_re(nst, nst);
+  MATRIX st_im(nst, nst);
+
+  CMATRIX nac(nst, nst);
+  MATRIX nac_re(nst, nst);
+  MATRIX nac_im(nst, nst);
+
+
+
+  if(isNBRA==1){
+    if(prms.nac_update_method==2){
+
+      st = ham.children[0]->get_time_overlap_adi();
+
+      if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
+      else if(prms.nac_algo==1){   
+        st_re = st.real();
+        nac_re = nac_npi(st_re, dt); 
+        nac = CMATRIX(nac_re, nac_im);
+      } 
+ 
+      ham.children[0]->set_nac_adi_by_val(nac);
+    }// if method == 2
+        
+  }// isNBRA == 1
+  else{
+
+    if(prms.nac_update_method==2){
+
+      for(int traj=0; traj<ntraj; traj++){
+        st = ham.children[traj]->get_time_overlap_adi();
+
+        if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
+        else if(prms.nac_algo==1){   
+          st_re = st.real();
+          nac_re = nac_npi(st_re, dt); 
+          nac = CMATRIX(nac_re, nac_im);
+        } 
+ 
+        ham.children[traj]->set_nac_adi_by_val(nac);
+
+      }// for traj
+    }// for nac_update_method == 2
+
+  }// else - isNBRA == 0
+
+}
+
+
+
 void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham, 
                           MATRIX& p, MATRIX& invM){
 
@@ -156,7 +218,8 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
       p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );
     }
   }
-  
+
+  //update_nacs(prms, ham);
 
 
   // Update NACs and Hvib for all trajectories
@@ -186,63 +249,6 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
   _prms.set_parameters(prms);
 
   update_Hamiltonian_p(_prms, ham, p, invM);
-
-}
-
-
-void update_nacs(dyn_control_params& prms, nHamiltonian& ham){
-/**
-  This function updates the internal (time-derivative, scalar) NACs in the hierarchy of 
-  Hamiltonians
-*/
-
-  int isNBRA = prms.isNBRA;
-  double dt = prms.dt;
-  int nst = ham.nadi;
-  int ntraj = ham.children.size();
-  CMATRIX st(nst,nst);
-  MATRIX st_re(nst, nst);
-  MATRIX st_im(nst, nst);
-
-  CMATRIX nac(nst, nst);
-  MATRIX nac_re(nst, nst);
-  MATRIX nac_im(nst, nst);
-
-
-
-  if(isNBRA==1){
-    st = ham.children[0]->get_time_overlap_adi();
-
-    if(prms.nac_update_method==2){
-      if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
-      else if(prms.nac_algo==1){   
-        st_re = st.real();
-        nac_re = nac_npi(st_re, dt); 
-        nac = CMATRIX(nac_re, nac_im);
-      } 
- 
-      ham.children[0]->set_nac_adi_by_val(nac);
-    }
-        
-  }
-  else{
-    for(int traj=0; traj<ntraj; traj++){
-
-      st = ham.children[traj]->get_time_overlap_adi();
-
-      if(prms.nac_update_method==2){
-        if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
-        else if(prms.nac_algo==1){   
-          st_re = st.real();
-          nac_re = nac_npi(st_re, dt); 
-          nac = CMATRIX(nac_re, nac_im);
-        } 
- 
-        ham.children[traj]->set_nac_adi_by_val(nac);
-      }
-
-    }// for traj
-  }// else
 
 }
 
@@ -755,6 +761,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
+  update_nacs(prms, ham);
   update_Hamiltonian_p(prms, ham, p, invM);
   for(i=0; i<num_el; i++){
     propagate_electronic(0.5*dt_el, C, projectors, ham.children, prms.rep_tdse, prms.isNBRA);

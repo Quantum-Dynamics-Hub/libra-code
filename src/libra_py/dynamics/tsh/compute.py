@@ -984,13 +984,13 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
     update_Hamiltonian_p(dyn_params, ham, p, iM)  
 
-
     U = []
     if is_nbra == 1:
         U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
     else:
         for tr in range(ntraj):
             U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
+
 
 
     therm = ThermostatList();
@@ -1008,6 +1008,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     elif decoherence_algo==3:
         dyn_var.allocate_bcsh()
 
+              
                 
     # Do the propagation
     for i in range(nsteps):
@@ -1103,10 +1104,12 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         model_params.update({"timestep":index})
         #model_params.update({"timestep":i})        
 
+
         if rep_tdse==0:            
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
+
             
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)
