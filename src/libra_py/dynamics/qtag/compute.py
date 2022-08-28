@@ -64,29 +64,29 @@ def time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate):
     
     Args: 
     
-        nQ (MATRIX(ndof x ntraj)): Matrix containing basis positions after a timestep dt
+        nQ (MATRIX(ndof, ntraj)): Matrix containing basis positions after a timestep dt
         
-        nP (MATRIX(ndof x ntraj)): Matrix containing basis momenta after a timestep dt
+        nP (MATRIX(ndof, ntraj)): Matrix containing basis momenta after a timestep dt
         
-        nA (MATRIX(ndof x ntraj)): Matrix containing basis widths after a timestep dt
+        nA (MATRIX(ndof, ntraj)): Matrix containing basis widths after a timestep dt
         
-        nS (MATRIX(ndof x ntraj)): Matrix containing basis phases after a timestep dt
+        nS (MATRIX(ndof, ntraj)): Matrix containing basis phases after a timestep dt
         
         nstate (list of ints): The list specifying which electronic state each updated GBF belongs to
         
-        oQ (MATRIX(ndof x ntraj)): Matrix containing basis positions before a timestep dt
+        oQ (MATRIX(ndof, ntraj)): Matrix containing basis positions before a timestep dt
         
-        oP (MATRIX(ndof x ntraj)): Matrix containing basis momenta before a timestep dt
+        oP (MATRIX(ndof, ntraj)): Matrix containing basis momenta before a timestep dt
         
-        oA (MATRIX(ndof x ntraj)): Matrix containing basis widths before a timestep dt
+        oA (MATRIX(ndof, ntraj)): Matrix containing basis widths before a timestep dt
         
-        oS (MATRIX(ndof x ntraj)): Matrix containing basis phases before a timestep dt
+        oS (MATRIX(ndof, ntraj)): Matrix containing basis phases before a timestep dt
         
         ostate (list of ints): The list specifying which electronic state each old GBF belongs to
         
     Returns:
     
-        st (CMATRIX(ntraj x ntraj)): The time-overlap matrix between sets of GBFs across a timestep dt
+        st (CMATRIX(ntraj, ntraj)): The time-overlap matrix between sets of GBFs across a timestep dt
     """
 
     ndof = nQ.num_of_rows
@@ -118,20 +118,26 @@ def qtag_momentum(_q, _p, _a, _s, coeff_on_surf, dyn_params):
               stricter fit, although convergence issues may arise when going below 1e-5  
               [ default: 1e-1 ]
 
-        qpas (list): List of {q,p,a,s} MATRIX objects.
+        _q ( MATRIX(ndof, ntraj_on_surf) ): coordinates of the "classical" particles [units: Bohr]
+        
+        _p ( MATRIX(ndof, ntraj_on_surf) ): momenta of the "classical" particles [units: a.u. of momenta]
+        
+        _a ( MATRIX(ndof, ntraj_on_surf) ): widths of the GBFs [ units: Bohr^-1 ]
+        
+        _s ( MATRIX(ndof, ntraj_on_surf) ): phases of all GBFs [ units: no ]
 
         coeff_on_surf (CMATRIX(ntraj_on_surf x 1)): The complex coefficient matrix for the TBF
         on the relevant surface.
 
     Returns:
-        mom (MATRIX(ndof x ntraj)): Matrix containing trajectory momenta.
+        mom (MATRIX(ndof, ntraj)): Matrix containing trajectory momenta.
 
-        r (MATRIX(ndof x ntraj)): Matrix containing the real complement to the trajectory momenta.
+        r (MATRIX(ndof, ntraj)): Matrix containing the real complement to the trajectory momenta.
 
-        gmom (MATRIX(ndof x ntraj)): Matrix containing the momentum gradients at each trajectory
+        gmom (MATRIX(ndof, ntraj)): Matrix containing the momentum gradients at each trajectory
         location.
 
-        gr (MATRIX(ndof x ntraj)): Matrix containing the real complement to *gmom*.
+        gr (MATRIX(ndof, ntraj)): Matrix containing the real complement to *gmom*.
     """
 
     params = dict(dyn_params)
@@ -260,33 +266,33 @@ def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
               quantum momentum. If the population is less than this number, the trajectories evolve according
               to the quantum momentum for the most populated state.  [ default: 0.25 ]
 
-        _q ( MATRIX(nnucl x ntraj) ): coordinates of the "classical" particles [units: Bohr]
+        _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
         
-        _p ( MATRIX(nnucl x ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
+        _p ( MATRIX(nnucl, ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
         
-        _alp ( MATRIX(nnucl x ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
+        _alp ( MATRIX(nnucl, ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
         
-        _s ( MATRIX(1 x ntraj) ): phases of all GBFs [ units: no ]
+        _s ( MATRIX(1, ntraj) ): phases of all GBFs [ units: no ]
         
         _states ( intList, or list of ntraj ints ): the quantum state of each trajectory
 
-        coeff (CMATRIX(ntraj x 1)): The complex coefficient matrix for the TBF on all surfaces.
+        coeff (CMATRIX(ntraj, 1)): The complex coefficient matrix for the TBF on all surfaces.
 
         surf_pops (list of floats): List of surface populations.
 
     Returns:
     
-        q_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis positions
+        q_new (MATRIX(ndof, ntraj)): the updated matrix object containing the basis positions
         
-        p_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis momenta
+        p_new (MATRIX(ndof, ntraj)): the updated matrix object containing the basis momenta
         
-        a_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis widths
+        a_new (MATRIX(ndof, ntraj)): the updated matrix object containing the basis widths
         
-        s_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis phases 
+        s_new (MATRIX(ndof, ntraj)): the updated matrix object containing the basis phases 
         
         surf_ids (list of ints): the list specifying which electronic state each trajectory belongs to
         
-        coeff (CMATRIX(ntraj x 1)):  the updated complex coefficient matrix for the TBF on all surfaces
+        coeff (CMATRIX(ntraj, 1)):  the updated complex coefficient matrix for the TBF on all surfaces
     """
 
     params = dict(dyn_params)
@@ -481,9 +487,9 @@ def qtag_pops(surf_ids, coeff, S, target_states):
     Args:
         surf_ids (list of ints): List containing the trajectory indices on various states.
 
-        coeff ( CMATRIX(ntraj x 1) ): The GBF expansion coefficients (in the super-basis) 
+        coeff ( CMATRIX(ntraj, 1) ): The GBF expansion coefficients (in the super-basis) 
 
-        S (CMATRIX(ntraj x ntraj) ): Basis functions super-overlap
+        S (CMATRIX(ntraj, ntraj) ): Basis functions super-overlap
 
         target_states (list of ints): List of states for which the norm should be calculated.
 
@@ -517,9 +523,9 @@ def qtag_energy(coeff, H):
        E = C^+ * H * C
 
     Args:
-        coeff (CMATRIX(ntraj x 1) ): The ntraj-by-1 complex matrix of basis coefficients.
+        coeff (CMATRIX(ntraj, 1) ): The ntraj-by-1 complex matrix of basis coefficients.
 
-        H (CMATRIX(ntraj x ntraj) ): The full system super-Hamiltonian (all trajectories and surfaces).
+        H (CMATRIX(ntraj, ntraj) ): The full system super-Hamiltonian (all trajectories and surfaces).
 
     Returns:
         e (float): Total energy of the system. The imaginary part should be zero.
@@ -654,13 +660,13 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
 def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model, _model_params):
     """
     Args: 
-        _q ( MATRIX(nnucl x ntraj) ): coordinates of the "classical" particles [units: Bohr]
-        _p ( MATRIX(nnucl x ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
-        _alp ( MATRIX(nnucl x ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
-        _s ( MATRIX(1 x ntraj) ): phases of all GBFs [ units: no ]
+        _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
+        _p ( MATRIX(nnucl, ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
+        _alp ( MATRIX(nnucl, ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
+        _s ( MATRIX(1, ntraj) ): phases of all GBFs [ units: no ]
         _states ( intList, or list of ntraj ints ): the quantum state of each trajectory
         _coeff ( CMATRIX(nstates x ntraj) ): amplitudes of the GBFs
-        _iM ( MATRIX(nnucl x 1) ): masses of classical particles [units: a.u.^-1]
+        _iM ( MATRIX(nnucl, 1) ): masses of classical particles [units: a.u.^-1]
         _dyn_params ( dictionary ): parameters controlling the execution of the dynamics
             Can contain:
 
