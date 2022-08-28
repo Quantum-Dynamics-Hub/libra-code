@@ -23,6 +23,17 @@ from matplotlib import cm
 from libra_py import data_read
 
 def plot_wf_1D(plt_params, data, *ref_data):
+   """
+        plt_params (dict): Dictionary containing plot control parameters.
+
+          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+
+          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+
+          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+
+        data (list of lists) : the data to be plotted, extracted from plots.wf_plot()
+    """
 
     fig = plt.figure(figsize=plt_params['size'])
     nsnaps = len(data)
@@ -59,9 +70,23 @@ def plot_wf_1D(plt_params, data, *ref_data):
 #    plt.subplots()
 
 def plot_wf_2D(plt_params, data, *ref_data):
+   """
+        plt_params (dict): Dictionary containing plot control parameters.
+
+          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+
+          * **plt_params[`npoints`]** (list of ints) : the grid used to compute the wavefunction in compute.wf_calc_nD()
+
+          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+
+          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+
+        data (list of lists) : the data to be plotted, extracted from plots.wf_plot()
+    """
 
     fig = plt.figure(figsize=plt_params['size'])
     nsnaps = len(data)
+    npoints = plt_params['npoints']
     states = sorted(plt_params['states'])
     which_states = plt_params['which_states']
     colors = plt_params['2Dcolors']
@@ -90,9 +115,7 @@ def wf_plot(dyn_params, plt_params):
     Args:
         dyn_params (dict): Dictionary containing simulation parameters.
 
-          * **dyn_params[`nsteps`]** (int) : the number of simulation steps
-
-          * **dyn_params[`nstates`]** (int) : the number of states [ default: 2 ]
+          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
 
           * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
 
@@ -100,17 +123,17 @@ def wf_plot(dyn_params, plt_params):
 
           * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
 
-          * **plt_params[`states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
 
-          * **plt_params[`snaps`]** (list of ints) : the list of snapshots used in qtag_calc.wf_calc_nD()
+          * **plt_params[`snaps`]** (list of ints) : the list of snapshots used in compute.wf_calc_nD()
 
+          * **plt_params[`npoints`]** (list of ints) : the grid used to compute the wavefunction in compute.wf_calc_nD()
     """
 
     ndof = dyn_params['ndof']
 
     prefix = plt_params['prefix']
-    plt_params['states'] = sorted(dyn_params['states'])
-    states = plt_params['states']
+    states = sorted(dyn_params['states'])
     which_states = sorted(plt_params['which_states'])
     snaps = plt_params['snaps']
     npoints = plt_params['npoints']
@@ -130,6 +153,7 @@ def wf_plot(dyn_params, plt_params):
             for j in range(len(which_cols)):
                 data[i][j] = np.reshape(data[i][j],tuple(npoints))
 
+    plt_params['states'] = states
     print("Number of files = " + str(len(filenames)))
     if ndof == 1:
         plot_wf_1D(plt_params, data)
@@ -146,7 +170,7 @@ def energy_and_pops(dyn_params, plt_params):
 
           * **dyn_params[`nsteps`]** (int) : the number of simulation steps
 
-          * **dyn_params[`nstates`]** (int) : the number of states [ default: 2 ]
+          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
 
           * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
 
@@ -154,10 +178,9 @@ def energy_and_pops(dyn_params, plt_params):
 
           * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
 
-          * **plt_params[`states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
 
-          * **plt_params[`snaps`]** (list of ints) : the list of snapshots used in qtag_calc.wf_calc_nD()
-
+          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
     """
 
     prefix = plt_params['prefix']
@@ -217,6 +240,28 @@ def energy_and_pops(dyn_params, plt_params):
 
 
 def trajectories(dyn_params, plt_params):
+    """
+
+    Args:
+        dyn_params (dict): Dictionary containing simulation parameters.
+
+          * **dyn_params[`grid_dims`]** (list of ints) : the *grid_dims* list used to specify the initial basis passed to initialize.py
+
+          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
+
+          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+
+        plt_params (dict): Dictionary containing plot control parameters.
+
+          * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
+
+          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+
+          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+
+          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+
+    """
 
     prefix = plt_params['prefix']
     colors = plt_params['1Dcolors']
