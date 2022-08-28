@@ -119,7 +119,7 @@ Do this one by one, and in this order (should not matter too much, but who knows
 Basic stuff
 
     conda install conda-build
-    conda install gcc_linux-64
+    conda install gcc_linux-64=9.3.0
     conda install gxx_linux-64
     conda install make
     conda install boost

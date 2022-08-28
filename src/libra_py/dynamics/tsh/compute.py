@@ -863,7 +863,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 
-                             "is_nbra":0
+                             "is_nbra":0, "icond":0, "nfiles":-1
                            } )
 
     #================= Surface hopping: proposal, acceptance =======================
@@ -895,7 +895,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     default_params.update( { "nsteps":1, "prefix":"out", "prefix2":"out2",
                              "hdf5_output_level":-1, "mem_output_level":-1, "txt_output_level":-1, "txt2_output_level":-1,
                              "use_compression":0, "compression_level":[0,0,0], 
-                             "progress_frequency":0.1, "icond": 0, "nfiles": 1,
+                             "progress_frequency":0.1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
                                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
@@ -923,7 +923,10 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     ensemble = dyn_params["ensemble"]
     time_overlap_method = dyn_params["time_overlap_method"]
     decoherence_algo = dyn_params["decoherence_algo"]
-    is_nbra = dyn_params["is_nbra"]
+    is_nbra = dyn_params["is_nbra"]    
+    icond = dyn_params["icond"]    # Setting the initial geoemtry in the dynamics    
+    nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
+
 
     q = MATRIX(_q)
     p = MATRIX(_p)
@@ -975,16 +978,11 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         ham.add_new_children(ndia, nadi, nnucl, ntraj)
 
     ham.init_all(2,1)
-    # Setting the initial geoemtry in the dynamics
-    icond = dyn_params["icond"]
-    # The number of loaded Ham files
-    nfiles = dyn_params["nfiles"]
     model_params.update({"timestep":icond})
 
     
     update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
     update_Hamiltonian_p(dyn_params, ham, p, iM)  
-
 
     U = []
     if is_nbra == 1:
@@ -992,6 +990,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     else:
         for tr in range(ntraj):
             U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
+
 
 
     therm = ThermostatList();
@@ -1009,6 +1008,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     elif decoherence_algo==3:
         dyn_var.allocate_bcsh()
 
+              
                 
     # Do the propagation
     for i in range(nsteps):
@@ -1097,17 +1097,19 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             #    del U[tr]
 
         #============ Propagate ===========        
-        index = i+icond
-        while index>=nfiles:
-            index -= nfiles
+        index = i + icond
+        if nfiles > 0:
+            index = index % nfiles
 
         model_params.update({"timestep":index})
         #model_params.update({"timestep":i})        
+
 
         if rep_tdse==0:            
             compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
         elif rep_tdse==1:
             compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
+
             
         if _savers["txt_saver"]!=None:
             _savers["txt_saver"].save_data_txt( F"{prefix}", properties_to_save, "a", i)

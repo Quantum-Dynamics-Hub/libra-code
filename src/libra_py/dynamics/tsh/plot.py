@@ -755,112 +755,117 @@ def plot_dynamics(plot_params_):
     with h5py.File(F"{prefix}/{filename}", 'r') as f:
         
         #===== Energy Components vs. Time =========
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])        
-        if "energies" in what_to_plot:
-            plt.subplot(1,2,1)
-            add_energies(plt, f, plot_params, "energies")        
-        if "energy_fluctuations" in what_to_plot:
-            plt.subplot(1,2,2)
-            add_energies(plt, f, plot_params, "energy_fluctuations")
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/average_energies-vs-t.png", dpi=plot_params["dpi"])
+        if output_level>=1:
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            if "energies" in what_to_plot:
+                plt.subplot(1,2,1)
+                add_energies(plt, f, plot_params, "energies")        
+            if "energy_fluctuations" in what_to_plot:
+                plt.subplot(1,2,2)
+                add_energies(plt, f, plot_params, "energy_fluctuations")
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/average_energies-vs-t.png", dpi=plot_params["dpi"])
             
                    
         #===== Trajectory-resolved adiabatic energies =========
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])
-        if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.subplot(1,2,1)
-            add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
-        if "traj_resolved_diabatic_ham" in what_to_plot:
-            plt.subplot(1,2,2)
-            add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/traj-res_energies-vs-t.png", dpi=plot_params["dpi"])
+        if output_level>=4:
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            if "traj_resolved_adiabatic_ham" in what_to_plot:
+                plt.subplot(1,2,1)
+                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
+            if "traj_resolved_diabatic_ham" in what_to_plot:
+                plt.subplot(1,2,2)
+                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/traj-res_energies-vs-t.png", dpi=plot_params["dpi"])
 
             
         #===== Coordinates and phase space portraits =========            
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])
-        if "coordinates" in what_to_plot:
-            plt.subplot(1,2,1)
-            add_cooordinates_vs_t(plt, f, plot_params)
-        if "phase_space" in what_to_plot:
-            plt.subplot(1,2,2)        
-            add_phase_space(plt, f, plot_params)
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/q-vs-t_and_phase_space.png", dpi=plot_params["dpi"])
+        if output_level>=3:
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            if "coordinates" in what_to_plot:
+                plt.subplot(1,2,1)
+                add_cooordinates_vs_t(plt, f, plot_params)
+            if "phase_space" in what_to_plot:
+                plt.subplot(1,2,2)        
+                add_phase_space(plt, f, plot_params)
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/q-vs-t_and_phase_space.png", dpi=plot_params["dpi"])
                 
         #====== Populations of all kinds ================
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])        
+        if output_level>=3:
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            
+            if "sh_pop" in what_to_plot:
+                plt.subplot(1,3,1)            
+                add_populations(plt, f, plot_params_, "SH_pop")
+            
+            if "se_pop_adi" in what_to_plot:
+                plt.subplot(1,3,2)
+                add_populations(plt, f, plot_params_, "D_adi")
+            
+            if "se_pop_dia" in what_to_plot:
+                plt.subplot(1,3,3)
+                add_populations(plt, f, plot_params_, "D_dia")
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/dynamically-consistent-populations.png", dpi=plot_params["dpi"])
+        
 
-        if "sh_pop" in what_to_plot:
-            plt.subplot(1,3,1)            
-            add_populations(plt, f, plot_params_, "SH_pop")
-        
-        if "se_pop_adi" in what_to_plot:
-            plt.subplot(1,3,2)
-            add_populations(plt, f, plot_params_, "D_adi")
-
-        if "se_pop_dia" in what_to_plot:
-            plt.subplot(1,3,3)
-            add_populations(plt, f, plot_params_, "D_dia")
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/dynamically-consistent-populations.png", dpi=plot_params["dpi"])
-        
-        
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])
-
-        if "sh_pop_raw" in what_to_plot:
-            plt.subplot(1,3,1)            
-            add_populations(plt, f, plot_params_, "SH_pop_raw")
-        
-        if "se_pop_adi_raw" in what_to_plot:
-            plt.subplot(1,3,2)
-            add_populations(plt, f, plot_params_, "D_adi_raw")
-        
-        if "se_pop_dia_raw" in what_to_plot:
-            plt.subplot(1,3,3)
-            add_populations(plt, f, plot_params_, "D_dia_raw")
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/raw-consistent-populations.png", dpi=plot_params["dpi"])
+        if output_level>=3:        
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            
+            if "sh_pop_raw" in what_to_plot:
+                plt.subplot(1,3,1)            
+                add_populations(plt, f, plot_params_, "SH_pop_raw")
+            
+            if "se_pop_adi_raw" in what_to_plot:
+                plt.subplot(1,3,2)
+                add_populations(plt, f, plot_params_, "D_adi_raw")
+            
+            if "se_pop_dia_raw" in what_to_plot:
+                plt.subplot(1,3,3)
+                add_populations(plt, f, plot_params_, "D_dia_raw")
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/raw-consistent-populations.png", dpi=plot_params["dpi"])
 
 
         #===== Time-overlaps and projectors =========
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])  
+        if output_level>=4:        
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])  
+            
+            if "time_overlaps" in what_to_plot:
+                plt.subplot(1,2,1)
+                add_time_overlaps_projectors(plt, f, plot_params, "St")
         
-        if "time_overlaps" in what_to_plot:
-            plt.subplot(1,2,1)
-            add_time_overlaps_projectors(plt, f, plot_params, "St")
-
-        if "projectors" in what_to_plot:
-            plt.subplot(1,2,2)
-            add_time_overlaps_projectors(plt, f, plot_params, "projector")
-        
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/St-projectors-vs-t.png", dpi=plot_params["dpi"])
+            if "projectors" in what_to_plot:
+                plt.subplot(1,2,2)
+                add_time_overlaps_projectors(plt, f, plot_params, "projector")
+            
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/St-projectors-vs-t.png", dpi=plot_params["dpi"])
         
         
         #===== Basis transforms =========
-        plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                   edgecolor='black', frameon=plot_params["frameon"])          
-        if "basis_transform" in what_to_plot:
-            plt.subplot(1,1,1)
-            add_basis_transform(plt, f, plot_params)
-                
-        if plot_params["save_figures"]==1:
-            plt.savefig(F"{out_prefix}/basist_transform-vs-t.png", dpi=plot_params["dpi"])            
-
-
+        if output_level>=4:        
+            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])          
+            if "basis_transform" in what_to_plot:
+                plt.subplot(1,1,1)
+                add_basis_transform(plt, f, plot_params)
+                    
+            if plot_params["save_figures"]==1:
+                plt.savefig(F"{out_prefix}/basist_transform-vs-t.png", dpi=plot_params["dpi"])            
                 
         plt.show()
 
