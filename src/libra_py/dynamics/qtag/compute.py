@@ -61,6 +61,32 @@ def time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate):
 
     n - new 
     o - old
+    
+    Args: 
+    
+        nQ (MATRIX(ndof x ntraj)): Matrix containing basis positions after a timestep dt
+        
+        nP (MATRIX(ndof x ntraj)): Matrix containing basis momenta after a timestep dt
+        
+        nA (MATRIX(ndof x ntraj)): Matrix containing basis widths after a timestep dt
+        
+        nS (MATRIX(ndof x ntraj)): Matrix containing basis phases after a timestep dt
+        
+        nstate (list of ints): The list specifying which electronic state each updated GBF belongs to
+        
+        oQ (MATRIX(ndof x ntraj)): Matrix containing basis positions before a timestep dt
+        
+        oP (MATRIX(ndof x ntraj)): Matrix containing basis momenta before a timestep dt
+        
+        oA (MATRIX(ndof x ntraj)): Matrix containing basis widths before a timestep dt
+        
+        oS (MATRIX(ndof x ntraj)): Matrix containing basis phases before a timestep dt
+        
+        ostate (list of ints): The list specifying which electronic state each old GBF belongs to
+        
+    Returns:
+    
+        st (CMATRIX(ntraj x ntraj)): The time-overlap matrix between sets of GBFs across a timestep dt
     """
 
     ndof = nQ.num_of_rows
@@ -71,7 +97,6 @@ def time_overlap(nQ, nP, nA, nS, nstate, oQ, oP, oA, oS, ostate):
     oA_half = 0.5*oA    
 
     St = gwp_overlap_matrix(nQ, nP, nS, nA_half, Py2Cpp_int(nstate), oQ, oP, oS, oA_half, Py2Cpp_int(ostate))
-
 
     return St
 
@@ -223,8 +248,8 @@ def qtag_momentum(_q, _p, _a, _s, coeff_on_surf, dyn_params):
 
 
 def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
-    """Makes the trajectories on surfaces with low populations (where quantum momentum
-       is ill-defined) move as the trajectories on the surface with the highest population
+    """Computes the updated basis parameters q, p, a, and s according to a specified single-surface and multi-surface
+    calculation scheme, as defined by the update_method and sync_method sets of parameters in dyn_params.
 
     Args:
 
@@ -235,16 +260,33 @@ def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
               quantum momentum. If the population is less than this number, the trajectories evolve according
               to the quantum momentum for the most populated state.  [ default: 0.25 ]
 
-        qpas (list): List of {q,p,a,s} MATRIX objects.
+        _q ( MATRIX(nnucl x ntraj) ): coordinates of the "classical" particles [units: Bohr]
+        
+        _p ( MATRIX(nnucl x ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
+        
+        _alp ( MATRIX(nnucl x ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
+        
+        _s ( MATRIX(1 x ntraj) ): phases of all GBFs [ units: no ]
+        
+        _states ( intList, or list of ntraj ints ): the quantum state of each trajectory
 
         coeff (CMATRIX(ntraj x 1)): The complex coefficient matrix for the TBF on all surfaces.
 
-        surf_pops (list): List of surface populations.
+        surf_pops (list of floats): List of surface populations.
 
     Returns:
-        qpas_new (list): List of updated {q,p,a,s} MATRIX objects for active surface
-
-        btot (CMATRIX(ntraj x 1)): The complex projection vector for the TBF on all surfaces.
+    
+        q_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis positions
+        
+        p_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis momenta
+        
+        a_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis widths
+        
+        s_new (MATRIX(ndof x ntraj)): the updated matrix object containing the basis phases 
+        
+        surf_ids (list of ints): the list specifying which electronic state each trajectory belongs to
+        
+        coeff (CMATRIX(ntraj x 1)):  the updated complex coefficient matrix for the TBF on all surfaces
     """
 
     params = dict(dyn_params)
@@ -437,13 +479,13 @@ def qtag_pops(surf_ids, coeff, S, target_states):
        a single-surface system.
 
     Args:
-        surf_ids (list): List containing the trajectory indices on various states.
+        surf_ids (list of ints): List containing the trajectory indices on various states.
 
-        coeff ( CMATRIX(ntraj, 1) ): The GBF expansion coefficients (in the super-basis) 
+        coeff ( CMATRIX(ntraj x 1) ): The GBF expansion coefficients (in the super-basis) 
 
-        S (CMATRIX(ntraj, ntraj) ): Basis functions super-overlap
+        S (CMATRIX(ntraj x ntraj) ): Basis functions super-overlap
 
-        target_states (list): List of states for which the norm should be calculated.
+        target_states (list of ints): List of states for which the norm should be calculated.
 
     Returns:
         pops (list of floats): Surface population. The imaginary part should be zero.
@@ -469,66 +511,27 @@ def qtag_pops(surf_ids, coeff, S, target_states):
     return pops
 
 
-
 def qtag_energy(coeff, H):
     """Returns the system energy *e*, calculated from the total basis coefficients *coeff* 
        and the total Hamiltonian *H* as <G|H|G>.
        E = C^+ * H * C
 
     Args:
-        c (CMATRIX(ntraj, 1) ): The ntraj-by-1 complex matrix of basis coefficients.
+        coeff (CMATRIX(ntraj x 1) ): The ntraj-by-1 complex matrix of basis coefficients.
 
-        H (CMATRIX(ntraj, ntraj) ): The full system super-Hamiltonian (all trajectories and surfaces).
+        H (CMATRIX(ntraj x ntraj) ): The full system super-Hamiltonian (all trajectories and surfaces).
 
     Returns:
-        float: Total energy of the system. The imaginary part should be zero.
+        e (float): Total energy of the system. The imaginary part should be zero.
     """
-
 
     e = (coeff.H() * H * coeff).get(0).real
 
     return e
 
-
-
-# CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CMATRIX& Coeff);
-def psi(ndof, ntraj_on_surf, qpas, c, x0):
-    """Returns the (complex) wavefunction value *wf* at a given point *x0*, calculated using the single-surface basis parameters stored in *qpas* and coefficients *c*.
-
-    Args:
-        ndof (integer): Number of degrees of freedom.
-
-        ntraj_on_surf (integer): Number of trajectories per surface.
-
-        qpas (list): List of {q,p,a,s} MATRIX objects.
-
-        c (CMATRIX): The ntraj_on_surf-by-1 complex matrix of basis coefficients.
-
-        x0 (MATRIX): The matrix of coordinates [x_1,...,x_ndof] at which the wavefunction value should be calculated.
-
-    Returns:
-        wf (complex): Complex value of the wavefunction at x0.
-    """
-
-    qvals,pvals,avals,svals=qpas[0],qpas[1],qpas[2],qpas[3]
-
-    wf=0+0j
-    for i in range(ntraj_on_surf):
-        prod=1.0
-        for j in range(ndof):
-            q1,p1,a1,s1=qvals.get(j,i),pvals.get(j,i),avals.get(j,i),svals.get(j,i)
-            prod*=(a1/np.pi)**0.25*np.exp(-a1/2.0*(x0.get(j)-q1)**2+1j*(p1*(x0.get(j)-q1)+s1))
-        wf+=c.get(i)*prod
-    return(wf)
-
-
-
 def wf_calc_nD(dyn_params, plt_params, prefix):
-    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*,
-       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a
-       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*,
-       and each surface has the same number of trajectories. The corresponding Gaussian-distributed
-       momenta are ordered so that the wavepacket spreads as x increases.
+    """Computes the wavefunction on an nD-dimensional grid, as specified by the parameters obtained
+    from the dyn_params and plt_params dictionaries.
 
     Args:
         dyn_params (dict): Dictionary containing simulation parameters.
@@ -543,6 +546,19 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
               will then be *nstates*-by-*prod(grid_dims)*
 
           * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+          
+        plt_params (dict): Dictionary containing plotting parameters.
+        
+          * **plt_params[`xmin`]** (list of floats) : list of minima in the independent coordinate space
+              at which the wavefunction should be calculated
+              
+          * **plt_params[`xmax`]** (list of floats) : list of maxima in the independent coordinate space
+              at which the wavefunction should be calculated
+              
+          * **plt_params[`npoints`]** (list of ints) : the number of points used to compute the wavefunction
+              along each coordinate (i.e. the calculation grid)
+              
+          * **plt_params[`snaps`]** (list of ints) : the snapshots at which to calculate the wavefunction
 
         prefix (str): The name of the directory containing the q, p, a, and s trajectory data.
     """
@@ -635,20 +651,16 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
                 outfile.write("\n")
         iline+=1
 
-
-
-
-
 def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model, _model_params):
     """
     Args: 
-        _q ( MATRIX(nnucl, ntraj) ): coordinates of the "classical" particles [units: Bohr]
-        _p ( MATRIX(nnucl, ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
-        _alp ( MATRIX(nnucl, ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
-        _s ( MATRIX(1, ntraj) ): phases of all GBFs [ units: no ]
+        _q ( MATRIX(nnucl x ntraj) ): coordinates of the "classical" particles [units: Bohr]
+        _p ( MATRIX(nnucl x ntraj) ): momenta of the "classical" particles [units: a.u. of momenta]
+        _alp ( MATRIX(nnucl x ntraj) ): widths of the GBFs [ units: Bohr^-1 ]
+        _s ( MATRIX(1 x ntraj) ): phases of all GBFs [ units: no ]
         _states ( intList, or list of ntraj ints ): the quantum state of each trajectory
-        _coeff ( CMATRIX(nstates, ntraj) ): amplitudes of the GBFs
-        _iM ( MATRIX(nnucl, 1) ): masses of classical particles [units: a.u.^-1]
+        _coeff ( CMATRIX(nstates x ntraj) ): amplitudes of the GBFs
+        _iM ( MATRIX(nnucl x 1) ): masses of classical particles [units: a.u.^-1]
         _dyn_params ( dictionary ): parameters controlling the execution of the dynamics
             Can contain:
 
@@ -746,10 +758,7 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
         _compute_model ( PyObject ): the function that computes the Hamiltonian object
         _model_params ( dict ): parameters that are passed to the Hamiltonian-computing function
 
-
-
     """
-    
 
     dyn_params = dict(_dyn_params)
     Q = MATRIX(_q)
