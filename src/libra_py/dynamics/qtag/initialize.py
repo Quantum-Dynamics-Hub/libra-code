@@ -76,10 +76,11 @@ def initialize(_params):
 
 
 def grid(_params):
-    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*, 
+    """Returns the initial basis parameters Q, P, A, S as ndof-by-ntraj matrices, 
        based on the input contained in the dict *dyn_params*. The placement is evenly spaced 
        across the domain where the initial wavefunction has a magnitude greater than *rho_cut*, and 
-       each surface has the same number of trajectories.
+       each surface has the same number of trajectories. If *rho_cut* is negative, a user-defined
+       set of boundary conditions specified by *grid_min* and *grid_max* is used instead.
 
     Args:
         dyn_params (dict): Dictionary containing simulation parameters.
@@ -107,6 +108,12 @@ def grid(_params):
 
           * **_params[`wfc_s0`]** (list of floats) : list of values (length *ndof*) for the initial
               wavefunction phase [ default: 0.0 ]
+              
+          * **_params[`grid_min`]** (list of floats) : list of minimum values for each domain when a user-defined cutoff is
+              specified (supersedes the wavefunction-density based method)
+              
+          * **_params[`grid_max`]** (list of floats) : list of maximum values for each domain when a user-defined cutoff is
+              specified (supersedes the wavefunction-density based method)
 
 
     Returns:
@@ -205,7 +212,7 @@ def grid(_params):
 
 
 def gaussian(_params):
-    """Returns the initial basis parameters {q,p,a,s} as a list of  ndof-by-ntraj matrices *qpas*,
+    """Returns the initial basis parameters Q, P, A, S as ndof-by-ntraj matrices,
        based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a 
        Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*, 
        and each surface has the same number of trajectories. The corresponding Gaussian-distributed 
