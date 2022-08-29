@@ -196,25 +196,43 @@ complex<double> BAT(CMATRIX* Ham1, CMATRIX* Ham2, vector<CMATRIX*>& dHam1, vecto
                     MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
                     MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2){
 /**
-    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
-       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Bra-ket 
-       Averaged Taylor expansion (BAT) about each basis center, which requires a potential function *pot* as well as 
-       its first derivative. The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
+    """Returns the (complex) value for the potential *v* on the surface specified by *n1*, *n2* using the Bra-Ket Averaged
+       Taylor expansion (BAT)  between two basis functions i (specified by *q1*, *p1*, *s1*, *alp1*) and j (specified by *q2*, *p2*,
+       *s2*, *alp2*). This requires the objects *Ham1* and *Ham2* containing the potential information for GBFs i and j,
+       as well as first derivatives (*dHam1*, *dHam2*).
 
     Args:
 
-        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+        Ham1 (CMATRIX): The matrix containing the system Hamiltonian for basis function i
 
-        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        Ham2 (CMATRIX): The matrix containing the system Hamiltonian for basis function j
 
-        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        dHam1 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian derivatives d/dx for basis function i; the length of the vector is ndof.
 
-        params (dictionary): Dictionary containing the potential parameters.
+        dHam2 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian derivatives d/dx for basis function j; the length of the vector is ndof.
 
-        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+        q1 (MATRIX( ndof, 1 )): The matrix containing the position of basis function i.
+
+        p1 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function i.
+
+        s1 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function i.
+
+        alp1 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function i.
+
+        n1 (int): Electronic state of trajectory i.
+
+        q2 (MATRIX( ndof, 1 )): The matrix containing the position of basis function j.
+
+        p2 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function j.
+
+        s2 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function j.
+
+        alp2 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function j.
+
+        n2 (int): Electronic state of trajectory j.
 
     Returns:
-        complex : v - The complex potential v computed via the bra-ket averaged Taylor expansion between basis functions i and j.
+        v (complex): The complex potential v computed via BAT between basis functions i and j.
 
     """
 */
@@ -264,93 +282,124 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
                     MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, 
                     MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2){
 /**
-    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis 
-       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic 
-       Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives. 
-       The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
+    """Returns the (complex) value for the potential *v* on the surface specified by *n1*, *n2* using the Local Harmonic
+       Approximation (LHA) between two basis functions i (specified by *q1*, *p1*, *s1*, *alp1*) and j (specified by *q2*, 
+       *p2*, *s2*, *alp2*). This requires the objects *Ham1* and *Ham2* containing the potential information for GBFs 
+       i and j, as well as first (*dHam1*, *dHam2*) and second derivatives (*d2Ham1*, *d2Ham2*).
 
     Args:
-        univ (dictionary): Dictionary containing various system parameters.
+        Ham1 (CMATRIX): The matrix containing the system Hamiltonian for basis function i
 
-        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+        Ham2 (CMATRIX): The matrix containing the system Hamiltonian for basis function j
 
-        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        dHam1 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian derivatives d/dx for basis function i; the length of the vector is ndof.
 
-        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        dHam2 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian derivatives d/dx for basis function j; the length of the vector is ndof.
 
-        params (dictionary): Dictionary containing the potential parameters.
+        d2Ham1 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian second derivatives d^2/dx^2 for basis function i; the length of the vector is ndof**2.
 
-        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+        d2Ham2 (vector<CMATRIX>): The vector of matrices containing the Hamiltonian second derivatives d^2/dx^2 for basis function j; the length of the vector is ndof**2.
+
+        q1 (MATRIX( ndof, 1 )): The matrix containing the position of basis function i.
+
+        p1 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function i.
+
+        s1 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function i.
+
+        alp1 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function i.
+
+        n1 (int): Electronic state of trajectory i.
+
+        q2 (MATRIX( ndof, 1 )): The matrix containing the position of basis function j.
+
+        p2 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function j.
+
+        s2 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function j.
+
+        alp2 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function j.
+
+        n2 (int): Electronic state of trajectory j.
 
     Returns:
-        v (complex): The complex potential v computed via the local harmonic approximation between basis functions i and j.
+        v (complex): The complex potential v computed via the LHA between basis functions i and j.
     """
 
 */
 
-  complex<double> vx1, vx2, dvx1, dvx2, d2vx1, d2vx2, v;
+  complex<double> v_i, v_j, dv_i, dv_j, d2v_i, d2v_j, d2vxyi, d2vxyj, v;
   int ndof = q1.n_rows;
 
-  vx1 = Ham1->get(n1, n2);
-  vx2 = Ham2->get(n1, n2);
+  v_i = Ham1->get(n1, n2);
+  v_j = Ham2->get(n1, n2);
 
-  v = 0.5 * (vx1 + vx2);
+  v = 0.5 * (v_i + v_j);
 
   for(int dof=0; dof<ndof; dof++){
 
-    dvx1 = dHam1[dof]->get(n1,n2);
-    dvx2 = dHam2[dof]->get(n1,n2);
+    int indx = dof*(ndof+1);
+    dv_i = dHam1[dof]->get(n1,n2);
+    dv_j = dHam2[dof]->get(n1,n2);
 
     double q1i = q1.get(dof);
-    double q2i = q2.get(dof);
+    double q1j = q2.get(dof);
 
     double p1i = p1.get(dof);
-    double p2i = p2.get(dof);
+    double p1j = p2.get(dof);
 
     double a1i = alp1.get(dof);
-    double a2i = alp2.get(dof);
+    double a1j = alp2.get(dof);
 
-    double dq = q2i - q1i;
-    double dp = p2i - p1i;
-    double denom = a1i + a2i; 
+    double dq = q1j - q1i;
+    double dp = p1j - p1i;
+    double denom = a1i + a1j; 
 
-    complex<double> q1_rr1_q2(a2i*dq, dp); 
+    complex<double> q1_rr1_q2(a1j*dq, dp); 
     complex<double> q1_rr2_q2(-a1i*dq, dp);
 
-    v += 0.5 * (dvx1*q1_rr1_q2 + dvx2*q1_rr2_q2)/denom;   // BAT terms
+    v += 0.5 * (dv_i*q1_rr1_q2 + dv_j*q1_rr2_q2)/denom;   // BAT terms
 
 
     // Now let's do the second-order terms
-    double X_ij = (a1i * q1i + a2i * q2i)/denom;
+    double X_ij = (a1i * q1i + a1j * q1j)/denom;
     double P_ij = dp/denom;
 
     complex<double> Q2_i( 1.0/denom + X_ij*X_ij - P_ij*P_ij - 2.0*X_ij*q1i + q1i*q1i, 2.0*P_ij*(X_ij - q1i) );
-    complex<double> Q2_j( 1.0/denom + X_ij*X_ij - P_ij*P_ij - 2.0*X_ij*q2i + q2i*q2i, 2.0*P_ij*(X_ij - q2i) );
+    complex<double> Q2_j( 1.0/denom + X_ij*X_ij - P_ij*P_ij - 2.0*X_ij*q1j + q1j*q1j, 2.0*P_ij*(X_ij - q1j) );
 
 
-    d2vx1 = d2Ham1[dof]->get(n1,n2);
-    d2vx2 = d2Ham2[dof]->get(n1,n2);
+    d2v_i = d2Ham1[indx]->get(n1,n2);
+    d2v_j = d2Ham2[indx]->get(n1,n2);
 
-    v += 0.25 * (d2vx1 * Q2_i + d2vx2 * Q2_j);
+    v += 0.25 * (d2v_i * Q2_i + d2v_i * Q2_j);
 
-/*
-    double aqp = a1i * q1i + a2i * q2i;
+    //Now the cross-terms, where the 2 indicates the second DoF under consideration
+    for(int dof2=0; dof2<dof; dof2++){
+      int indx2 = ndof*dof+dof2;
+      d2vxyi = d2Ham1[indx2]->get(n1,n2);
+      d2vxyj = d2Ham2[indx2]->get(n1,n2);
 
-    complex<double> z(aqp, dp); z = z/denom;
+      double q2i = q1.get(dof2);
+      double q2j = q2.get(dof2);
 
+      double p2i = p1.get(dof2);
+      double p2j = p2.get(dof2);
 
-    complex<double> vv01 = -dvx1*q1i + 0.5*d2vx1*q1i*q1i;
-    complex<double> vv02 = -dvx2*q2i + 0.5*d2vx2*q2i*q2i;
+      double a2i = alp1.get(dof2);
+      double a2j = alp2.get(dof2);
 
-    v += 0.5 * (vv01 + vv02);
+      double dq2 = q2j - q2i;
+      double dp2 = p2j - p2i;
+      double denom2 = a2i + a2j;
+ 
+      double X2_ij = (a2i * q2i + a2j * q2j)/denom;
+      double P2_ij = dp2/denom;
 
-    complex<double> vv11 = -d2vx1*q1i + dvx1;
-    complex<double> vv12 = -d2vx2*q2i + dvx2;
+      complex<double> zeta( X_ij, P_ij );
+      complex<double> zeta2( X2_ij, P2_ij );
+      complex<double> zeta12( X_ij*X2_ij - P_ij*P2_ij, X_ij*P2_ij + X2_ij*P_ij );
 
-    v += 0.5 * (vv11 + vv12)*z;
-
-    v += 0.25 * (d2vx1 + d2vx2) * (z*z + 1.0/denom);
-*/
+      v+=0.5*( d2vxyi*( zeta12 - zeta*q1i - zeta2*q2i + q1i*q2i ) + d2vxyj*( zeta12 - zeta*q1j - zeta2*q2j + q1j*q2j ));
+    } // for dof2
 
   }// for  dof
 
@@ -363,26 +412,42 @@ complex<double> LHAe(int i, int j,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
                      double AA, double BB, double CC, nHamiltonian& ham){
 /**
-    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
-       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
-       Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives.
-       The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
-
+    """Returns the (complex) value for the potential *v* on the surface specified by *n1*, *n2* using the Local Harmonic
+       Approximation (LHA) between two basis functions i (specified by *q1*, *p1*, *s1*, *alp1*) and j (specified by *q2*,
+       *p2*, *s2*, *alp2*). This version computes the Gaussian coupling b/t electronic states exactly, defined in general
+       as v12(x) = AA*exp(-BB*(x-CC)**2).
+^M
     Args:
-        univ (dictionary): Dictionary containing various system parameters.
+        q1 (MATRIX( ndof, 1 )): The matrix containing the position of basis function i.
 
-        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+        p1 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function i.
 
-        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        s1 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function i.
 
-        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        alp1 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function i.
 
-        params (dictionary): Dictionary containing the potential parameters.
+        n1 (int): Electronic state of trajectory i.
 
-        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+        q2 (MATRIX( ndof, 1 )): The matrix containing the position of basis function j.
 
+        p2 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function j.
+
+        s2 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function j.
+
+        alp2 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function j.
+
+        n2 (int): Electronic state of trajectory j.
+
+        AA (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        BB (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        CC (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        ham (nHamiltonian object): The system Hamiltonian.
     Returns:
-        v (complex): The complex potential v computed via the local harmonic approximation between basis functions i and j.
+        v (complex): The complex potential v computed via the LHA between basis functions i and j w/ exact coupling
+        defined by v12(x)=AA*exp(-BB*(x-CC)**2).
     """
 */
 
@@ -439,26 +504,43 @@ complex<double> BATe(int i, int j,
                      MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2,
                      double AA, double BB, double CC, nHamiltonian& ham){
 /**
-    """Returns the (complex) value for the potential *v* on an energetic surface specified by *nsurf* from two basis
-       functions defined by their parameters *qpasi* and *qpasj*, respectively. The computation employs the Local Harmonic
-       Approximation (LHA), which requires a potential function *pot* as well as its first and second derivatives.
-       The potential parameters are stored in the dict 'model_params' as defined in qtag_config.
-
+    """Returns the (complex) value for the potential *v* on the surface specified by *n1*, *n2* using the Bra-Ket Averaged
+       Taylor expansion (BAT) between two basis functions i (specified by *q1*, *p1*, *s1*, *alp1*) and j (specified by *q2*,
+       *p2*, *s2*, *alp2*). This version computes the Gaussian coupling b/t electronic states exactly, defined in general
+       as v12(x) = AA*exp(-BB*(x-CC)**2).
+^M
     Args:
-        univ (dictionary): Dictionary containing various system parameters.
+        q1 (MATRIX( ndof, 1 )): The matrix containing the position of basis function i.
 
-        nstate (integer): Integer specifying the potential surface to be calculated (0 = ground, 1 = first excited, ...)
+        p1 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function i.
 
-        qpasi (list): The ndof-by-4 parameter list of the i-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        s1 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function i.
 
-        qpasj (list): The ndof-by-4 parameter list of the j-th basis function. Each entry is an ndof-by-1 column MATRIX.
+        alp1 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function i.
 
-        params (dictionary): Dictionary containing the potential parameters.
+        n1 (int): Electronic state of trajectory i.
 
-        libra_model (function object): Function object containing the Libra potential model for the ground and excited states.
+        q2 (MATRIX( ndof, 1 )): The matrix containing the position of basis function j.
 
+        p2 (MATRIX( ndof, 1 )): The matrix containing the momentum of basis function j.
+
+        s2 (MATRIX( ndof, 1 )): The matrix containing the phase of basis function j.
+
+        alp2 (MATRIX( ndof, 1 )): The matrix containing the width parameter of basis function j.
+
+        n2 (int): Electronic state of trajectory j.
+
+        AA (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        BB (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        CC (double): Exact gaussian coupling parameter, used in the form v12(x)=AA*exp(-BB*(x-CC)**2)
+
+        ham (nHamiltonian object): The system Hamiltonian.
+ 
     Returns:
-        v (complex): The complex potential v computed via the local harmonic approximation between basis functions i and j.
+        v (complex): The complex potential v computed via BAT between basis functions i and j w/ exact coupling
+        defined by v12(x)=AA*exp(-BB*(x-CC)**2).
     """
 */
 
