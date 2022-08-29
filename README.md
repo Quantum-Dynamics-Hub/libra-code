@@ -231,6 +231,11 @@ Used in some of the tutorials
   * Dr. Xiang Sun (NYU Shanghai, China)
       Implementation and testing of the FGR codes
 
+  * Dr. Sophya Garashchuk (University of South Carolina)
+      QTAG theory development
+
+  * Dr. Matthew Dutra (University of South Carolina)
+      Implementation and testing of the QTAG codes
 
 ## References
 
