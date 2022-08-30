@@ -23,7 +23,7 @@ from matplotlib import cm
 from libra_py import data_read
 
 def plot_wf_1D(plt_params, data, *ref_data):
-   """
+    """
         plt_params (dict): Dictionary containing plot control parameters.
 
           * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
@@ -70,7 +70,7 @@ def plot_wf_1D(plt_params, data, *ref_data):
 #    plt.subplots()
 
 def plot_wf_2D(plt_params, data, *ref_data):
-   """
+    """
         plt_params (dict): Dictionary containing plot control parameters.
 
           * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
