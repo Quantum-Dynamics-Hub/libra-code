@@ -134,6 +134,7 @@ public:
   /// Hamiltonian and Propagator
   vector<CMATRIX> Hdia;      ///<  diabatic Hamiltoninans for all the Npts points
   vector<CMATRIX> Hadi;      ///<  adiabatic Hamiltoninans for all the Npts points
+  vector<CMATRIX> Vcomplex;  ///<  complex absorbing potential that will be added to the real-space propagator
   vector< vector<CMATRIX> > NAC1;  ///<  1-st order NACS: NAC1[ipt][alpha].get(i,j) = <psi_i| nabla_alpha | psi_j> 
   vector< vector<CMATRIX> > NAC2;  ///<  2-nd order NACS: NAC2[ipt][alpha].get(i,j) = <psi_i| nabla_alpha^2 | psi_j> 
   vector<CMATRIX> U;         ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
@@ -230,6 +231,7 @@ public:
   ///=============== In the Wfcgrid2_updates.cpp ====================  
   ///< Precompute Hamiltonian on the grid
   void update_Hamiltonian(bp::object py_funct, bp::object params, int rep);
+
 
   ///< Convert diabatic and adiabatic wfc into one another
   void update_adiabatic();

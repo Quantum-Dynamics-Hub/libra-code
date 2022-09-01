@@ -114,6 +114,7 @@ void Wfcgrid2::allocate(){
 
   Hdia = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  diabatic Hamiltoninans for all the Npts points
   Hadi = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  adiabatic Hamiltoninans for all the Npts points
+  Vcomplex = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  complex absorbing potential
   U = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));      ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
   expH = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  exponent of the diabatic Hamiltoninans for all the Npts points
   expK = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  exponent of the kinetic energy propagator for all the Npts points

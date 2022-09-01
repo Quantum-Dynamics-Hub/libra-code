@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2019 Alexey V. Akimov
+* Copyright (C) 2019-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -58,6 +58,11 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
     bp::object obj = py_funct(bp::object(q), params);  
 
 
+    // Try extract the adiabatic Hamiltonian
+    has_attr = (int)hasattr(obj,"v_complex");
+    if(has_attr){   Vcomplex[npt1] = extract<CMATRIX>(obj.attr("v_complex"));    } 
+
+
     if(rep==0){
 
       // Try to extract the diabatic Hamiltonian
@@ -87,6 +92,8 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
   }// for allgrid points
 
 }// update_Hamiltonian
+
+
 
 
 

@@ -151,6 +151,7 @@ void export_Wfcgrid2_objects(){
 
       .def_readwrite("Hdia", &Wfcgrid2::Hdia)
       .def_readwrite("Hadi", &Wfcgrid2::Hadi)
+      .def_readwrite("Vcomplex", &Wfcgrid2::Vcomplex)
       .def_readwrite("NAC1", &Wfcgrid2::NAC1)
       .def_readwrite("NAC2", &Wfcgrid2::NAC2)
       .def_readwrite("U",    &Wfcgrid2::U)

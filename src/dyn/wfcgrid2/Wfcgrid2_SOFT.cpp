@@ -36,20 +36,32 @@ using namespace libmeigen;
 
 void Wfcgrid2::update_propagator_H(double dt){
 /**
-  \brief Update the Hamiltonian for nd-D grid
+  \brief Update the exp(-i*dt*Hamiltonian) for nd-D grid
 
   Should have called ```update_Hamiltonian``` prior to this
 
+  H * U = U * E  =>  H = U * E * U^+
+
+  exp(-i*dt*H) = U * exp(-i*dt*E) * U^+
+
+  exp(-i*dt*E) = exp(-i * dt * [Re(E)+i*Im(E)]) = exp(-i*dt*Re(E)) * exp(dt*Im(E))
+                                                  ----- ex -------   ---- scl ----
+
+  ex = cos(dt*Re(E)) - i * sin(dt*Re(E))
 */
 
   int nst, nst1;
 
   CMATRIX S(nstates, nstates); S.Init_Unit_Matrix(1.0);
-  CMATRIX si(nstates, nstates);  // sin(-dt*E), where E is adiabatic Ham.
-  CMATRIX cs(nstates, nstates);  // cos(-dt*E), where E is adiabatic Ham.
+//  CMATRIX si(nstates, nstates);  // sin(dt*E), where E is adiabatic Ham.
+//  CMATRIX cs(nstates, nstates);  // cos(dt*E), where E is adiabatic Ham.
+//  CMATRIX ex(nstates, nstates);  // exp()
 
   complex<double> one(1.0, 0.0);
   complex<double> eye(0.0, 1.0);
+  //complex<double> ex(0.0, 0.0);
+  double scl = 1.0;
+  double si, cs;
 
   // For all grid points
   for(int npt1=0; npt1<Npts; npt1++){
@@ -57,24 +69,32 @@ void Wfcgrid2::update_propagator_H(double dt){
     // Transformation to adiabatic basis
     // Hdia * U = S * U * Hadi
     solve_eigen(Hdia[npt1], S, Hadi[npt1], U[npt1], 0);  
-
-    cs = 0.0;   si = 0.0;
+    
+//    cs = 0.0;   si = 0.0;
     for(int nst=0;nst<nstates;nst++){  
-      cs.set(nst, nst, std::cos(-dt*Hadi[npt1].get(nst, nst)) * one );
-      si.set(nst, nst, std::sin(-dt*Hadi[npt1].get(nst, nst)) * one );
+      //cs.set(nst, nst, std::cos(dt*Hadi[npt1].get(nst, nst)) * one );
+      //si.set(nst, nst, std::sin(dt*Hadi[npt1].get(nst, nst)) * one );
+      cs = std::cos( dt*( Hadi[npt1].get(nst, nst).real() + Vcomplex[npt1].get(nst, nst).real() ) );
+      si = std::sin( dt*( Hadi[npt1].get(nst, nst).real() + Vcomplex[npt1].get(nst, nst).real() ) );
+      scl = std::exp(dt*( Hadi[npt1].get(nst, nst).imag() + Vcomplex[npt1].get(nst, nst).imag() ) );
+       
+      complex<double> ex(cs, -si);
+      expH[npt1].set(nst, nst,  scl * ex);
     }
 
     // Transform cs and si according to matrix U:
-    cs = U[npt1] * cs * U[npt1].H(); 
-    si = U[npt1] * si * U[npt1].H(); 
+    //cs = U[npt1] * cs * U[npt1].H(); 
+    //si = U[npt1] * si * U[npt1].H(); 
+    expH[npt1] = U[npt1] * expH[npt1] * U[npt1].H();
 
     // Finally construct complex exp(-i*dt*H) matrix from the cs and si matrices
-    expH[npt1] = cs + eye*si;
+    //expH[npt1] = cs - eye*si;
 
 
   }// for npt1  
 
 }// update_propagator_H
+
 
 
 
