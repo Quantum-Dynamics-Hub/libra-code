@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021 Alexey V. Akimov
+* Copyright (C) 2021-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -25,6 +25,25 @@ namespace libdyn{
 
 namespace bp = boost::python;
 
+void dyn_variables::allocate_gen_vars(){
+
+  if(gen_vars_status==0){ 
+
+    ampl_dia = new CMATRIX(ndia, ntraj);
+    ampl_adi = new CMATRIX(nadi, ntraj);
+    dm_dia = vector<CMATRIX*>(ntraj, NULL);
+    dm_adi = vector<CMATRIX*>(ntraj, NULL);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      dm_dia[itraj] = new CMATRIX(ndia, ndia);
+      dm_adi[itraj] = new CMATRIX(nadi, nadi);
+    }
+    gen_vars_status = 1;
+  }
+
+}
+
+
 dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
 /**
@@ -41,8 +60,12 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ndof = _ndof;
   ntraj = _ntraj;
 
-/*
+
   ///================= General variables, for OOP implementation ===================
+  gen_vars_status = 0;
+  allocate_gen_vars();
+    
+/*
   q = NULL;
   p = NULL;
   ampl_dia = NULL;
@@ -102,10 +125,53 @@ void dyn_variables::allocate_bcsh(){
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
-     cout<<"dyn_variables copy constructor!!!\n";
-     *this = x;
-//    decoherence_rates = new MATRIX( *x.decoherence_rates );  
 
+  cout<<"dyn_variables copy constructor!!!\n";
+
+  int itraj, idof;
+
+  ndia = x.ndia;
+  nadi = x.nadi;
+  ndof = x.ndof;
+  ntraj = x.ntraj;
+
+  // Gen vars
+  allocate_gen_vars();
+
+  // copy content of gen vars
+  *ampl_dia = *x.ampl_dia;
+  *ampl_adi = *x.ampl_adi;
+  for(itraj=0; itraj<ntraj; itraj++){
+    *dm_dia[itraj] = *x.dm_dia[itraj];
+    *dm_adi[itraj] = *x.dm_adi[itraj];
+  }
+
+
+  // AFSSH vars - only if initialized
+  if(x.afssh_vars_status==1){
+    allocate_afssh();
+    
+    // Copy content
+    for(itraj=0; itraj<ntraj; itraj++){
+      for(idof=0; idof<ndof; idof++){
+        *dR[itraj][idof] = *x.dR[itraj][idof];
+        *dP[itraj][idof] = *x.dP[itraj][idof];
+      }
+    }
+
+  }// if AFSSH vars
+
+  // BCSH vars - only if initialized
+  if(x.bcsh_vars_status==1){
+    allocate_bcsh();
+
+    // Copy content
+    *reversal_events = *x.reversal_events;
+
+  }// if BCSH vars
+
+  //*this = x;
+  
 }
 
 

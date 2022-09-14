@@ -137,6 +137,7 @@ void export_dyn_variables_objects(){
 
       .def("set_parameters", expt_set_parameters_v1)
 
+      .def("allocate_gen_vars", &dyn_variables::allocate_gen_vars)
       .def("allocate_afssh", &dyn_variables::allocate_afssh)
       .def("allocate_bcsh", &dyn_variables::allocate_bcsh)
   ;
@@ -473,6 +474,9 @@ void export_dyn_projectors_objects(){
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &update_projectors;
   def("update_projectors", expt_update_projectors_v1);  
 
+  vector<CMATRIX> (*expt_compute_projectors_v1)
+  (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_projectors;
+  def("compute_projectors", expt_compute_projectors_v1);
 
   CMATRIX (*expt_raw_to_dynconsyst_v1)
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;

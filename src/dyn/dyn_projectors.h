@@ -47,6 +47,7 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd,
 CMATRIX permutation2cmatrix(vector<int>& permutation);
 void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
+vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
 
 
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);

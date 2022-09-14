@@ -79,6 +79,14 @@ class dyn_variables{
 
   ///================= General variables, for OOP implementation ===================
   /**
+    Status of the general vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int gen_vars_status; 
+
+  /**
     Nuclear coordinates 
     
     Options:
@@ -102,7 +110,7 @@ class dyn_variables{
     Options:
      CMATRIX(ndia, ntraj)
   */
-//  CMATRIX* ampl_dia; 
+  CMATRIX* ampl_dia; 
 
 
   /**
@@ -111,7 +119,25 @@ class dyn_variables{
     Options:
      CMATRIX(nadi, ntraj)
   */
-//  CMATRIX* ampl_adi; 
+  CMATRIX* ampl_adi; 
+
+
+  /**
+    Electronic density matrix in diabatic representation
+    
+    Options:
+     vector<ntraj, CMATRIX(ndia, ndia)>
+  */
+  vector<CMATRIX*> dm_dia; 
+
+
+  /**
+    Electronic density matrix in adiabatic representation
+    
+    Options:
+     vector<ntraj, CMATRIX(nadi, nadi)>
+  */
+  vector<CMATRIX*> dm_adi; 
 
 
   /**
@@ -187,8 +213,7 @@ class dyn_variables{
   MATRIX* reversal_events;
 
 
-
-
+  void allocate_gen_vars();
   void allocate_afssh();
   void allocate_bcsh();
 

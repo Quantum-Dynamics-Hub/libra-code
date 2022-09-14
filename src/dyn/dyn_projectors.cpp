@@ -621,6 +621,70 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
 
 
 
+vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd){
+/**
+
+ Computes the instantaneous projector = permutation + phase correction
+
+*/
+
+  int ntraj = St.size();
+  // Instead of setting many of-else in the for loop we can set ntraj=1
+  if(prms.isNBRA==1){    ntraj = 1;  }
+
+  int nst = St[0].n_rows; 
+
+  vector<int> perm_t(nst,0); 
+  for(int i=0; i<nst; i++){ perm_t[i] = i; }
+
+  CMATRIX phase_i(nst, 1);
+  CMATRIX st(nst, nst);
+  CMATRIX ist(nst, nst);
+  
+  vector<CMATRIX> res(ntraj, CMATRIX(nst, nst));
+
+  for(int traj=0; traj<ntraj; traj++){
+
+    st = St[traj];
+
+    if(prms.state_tracking_algo==1){
+        perm_t = get_reordering(st);
+    }
+    else if(prms.state_tracking_algo==2){
+        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
+    }
+    if(prms.state_tracking_algo==3){
+        perm_t = get_stochastic_reordering(st, rnd);
+    }
+    if(prms.state_tracking_algo==32){
+        perm_t = get_stochastic_reordering2(st, rnd);
+    }
+
+    if(prms.state_tracking_algo==33){
+        perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts, prms.min_probability_reordering, 0);
+    }
+    
+    // P -> P * perm
+    res[traj] = permutation2cmatrix(perm_t);
+    st = st * res[traj];
+    
+    if(prms.do_phase_correction){
+      // ### Compute the instantaneous phase correction factors ###
+      phase_i = compute_phase_corrections(st, prms.phase_correction_tol);  // f(i)
+
+      // ### Scale projections' components by the phases ###
+      for(int a=0; a<nst; a++){  
+        res[traj].scale(-1, a, std::conj(phase_i.get(a)) );
+      }
+    }
+
+  }// for traj
+
+  return res;
+}
+
+
+
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
 /**
   This function converts the amplitudes from the raw ones to the dynamically-consistent

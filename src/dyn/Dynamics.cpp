@@ -275,38 +275,21 @@ CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& 
   /// Coeff - the basis in which SH is done
 
   // Input in the diabatic basis
-  if(rep_in==0){                  
- 
+  if(rep_in==0){                   
     // Output in the diabatic basis too
-    if(rep_out==0){ 
-      Coeff = C; 
-    }
+    if(rep_out==0){    Coeff = C;   }
 
     // Output in the adiabatic basis
-    else if(rep_out==1){  
-
-      ham.ampl_dia2adi(C, Coeff, 0, 1);  
-
-    }
-
+    else if(rep_out==1){  ham.ampl_dia2adi(C, Coeff, 0, 1);  }
   }
 
   // Input in the adiabatic basis 
   else if(rep_in==1){   
-
     // Output in the diabatic basis 
-    if(rep_out==0){  
-
-      ham.ampl_adi2dia(Coeff, C, 0, 1); 
-
-    } 
+    if(rep_out==0){  ham.ampl_adi2dia(Coeff, C, 0, 1);   } 
 
     // Output in the diabatic basis too
-    else if(rep_out==1){ 
-
-      Coeff = C;  
-
-    } 
+    else if(rep_out==1){     Coeff = C;    } 
   }
 
   return Coeff;
@@ -597,6 +580,8 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   MATRIX coherence_interval(nst, ntraj); // for DISH
   vector<int> project_out_states(ntraj); // for DISH
 
+  vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
+ 
   vector<CMATRIX> Uprev;
   // Defining ntraj1 as a reference for making these matrices
   // ntraj is defined as q.n_cols as since it would be large in NBRA
@@ -615,7 +600,8 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   MATRIX p_traj(ndof, 1);
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
   vector<int> t2(1,0);
-
+  vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
+  CMATRIX c_tmp(nst, 1);
 
   //if(prms.decoherence_algo==2){   dyn_var.allocate_afssh(); }
 
@@ -711,6 +697,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   update_Hamiltonian_q_ethd(prms, q, p, projectors, ham, py_funct, params, invM);
   //exit(0);
 
+
   // Apply phase correction and state reordering as needed
   if(prms.rep_tdse==1){
 
@@ -723,11 +710,23 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       /// Read the existing time-overlap
       else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);      }
       Eadi = get_Eadi(ham);           // these are raw properties
-      update_projectors(prms, projectors, Eadi, St, rnd);
+      //update_projectors(prms, projectors, Eadi, St, rnd);
+
+      insta_proj = compute_projectors(prms, Eadi, St, rnd);
+      
+      for(traj=0; traj<ntraj; traj++){
+        t2[0] = traj;
+        pop_submatrix(C, c_tmp, t3, t2);
+        c_tmp = insta_proj[traj] * c_tmp;
+        push_submatrix(C, c_tmp, t3, t2);
+      }
 
     }
   }// rep_tdse == 1
 
+
+  // In case, we select to compute scalar NACs from time-overlaps
+  update_nacs(prms, ham);
 
 
   // NVT dynamics
@@ -771,24 +770,36 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   Hvib = ham.children[0]->get_hvib_adi();
 
 
+
+
   //============== Begin the TSH part ===================
 
   // To be able to compute transition probabilities, compute the corresponding amplitudes
   // This transformation is between diabatic and raw adiabatic representations
-  CMATRIX Coeff(nst,ntraj); 
-  Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
-
+  CMATRIX Coeff(nst, ntraj);   // this is adiabatic amplitudes
+  
+  Coeff = C;
+/*
+  if(prms.rep_tdse==0){ // If we do calculations in the diabatic rep, we need to compute
+                        // adiabatic coefficients - e.g. to apply surface
+    Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
+  }
+*/
+/*
   if(prms.rep_tdse==0){
     // If we solve TD-SE in the diabatic rep, C (when transformed to adiabatic basis by the code above)
     // returned is in the raw representation, so we need to make it dynamically-consistent
-
-    Coeff = raw_to_dynconsyst(Coeff, projectors);
+    Coeff = C; 
+    
+//    Coeff = raw_to_dynconsyst(Coeff, projectors);
   }
   else if(prms.rep_tdse==1){ 
     // If we solve TD-SE in the adiabatic rep, C is already dynamically-consistent
+    Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
+
     ;;
   }
-
+*/
 
   //================= Update decoherence rates & times ================
   //MATRIX decoh_rates(*prms.decoh_rates);
@@ -858,7 +869,6 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     // Propose new discrete states    
     vector<int> prop_states( propose_hops(g, act_states, rnd) );
 
-//    exit(0);
 
     // Decide if to accept the transitions (and then which)
     vector<int> old_states(act_states);
@@ -917,22 +927,22 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 
-
+/*
   /// Convert the temporary amplitudes Coeff to the actual variables C
   if(prms.rep_tdse==0){
     // If we solve TD-SE in the diabatic rep, C (when transformed to adiabatic basis by the code above)
     // returned is in the raw representation, so we need to make it dynamically-consistent
 
-    Coeff = dynconsyst_to_raw(Coeff, projectors);
+    //Coeff = dynconsyst_to_raw(Coeff, projectors);
   }
   else if(prms.rep_tdse==1){ 
     // If we solve TD-SE in the adiabatic rep, C is already dynamically-consistent
     ;;
   }
 
+*/
   // Need the inverse
   //Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
-
   C = Coeff;
 
 

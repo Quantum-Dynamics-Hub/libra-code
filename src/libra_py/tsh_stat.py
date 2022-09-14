@@ -272,103 +272,59 @@ def compute_dm(ham, Cdia, Cadi, projectors, rep, lvl, isNBRA=0):
     # Raw
     dm_dia_raw, dm_adi_raw = CMATRIX(ndia, ndia), CMATRIX(nadi, nadi)
 
-    if isNBRA==1:
 
-        traj = 0
+    for traj in range(0,ntraj):
 
+        # In the NBRA case - we are going to use the S and U only for the
+        # first Hamiltonian child, since other children have not Hamiltonians         
+        ham_indx = traj
+        if isNBRA==1: 
+            ham_indx = 0
+       
         indx = None
         if lvl==0:
             indx = Py2Cpp_int([0])
         elif lvl==1:
-            indx = Py2Cpp_int([0,traj])
-
+            indx = Py2Cpp_int([0,ham_indx])
+    
         S = ham.get_ovlp_dia(indx)
-        U = ham.get_basis_transform(indx)
+        U = ham.get_basis_transform(indx) 
 
+        # However, in both NBRA and non-NBRA cases, we have all the trajectories        
         if rep==0:
+            c = Cdia.col(traj)
+            tmp = S * (c * c.H()) * S
+    
+            # Dia dyn-consistent and dia raw
+            dm_dia = dm_dia + tmp
+            dm_dia_raw = dm_dia_raw + tmp
+    
+            # Adi raw                     
+            tmp = U.H() * tmp * U
+            dm_adi_raw = dm_adi_raw + tmp
 
-            dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
-
-            # Dia dyn-consistent
-            dm_dia = dm_dia + dm_tmp
-
-            # Dia raw - i'm not sure about that one, so lets keep it just zero for now
-
-            # Adi dyn-consistent
-            tmp = U.H() * dm_tmp * U
+            # Adi dyn-consistent    
             dm_adi = dm_adi + tmp
-
-            # Adi raw
-            dm_adi_raw = dm_adi_raw + projectors[traj] * tmp * projectors[traj].H()
-
-
+                   
+    
         elif rep==1:
-            su = S * U
-
             # Raw
-            #c = Cadi.col(traj)
-            dm_tmp = Cadi.col(traj) * Cadi.col(traj).H()
-
-            # Adi dynamically-consistent DM
-            dm_adi = dm_adi + dm_tmp
-
+            c = Cadi.col(traj)            
+            tmp = c * c.H()
+                        
             # Adi raw
-            dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
-            dm_adi_raw = dm_adi_raw + dm_tmp_raw
-
-            # Dia dynamically-consistent DM
-            dm_dia = dm_dia + su * dm_tmp * su.H()
-
-            # Dia raw
-            dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()
-
-    else:
-        for traj in range(0,ntraj):
-            indx = None
-            if lvl==0:
-                indx = Py2Cpp_int([0])
-            elif lvl==1:
-                indx = Py2Cpp_int([0,traj])
+            dm_adi_raw = dm_adi_raw + tmp
+            
+            # Adi dyn-consistent
+            dm_adi = dm_adi + tmp
+            #dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
+            #dm_adi_raw = dm_adi_raw + dm_tmp_raw
     
-            S = ham.get_ovlp_dia(indx)
-            U = ham.get_basis_transform(indx) 
-        
-            if rep==0:
-        
-                dm_tmp = S * Cdia.col(traj) * Cdia.col(traj).H() * S
-    
-                # Dia dyn-consistent
-                dm_dia = dm_dia + dm_tmp
-    
-                # Dia raw - i'm not sure about that one, so lets keep it just zero for now
-    
-                # Adi dyn-consistent
-                tmp = U.H() * dm_tmp * U
-                dm_adi = dm_adi + tmp
-    
-                # Adi raw
-                dm_adi_raw = dm_adi_raw + projectors[traj] * tmp * projectors[traj].H()
-                       
-        
-            elif rep==1:
-                su = S * U
-    
-                # Raw
-                c = Cadi.col(traj)            
-                dm_tmp = c * c.H()
-                            
-                # Adi dynamically-consistent DM
-                dm_adi = dm_adi + dm_tmp
-                
-                # Adi raw
-                dm_tmp_raw = projectors[traj] * dm_tmp * projectors[traj].H()
-                dm_adi_raw = dm_adi_raw + dm_tmp_raw
-    
-                # Dia dynamically-consistent DM
-                dm_dia = dm_dia + su * dm_tmp * su.H()            
-    
-                # Dia raw
-                dm_dia_raw = dm_dia_raw + su * dm_tmp_raw * su.H()            
+            # Dia raw and dyn-consistent
+            su = S * U
+            tmp =  su * tmp * su.H()
+            dm_dia = dm_dia + tmp 
+            dm_dia_raw = dm_dia_raw + tmp  
 
     
     dm_dia = dm_dia / float(ntraj)        

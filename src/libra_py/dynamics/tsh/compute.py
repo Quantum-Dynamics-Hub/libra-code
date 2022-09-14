@@ -255,7 +255,7 @@ def init_electronic_dyn_var(params, rnd):
 
     # Read the parameters
     critical_params = [  ]
-    default_params = { "init_type":0, "nstates":1, "istate":0, "istates":[1.0], "rep":1,  "ntraj":1, "is_nbra":0  }
+    default_params = { "init_type":0, "nstates":1, "istate":0, "istates":[1.0], "rep":1,  "ntraj":1, "is_nbra":0, "verbosity":0  }
     comn.check_input(params, default_params, critical_params)
 
     init_type = params["init_type"]
@@ -265,6 +265,7 @@ def init_electronic_dyn_var(params, rnd):
     rep = params["rep"]  
     ntraj = params["ntraj"]
     is_nbra = params["is_nbra"]
+    verbosity = params["verbosity"]
 
     # Sanity check
     if rep not in [0, 1]:
@@ -311,6 +312,9 @@ def init_electronic_dyn_var(params, rnd):
     for traj in range(ntraj):
 
         if init_type==0:
+            if verbosity > 0:
+                print(F"======= Initialization type is {init_type} ========\n")
+                print(F"setting representation {rep} coefficient C_{istate} to 1.0")
  
             if rep==0:
                 Cdia.set(istate, traj, 1.0+0.0j);  
@@ -319,6 +323,9 @@ def init_electronic_dyn_var(params, rnd):
             states.append(istate) 
 
         elif init_type==1:
+            if verbosity > 0:
+                print(F"======= Initialization type is {init_type} ========\n")
+                print(F"setting representation {rep} coefficient to complex C_{istate} such that |C_{istate}|^2 = 1.0")
 
             ksi = rnd.uniform(0.0, 1.0)
             ampl = math.cos(2*math.pi*ksi) + 1.0j*math.sin(2.0*math.pi*ksi)
@@ -331,6 +338,9 @@ def init_electronic_dyn_var(params, rnd):
 
 
         elif init_type==2:
+            if verbosity > 0:
+                print(F"======= Initialization type is {init_type} ========\n")
+                print(F"setting representation {rep} coefficients C_i for all i to sqrt( target populations) ")
 
             for state, pop in enumerate(istates):
                 ampl = math.sqrt( pop )
@@ -345,6 +355,10 @@ def init_electronic_dyn_var(params, rnd):
 
 
         elif init_type==3:
+
+            if verbosity > 0:
+                print(F"======= Initialization type is {init_type} ========\n")
+                print(F"setting representation {rep} coefficients C_i for all i to complex numbers such that |C_i|^2  = target populations ")
 
             for state, pop in enumerate(istates):
 
@@ -368,6 +382,20 @@ def init_electronic_dyn_var(params, rnd):
         for traj in range(ntraj):
             projections.append( CMATRIX(nstates, nstates) )
             projections[traj].identity()
+
+    if verbosity > 0:
+        print("========== Cdia ===============\n")
+        Cdia.show_matrix()
+        print("========== Cadi ===============\n")
+        Cadi.show_matrix()
+        print("========== states ===============\n")
+        print( Cpp2Py(states) )
+
+        if verbosity > 1:
+            print("========== projectors ===============\n")
+            for traj in range(ntraj):
+                print(F"========== projector for trajectory {traj} =============\n")
+                projections[traj].show_matrix()
 
 
     return Cdia, Cadi, projections, states
@@ -1079,7 +1107,6 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                 save.save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
                 del hvib_adi, hvib_dia
 
-
             if txt_output_level>=4: 
                 hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
                 hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
@@ -1207,8 +1234,11 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
             model_params1.update({"model":model_params["model0"]})
             update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
 
-            Cdia = transform_amplitudes(1, 0, Cdia, ham) 
+            Cdia = transform_amplitudes(1, 0, Cadi, ham) 
 
+            #ham.get_basis_transform( Py2Cpp_int([0,0])).show_matrix()
+            #Cdia.show_matrix()
+            #sys.exit(0)
 
     #if _dyn_params["isNBRA"]==1:
     #    res = run_dynamics_nbra(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
