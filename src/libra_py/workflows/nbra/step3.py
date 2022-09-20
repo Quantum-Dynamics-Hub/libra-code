@@ -663,7 +663,7 @@ def apply_orthonormalization_scipy(S_1, S_2, St):
     U2 = get_Lowdin_scipy(S_2)
 
     St_orthonormalized = np.linalg.multi_dot([U1.transpose(), St, U2])
-    S_1_orthonormalized = np.linalg.multi_dot([U1.transpose(), S_1, U2])
+    S_1_orthonormalized = np.linalg.multi_dot([U1.transpose(), S_1, U1])
 
     return St_orthonormalized, S_1_orthonormalized
 
