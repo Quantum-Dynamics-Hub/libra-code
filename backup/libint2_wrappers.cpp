@@ -323,16 +323,16 @@ libint2::Operator obtype, int nthreads){
         // The results block 
         Eigen::Map<const Matrix> buf_mat(buf[0], n1, n2);
         result.block(bf1, bf2, n1, n2) = buf_mat;
-        //if (s1 != s2)  // if s1 >= s2, copy {s1,s2} to the corresponding
-        //               // {s2,s1} block, note the transpose!
-        //result.block(bf2, bf1, n2, n1) = buf_mat.transpose();
+        if (s1 != s2)  // if s1 >= s2, copy {s1,s2} to the corresponding
+                       // {s2,s1} block, note the transpose!
+        result.block(bf2, bf1, n2, n1) = buf_mat.transpose();
         }
       }
     };
-  //std::cout << "Done";
-  MATRIX res(n_1,n_2);
   // Now for compute, do parallel
   parallel_do(compute, nthreads);
+  //std::cout << "Done";
+  MATRIX res(n_1,n_2);
   for(int i=0;i<n_1;i++){
     for(int j=0; j<n_2;j++){
       res.set(i,j, result(i,j));
