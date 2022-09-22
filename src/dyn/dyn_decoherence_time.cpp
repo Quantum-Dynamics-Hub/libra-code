@@ -309,13 +309,13 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<
   vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
 
   vector<int> act_states(ntraj, 0);
-  F_mf = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+  F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
 
   for(int i=0;i<nstates; i++){
     vector<int> act_states(ntraj, i);
     
-    F_st = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+    F_st = ham.forces_adi(act_states).real();  // aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
     for(int itraj=0; itraj<ntraj; itraj++){
 
@@ -365,7 +365,7 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors,
 
   for(int i=0; i<nstates; i++){
     vector<int> act_states_i(ntraj, i);
-    F[i] = aux_get_forces(prms_st, amplitudes, projectors, act_states_i, ham);
+    F[i] = ham.forces_adi(act_states_i).real(); //  aux_get_forces(prms_st, amplitudes, projectors, act_states_i, ham);
 
   }// for i
 

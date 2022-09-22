@@ -30,6 +30,8 @@
 #include "electronic/libelectronic.h"
 #include "ensemble/libensemble.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
+
 
 /// liblibra namespace
 namespace liblibra{
@@ -53,11 +55,16 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM);
 
 
 CMATRIX tsh_indx2ampl(vector<int>& res, int nstates);
+
+MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars,  nHamiltonian& ham);
+MATRIX aux_get_forces(bp::dict prms, dyn_variables& dynvars, nHamiltonian& ham);
+
+/* old way
 MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
                       nHamiltonian& ham);
 MATRIX aux_get_forces(bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
                       nHamiltonian& ham);
-
+*/
 vector<CMATRIX> get_Eadi(nHamiltonian& ham);
 
 

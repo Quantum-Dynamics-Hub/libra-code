@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -196,7 +196,15 @@ void export_nhamiltonian_generic_objects(){
 
 
 
+  CMATRIX (nHamiltonian::*expt_forces_adi_v1)(vector<int>& act_states)
+  = &nHamiltonian::forces_adi;
 
+
+  CMATRIX (nHamiltonian::*expt_forces_dia_v1)(vector<int>& act_states)
+  = &nHamiltonian::forces_dia;
+
+
+/*
   CMATRIX (nHamiltonian::*expt_forces_adi_v1)(CMATRIX& ampl_adi) 
   = &nHamiltonian::forces_adi;
   CMATRIX (nHamiltonian::*expt_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
@@ -226,6 +234,7 @@ void export_nhamiltonian_generic_objects(){
   vector<CMATRIX> (nHamiltonian::*expt_forces_tens_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_) 
   = &nHamiltonian::forces_tens_dia; 
 
+*/
 
 
   complex<double> (nHamiltonian::*expt_Ehrenfest_energy_adi_v1)(CMATRIX& ampl_adi)
@@ -439,20 +448,20 @@ void export_nhamiltonian_generic_objects(){
       .def("ampl_dia2adi", expt_ampl_dia2adi_v3)
 
 
-      .def("forces_tens_adi", expt_forces_tens_adi_v1)
-      .def("forces_tens_adi", expt_forces_tens_adi_v2)
-      .def("forces_tens_dia", expt_forces_tens_dia_v1)
-      .def("forces_tens_dia", expt_forces_tens_dia_v2)
+//      .def("forces_tens_adi", expt_forces_tens_adi_v1)
+//      .def("forces_tens_adi", expt_forces_tens_adi_v2)
+//      .def("forces_tens_dia", expt_forces_tens_dia_v1)
+//      .def("forces_tens_dia", expt_forces_tens_dia_v2)
 
       .def("forces_adi", expt_forces_adi_v1)
-      .def("forces_adi", expt_forces_adi_v2)
-      .def("forces_adi", expt_forces_adi_v3)
-      .def("forces_adi", expt_forces_adi_v4)
+//      .def("forces_adi", expt_forces_adi_v2)
+//      .def("forces_adi", expt_forces_adi_v3)
+//      .def("forces_adi", expt_forces_adi_v4)
 
       .def("forces_dia", expt_forces_dia_v1)
-      .def("forces_dia", expt_forces_dia_v2)
-      .def("forces_dia", expt_forces_dia_v3)
-      .def("forces_dia", expt_forces_dia_v4)
+//      .def("forces_dia", expt_forces_dia_v2)
+//      .def("forces_dia", expt_forces_dia_v3)
+//      .def("forces_dia", expt_forces_dia_v4)
 
 
 

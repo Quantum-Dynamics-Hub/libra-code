@@ -37,6 +37,11 @@ using namespace libmeigen;
 
 CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
 /**
+  \param[in] ampl_dia: MATRIX(ndia, 1) diabatic amplitudes for one trajectory
+
+  Returns:
+  MATRIX(ndof, 1) - Ehrenfest forces in diabatic representation, for a single trajectory
+ 
 
   These are the Ehrenfest forces derived such the EOMs derived from the
   quntum-classical energy would conserve:
@@ -104,8 +109,8 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
 /**
   \brief Computes the Ehrenfest forces in the diabatic basis
 
-  \param[in] ampl_dia A [ndia x ntraj] matrix of diabatic amplitudes for
-  one of many (ntraj) trajectories
+  \param[in] ampl_dia [ndia x ntraj] matrix of diabatic amplitudes for
+  one or many (ntraj) trajectories
   \param[in] lvl [0 or 1] - 0 - use the present level for all trajectories, 1 - use the next 
   level for the trajectories (one sub-Hamiltonian per each trajectory) 
 
@@ -115,6 +120,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
 
   b) lvl = 1 ampl_adi is a ndia x ntraj matrix (ntraj trajectories) and 
   each trajectory is meant to be handled by a separate sub-Hamiltonian 
+
+  Returns:
+  MATRIX(ndof, ntraj) - Ehrenfest forces in diabatic representation, for multiple trajectories
+
 
 */
   int i;
@@ -183,6 +192,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
 /**
+  \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
+
+  Returns:
+  MATRIX(ndof, 1) - Ehrenfest forces in adiabatic representation, for single trajectory
 
   These are the Ehrenfest forces derived such the EOMs derived from the
   quntum-classical energy would conserve:
@@ -245,7 +258,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
 /**
   \brief Computes the Ehrenfest forces in the adiabatic basis
 
-  \param[in] ampl_adi A [nadi x ntraj] matrix of adiabatic amplitudes for
+  \param[in] ampl_adi [nadi x ntraj] matrix of adiabatic amplitudes for
   one of many (ntraj) trajectories
   \param[in] lvl [0 or 1] - 0 - use the present level for all trajectories, 1 - use the next 
   level for the trajectories (one sub-Hamiltonian per each trajectory) 
@@ -256,6 +269,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
 
   b) lvl = 1 ampl_adi is a nadi x ntraj matrix (ntraj trajectories) and 
   each trajectory is meant to be handled by a separate sub-Hamiltonian 
+
+  Returns:
+  MATRIX(ndof, ntraj) - Ehrenfest forces in adiabatic representation, for multiple trajectories
+
 */
   int i;
 

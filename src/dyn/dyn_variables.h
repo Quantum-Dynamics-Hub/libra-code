@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021 Alexey V. Akimov
+* Copyright (C) 2021-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -146,7 +146,7 @@ class dyn_variables{
     Options:
      vector<int> act_states(ntraj)
   */
-//  vector<int> act_states;
+  vector<int> act_states;
 
 
   /**

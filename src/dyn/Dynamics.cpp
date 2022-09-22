@@ -571,9 +571,20 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   int n_therm_dofs;
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
+  vector< vector<int> > perms;
   //cout << "Flag 1 isNBRA " << prms.isNBRA << endl;
 
   //dyn_variables dyn_var(nst, nst, ndof, ntraj);
+  //dyn_variables dynvars(nst, nst, ndof, ntraj);
+
+  if(prms.rep_tdse==0){
+    dyn_var.ampl_dia = &C;
+  }
+  else if(prms.rep_tdse==1){
+    dyn_var.ampl_adi = &C;
+  }
+
+  dyn_var.act_states = act_states;
 
 
   MATRIX coherence_time(nst, ntraj); // for DISH
@@ -666,7 +677,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
     }// idof 
   }
 
-  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+//  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+  p = p + aux_get_forces(prms, dyn_var, ham) * 0.5 * prms.dt;
+
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
     p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
@@ -712,14 +725,22 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
       Eadi = get_Eadi(ham);           // these are raw properties
       //update_projectors(prms, projectors, Eadi, St, rnd);
 
-      insta_proj = compute_projectors(prms, Eadi, St, rnd);
+
+      perms = compute_permutations(prms, Eadi, St, rnd);
+      insta_proj = compute_projectors(prms, St, perms);
+
+//      insta_proj = compute_projectors(prms, Eadi, St, rnd);
       
+      /// Adiabatic Amplitudes
       for(traj=0; traj<ntraj; traj++){
         t2[0] = traj;
         pop_submatrix(C, c_tmp, t3, t2);
         c_tmp = insta_proj[traj] * c_tmp;
         push_submatrix(C, c_tmp, t3, t2);
       }
+
+      /// Adiabatic states are permuted
+      act_states = permute_states(perms, act_states);
 
     }
   }// rep_tdse == 1
@@ -741,7 +762,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
   }
 
 
-  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+//  p = p + aux_get_forces(prms, C, projectors, act_states, ham) * 0.5 * prms.dt;
+  p = p + aux_get_forces(prms, dyn_var, ham) * 0.5 * prms.dt;
+
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -872,7 +895,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
     // Decide if to accept the transitions (and then which)
     vector<int> old_states(act_states);
-    act_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, prop_states, act_states, rnd);
+    act_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, prop_states, act_states, rnd);    
 
     // Velocity rescaling
     handle_hops_nuclear(prms, q, p, invM, Coeff, projectors, ham, act_states, old_states);
@@ -963,6 +986,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 //  t1.clear();
 //  t2.clear();
 
+  dyn_var.act_states = act_states;
 
 //    exit(0);
 }

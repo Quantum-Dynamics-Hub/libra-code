@@ -38,6 +38,9 @@ void dyn_variables::allocate_gen_vars(){
       dm_dia[itraj] = new CMATRIX(ndia, ndia);
       dm_adi[itraj] = new CMATRIX(nadi, nadi);
     }
+
+    act_states = vector<int>(ntraj, 0);
+
     gen_vars_status = 1;
   }
 
@@ -145,6 +148,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *dm_dia[itraj] = *x.dm_dia[itraj];
     *dm_adi[itraj] = *x.dm_adi[itraj];
   }
+  act_states = x.act_states;
 
 
   // AFSSH vars - only if initialized

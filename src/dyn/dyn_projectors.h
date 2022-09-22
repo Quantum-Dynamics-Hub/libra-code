@@ -44,10 +44,16 @@ vector<int> get_stochastic_reordering3(CMATRIX& time_overlap, Random& rnd,
                                        int convergence, int max_number_of_attempts,
                                        double filter_tol, int verbosity_level
                                        );
+
+vector<int> permute_states(vector<vector<int> >& perms, vector<int>& act_states);
+
 CMATRIX permutation2cmatrix(vector<int>& permutation);
 void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
+
+vector< vector<int> > compute_permutations(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
 vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
+vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms);
 
 
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);

@@ -470,13 +470,29 @@ void export_dyn_projectors_objects(){
   CMATRIX (*expt_permutation2cmatrix_v1)(vector<int>& permutation) = &permutation2cmatrix;
   def("permutation2cmatrix", expt_permutation2cmatrix_v1);  
 
+  vector<int> (*expt_permute_states_v1)
+  (vector<vector<int> >& perms, vector<int>& act_states) = &permute_states;
+  def("permute_states", expt_permute_states_v1);
+
+
+
   void (*expt_update_projectors_v1)(dyn_control_params& prms, vector<CMATRIX>& projectors, 
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &update_projectors;
   def("update_projectors", expt_update_projectors_v1);  
 
+
+  vector< vector<int> > (*expt_compute_permutations_v1)
+  (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_permutations;
+
+
   vector<CMATRIX> (*expt_compute_projectors_v1)
   (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v1);
+
+  vector<CMATRIX> (*expt_compute_projectors_v2)
+  (dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms) = &compute_projectors;
+  def("compute_projectors", expt_compute_projectors_v2);
+
 
   CMATRIX (*expt_raw_to_dynconsyst_v1)
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;
@@ -563,7 +579,7 @@ void export_Energy_Forces_objects(){
   CMATRIX (*expt_tsh_indx2ampl_v1)(vector<int>& res, int nstates) = &tsh_indx2ampl;
   def("tsh_indx2ampl", expt_tsh_indx2ampl_v1);
 
-
+/*
   MATRIX (*expt_aux_get_forces_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, 
   vector<int>& act_states, nHamiltonian& ham) = &aux_get_forces;
@@ -573,6 +589,17 @@ void export_Energy_Forces_objects(){
   (bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, 
   vector<int>& act_states, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v2);
+*/
+
+  MATRIX (*expt_aux_get_forces_v1)
+  (dyn_control_params& prms, dyn_variables& dynvars, nHamiltonian& ham) = &aux_get_forces;
+  def("aux_get_forces", expt_aux_get_forces_v1);
+
+
+  MATRIX (*expt_aux_get_forces_v2)
+  (bp::dict params, dyn_variables& dynvars, nHamiltonian& ham) = &aux_get_forces;
+  def("aux_get_forces", expt_aux_get_forces_v2);
+
 
 
   vector<CMATRIX> (*expt_get_Eadi_v1)(nHamiltonian& ham) = &get_Eadi;
