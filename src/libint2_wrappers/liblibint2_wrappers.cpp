@@ -104,10 +104,11 @@ void export_libint2_wrappers_objects(){
  
   def("compute_overlaps", expt_compute_overlaps_v1);
 
+/*
   MATRIX (*expt_compute_overlaps_serial_v1)
   (const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2) = &compute_overlaps_serial;
   def("compute_overlaps_serial", expt_compute_overlaps_serial_v1);
-
+*/
 
 
 /**

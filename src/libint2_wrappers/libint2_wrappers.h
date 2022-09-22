@@ -116,10 +116,10 @@ std::vector<size_t> map_shell_to_basis_function(const std::vector<libint2::Shell
 using real_t = libint2::scalar_type;
 typedef Eigen::Matrix<real_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>  Matrix;  
 
-MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,libint2::Operator obtype);
+//MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,libint2::Operator obtype);
 MATRIX compute_1body_ints_parallel(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,libint2::Operator obtype);
 MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int number_of_threads);
-MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2);
+//MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2);
 
 
 

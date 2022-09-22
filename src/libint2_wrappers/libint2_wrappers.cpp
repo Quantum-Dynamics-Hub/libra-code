@@ -166,7 +166,7 @@ std::vector<size_t> map_shell_to_basis_function(const std::vector<libint2::Shell
 
 
 
-
+/*
 
 // Computing the integrals between two shells serial
 MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,libint2::Operator obtype)
@@ -206,31 +206,31 @@ MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std
 
   // loop over unique shell pairs, {s1,s2} such that s1 >= s2
   // this is due to the permutational symmetry of the real integrals over Hermitian operators: (1|2) = (2|1)
-  std::cout << shells_1.size();
+  //std::cout << shells_1.size();
   for(auto s1=0; s1!=shells_1.size(); ++s1) {
 
     auto bf1 = shell2bf_1[s1]; // first basis function in this shell
-    std::cout << "Flag bf1: " << bf1 << "\n";
+    //std::cout << "Flag bf1: " << bf1 << "\n";
     auto n1 = shells_1[s1].size();
 
-    std::cout << "shells_1[s1]" << shells_1[s1].size() << "\n";
+    //std::cout << "shells_1[s1]" << shells_1[s1].size() << "\n";
 
     //for(auto s2=0; s2<=s1; ++s2) {
     for(auto s2=0; s2!=shells_2.size(); ++s2) {
 
       auto bf2 = shell2bf_2[s2];
-      std::cout << "Flag bf2: " << bf2 << "\n";
+      //std::cout << "Flag bf2: " << bf2 << "\n";
       auto n2 = shells_2[s2].size();
 
-      std::cout << "shells_2[s2]" << shells_2[s2].size() << "\n";
+      //std::cout << "shells_2[s2]" << shells_2[s2].size() << "\n";
 
       // compute shell pair
       engine.compute(shells_1[s1], shells_2[s2]);
       //std::cout << "Flag after engine.compute" << "\n";
       // "map" buffer to a const Eigen Matrix, and copy it to the corresponding blocks of the result
       Eigen::Map<const Matrix> buf_mat(buf[0], n1, n2);
-      std::cout << "Flag after buf_mat" << "\n" << "buf_mat.size: \n" << buf_mat.size() << "\n";
-      std::cout << "Flag after buf_mat" << "\n" << "buf_mat  \n" << buf_mat << "\n";
+      //std::cout << "Flag after buf_mat" << "\n" << "buf_mat.size: \n" << buf_mat.size() << "\n";
+      //std::cout << "Flag after buf_mat" << "\n" << "buf_mat  \n" << buf_mat << "\n";
       //std::cout << "Flag after buf_mat" << "\n" << "bf1.size" << bf1.size() << "\n";
       //std::cout << "Flag after buf_mat" << "\n" << "bf2.size" << bf2.size() << "\n";
       result.block(bf1, bf2, n1, n2) = buf_mat;
@@ -240,7 +240,7 @@ MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std
       //std::cout << "Flag after buf_mat.transpose" << "\n";
     }
   }
-  std::cout << "Flag before MATRIX res" << "\n";
+  //std::cout << "Flag before MATRIX res" << "\n";
   MATRIX res(n_1, n_2);
   for(int i=0;i<n_1;i++){
     for(int j=0; j<n_2;j++){
@@ -252,7 +252,7 @@ MATRIX compute_1body_ints(const std::vector<libint2::Shell>& shells_1, const std
   return res;
 }
 
-
+*/
 
 
 // Computing the integrals between two shells in parallel using OpenMP (This is also adopted from libint test files with some modifications)
@@ -305,11 +305,12 @@ libint2::Operator obtype, int nthreads){
     const auto& buf = engines[thread_id].results();
 
     for (auto s1 = 0l, s12 = 0l; s1 != shells_1.size(); ++s1) {
+//    for (auto s1 = 0; s1 < shells_1.size(); ++s1) {
       auto bf1 = shell2bf1[s1];     // first basis function in this shell
       auto n1 = shells_1[s1].size();
       //std::cout << "shells_1[" << s1 << "]" << shells_1[s1].size() << "\n";   
       auto s1_offset = s1 * (s1+1) / 2;
-      //for (auto s2=0; s2<=s1; ++s2) {
+      //for (auto s2 = 0; s2 < shells_2.size(); ++s2) {
       for (auto s2=0; s2!= shells_2.size(); ++s2) {
         //std::cout << "shells_2[" << s2 << "]" << shells_2[s2].size() << "\n";
         auto s12 = s1_offset + s2;
@@ -376,7 +377,7 @@ MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::
     libint2::initialize();
 	// Compute the AO overlap matrix
     auto S = compute_1body_ints_parallel(shells_1, shells_2, Operator::overlap, nthreads);
-    std::cout << "\n\tFinished computing overlap integral\n";
+    //std::cout << "\n\tFinished computing overlap integral\n";
 	// End of AO matrix calculation
     libint2::finalize(); // done with libint
 
@@ -384,17 +385,18 @@ MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::
 }
 
 
-
+/*
 MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2) {
     // Initialize Libint    
     libint2::initialize();
         // Compute the AO overlap matrix
     auto S = compute_1body_ints(shells_1, shells_2, Operator::overlap);
-    std::cout << "\n\tFinished computing overlap integral\n";
+    //std::cout << "\n\tFinished computing overlap integral\n";
     libint2::finalize(); // done with libint
     return S;
 }
 
+*/
 
 
 }// namespace liblibint2_wrappers
