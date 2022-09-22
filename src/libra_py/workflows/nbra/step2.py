@@ -633,6 +633,14 @@ def run_cp2k_libint_step2(params):
                 #beta_eigenvectors_2 = eigenvectors_2[1::2]
                 #beta_energies_2 = energies_2[1::2]
                 eig_vec_shape = int(eigenvectors_2.shape[0]/2)
+
+                # Alpha spin channel
+                alpha_eigenvectors_1 = eigenvectors_1[0:eig_vec_shape]
+                alpha_energies_1 = energies_1[0:eig_vec_shape]
+                # Beta spin channel
+                beta_eigenvectors_1 = eigenvectors_1[eig_vec_shape:]
+                beta_energies_1 = energies_1[eig_vec_shape:]
+
                 # Alpha spin channel
                 alpha_eigenvectors_2 = eigenvectors_2[0:eig_vec_shape]
                 alpha_energies_2 = energies_2[0:eig_vec_shape]
