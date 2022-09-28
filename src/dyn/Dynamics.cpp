@@ -228,8 +228,8 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
       ham.compute_nac_dia(p_quantum_dof, invM, 0, 1);
+      ham.compute_hvib_dia(1);
     }
-    ham.compute_hvib_dia(1);
 
   }
   else if(prms.rep_tdse==1){  
@@ -237,8 +237,8 @@ void update_Hamiltonian_p(dyn_control_params& prms, nHamiltonian& ham,
     if(prms.nac_update_method==0){ ;;  }
     else if(prms.nac_update_method==1){
       ham.compute_nac_adi(p_quantum_dof, invM, 0, 1); 
+      ham.compute_hvib_adi(1);
     }
-    ham.compute_hvib_adi(1);
   }
 }
 
