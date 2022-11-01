@@ -1,4 +1,25 @@
 #
+#  Compile PCH first
+#
+#file(SET PCH_HEADERS pch.h)
+#file(SET PCH_SRC pch.cpp pch.h) 
+set(PCH_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
+set(PCH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp ${PCH_HEADERS})
+
+ADD_LIBRARY(pch SHARED ${PCH_SRC})
+ADD_LIBRARY(pch_stat STATIC ${PCH_SRC})
+
+target_precompile_headers(pch PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
+target_precompile_headers(pch_stat PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
+
+
+#add_compile_definitions(USING_PCH)
+
+TARGET_LINK_LIBRARIES(pch      ${ext_libs} )
+TARGET_LINK_LIBRARIES(pch_stat ${ext_libs} )
+
+
+#
 #  Building sub-directories
 #
 MESSAGE("Going into subdirectory util...")
@@ -151,11 +172,34 @@ ADD_SUBDIRECTORY("integrators")
 #
 #  Source files and headers in this directory
 #
-file(GLOB LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
-file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS}) 
+#file(GLOB LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+#file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS}) 
+
+#file(GLOB LIBRA_HEADERS liblibra_core.h realtype.h Units.h)
+#file(GLOB LIBRA_SRC liblibra_core.cpp ${LIBRA_HEADERS}) 
+set(LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.h ${CMAKE_CURRENT_SOURCE_DIR}/realtype.h ${CMAKE_CURRENT_SOURCE_DIR}/Units.h)
+set(LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.cpp ${LIBRA_HEADERS})
+
 
 ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
 ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
+
+
+#
+#  PCH (Precompiled header) support
+# 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16 AND USING_PCH)  # Support for PCHs in CMake was added in 3.16
+   message(STATUS "Compiling using pre-compiled header support")
+   #target_precompile_headers(libra_core PUBLIC pch.h) # With PUBLIC they will be used by targets using this target
+   #target_precompile_headers(libra_core_stat PUBLIC pch.h) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(libra_core REUSE_FROM pch) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(libra_core_stat REUSE_FROM pch_stat) # With PUBLIC they will be used by targets using this target
+   set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
+   add_compile_definitions(USING_PCH)
+else()
+   message(STATUS "No pre-compiled header support")
+endif()
+
 
 
 

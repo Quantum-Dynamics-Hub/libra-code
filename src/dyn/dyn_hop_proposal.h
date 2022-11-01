@@ -38,9 +38,15 @@ MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
 MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
 
+/*
 vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
        nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
+*/
+vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
+       nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
+
 
 int hop(vector<double>& prob, double ksi);
 int hop(int initstate, MATRIX& g, double ksi);

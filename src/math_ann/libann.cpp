@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2021 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -10,7 +10,14 @@
 *********************************************************************************/
 
 //#include <string>
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <boost/python.hpp>
+
+#endif 
+
 #include "libann.h"
 
 

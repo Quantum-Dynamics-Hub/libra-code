@@ -49,23 +49,23 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt);
 
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd,
        vector<int>& which_trajectories);
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd);
 
 
 vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& act_states, Random& rnd);
 
 
 
 void handle_hops_nuclear(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
        nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states);
 
 

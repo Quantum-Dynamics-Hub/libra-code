@@ -99,6 +99,88 @@ dyn_control_params::dyn_control_params(){
 }
 
 
+dyn_control_params::dyn_control_params(const dyn_control_params& x){ 
+  cout<<"dyn_control_params cctor\n";
+
+  rep_tdse = x.rep_tdse;
+  rep_ham = x.rep_ham;
+  rep_sh = x.rep_sh;
+  rep_lz = x.rep_lz;
+  rep_force = x.rep_force;
+  force_method = x.force_method;
+  enforce_state_following = x.enforce_state_following;
+  enforced_state_index = x.enforced_state_index; 
+  time_overlap_method = x.time_overlap_method;
+  nac_update_method = x.nac_update_method;
+  nac_algo = x.nac_algo;
+  do_phase_correction = x.do_phase_correction;
+  phase_correction_tol = x.phase_correction_tol; 
+  state_tracking_algo = x.state_tracking_algo;
+  MK_alpha = x.MK_alpha;
+  MK_verbosity = x.MK_verbosity;
+  convergence = x.convergence;
+  max_number_attempts = x.max_number_attempts;
+  min_probability_reordering = x.min_probability_reordering;
+  isNBRA = x.isNBRA;
+
+  ///================= Surface hopping: proposal, acceptance =======================
+  tsh_method = x.tsh_method;
+  hop_acceptance_algo = x.hop_acceptance_algo;
+  momenta_rescaling_algo = x.momenta_rescaling_algo;
+  use_boltz_factor = x.use_boltz_factor;
+
+  ///================= Decoherence options =========================================
+  decoherence_algo = x.decoherence_algo; 
+  sdm_norm_tolerance = x.sdm_norm_tolerance;
+  dish_decoherence_event_option = x.dish_decoherence_event_option;
+  decoherence_times_type = x.decoherence_times_type;
+  decoherence_C_param = x.decoherence_C_param;
+  decoherence_eps_param = x.decoherence_eps_param;
+  dephasing_informed = x.dephasing_informed;
+  instantaneous_decoherence_variant = x.instantaneous_decoherence_variant; 
+  collapse_option = x.collapse_option;
+
+  ///================= Entanglement of trajectories ================================
+  entanglement_opt = x.entanglement_opt;
+  ETHD3_alpha = x.ETHD3_alpha;
+  ETHD3_beta = x.ETHD3_beta;
+
+  ///============================ QTAG =============================================
+  qtag_pot_approx_method = x.qtag_pot_approx_method;
+  ///================= Bath, Constraints, and Dynamical controls ===================
+
+  Temperature = x.Temperature;
+  ensemble = x.ensemble;
+
+  thermostat_params = bp::dict(x.thermostat_params);
+
+  thermostat_dofs = x.thermostat_dofs;
+  quantum_dofs = x.quantum_dofs;
+  constrained_dofs = x.constrained_dofs;
+
+  dt = x.dt;
+  num_electronic_substeps = x.num_electronic_substeps;
+
+  decoherence_rates = new MATRIX(x.decoherence_rates->n_rows, x.decoherence_rates->n_cols);  
+  *decoherence_rates = *x.decoherence_rates;
+
+  ave_gaps = new MATRIX( x.ave_gaps->n_rows, x.ave_gaps->n_cols );
+  *ave_gaps = *x.ave_gaps;
+
+  schwartz_decoherence_inv_alpha = new MATRIX( x.schwartz_decoherence_inv_alpha->n_rows, x.schwartz_decoherence_inv_alpha->n_cols );
+  *schwartz_decoherence_inv_alpha = *x.schwartz_decoherence_inv_alpha;
+
+
+}
+dyn_control_params::~dyn_control_params() {  
+
+  cout<<"dyn_control_params destructor\n";
+
+  delete decoherence_rates;  
+  delete ave_gaps;
+  delete schwartz_decoherence_inv_alpha;
+}
+
 
 void dyn_control_params::sanity_check(){
 

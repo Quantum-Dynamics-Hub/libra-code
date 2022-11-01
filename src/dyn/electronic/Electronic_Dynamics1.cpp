@@ -14,8 +14,13 @@
     
 */
 
-#include "Electronic.h"
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <cmath>
+#endif 
+
+#include "Electronic.h"
 #include "../../math_meigen/libmeigen.h"
 #include "../../math_operators/liboperators.h"
 
@@ -1029,7 +1034,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 
 }
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA){
+void propagate_electronic(double dt, CMATRIX& C, /*vector<CMATRIX>& projector,*/ vector<nHamiltonian*>& ham, int rep, int isNBRA){
 
   if(isNBRA!=1){
   if(C.n_cols!=ham.size()){
@@ -1075,7 +1080,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vec
 
   for(int traj=0; traj<ntraj; traj++){
     ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, projector[traj], ham[traj], rep);
+    propagate_electronic(dt, ctmp, /*projector[traj],*/ ham[traj], rep);
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }

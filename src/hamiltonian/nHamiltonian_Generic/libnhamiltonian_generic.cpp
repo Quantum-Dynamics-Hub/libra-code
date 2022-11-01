@@ -14,9 +14,13 @@
     
 */
 
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <memory> // for std::auto_ptr<>
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
 
 #include "libnhamiltonian_generic.h"
 
@@ -119,10 +123,17 @@ void export_nhamiltonian_generic_objects(){
 
 
   // for models defined in Python
+/*
   void (nHamiltonian::*expt_compute_diabatic_v3)(bp::object py_funct, bp::object q, bp::object params, int lvl)
   = &nHamiltonian::compute_diabatic;
 
   void (nHamiltonian::*expt_compute_diabatic_v4)(bp::object py_funct, bp::object q, bp::object params)
+  = &nHamiltonian::compute_diabatic;
+*/
+  void (nHamiltonian::*expt_compute_diabatic_v3)(bp::object py_funct, MATRIX& q, bp::object params, int lvl)
+  = &nHamiltonian::compute_diabatic;
+
+  void (nHamiltonian::*expt_compute_diabatic_v4)(bp::object py_funct, MATRIX& q, bp::object params)
   = &nHamiltonian::compute_diabatic;
 
 
@@ -144,11 +155,17 @@ void export_nhamiltonian_generic_objects(){
   = &nHamiltonian::compute_adiabatic;
   void (nHamiltonian::*expt_compute_adiabatic_v2)(int der_lvl)
   = &nHamiltonian::compute_adiabatic;
+  void (nHamiltonian::*expt_compute_adiabatic_v3)(bp::object py_funct, MATRIX& q, bp::object params, int lvl)
+  = &nHamiltonian::compute_adiabatic;
+  void (nHamiltonian::*expt_compute_adiabatic_v4)(bp::object py_funct, MATRIX& q, bp::object params)
+  = &nHamiltonian::compute_adiabatic;
+
+/*
   void (nHamiltonian::*expt_compute_adiabatic_v3)(bp::object py_funct, bp::object q, bp::object params, int lvl)
   = &nHamiltonian::compute_adiabatic;
   void (nHamiltonian::*expt_compute_adiabatic_v4)(bp::object py_funct, bp::object q, bp::object params)
   = &nHamiltonian::compute_adiabatic;
-
+*/
 
 
   void (nHamiltonian::*expt_ampl_dia2adi_v1)(CMATRIX& ampl_dia, CMATRIX& ampl_adi) 

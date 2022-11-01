@@ -28,7 +28,12 @@
 #ifndef CMATRIX_H
 #define CMATRIX_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <complex>
+#endif 
+
 #include "base_matrix.h"
 #include "MATRIX.h"
 //#include "IMATRIX.h"

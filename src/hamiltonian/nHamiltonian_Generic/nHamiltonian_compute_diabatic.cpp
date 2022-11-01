@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2018 Alexey V. Akimov
+* Copyright (C) 2018-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -15,8 +15,12 @@
 */
 
 
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <stdlib.h>
 #include <omp.h>
+#endif 
 
 #include "nHamiltonian.h"
 #include "../Hamiltonian_Model/libhamiltonian_model.h"
@@ -85,7 +89,8 @@ void nHamiltonian::compute_diabatic(int model, vector<double>& q, vector<double>
 }
 
 
-void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params){
+//void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params){
+void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params){
 /**
   Performs the diabatic properties calculation at the top-most level of the Hamiltonians 
   hierarchy. See the description of the more general function prototype for more info.
@@ -97,7 +102,8 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::objec
 
 
 
-void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl){
+//void nHamiltonian::compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl){
+void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params, int lvl){
 /**
   This function will call the <py_funct> function defined in Python and taking the signature:
 

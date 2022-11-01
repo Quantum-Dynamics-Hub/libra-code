@@ -14,7 +14,12 @@
     
 */
 
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <sstream>
+#endif 
+
 #include "Grid_functions.h"
 
 /// liblibra namespace

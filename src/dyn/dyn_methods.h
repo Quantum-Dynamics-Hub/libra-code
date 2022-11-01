@@ -38,6 +38,13 @@ namespace libdyn{
 vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd);
 vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd);
 
+/*
+vector<int> dish(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
+       nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
+       vector<MATRIX>& decoherence_rates, Random& rnd);
+*/
+
 vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 
   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd);
 

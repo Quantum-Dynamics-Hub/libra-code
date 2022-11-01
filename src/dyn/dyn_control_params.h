@@ -17,8 +17,13 @@
 #ifndef DYN_CONTROL_PARAMS_H
 #define DYN_CONTROL_PARAMS_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif
+
 #include "../math_linalg/liblinalg.h"
 
 
@@ -557,16 +562,8 @@ class dyn_control_params{
 
 
   dyn_control_params();
-  dyn_control_params(const dyn_control_params& x){ 
-    *this = x;
-    decoherence_rates = new MATRIX( *x.decoherence_rates );  
-    ave_gaps = new MATRIX( *x.ave_gaps );
-    schwartz_decoherence_inv_alpha = new MATRIX( *x.schwartz_decoherence_inv_alpha );
-  }
-  ~dyn_control_params() {  
-    delete decoherence_rates;  
-    delete ave_gaps;
-  }
+  dyn_control_params(const dyn_control_params& x);
+  ~dyn_control_params();
 
   void sanity_check();
   void set_parameters(bp::dict params);

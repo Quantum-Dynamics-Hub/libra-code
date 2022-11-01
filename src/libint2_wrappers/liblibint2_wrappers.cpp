@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021 Mohammad Shakiba and Alexey V. Akimov
+* Copyright (C) 2021-2022 Mohammad Shakiba and Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -15,8 +15,13 @@
 */
 
 #define BOOST_PYTHON_MAX_ARITY 30
+
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
 
 #include "libint2_wrappers.h"
 

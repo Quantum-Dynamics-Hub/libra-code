@@ -25,12 +25,12 @@
 
 #include "dyn_decoherence.h"
 #include "dyn_control_params.h"
-#include "dyn_variables.h"
 #include "dyn_hop_acceptance.h"
 #include "dyn_hop_proposal.h"
 #include "dyn_methods.h"
 #include "dyn_projectors.h"
-
+#include "dyn_variables.h"
+#include "dyn_ham.h"
 
 
 /// liblibra namespace
@@ -51,19 +51,15 @@ using namespace libthermostat;
 
 void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham);
 
-
-void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, vector<CMATRIX>& projectors,
-                          nHamiltonian& ham, 
+/*
+void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params);
-void update_Hamiltonian_q(bp::dict prms, MATRIX& q, vector<CMATRIX>& projectors,
-                          nHamiltonian& ham, 
+void update_Hamiltonian_q(bp::dict prms, MATRIX& q, nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params);
 
-void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
-                          nHamiltonian& ham, 
+void update_Hamiltonian_q_ethd(dyn_control_params& prms, MATRIX& q, MATRIX& p, nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params, MATRIX& invM);
-void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, vector<CMATRIX>& projectors,
-                          nHamiltonian& ham, 
+void update_Hamiltonian_q_ethd(bp::dict prms, MATRIX& q, MATRIX& p, nHamiltonian& ham, 
                           bp::object py_funct, bp::object model_params, MATRIX& invM);
 
 
@@ -73,8 +69,7 @@ void update_Hamiltonian_p(bp::dict prms, nHamiltonian& ham, MATRIX& p, MATRIX& i
 
 void update_nacs(dyn_control_params& prms, nHamiltonian& ham);
 
-
-CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham);
+*/
 
 // Adding the NBRA flag to the functions in the header
 vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA);
@@ -95,6 +90,9 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 
               nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
               vector<Thermostat>& therm, dyn_variables& dyn_var);
+
+void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params, nHamiltonian& ham, 
+                      bp::object py_funct, bp::dict model_params, Random& rnd, vector<Thermostat>& therm);
 
 
 

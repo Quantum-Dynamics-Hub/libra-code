@@ -43,7 +43,6 @@ from . import probabilities
 
 
 
-
 def sample(x, mean_x, sigma_x, rnd):  
     """
     This function generates ntraj ndof-dimensional vectors sampled from a 
@@ -65,6 +64,8 @@ def sample(x, mean_x, sigma_x, rnd):
     for i in range(nr):
         for j in range(nc):    
             x.set(i,j, mean_x.get(i,0) + sigma_x.get(i,0) * rnd.normal() )
+
+
 
 
 

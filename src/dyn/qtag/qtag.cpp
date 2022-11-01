@@ -728,7 +728,8 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   }// for itraj
 
   // Compute Hamiltonians for all the trajectories
-  ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
+  //ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
+  ham.compute_diabatic(compute_ham_funct, q, compute_ham_params, 1);
 
   // State blocks
   for(n1=0; n1<nstates; n1++){

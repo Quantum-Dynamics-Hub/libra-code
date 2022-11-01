@@ -15,7 +15,11 @@
 */
 
 
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <stdlib.h>
+#endif 
 
 #include "nHamiltonian.h"
 #include "../../math_meigen/libmeigen.h"

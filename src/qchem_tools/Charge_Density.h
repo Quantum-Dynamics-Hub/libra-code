@@ -36,8 +36,6 @@ using namespace libbasis_setups;
 using namespace libcontrol_parameters;
 using namespace libmodel_parameters;
 using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
-
 
 
 /// libqchem_tools namespace

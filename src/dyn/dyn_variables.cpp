@@ -25,14 +25,14 @@ namespace libdyn{
 
 namespace bp = boost::python;
 
-void dyn_variables::allocate_gen_vars(){
+void dyn_variables::allocate_electronic_vars(){
 
-  if(gen_vars_status==0){ 
+  if(electronic_vars_status==0){ 
 
     ampl_dia = new CMATRIX(ndia, ntraj);
     ampl_adi = new CMATRIX(nadi, ntraj);
-    dm_dia = vector<CMATRIX*>(ntraj, NULL);
-    dm_adi = vector<CMATRIX*>(ntraj, NULL);
+    dm_dia = vector<CMATRIX*>(ntraj);
+    dm_adi = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
       dm_dia[itraj] = new CMATRIX(ndia, ndia);
@@ -41,10 +41,25 @@ void dyn_variables::allocate_gen_vars(){
 
     act_states = vector<int>(ntraj, 0);
 
-    gen_vars_status = 1;
+    electronic_vars_status = 1;
   }
 
 }
+
+void dyn_variables::allocate_nuclear_vars(){
+
+  if(nuclear_vars_status==0){ 
+
+    iM = new MATRIX(ndof, 1);
+    q = new MATRIX(ndof, ntraj);
+    p = new MATRIX(ndof, ntraj);
+
+    nuclear_vars_status = 1;
+  }
+
+}
+
+
 
 
 dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
@@ -64,22 +79,15 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ntraj = _ntraj;
 
 
-  ///================= General variables, for OOP implementation ===================
-  gen_vars_status = 0;
-  allocate_gen_vars();
+  ///================= Electronic and nuclear variables, for OOP implementation ================
+  electronic_vars_status = 0;
+  allocate_electronic_vars();
     
-/*
-  q = NULL;
-  p = NULL;
-  ampl_dia = NULL;
-  ampl_adi = NULL;
-  projectors = NULL;
-*/
+  nuclear_vars_status = 0;
+  allocate_nuclear_vars();
 
   ///================= A-FSSH ====================
   afssh_vars_status = 0;
-  //dR = NULL;
-  //dP = NULL;
 
   ///================= BCSH ====================
   bcsh_vars_status = 0;
@@ -89,7 +97,7 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
 
 void dyn_variables::allocate_afssh(){
-//     cout<<"dyn_variables allocate_afssh!!!\n";  
+
 
   if(afssh_vars_status==0){
 
@@ -114,7 +122,6 @@ void dyn_variables::allocate_afssh(){
 
 
 void dyn_variables::allocate_bcsh(){
-//     cout<<"dyn_variables allocate_bcsh!!!\n";  
 
   if(bcsh_vars_status==0){
 
@@ -128,9 +135,7 @@ void dyn_variables::allocate_bcsh(){
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
-
-  cout<<"dyn_variables copy constructor!!!\n";
-
+  cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
 
   ndia = x.ndia;
@@ -138,18 +143,30 @@ dyn_variables::dyn_variables(const dyn_variables& x){
   ndof = x.ndof;
   ntraj = x.ntraj;
 
-  // Gen vars
-  allocate_gen_vars();
+  // copy content of electronic vars, only if initialized 
+  if(x.electronic_vars_status==1){
 
-  // copy content of gen vars
-  *ampl_dia = *x.ampl_dia;
-  *ampl_adi = *x.ampl_adi;
-  for(itraj=0; itraj<ntraj; itraj++){
-    *dm_dia[itraj] = *x.dm_dia[itraj];
-    *dm_adi[itraj] = *x.dm_adi[itraj];
+    allocate_electronic_vars();
+
+    *ampl_dia = *x.ampl_dia;
+    *ampl_adi = *x.ampl_adi;
+    for(itraj=0; itraj<ntraj; itraj++){
+      *dm_dia[itraj] = *x.dm_dia[itraj];
+      *dm_adi[itraj] = *x.dm_adi[itraj];
+    }
+    act_states = x.act_states;
+
   }
-  act_states = x.act_states;
 
+  // copy content of nuclear vars, only if initialized 
+  if(x.nuclear_vars_status==1){
+
+    allocate_nuclear_vars();
+
+    *iM = *x.iM;
+    *q = *x.q;
+    *p = *x.p;
+  }
 
   // AFSSH vars - only if initialized
   if(x.afssh_vars_status==1){
@@ -181,7 +198,25 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
 
 dyn_variables::~dyn_variables(){  
-     cout<<"dyn_variables destructor!!!\n";
+  cout<<"dyn_variables destructor!!!\n";
+
+/*
+  if(electronic_vars_status==1){ 
+    for(int itraj=0; itraj<ntraj; itraj++){
+      delete dm_dia[itraj];
+      delete dm_adi[itraj];
+    }
+    dm_dia.clear();
+    dm_adi.clear();
+    
+    delete ampl_dia;
+    delete ampl_adi;
+
+    act_states.clear();
+    electronic_vars_status = 0;
+  }
+
+*/
 /*
   if(afssh_vars_status==1){
 
@@ -222,7 +257,7 @@ void dyn_variables::set_parameters(bp::dict params){
 //    if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
 //    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
 
-}
+  }
 }
 
 

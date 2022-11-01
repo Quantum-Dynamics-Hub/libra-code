@@ -311,10 +311,15 @@ MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
 
 
-
+/*
 vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
        nHamiltonian& ham, vector<MATRIX>& prev_ham_dia){
+*/
+vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
+       nHamiltonian& ham, vector<MATRIX>& prev_ham_dia){
+
 
 /**
   This function computes the hop probabilities for each trajectory to hop from any state to all states
@@ -360,7 +365,7 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
       Hvib = ham.children[traj]->get_hvib_adi();
 
       //Transform Hamiltonian to the dynamically-consistent form:
-      Hvib = projectors[traj].H() * Hvib * projectors[traj];
+      //Hvib = projectors[traj].H() * Hvib * projectors[traj];
       }
     }
 
@@ -369,7 +374,7 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
     Hvib = ham.children[traj]->get_hvib_adi();
 
     //Transform Hamiltonian to the dynamically-consistent form:
-    Hvib = projectors[traj].H() * Hvib * projectors[traj];
+    //Hvib = projectors[traj].H() * Hvib * projectors[traj];
     }
 
     if(prms.tsh_method == 0){ // FSSH

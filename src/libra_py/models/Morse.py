@@ -20,7 +20,7 @@ import sys
 import math
 import copy
 
-from numba import jit
+#from numba import jit
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -172,7 +172,7 @@ def general(q, params, full_id):
 
         for k in [0]:
             #  d Hdia / dR_0
-            d1ham_dia[k].set(i,i, -2.0*alpha[i]*D[i]*bo*(1.0 - bo) * (1.0+0.0j) )
+            d1ham_dia[k].set(i,i, 2.0*alpha[i]*D[i]*bo*(1.0 - bo) * (1.0+0.0j) )
 
 
     # Off-diagonals
@@ -183,8 +183,8 @@ def general(q, params, full_id):
 
                 Hdia.set(i,j,  d * (1.0+0.0j) )
 
-                    for k in [0]:
-                        d1ham_dia[k].set(i,j,  -2.0*beta[i][j] * (x-x_nm[i][j]) * d * (1.0+0.0j) )
+                for k in [0]:
+                    d1ham_dia[k].set(i,j,  -2.0*beta[i][j] * (x-x_nm[i][j]) * d * (1.0+0.0j) )
 
 
 

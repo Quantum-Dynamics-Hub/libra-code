@@ -12,9 +12,15 @@
 #ifndef PY_COPY_H
 #define PY_COPY_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include <stdint.h>
+#endif 
+
 #define PYTHON_ERROR(TYPE, REASON) \
 { \
     PyErr_SetString(TYPE, REASON); \

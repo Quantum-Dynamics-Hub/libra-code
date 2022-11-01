@@ -17,6 +17,10 @@
 #ifndef permutations_H
 #define permutations_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <complex>
 #include <vector>
 #include <string.h>
@@ -26,10 +30,10 @@
 #include <iomanip>
 #include <fstream>
 
-
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#endif
 
 
 /// liblibra 

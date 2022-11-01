@@ -21,12 +21,15 @@ import sys
 import math
 import copy
 
+from numba import jit
+
 if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
 import libra_py.units as units
+
 
 
 class tmp:

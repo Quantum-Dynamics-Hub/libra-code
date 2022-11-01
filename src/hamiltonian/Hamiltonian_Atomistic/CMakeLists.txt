@@ -22,6 +22,15 @@ ADD_LIBRARY(hamiltonian_atomistic_stat STATIC ${HAMILTONIAN_ATOMISTIC_SRC})
 
 
 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16 AND USING_PCH)  # Support for PCHs in CMake was added in 3.16
+   message(STATUS "Compiling using pre-compiled header support: in hamiltonian_atomistic")
+   target_precompile_headers(hamiltonian_atomistic REUSE_FROM pch) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(hamiltonian_atomistic_stat REUSE_FROM pch_stat) # With PUBLIC they will be used by targets using this target
+endif()
+
+
+
+
 #
 #  Link to external libraries
 #

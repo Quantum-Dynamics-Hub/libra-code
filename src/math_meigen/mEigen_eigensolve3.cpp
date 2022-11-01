@@ -8,11 +8,15 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
-
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <Eigen/LU>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
+#endif
+
 #include "mEigen.h"
 
 

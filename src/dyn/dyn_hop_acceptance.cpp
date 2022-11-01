@@ -413,7 +413,7 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt){
 
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
        vector<int>& which_trajectories){
 /**
@@ -481,13 +481,13 @@ vector<int> accept_hops(dyn_control_params& prms,
         if(isNBRA==1){
           if(itraj==0){
             hvib = ham.children[traj]->get_ham_adi();
-            hvib = projectors[traj].H() * hvib * projectors[traj];
+            //hvib = projectors[traj].H() * hvib * projectors[traj];
           }
         }
 
         else{
           hvib = ham.children[traj]->get_ham_adi();
-          hvib = projectors[traj].H() * hvib * projectors[traj];
+          //hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
@@ -555,12 +555,12 @@ vector<int> accept_hops(dyn_control_params& prms,
         if(isNBRA==1){
         if(itraj==0){
         hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         }
         else{
         hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -570,7 +570,7 @@ vector<int> accept_hops(dyn_control_params& prms,
         for(idof = 0; idof < ndof_active; idof++){
           dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
-          nac = projectors[traj].H() * nac * projectors[traj];
+          //nac = projectors[traj].H() * nac * projectors[traj];
 
           dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
         }
@@ -618,12 +618,12 @@ vector<int> accept_hops(dyn_control_params& prms,
         if(isNBRA==1){
         if(itraj==0){
         hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         }
         else{
         hvib = ham.children[traj]->get_ham_adi();
-        hvib = projectors[traj].H() * hvib * projectors[traj];
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
         }
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
@@ -633,7 +633,7 @@ vector<int> accept_hops(dyn_control_params& prms,
         for(idof = 0; idof < ndof_active; idof++){
           dof = which_dofs[idof];
           df = ham.children[traj]->get_d1ham_adi(dof);
-          df = projectors[traj].H() * df * projectors[traj];
+          //df = projectors[traj].H() * df * projectors[traj];
           dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
 
         }
@@ -666,12 +666,12 @@ vector<int> accept_hops(dyn_control_params& prms,
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -701,12 +701,12 @@ vector<int> accept_hops(dyn_control_params& prms,
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -737,12 +737,12 @@ vector<int> accept_hops(dyn_control_params& prms,
       if(isNBRA==1){
       if(itraj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -769,7 +769,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
 
     int ntraj = q.n_cols;
@@ -777,7 +777,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
     for(int i=0; i<ntraj; i++){ which_trajectories[i] = i; }
 
-    return accept_hops(prms, q, p, invM, C, projectors, ham, proposed_states, initial_states, rnd, which_trajectories);
+    return accept_hops(prms, q, p, invM, C, /*projectors,*/ ham, proposed_states, initial_states, rnd, which_trajectories);
 
 }
 
@@ -786,7 +786,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 
 
 vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& act_states, Random& rnd){
 /**
    This function gives a list of indices of states to which a trajectory of index `traj` can
@@ -819,7 +819,7 @@ vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
         /// Decide if we can accept the transitions, the function below only checks the hopping for a single trajectory `traj`
         /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
         /// the variable `which_trajectories` instructs to handle only the current trajectory
-        new_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, proposed_states, act_states, rnd, which_trajectories);
+        new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, act_states, rnd, which_trajectories);
 
         if(new_states[traj]!=act_states[traj]){
           all_possible_hops.push_back(new_states[traj]);
@@ -836,7 +836,7 @@ vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
 
 
 void handle_hops_nuclear(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
        nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states){
 /**
   This function changes the nuclear dynamical variables after successful or frustrated hops
@@ -888,12 +888,12 @@ void handle_hops_nuclear(dyn_control_params& prms,
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -965,12 +965,12 @@ void handle_hops_nuclear(dyn_control_params& prms,
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
@@ -979,7 +979,7 @@ void handle_hops_nuclear(dyn_control_params& prms,
       for(idof = 0; idof < n_active_dof; idof++){
         dof = which_dofs[idof];
         nac = ham.children[traj]->get_dc1_adi(dof);
-        nac = projectors[traj].H() * nac * projectors[traj];
+        //nac = projectors[traj].H() * nac * projectors[traj];
         dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
       }
 
@@ -1025,12 +1025,12 @@ void handle_hops_nuclear(dyn_control_params& prms,
       if(isNBRA==1){
       if(traj==0){
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       }
       else{
       hvib = ham.children[traj]->get_ham_adi();
-      hvib = projectors[traj].H() * hvib * projectors[traj];
+      //hvib = projectors[traj].H() * hvib * projectors[traj];
       }
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
@@ -1039,7 +1039,7 @@ void handle_hops_nuclear(dyn_control_params& prms,
       for(idof = 0; idof < n_active_dof; idof++){
         dof = which_dofs[idof];
         df = ham.children[traj]->get_d1ham_adi(dof);
-        df = projectors[traj].H() * df * projectors[traj];
+        //df = projectors[traj].H() * df * projectors[traj];
         dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
       }
 

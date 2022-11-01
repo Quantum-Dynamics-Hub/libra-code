@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -17,7 +17,12 @@
 #ifndef nHAMILTONIAN_H
 #define nHAMILTONIAN_H
 
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <complex>
+#endif 
+
 #include "../../math_linalg/liblinalg.h"
 
 /// liblibra namespace
@@ -411,8 +416,10 @@ public:
   void compute_diabatic(int model, vector<double>& q, vector<double>& params, int lvl); // for internal model types
   void compute_diabatic(int model, vector<double>& q, vector<double>& params); // for internal model types
 
-  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
-  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+//  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
+//  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+  void compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params, int lvl); // for models defined in Python
+  void compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params); // for models defined in Python
 
 
   ///< In nHamiltonian_compute_ETHD.cpp
@@ -443,8 +450,10 @@ public:
 
   void compute_adiabatic(int der_lvl, int lvl);
   void compute_adiabatic(int der_lvl);
-  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
-  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+//  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params, int lvl); // for models defined in Python
+//  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
+  void compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object params, int lvl); // for models defined in Python
+  void compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object params); // for models defined in Python
 
 
 
@@ -456,6 +465,14 @@ public:
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi);
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi, vector<int>& id_);
   void ampl_adi2dia(CMATRIX& ampl_dia, CMATRIX& ampl_adi, int lvl, int split);
+
+  void ampl_dia2adi(CMATRIX* ampl_dia, CMATRIX* ampl_adi);
+  void ampl_dia2adi(CMATRIX* ampl_dia, CMATRIX* ampl_adi, vector<int>& id_);
+  void ampl_dia2adi(CMATRIX* ampl_dia, CMATRIX* ampl_adi, int lvl, int split);
+  void ampl_adi2dia(CMATRIX* ampl_dia, CMATRIX* ampl_adi);
+  void ampl_adi2dia(CMATRIX* ampl_dia, CMATRIX* ampl_adi, vector<int>& id_);
+  void ampl_adi2dia(CMATRIX* ampl_dia, CMATRIX* ampl_adi, int lvl, int split);
+
 
 
 

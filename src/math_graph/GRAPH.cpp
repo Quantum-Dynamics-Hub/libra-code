@@ -9,9 +9,15 @@
 *
 *********************************************************************************/
 
-#include "GRAPH.h"
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <vector>
 #include <algorithm>
+#endif 
+
+#include "GRAPH.h"
 
 
 /// liblibra namespace

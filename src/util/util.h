@@ -15,6 +15,10 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -22,6 +26,8 @@
 #include <sstream>
 #include <vector>
 #include <boost/python.hpp>
+
+#endif 
 
 /// liblibra namespace
 namespace liblibra{
