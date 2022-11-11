@@ -908,6 +908,62 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 }// propagate_electronic
 
 
+
+
+void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
+/**
+  Solves the generalized time-dependent Schrodinger equation:
+
+  i*hbar*S*dc/dt = Hvib*c 
+ 
+  using the approach described in the QTAG paper:
+
+
+  U = Z exp(-i/hbar *E *dt) * Z^+  * S
+
+  This is a potentially more robust integrator that the other one, where we compute S^+/-{1/2}
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
+
+*/ 
+
+
+  int i;
+ 
+  // Let us first diagonalize the overlap matrix Hvib
+  int sz = Hvib.n_cols;  
+  CMATRIX Z(sz, sz);
+  CMATRIX E(sz, sz);
+
+  // Transformation to adiabatic basis
+  libmeigen::solve_eigen(Hvib, S, E, Z, 0);  // Hvib * Z = S * Z * E
+
+
+  // Diagonal form expH
+  CMATRIX expE(sz, sz); 
+  for(i=0;i<sz;i++){
+    double argg = -E.get(i,i).real()*dt;
+    double _cs = cos(argg);
+    double _si = sin(argg);
+    expE.set(i,i, complex<double>(_cs, _si)  );
+  }
+
+
+  // This is a supposedly more efficient form of Coeff = (Z * expE * Z.H() * S) * Coeff
+  Coeff = S * Coeff;
+  Coeff = Z.H() * Coeff;
+  Coeff = expE * Coeff;
+  Coeff = Z * Coeff;
+
+
+}// propagate_electronic_qtag
+
+
+
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
  if(rep==0){  // diabatic
@@ -915,7 +971,8 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
     CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
     CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
 
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    //propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
 
   }
 
@@ -1034,59 +1091,40 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 
 }
 
-void propagate_electronic(double dt, CMATRIX& C, /*vector<CMATRIX>& projector,*/ vector<nHamiltonian*>& ham, int rep, int isNBRA){
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep, int isNBRA){
+/**
+  if isNBRA == 1, then only the first element of ham (ham[0]) will be used. However, we assume that the C matrix still
+  has the full dimensionality, that is it consist of ntraj columns
+*/
 
-  if(isNBRA!=1){
-  if(C.n_cols!=ham.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-  }
-
-  if(isNBRA==1){
-  int i,j;
-  CMATRIX Hvib(ham[0]->nadi, ham[0]->nadi);  Hvib = ham[0]->get_hvib_adi();
-  int sz = Hvib.n_cols;
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
-  CMATRIX* C1; C1 = new CMATRIX(sz, sz);  *C1 = complex<double>(0.0, 0.0); // eigenvectors
-  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);
- 
-  libmeigen::solve_eigen(Hvib, *I, *Heig, *C1, 0);  // Hvib_eff * C1 = I * C1 * Heig  ==>  ham[0] = C1 * Heig * C.H()
-
-  complex<double> one(0.0, 1.0);
-  for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
-    expH->set(i,i,val);
+  if(!isNBRA){  
+    if(C.n_cols!=ham.size()){
+      cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
+      cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
+      cout<<"Exiting...\n";
+      exit(0);
+    }
   }
 
-  *expH = (*C1) * (*expH) * ((*C1).H());
-  // Instead of the for loop
-  C = *expH * C;
-
-  delete expH;
-  delete I;
-  delete C1;
-  delete Heig;
-
-  }
-  else {
   int nst = C.n_rows;
   int ntraj = C.n_cols;
   
   CMATRIX ctmp(nst, 1);
 
   for(int traj=0; traj<ntraj; traj++){
+
     ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, /*projector[traj],*/ ham[traj], rep);
+
+    int traj1 = traj; 
+    if(isNBRA==1){ traj1 = 0; }
+
+    propagate_electronic(dt, ctmp, ham[traj1], rep);
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
 
   }
- }//isNBRA
+
 }
 
 

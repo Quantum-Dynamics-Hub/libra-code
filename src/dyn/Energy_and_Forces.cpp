@@ -143,21 +143,115 @@ CMATRIX tsh_indx2ampl(vector<int>& res, int nstates){
 }
 
 
+double average_potential_energy(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
 
-//MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
-//                      nHamiltonian& ham){
+  vector<double> res(dyn_vars.ntraj, 0.0);
+  res = potential_energies(prms, dyn_vars, ham);
 
-MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars, nHamiltonian& ham){
+  double ave = 0.0;
+  for(int itraj = 0; itraj < dyn_vars.ntraj; itraj++){  ave += res[itraj]; }
+  ave /= double(dyn_vars.ntraj);
+  
+  return ave;
+}
+
+double average_potential_energy(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
+
+  dyn_control_params prms;
+  prms.set_parameters(params);
+
+  return average_potential_energy(prms, dyn_vars, ham);
+}
+
+
+vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
+
+  int itraj;
+  int ntraj = dyn_vars.ntraj;
+  vector<int> id(2,0);
+
+  vector<double> res(ntraj, 0.0);
+
+  if(prms.force_method==0){  // No forces
+
+    // Don't compute forces at all - e.g. in NBRA
+    for(itraj=0; itraj<ntraj; itraj++){ res[itraj] = 0.0; }
+
+  }// NBRA
+
+  else if(prms.force_method==1){   // State-specific forces
+
+    // TSH or adiabatic (including excited states)
+    // state-specific forces
+
+    vector<int> effective_states(dyn_vars.act_states);
+
+    if(prms.enforce_state_following==1){ 
+      for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
+    }
+
+    // Diabatic 
+    if(prms.rep_force==0){  
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_dia(id).get(ist, ist).real();   
+      }
+    }
+    // Adiabatic 
+    else if(prms.rep_force==1){  
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_adi(id).get(ist, ist).real();   
+      }
+    }
+
+  }// TSH && adiabatic
+
+  else if(prms.force_method==2){  // Ehrenfest forces
+
+    // Diabatic 
+    if(prms.rep_force==0){  
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        res[itraj] = ham.Ehrenfest_energy_dia(*dyn_vars.ampl_dia, id).real();
+      }
+    }
+    // Adiabatic 
+    else if(prms.rep_force==1){  
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        res[itraj] = ham.Ehrenfest_energy_adi(*dyn_vars.ampl_adi, id).real();
+      }
+    }
+  
+  }// Ehrenfest
+
+
+  return res;
+}
+
+vector<double> potential_energies(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
+
+  dyn_control_params prms;
+  prms.set_parameters(params);
+
+  return potential_energies(prms, dyn_vars, ham);
+
+}
+
+MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
   /**
     Compute the force depending on the method used
   */
 
   int ndof = ham.nnucl;
   int nst = ham.nadi;
-  int ntraj = dynvars.act_states.size();
+  int ntraj = dyn_vars.ntraj;
 
   MATRIX F(ndof, ntraj);
-  CMATRIX _amplitudes(nst, ntraj); // CMATRIX version of "act_states"
+//  CMATRIX _amplitudes(nst, ntraj); // CMATRIX version of "act_states"
 
   if(prms.force_method==0){  // No forces
 
@@ -170,66 +264,35 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars, nHamilto
     // TSH or adiabatic (including excited states)
     // state-specific forces
 
-    vector<int> effective_states(dynvars.act_states);
+    vector<int> effective_states(dyn_vars.act_states);
 
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
-      for(int i=0; i<nst; i++){  effective_states[i] = prms.enforced_state_index;  }
+      for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
     }
 
-
-    if(prms.rep_force==0){  
-      // Diabatic 
-      F = ham.forces_dia(effective_states).real();
-
-      // This is now an outdated approach - go back to the older one above
-      //_amplitudes = tsh_indx2ampl(dynvars.act_states, nst);
-      //F = ham.Ehrenfest_forces_dia(_amplitudes, 1).real();
-    }
-
-    else if(prms.rep_force==1){  
-      // Adiabatic 
-      F = ham.forces_adi(effective_states).real();
-
-
-//      vector<int> effective_states(dynvars.act_states);
-//      if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
-//         for(int i=0; i<nst; i++){  effective_states[i] = prms.enforced_state_index;  }
-//      }
-
-//      _amplitudes = tsh_indx2ampl(effective_states, nst);
-
-      // Since the Hamiltonians are given in the "raw" format 
-      // and because the Ehrenfest forces (including adiabatic)
-      // are invariant w.r.t. representation, we can simply use the "raw"
-      // format amplitudes
-//      _amplitudes = dynconsyst_to_raw(_amplitudes, projectors);
-
-//      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
-    }
+    // Diabatic 
+    if(prms.rep_force==0){  F = ham.forces_dia(effective_states).real();   }
+    // Adiabatic 
+    else if(prms.rep_force==1){  F = ham.forces_adi(effective_states).real();  }
 
   }// TSH && adiabatic
 
   else if(prms.force_method==2){  // Ehrenfest forces
 
+    // Diabatic 
     if(prms.rep_force==0){  
-      // Diabatic 
-      CMATRIX _amplitudes(nst, ntraj);
-      _amplitudes = *dynvars.ampl_dia;
-      F = ham.Ehrenfest_forces_dia(_amplitudes, 1).real();
+//      CMATRIX _amplitudes(nst, ntraj);
+//      _amplitudes = *dynvars.ampl_dia;
+      F = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();
     }
 
+    // Adiabatic 
     else if(prms.rep_force==1){  
-      // Adiabatic 
 
-      // Since the Hamiltonians are given in the "raw" format 
-      // and because the Ehrenfest forces (including adiabatic)
-      // are invariant w.r.t. representation, we can simply use the "raw"
-      // format amplitudes
-      CMATRIX _amplitudes(nst, ntraj); 
+      //CMATRIX _amplitudes(nst, ntraj); 
       //_amplitudes = dynconsyst_to_raw(amplitudes, projectors);
-      _amplitudes = *dynvars.ampl_adi;
-
-      F = ham.Ehrenfest_forces_adi(_amplitudes, 1).real();
+      //_amplitudes = *dynvars.ampl_adi;
+      F = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1).real();
     }
   
   }// Ehrenfest
@@ -238,16 +301,12 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars, nHamilto
   return F;
 }
 
-
-//MATRIX aux_get_forces(bp::dict params, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 
-//                      nHamiltonian& ham){
-
-MATRIX aux_get_forces(bp::dict params, dyn_variables& dynvars, nHamiltonian& ham){
+MATRIX aux_get_forces(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
 
   dyn_control_params prms;
   prms.set_parameters(params);
 
-  return aux_get_forces(prms, dynvars, ham);
+  return aux_get_forces(prms, dyn_vars, ham);
   
 }
 

@@ -416,7 +416,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     # Parameters and dimensions
     critical_params = [  ] 
     default_params = {  "colors":colors_, "clrs_index":clrs_index_,
-                        "xlim":[-7.5, 15], "ylim":[-0.005, 0.025]
+                        "xlim":[-7.5, 15], "ylim":[-0.005, 0.025], "do_show":1,
+                        "save_figures":1, "prefix":"out", "dpi":300
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
@@ -424,6 +425,10 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     clrs_index = plot_params["clrs_index"]
     xlim = plot_params["xlim"]
     ylim = plot_params["ylim"]
+    do_show = plot_params["do_show"]
+    save_figures = plot_params["save_figures"]
+    prefix = plot_params["prefix"]
+    dpi_value = plot_params["dpi"]
 
     
     X = []
@@ -506,6 +511,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         for k1 in states_of_interest:
             plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, color = colors[clrs_index[k1]])     
         plt.legend()    
+
     
         plt.subplot(1, 2, 2)
         plt.ylim(ylim[0], ylim[1])
@@ -516,6 +522,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         for k1 in states_of_interest:
             plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])     
         plt.legend()    
+
+        if save_figures:
+            plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
             
             
           
@@ -537,8 +546,13 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 #                plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
                 plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
             plt.legend()               
-    
 
-        plt.show()
+        if save_figures:
+            plt.savefig(F"{prefix}/projections_set_{iset}.png", dpi=dpi_value)            
+    
+        if do_show:
+            plt.show()
+        
         plt.close()          
+
 

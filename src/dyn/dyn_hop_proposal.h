@@ -22,6 +22,7 @@
 #include "../hamiltonian/libhamiltonian.h"
 #include "../io/libio.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
 
 
 /// liblibra namespace
@@ -35,8 +36,13 @@ namespace bp = boost::python;
 namespace libdyn{
 
 MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
+vector<double> hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx);
+
 MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
+vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int atc_state_indx);
+
 MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
+vector<double> hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int atc_state_indx);
 
 /*
 vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
@@ -46,11 +52,16 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
        nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
+vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, 
+       dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
 
 
 int hop(vector<double>& prob, double ksi);
 int hop(int initstate, MATRIX& g, double ksi);
+int hop(int initstate, vector<double>& g, double ksi);
+
 vector<int> propose_hops(vector<MATRIX>& g, vector<int>& act_states, Random& rnd);
+vector<int> propose_hops(vector< vector<double> >& g, vector<int>& act_states, Random& rnd);
 
 
 

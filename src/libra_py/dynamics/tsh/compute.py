@@ -493,7 +493,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     critical_params = [  ] 
     default_params = {}
     #================= Computing Hamiltonian-related properties ====================
-    default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
+    default_params.update( { "rep_tdse":1, "rep_ham":0, "ham_update_method":1, "ham_transform_method":1,
+                             "hvib_update_method":1,
+                             "rep_sh":1, "rep_lz":0, "rep_force":1,
                              "force_method":1, "enforce_state_following":0, "enforced_state_index":0, 
                              "time_overlap_method":0, "nac_update_method":1, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
@@ -632,6 +634,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # Do the propagation
     for i in range(nsteps):
 
+        print(F"========== step {i} ===============")
         #========= Update variables, compute properties, and save ============    
         dyn_var.update_amplitudes(dyn_params, ham);
         dyn_var.update_density_matrix(dyn_params, ham, 1);
@@ -762,13 +765,38 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Compute internals of the Hamiltonian objects
     model_params1 = dict(model_params)
     model_params1.update({"model":model_params["model0"], "timestep":0})
-    dyn_params1 = dict(dyn_params)
-    dyn_params1.update({ "rep_tdse":1, "rep_ham":0 })
-    update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+
+    # We set up this temporary dict such that we we request diabatic Ham calculations
+    # followed by the transformation to the adiabatic one - this is what we need to get
+    # the transformation matrices to convert amplitudes between the representations
+    dyn_params1 = dict(dyn_params)        
+    dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
+    #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, compute_model, model_params1, 0)
+    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, compute_model, model_params1, 1)
+
 
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
-    dyn_var.update_amplitudes( dyn_params, ham);
-    dyn_var.update_density_matrix( dyn_params, ham, 1);
+    # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
+    # of electronic variables - this will convert the amplitudes to the proper representation
+    dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
+    dyn_var.update_density_matrix( dyn_params, ham, 1)
+
+
+    print("Initial adiabatic amplitudes")
+    dyn_var.get_ampl_adi().show_matrix()
+
+    print("Initial diabatic amplitudes")
+    dyn_var.get_ampl_dia().show_matrix()
+
+    print("Initial adiabatic DM")
+    dyn_var.get_dm_adi(0).show_matrix()
+
+    print("Initial diabatic DM")
+    dyn_var.get_dm_dia(0).show_matrix()
+
+    print("Active states")
+    print(Cpp2Py(dyn_var.act_states))
 
 
     # Finally, start the dynamics calculations

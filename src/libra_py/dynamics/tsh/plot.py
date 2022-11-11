@@ -620,7 +620,7 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
                "SH_pop": "Adiabatic SH populations",
                "SH_pop_raw": "Adiabatic SH populations (raw)",
                "sh_pop_dia": "Diabatic SH populations",
-               "sh_pop_adi": "Adiabatic SE populations"
+               "sh_pop_adi": "Adiabatic SH populations"
              }
     
     if xlim!=None:

@@ -217,7 +217,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
     }
     /// Diabatic DM representation
     else if(dyn_params.rep_tdse==2){
-      dm_adi[traj]->show_matrix();
+      //dm_adi[traj]->show_matrix();
       *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
     }
     /// Adiabatic DM representation
@@ -484,18 +484,16 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
       }
 
     }// init_type==2
-
-
-    if(verbosity > 1){
-        cout<<"========== ampl_dia ===============\n";
-        ampl_dia->show_matrix();
-        cout<<"========== ampl_adi ===============\n";
-        ampl_adi->show_matrix();
-        cout<<"========== states ===============\n";
-    }
-
-
   }// for traj
+
+  if(verbosity > 1){
+      cout<<"========== ampl_dia ===============\n";
+      ampl_dia->show_matrix();
+      cout<<"========== ampl_adi ===============\n";
+      ampl_adi->show_matrix();
+      cout<<"========== states ===============\n";
+  }
+
 
 
   //return params;
@@ -567,12 +565,12 @@ void dyn_variables::init_density_matrix(bp::dict _params){
       if(rep==0){ 
         CMATRIX C(ndia, 1); 
         C = ampl_dia->col(traj);
-        *dm_dia[traj] = C.H() * C; 
+        *dm_dia[traj] = C * C.H(); 
       }  
       else if(rep==1){ 
         CMATRIX C(nadi, 1); 
         C = ampl_adi->col(traj);
-        *dm_adi[traj] = C.H() * C; 
+        *dm_adi[traj] = C * C.H(); 
       }
 
     }// init_dm_type==0
@@ -750,6 +748,10 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
   vector<double> res(sz, 0.0);
 
   for(int i=0; i<sz; i++){ res[i] = ave.get(i,i); }
+
+  // 
+  //cout<<"compute_average_se_pop<<endl";
+  //for(const auto& x: res){  cout<< x<<" "; }  cout<<endl;
  
   return res;
 
@@ -768,6 +770,10 @@ vector<double> dyn_variables::compute_average_sh_pop(){
   }
   
   for(int j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj; }
+
+  //cout<<"compute_average_se_pop<<endl";
+  //for(const auto& x: res){  cout<< x<<" "; }  cout<<endl;
+
 
   return res;
 }

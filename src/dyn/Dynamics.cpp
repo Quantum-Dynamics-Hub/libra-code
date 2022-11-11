@@ -740,6 +740,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     //========== Aliases ===============================
     CMATRIX& Cadi = *dyn_var.ampl_adi;
     CMATRIX& Cdia = *dyn_var.ampl_dia;
+    CMATRIX& Cact = Cdia;  // active rep amplitudes
+    if(prms.rep_tdse==0){ Cact  = Cdia; }
+    else if(prms.rep_tdse==1){ Cact = Cadi; }
+
     vector<int>& act_states = dyn_var.act_states;
     MATRIX& q = *dyn_var.q;
     MATRIX& p = *dyn_var.p;
@@ -805,7 +809,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //============ Update the Hamiltonian object =============
   // In case, we may need phase correction & state reordering
   // prepare the temporary files
-  if(prms.rep_tdse==1){      
+//  if(prms.rep_tdse==1){      
     if(prms.do_phase_correction || prms.state_tracking_algo > 0){
 
       // On-the-fly calculations, from the wavefunctions
@@ -817,26 +821,16 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         }
       }      
     }// do_phase_correction || state_tracking_algo > 0
-  }// rep == 1
+//  }// rep == 1
 
-  // In case, we select to compute scalar NACs from time-overlaps
-  update_nacs(prms, ham);
 
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   // Adding the prms.isNBRA to the propagate electronic
-  //update_Hamiltonian_p(prms, ham, p, invM);
-  update_Hamiltonian_p(prms, dyn_var, ham);
 
-  for(i=0; i<num_el; i++){
-    if(prms.rep_tdse==0){
-      propagate_electronic(0.5*dt_el, Cdia, ham.children, prms.rep_tdse, prms.isNBRA);   
-    }
-    else if(prms.rep_tdse==1){
-      propagate_electronic(0.5*dt_el, Cadi, ham.children, prms.rep_tdse, prms.isNBRA);   
-    }
-  }
+  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
 
 
   //============== Nuclear propagation ===================
@@ -850,10 +844,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// idof 
   }
 
-  cout<<"Point 3\n";
-  //exit(0);
   F_eff = aux_get_forces(prms, dyn_var, ham); 
-  cout<<"Effective force: \n"; F_eff.show_matrix();  cout<<"endl";
   p = p + F_eff * 0.5 * prms.dt;
 
   // Kinetic constraint
@@ -880,30 +871,21 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Recompute the matrices at the new geometry and apply any necessary fixes 
-  //update_Hamiltonian_q(prms, q, ham, py_funct, params);
-  update_Hamiltonian_q(prms, dyn_var, ham, py_funct, params);
-
-  //update_Hamiltonian_q_ethd(prms, q, p, ham, py_funct, params, invM);
-  update_Hamiltonian_q_ethd(prms, dyn_var, ham, py_funct, params);
+  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 0);
 
 
   // Apply phase correction and state reordering as needed
-  if(prms.rep_tdse==1){
-
+//  if(prms.rep_tdse==1){
     if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
       /// Compute the time-overlap directly, using previous MO vectors
-      if(prms.time_overlap_method==0){    
-        St = compute_St(ham, Uprev, prms.isNBRA);
-      }
-      /// Read the existing time-overlap
-      else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);      }
-      Eadi = get_Eadi(ham);           // these are raw properties
-      //update_projectors(prms, projectors, Eadi, St, rnd);
+      if(prms.time_overlap_method==0){  St = compute_St(ham, Uprev, prms.isNBRA);   }
 
+      /// Read the existing time-overlap
+      else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
+      Eadi = get_Eadi(ham);           // these are raw properties
       perms = compute_permutations(prms, Eadi, St, rnd);
       insta_proj = compute_projectors(prms, St, perms);
-//      insta_proj = compute_projectors(prms, Eadi, St, rnd);
       
       /// Adiabatic Amplitudes
       for(traj=0; traj<ntraj; traj++){
@@ -917,11 +899,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       act_states = permute_states(perms, act_states);
 
     }
-  }// rep_tdse == 1
+//  }// rep_tdse == 1
 
 
   // In case, we select to compute scalar NACs from time-overlaps
-  update_nacs(prms, ham);
+//  update_nacs(prms, ham);
+  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+
 
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -936,7 +920,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   F_eff = aux_get_forces(prms, dyn_var, ham); 
   p = p + F_eff * 0.5 * prms.dt;
-
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -955,61 +938,45 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  update_nacs(prms, ham);
-  update_Hamiltonian_p(prms, dyn_var, ham);
+  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
 
-  for(i=0; i<num_el; i++){
-    if(prms.rep_tdse==0){
-      propagate_electronic(0.5*dt_el, Cdia, ham.children, prms.rep_tdse, prms.isNBRA);   
-    }
-    else if(prms.rep_tdse==1){
-      propagate_electronic(0.5*dt_el, Cadi, ham.children, prms.rep_tdse, prms.isNBRA);   
-    }
-  }
+
 
   CMATRIX Hvib(ham.children[0]->nadi, ham.children[0]->nadi);  
   Hvib = ham.children[0]->get_hvib_adi();
 
 
+
+  dyn_var.update_amplitudes(prms, ham);
+  dyn_var.update_density_matrix(prms, ham, 1);
+
+
   //============== Begin the TSH part ===================
 
-  // To be able to compute transition probabilities, compute the corresponding amplitudes
-  // This transformation is between diabatic and raw adiabatic representations
-  CMATRIX Coeff(nst, ntraj);   // this is adiabatic amplitudes   
-  Coeff = Cadi;
-
-
   //================= Update decoherence rates & times ================
-  //MATRIX decoh_rates(*prms.decoh_rates);
-//    exit(0);
+  /// Effectively turn off decoherence effects
   if(prms.decoherence_times_type==-1){
     for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = 0.0;   }
   }
-
-  /// mSDM
-  /// Just use the plain times given from the input, usually the
-  /// mSDM formalism
+  /// Just use the plain times given from the input, usually the mSDM formalism
   else if(prms.decoherence_times_type==0){
     for(traj=0; traj<ntraj1; traj++){   decoherence_rates[traj] = *prms.decoherence_rates;   }
   }
-
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
     Eadi = get_Eadi(ham); 
-    Ekin = compute_kinetic_energies(p, invM);
+    Ekin = dyn_var.compute_kinetic_energies();  
     decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
 
   else if(prms.decoherence_times_type==2){
-// TEMPORARY COMMENTS - next 1 line
-//    decoherence_rates = schwartz_1(prms, Coeff, projectors, ham, *prms.schwartz_decoherence_inv_alpha); 
+    decoherence_rates = schwartz_1(prms, *dyn_var.ampl_adi, ham, *prms.schwartz_decoherence_inv_alpha); 
   }
 
   else if(prms.decoherence_times_type==3){
-// TEMPORARY COMMENTS - next 1 line
-//    decoherence_rates = schwartz_2(prms, projectors, ham, *prms.schwartz_decoherence_inv_alpha); 
+    decoherence_rates = schwartz_2(prms, ham, *prms.schwartz_decoherence_inv_alpha); 
   }
-
 
   ///== Optionally, apply the dephasing-informed correction ==
   if(prms.dephasing_informed==1){
@@ -1019,9 +986,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   //============ Apply decoherence corrections ==================
-  // SDM and alike methods
-  if(prms.decoherence_algo==0){
-    Coeff = sdm(Coeff, prms.dt, act_states, decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
+  // SDM and alike methods - only in the adiabatic rep
+  if(prms.decoherence_algo==0 && prms.rep_tdse==1){
+    Cadi = sdm(Cadi, prms.dt, dyn_var.act_states, decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
   }
   // BCSH
   else if(prms.decoherence_algo==3){ 
@@ -1030,13 +997,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 //    Coeff = bcsh(Coeff, prms.dt, act_states, *dyn_var.reversal_events);
   }
 
+  // MFSD
   else if(prms.decoherence_algo==4){
-//    MATRIX decoh_rates(ndof, ntraj);
-    Coeff = mfsd(p, Coeff, invM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+    Cact = mfsd(*dyn_var.p, Cact, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
   }
 
 
+
   //========= Use the resulting amplitudes to do the hopping =======
+  dyn_var.update_amplitudes(prms, ham);
+  dyn_var.update_density_matrix(prms, ham, 1);
+
+
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
@@ -1044,33 +1016,42 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2){
 
     // Compute hopping probabilities
-    vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, ham, prev_ham_dia) );
+    // vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, ham, prev_ham_dia) );
 
-    // Propose new discrete states    
-    vector<int> prop_states( propose_hops(g, act_states, rnd) );
+    /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
+    /// of that trajectory
+    vector< vector<double> > g;
+    g = hop_proposal_probabilities(prms, dyn_var, ham, prev_ham_dia);
 
 
+    // Propose new discrete states for all trajectories
+    vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
+
+    
     // Decide if to accept the transitions (and then which)
-    vector<int> old_states(act_states);
-    act_states = accept_hops(prms, q, p, invM, Coeff, ham, prop_states, act_states, rnd);    
+    // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
+    vector<int> old_states(ntraj); //act_states);
+    for(traj=0; traj<ntraj; traj++){ old_states[traj] = act_states[traj]; }
+    act_states = accept_hops(prms, q, p, invM, Cact, ham, prop_states, act_states, rnd);    
 
-    // Velocity rescaling
-    handle_hops_nuclear(prms, q, p, invM, Coeff, ham, act_states, old_states);
 
+    // Velocity rescaling: however here we may be changing velocities
+    //
+    handle_hops_nuclear(prms, q, p, invM, Cact, ham, act_states, old_states);
 
 
     if(prms.decoherence_algo==1){
       // Instantaneous decoherence 
-      instantaneous_decoherence(Coeff, act_states, prop_states, old_states, 
-          prms.instantaneous_decoherence_variant, prms.collapse_option);
+      instantaneous_decoherence(Cact, act_states, prop_states, old_states, prms.instantaneous_decoherence_variant, prms.collapse_option);
     } 
     else if(prms.decoherence_algo==2){
-      apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
-
+      /// Temporarily commented AVA 11/7/2022
+      ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
     }// AFSSH
         
   }// tsh_method == 0, 1, 2, 4
   
+/*
   // DISH
   else if(prms.tsh_method == 3 ){
 
@@ -1086,13 +1067,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   }// tsh_method == 3
-
+*/
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
-
-
-  // Need the inverse
-  //Coeff = transform_amplitudes(prms.rep_tdse, prms.rep_sh, C, ham);
-  Cadi = Coeff;
 
 
 

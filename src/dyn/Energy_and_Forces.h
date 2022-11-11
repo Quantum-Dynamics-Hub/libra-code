@@ -56,6 +56,14 @@ vector<double> compute_kinetic_energies(MATRIX& p, MATRIX& invM);
 
 CMATRIX tsh_indx2ampl(vector<int>& res, int nstates);
 
+
+double average_potential_energy(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham);
+double average_potential_energy(bp::dict prms, dyn_variables& dyn_vars, nHamiltonian& ham);
+
+vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham);
+vector<double> potential_energies(bp::dict prms, dyn_variables& dyn_vars, nHamiltonian& ham);
+
+
 MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars,  nHamiltonian& ham);
 MATRIX aux_get_forces(bp::dict prms, dyn_variables& dynvars, nHamiltonian& ham);
 

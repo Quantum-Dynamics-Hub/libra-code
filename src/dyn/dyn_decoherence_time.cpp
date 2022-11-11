@@ -283,7 +283,7 @@ MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates){
 }
 
 
-vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp){
 /**
   Compute decoherence rates 1/tau_i for all states and all trajectories according to Schwartz prescription 
   
@@ -340,7 +340,7 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<
 
 
 
-vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp){
 /**
   Compute decoherence rates 1/tau_ij for all pairs of states and all trajectories according to Schwartz state-pair prescription 
   
@@ -360,7 +360,7 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors,
 
 
   // Precompute state-resolved forces
-  CMATRIX amplitudes(nstates, ntraj);
+  //CMATRIX amplitudes(nstates, ntraj);
   vector<MATRIX> F(nstates, MATRIX(ndof, ntraj));
 
   for(int i=0; i<nstates; i++){

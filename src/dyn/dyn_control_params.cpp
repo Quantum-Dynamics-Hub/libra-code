@@ -37,6 +37,8 @@ dyn_control_params::dyn_control_params(){
   ///================= Computing Hamiltonian-related properties ====================
   rep_tdse = 1;
   rep_ham = 0;
+  ham_update_method = 1;
+  ham_transform_method = 1;
   rep_sh = 1;
   rep_lz = 0;
   rep_force = 1;
@@ -46,6 +48,7 @@ dyn_control_params::dyn_control_params(){
   time_overlap_method = 0;
   nac_update_method = 1;
   nac_algo = -1;
+  hvib_update_method = 1;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = 2;
@@ -100,10 +103,12 @@ dyn_control_params::dyn_control_params(){
 
 
 dyn_control_params::dyn_control_params(const dyn_control_params& x){ 
-  cout<<"dyn_control_params cctor\n";
+  //cout<<"dyn_control_params cctor\n";
 
   rep_tdse = x.rep_tdse;
   rep_ham = x.rep_ham;
+  ham_update_method = x.ham_update_method;
+  ham_transform_method = x.ham_transform_method;
   rep_sh = x.rep_sh;
   rep_lz = x.rep_lz;
   rep_force = x.rep_force;
@@ -113,6 +118,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   time_overlap_method = x.time_overlap_method;
   nac_update_method = x.nac_update_method;
   nac_algo = x.nac_algo;
+  hvib_update_method = x.hvib_update_method;
   do_phase_correction = x.do_phase_correction;
   phase_correction_tol = x.phase_correction_tol; 
   state_tracking_algo = x.state_tracking_algo;
@@ -174,7 +180,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 }
 dyn_control_params::~dyn_control_params() {  
 
-  cout<<"dyn_control_params destructor\n";
+  //cout<<"dyn_control_params destructor\n";
 
   delete decoherence_rates;  
   delete ave_gaps;
@@ -253,6 +259,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     ///================= Computing Hamiltonian-related properties ====================
     if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
     else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
+    else if(key=="ham_update_method") { ham_update_method = bp::extract<int>(params.values()[i]);   }
+    else if(key=="ham_transform_method") { ham_transform_method = bp::extract<int>(params.values()[i]);   }
     else if(key=="rep_sh") { rep_sh = bp::extract<int>(params.values()[i]);  }
     else if(key=="rep_lz") { rep_lz = bp::extract<int>(params.values()[i]);  }
     else if(key=="rep_force") { rep_force = bp::extract<int>(params.values()[i]);  }
@@ -262,6 +270,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="time_overlap_method"){ time_overlap_method = bp::extract<double>(params.values()[i]); }
     else if(key=="nac_update_method") { nac_update_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="nac_algo") { nac_algo = bp::extract<int>(params.values()[i]);  }
+    else if(key=="hvib_update_method") { hvib_update_method = bp::extract<int>(params.values()[i]);   }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }

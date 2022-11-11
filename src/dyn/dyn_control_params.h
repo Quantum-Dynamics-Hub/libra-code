@@ -70,7 +70,32 @@ class dyn_control_params{
      - 1: adiabatic representation 
 
   */
-  int rep_ham;
+  int rep_ham;  /// TO BE REPLACED BY the ham_update_method
+
+
+  /** 
+   How to update Hamiltonian and which type of Hamiltonian to update
+
+   Options:
+     - 0: don't update any Hamiltonians
+     - 1: recompute only diabatic Hamiltonian [ default ]
+     - 2: recompute only adiabatic Hamiltonian
+  */
+  int ham_update_method;
+
+
+  /** 
+   How to transform the Hamiltonians between representations
+
+   Options:
+     - 0: don't do any transforms
+     - 1: diabatic->adiabatic according to internal diagonalization [ default ]
+     - 2: diabatic->adiabatic according to internally stored basis transformation matrix
+     - 3: adiabatic->diabatic according to internally stored basis transformation matrix
+     - 4: adiabatic->diabatic according to local diabatization method
+
+  */
+  int ham_transform_method;
 
 
   /**
@@ -150,7 +175,7 @@ class dyn_control_params{
 
 
   /** 
-    How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation.
+    How to update NACs 
 
     Options:
       - 0: don't update them (e.g. for simplest NAC)
@@ -169,6 +194,16 @@ class dyn_control_params{
       -  1: use NPI of Meek and Levine (if nac_update_method==2)
   */
   int nac_algo;
+
+
+  /** 
+    How to update Hvib 
+
+    Options:
+      - 0: don't update them (e.g. if it is read externally)
+      - 1: update according to regular formula: Hvib = Ham - i * hbar * NAC [ default ]
+  */
+  int hvib_update_method;
 
 
   /** 

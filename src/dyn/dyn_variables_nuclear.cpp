@@ -206,6 +206,58 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
 }
 
 
+double dyn_variables::compute_average_kinetic_energy(){
+  double res = 0.0;
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(int idof = 0; idof < ndof; idof++){
+      res += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+    }    
+  }
+  return 0.5*res/ float(ntraj);
+}
+
+double dyn_variables::compute_average_kinetic_energy(vector<int>& which_dofs){
+  double res = 0.0;
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(auto idof: which_dofs){
+      res += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+    }    
+  }
+  return 0.5*res / float(which_dofs.size() );
+}
+
+
+vector<double> dyn_variables::compute_kinetic_energies(){
+  vector<double> res(ntraj, 0.0);
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(int idof = 0; idof < ndof; idof++){
+      res[itraj] += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+    }    
+    res[itraj] *= 0.5;
+  }
+
+  return res;
+
+}
+
+vector<double> dyn_variables::compute_kinetic_energies(vector<int>& which_dofs){
+  vector<double> res(ntraj, 0.0);
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(auto idof : which_dofs){
+      res[itraj] += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+    }    
+    res[itraj] *= 0.5;
+  }
+
+  return res;
+
+}
+
+
 
 
 

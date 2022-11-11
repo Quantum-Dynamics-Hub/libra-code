@@ -16,9 +16,9 @@
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
 #include "electronic/libelectronic.h"
-#include "Dynamics.h"
+///#include "Dynamics.h"
 #include "dyn_control_params.h"
-
+#include "dyn_hop_acceptance.h"
 
 /// liblibra namespace
 namespace liblibra{

@@ -22,6 +22,7 @@
 #include "../hamiltonian/libhamiltonian.h"
 #include "../io/libio.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
 
 
 /// liblibra namespace
@@ -56,6 +57,7 @@ vector<int> accept_hops(dyn_control_params& prms,
 vector<int> accept_hops(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd);
+
 
 
 vector<int> where_can_we_hop(int traj, dyn_control_params& prms,

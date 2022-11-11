@@ -70,7 +70,7 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
 */
 
-  cout<<"dyn_variables constructor!!!\n";  
+  //cout<<"dyn_variables constructor!!!\n";  
 
   ///================= Dimension numbers =============
   ndia = _ndia;
@@ -135,7 +135,7 @@ void dyn_variables::allocate_bcsh(){
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
-  cout<<"dyn_variables copy constructor\n";
+  //cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
 
   ndia = x.ndia;
@@ -198,9 +198,8 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
 
 dyn_variables::~dyn_variables(){  
-  cout<<"dyn_variables destructor!!!\n";
+  //cout<<"dyn_variables destructor!!!\n";
 
-/*
   if(electronic_vars_status==1){ 
     for(int itraj=0; itraj<ntraj; itraj++){
       delete dm_dia[itraj];
@@ -216,8 +215,6 @@ dyn_variables::~dyn_variables(){
     electronic_vars_status = 0;
   }
 
-*/
-/*
   if(afssh_vars_status==1){
 
     for(int itraj; itraj<ntraj; itraj++){
@@ -238,7 +235,6 @@ dyn_variables::~dyn_variables(){
     afssh_vars_status = 0;
 
   }// AFSSH variables
-*/
 
 }
 

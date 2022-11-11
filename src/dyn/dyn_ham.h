@@ -36,6 +36,11 @@ namespace bp = boost::python;
 namespace libdyn{
 
 
+void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+                                  bp::object py_funct, bp::object model_params, int update_type);
+void update_Hamiltonian_variables(bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+                                  bp::object py_funct, bp::object model_params, int update_type);
+
 void update_Hamiltonian_q(dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, bp::object py_funct, bp::object model_params);
 void update_Hamiltonian_q(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, bp::object py_funct, bp::object model_params);
 void update_Hamiltonian_q(bp::dict prms, MATRIX& q, nHamiltonian& ham, bp::object py_funct, bp::object model_params);

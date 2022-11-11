@@ -266,6 +266,10 @@ class dyn_variables{
   ///====================== In dyn_variables_nuclear.cpp =====================
 
   void init_nuclear_dyn_var(bp::dict _params, Random& rnd);
+  double compute_average_kinetic_energy();
+  double compute_average_kinetic_energy(vector<int>& which_dofs);
+  vector<double> compute_kinetic_energies();
+  vector<double> compute_kinetic_energies(vector<int>& which_dofs);
 
 
   ///====================== In dyn_variables_electronic.cpp =====================

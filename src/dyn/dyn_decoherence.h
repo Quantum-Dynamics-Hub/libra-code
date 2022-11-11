@@ -87,8 +87,8 @@ void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>&
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
 
-vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
-vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp);
+vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp);
 
 
 ///================  In dyn_methods_dish.cpp  ===================================

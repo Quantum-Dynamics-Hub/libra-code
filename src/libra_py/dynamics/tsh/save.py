@@ -55,8 +55,8 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
     saver - can be either hdf5_saver or mem_saver
 
     """
-    print(F"In init_tsh_data with:nsteps = {_nsteps}, ntraj = {_ntraj}, ndof = {_ndof}, nadi = {_nadi}, ndia = {_ndia} ")
-    print(F"output_level = {output_level}")
+    #print(F"In init_tsh_data with:nsteps = {_nsteps}, ntraj = {_ntraj}, ndof = {_ndof}, nadi = {_nadi}, ndia = {_ndia} ")
+    #print(F"output_level = {output_level}")
 
     if output_level>=1:
 
@@ -351,12 +351,15 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
     saver.save_scalar(t, "time", dt*i)  
 
     # Average kinetic energy
+    Ekin = dyn_var.compute_average_kinetic_energy()
     saver.save_scalar(t, "Ekin_ave", Ekin)  
 
     # Average potential energy
+    Epot = average_potential_energy(params, dyn_var, ham)
     saver.save_scalar(t, "Epot_ave", Epot)  
 
     # Average total energy
+    Etot = Ekin + Epot
     saver.save_scalar(t, "Etot_ave", Etot)  
 
     # Fluctuation of average kinetic energy
@@ -398,7 +401,7 @@ def save_hdf5_2D(saver, i, states, txt_type=0):
 
 
 
-def save_hdf5_2D_new(saver, i, dyn_var, txt_type=0):
+def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
@@ -522,10 +525,6 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
 
     """
 
-    print("==========in 3D_new =========")
-    #exit(0)
-
-
     t = 0
     if txt_type==0:
         t = i
@@ -534,17 +533,13 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     # Average adiabatic density matrices
     # Format: saver.add_dataset("D_adi", (_nsteps, _nadi, _nadi), "C") 
     if "D_adi" in saver.keywords and "D_adi" in saver.np_data.keys():
-        #dm_adi = dyn_var.compute_average_dm(1)
-        print("dm_adi")
-        #dm_adi.show_matrix()
-        #saver.save_matrix(t, "D_adi", dm_adi) 
+        dm_adi = dyn_var.compute_average_dm(1)
+        saver.save_matrix(t, "D_adi", dm_adi) 
 
     # Average diabatic density matrices
     # Format: saver.add_dataset("D_dia", (_nsteps, _ndia, _ndia), "C") 
     if "D_dia" in saver.keywords and "D_dia" in saver.np_data.keys():
         dm_dia = dyn_var.compute_average_dm(0)
-        #print("dm_dia")
-        #dm_dia.show_matrix()
         saver.save_matrix(t, "D_dia", dm_dia) 
 
     # Trajectory-resolved coordinates
@@ -563,20 +558,14 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
     if "Cadi" in saver.keywords and "Cadi" in saver.np_data.keys():
         Cadi = dyn_var.get_ampl_adi()
-        print("Cadi")
-        #Cadi.show_matrix()
         saver.save_matrix(t, "Cadi", Cadi.T()) 
 
     # Trajectory-resolved diabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_dia", (_nsteps, _ntraj, _ndia), "C") 
     if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
         Cdia = dyn_var.get_ampl_dia()
-        print("Cdia")
-        #Cdia.show_matrix()
         saver.save_matrix(t, "Cdia", Cdia.T()) 
 
-    print("==========end of 3D_new =========")
-    #exit(0)
 
 
 def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector, txt_type=0):
@@ -689,8 +678,6 @@ def save_tsh_data_123(_savers, params,
 def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham, U):
 
 
-    print(params)
-
     hdf5_output_level = params["hdf5_output_level"]
     mem_output_level = params["mem_output_level"]
     txt_output_level = params["txt_output_level"]
@@ -720,30 +707,25 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham, U):
         #save_hdf5_1D(_savers["txt2_saver"], i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, 1)
         save_hdf5_1D_new(_savers["txt2_saver"], i, params, dyn_var, ham, 1)
 
-    print("=============== in save 1 =================")
-    #sys.exit(0)
-
 
     # =========== Using : def save_hdf5_2D_new(saver, i, dyn_var, txt_type=0) =====================
     if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
         #save_hdf5_2D(_savers["hdf5_saver"], i, states)
-        save_hdf5_2D_new(_savers["hdf5_saver"], i, dyn_var)
+        save_hdf5_2D_new(_savers["hdf5_saver"], i, dyn_var, ham)
 
     if mem_output_level>=2 and _savers["mem_saver"]!=None:
         #save_hdf5_2D(_savers["mem_saver"], i, states)
-        save_hdf5_2D_new(_savers["mem_saver"], i, dyn_var)
+        save_hdf5_2D_new(_savers["mem_saver"], i, dyn_var, ham)
 
     if txt_output_level>=2 and _savers["txt_saver"]!=None:
         #save_hdf5_2D(_savers["txt_saver"], i, states)
-        save_hdf5_2D_new(_savers["txt_saver"], i, dyn_var)
+        save_hdf5_2D_new(_savers["txt_saver"], i, dyn_var, ham)
 
     if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
         #save_hdf5_2D(_savers["txt2_saver"], i, states, 1)
-        save_hdf5_2D_new(_savers["txt2_saver"], i, dyn_var, 1)
+        save_hdf5_2D_new(_savers["txt2_saver"], i, dyn_var, ham, 1)
 
 
-    print("=============== in save 2 =================")
-    #exit(0)
     # ============ Using: def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0) ==========================
 
     if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None: 
@@ -762,9 +744,6 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham, U):
         #save_hdf5_3D(_savers["txt2_saver"], i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia, 1)
         save_hdf5_3D_new(_savers["txt2_saver"], i, dyn_var, 1)
 
-    print("=============== in save 3 =================")
-    #exit(0)
-
     # ============ Using: def save_hdf5_4D_new(saver, i, tr, dyn_var, ham, txt_type=0) ====================
 
     is_nbra = params["is_nbra"]
@@ -779,17 +758,12 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham, U):
     
     for tr in tr_range:
 
-        print("=============== in save 4.0 =================")
-
         if time_overlap_method==0:
             x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
             St = U[tr].H() * x
             U[tr] = CMATRIX(x)
         elif time_overlap_method==1:                
             St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
-
-        print("=============== in save 4.1 =================")
-        #exit(0)
 
 
         if hdf5_output_level>=4: 
@@ -811,13 +785,6 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham, U):
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
             save.save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], None, 1)
-
-        print("=============== in save 4.2 =================")
-        #exit(0)
-
-
-    print("=============== in save 4 =================")
-    #exit(0)
 
 
 

@@ -63,6 +63,8 @@ void export_dyn_control_params_objects(){
       ///================= Computing Hamiltonian-related properties ====================
       .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
       .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
+      .def_readwrite("ham_update_method", &dyn_control_params::ham_update_method)    
+      .def_readwrite("ham_transform_method", &dyn_control_params::ham_transform_method)    
       .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
       .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
       .def_readwrite("rep_force", &dyn_control_params::rep_force)
@@ -70,6 +72,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
       .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("nac_algo", &dyn_control_params::nac_algo)
+      .def_readwrite("hvib_update_method", &dyn_control_params::hvib_update_method)    
       .def_readwrite("do_phase_correction", &dyn_control_params::do_phase_correction)
       .def_readwrite("phase_correction_tol", &dyn_control_params::phase_correction_tol)
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
@@ -156,6 +159,11 @@ void export_dyn_variables_objects(){
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
 
 
+  double (dyn_variables::*expt_compute_average_kinetic_energy_v1)() = &dyn_variables::compute_average_kinetic_energy;
+  double (dyn_variables::*expt_compute_average_kinetic_energy_v2)(vector<int>& which_dofs) = &dyn_variables::compute_average_kinetic_energy;
+  vector<double> (dyn_variables::*expt_compute_kinetic_energies_v1)() = &dyn_variables::compute_kinetic_energies;
+  vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
+
 
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
@@ -191,6 +199,11 @@ void export_dyn_variables_objects(){
       .def("get_momenta", &dyn_variables::get_momenta)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
+      .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
+      .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v2)
+      .def("compute_kinetic_energies", expt_compute_kinetic_energies_v1)
+      .def("compute_kinetic_energies", expt_compute_kinetic_energies_v2)
+
 
       .def("update_amplitudes", expt_update_amplitudes_v1)
       .def("update_amplitudes", expt_update_amplitudes_v2)
@@ -336,12 +349,10 @@ void export_dyn_decoherence_objects(){
 
 
   vector<MATRIX> (*expt_schwartz_1_v1)
-  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, 
-   MATRIX& inv_alp) = &schwartz_1;
+  (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_1;
 
   vector<MATRIX> (*expt_schwartz_2_v1)
-  (dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, 
-   MATRIX& inv_alp) = &schwartz_2;
+  (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
 
 
 
@@ -465,14 +476,26 @@ void export_dyn_hop_proposal_objects(){
   MATRIX (*expt_hopping_probabilities_fssh_v1)
   (dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib) = &hopping_probabilities_fssh;
   def("hopping_probabilities_fssh", expt_hopping_probabilities_fssh_v1);
+  vector<double> (*expt_hopping_probabilities_fssh_v2)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_fssh;
+  def("hopping_probabilities_fssh", expt_hopping_probabilities_fssh_v2);
+
+
 
   MATRIX (*expt_hopping_probabilities_gfsh_v1)
   (dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib) = &hopping_probabilities_gfsh;
   def("hopping_probabilities_gfsh", expt_hopping_probabilities_gfsh_v1);
+  vector<double> (*expt_hopping_probabilities_gfsh_v2)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_gfsh;
+  def("hopping_probabilities_gfsh", expt_hopping_probabilities_gfsh_v2);
+
 
   MATRIX (*expt_hopping_probabilities_mssh_v1)
   (dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib) = &hopping_probabilities_mssh;
   def("hopping_probabilities_mssh", expt_hopping_probabilities_mssh_v1);
+  vector<double> (*expt_hopping_probabilities_mssh_v2)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_mssh;
+  def("hopping_probabilities_mssh", expt_hopping_probabilities_mssh_v2);
 
 
 /*
@@ -485,19 +508,30 @@ void export_dyn_hop_proposal_objects(){
   (dyn_control_params& prms,
    MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
    nHamiltonian& ham, vector<MATRIX>& prev_ham_dia) = &hop_proposal_probabilities;
-
   def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v1);
+
+  vector< vector<double> > (*expt_hop_proposal_probabilities_v2)
+  (dyn_control_params& prms, dyn_variables& dyn_var, 
+   nHamiltonian& ham, vector<MATRIX>& prev_ham_dia) = &hop_proposal_probabilities;
+  def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v2);
+
+
 
 
   int (*expt_hop_v1)(vector<double>& prob, double ksi) = &hop;
   def("hop", expt_hop_v1);
-
   int (*expt_hop_v2)(int initstate, MATRIX& g, double ksi) = &hop;
   def("hop", expt_hop_v2);
+  int (*expt_hop_v3)(int initstate, vector<double>& g, double ksi) = &hop;
+  def("hop", expt_hop_v3);
 
   vector<int> (*expt_propose_hops_v1)
   (vector<MATRIX>& g, vector<int>& act_states, Random& rnd) = &propose_hops;
   def("propose_hops", expt_propose_hops_v1);
+  vector<int> (*expt_propose_hops_v2)
+  (vector< vector<double> >& g, vector<int>& act_states, Random& rnd) = &propose_hops;
+  def("propose_hops", expt_propose_hops_v2);
+
 
 }
 
@@ -672,6 +706,24 @@ void export_Energy_Forces_objects(){
   def("aux_get_forces", expt_aux_get_forces_v2);
 */
 
+  double (*expt_average_potential_energy_v1)
+  (dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham) = &average_potential_energy;
+  def("average_potential_energy", expt_average_potential_energy_v1);
+
+  double (*expt_average_potential_energy_v2)
+  (bp::dict prms, dyn_variables& dyn_vars, nHamiltonian& ham) = &average_potential_energy;
+  def("average_potential_energy", expt_average_potential_energy_v2);
+
+  vector<double> (*expt_potential_energies_v1)
+  (dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham) = &potential_energies;
+  def("potential_energies", expt_potential_energies_v1);
+
+  vector<double> (*expt_potential_energies_v2)
+  (bp::dict prms, dyn_variables& dyn_vars, nHamiltonian& ham) = &potential_energies;
+  def("potential_energies", expt_potential_energies_v2);
+
+
+
   MATRIX (*expt_aux_get_forces_v1)
   (dyn_control_params& prms, dyn_variables& dynvars, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v1);
@@ -699,6 +751,17 @@ void export_Energy_Forces_objects(){
 
 
 void export_dyn_ham(){
+
+
+  void (*expt_update_Hamiltonian_variables_v1)
+  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+   bp::object py_funct, bp::object model_params, int update_type) = &update_Hamiltonian_variables;
+  void (*expt_update_Hamiltonian_variables_v2)
+  (bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+   bp::object py_funct, bp::object model_params, int update_type) = &update_Hamiltonian_variables;
+  
+  def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v1);
+  def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v2);
 
 
   void (*expt_update_Hamiltonian_q_v1)

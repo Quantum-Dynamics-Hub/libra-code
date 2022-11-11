@@ -135,6 +135,8 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
 void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 
+void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
+
 void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep);
