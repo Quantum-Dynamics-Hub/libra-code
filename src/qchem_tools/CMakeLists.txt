@@ -18,17 +18,28 @@ ADD_LIBRARY(qchem_tools      SHARED ${QCHEM_TOOLS_SRC})
 ADD_LIBRARY(qchem_tools_stat STATIC ${QCHEM_TOOLS_SRC})
 
 
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16 AND USING_PCH)  # Support for PCHs in CMake was added in 3.16
+   message(STATUS "Compiling using pre-compiled header support: qchem_tools")
+   target_precompile_headers(qchem_tools REUSE_FROM pch) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(qchem_tools_stat REUSE_FROM pch_stat) # With PUBLIC they will be used by targets using this target
+endif()
+
+
+
+
+
 #
 #  Link to external libraries
 #
 TARGET_LINK_LIBRARIES(qchem_tools      chemobjects_stat 
-                      hamiltonian_stat qobjects_stat
+                      atomistic_stat qobjects_stat
                       basis_setups_stat control_parameters_stat
                       model_parameters_stat
                       linalg_stat ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(qchem_tools_stat      chemobjects_stat 
-                      hamiltonian_stat qobjects_stat
+                      atomistic_stat qobjects_stat
                       basis_setups_stat control_parameters_stat
                       model_parameters_stat
                       linalg_stat ${ext_libs} )

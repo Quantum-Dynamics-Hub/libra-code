@@ -19,9 +19,12 @@
 ///#include "Dynamics.h"
 #include "dyn_control_params.h"
 #include "dyn_hop_acceptance.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libspecialfunctions;
 
 /// libdyn namespace
 namespace libdyn{

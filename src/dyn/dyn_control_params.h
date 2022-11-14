@@ -25,6 +25,7 @@
 #endif
 
 #include "../math_linalg/liblinalg.h"
+#include "../Units.h"
 
 
 /// liblibra namespace

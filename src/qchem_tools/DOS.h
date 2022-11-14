@@ -21,8 +21,8 @@
 #include "../basis_setups/libbasis_setups.h"
 #include "../control_parameters/libcontrol_parameters.h"
 #include "../model_parameters/libmodel_parameters.h"
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Electronic_Structure.h"
-#include "../hamiltonian/Hamiltonian_Atomistic/Hamiltonian_QM/Hamiltonian_QM.h"
+#include "../atomistic/Hamiltonian_QM/Electronic_Structure.h"
+#include "../atomistic/Hamiltonian_QM/Hamiltonian_QM.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -33,8 +33,7 @@ using namespace libchemobjects::libchemsys;
 using namespace libbasis_setups;
 using namespace libcontrol_parameters;
 using namespace libmodel_parameters;
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
-using namespace libhamiltonian::libhamiltonian_atomistic::libhamiltonian_qm;
+using namespace libatomistic::libhamiltonian_qm;
 
 
 

@@ -19,7 +19,7 @@
 
 // External dependencies
 #include "../math_linalg/liblinalg.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "../io/libio.h"
 #include "thermostat/Thermostat.h"
 
@@ -37,7 +37,7 @@
 namespace liblibra{
 
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 /// libdyn namespace

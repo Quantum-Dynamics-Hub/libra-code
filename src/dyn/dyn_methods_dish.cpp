@@ -19,10 +19,13 @@
 #include "dyn_decoherence.h"
 #include "dyn_hop_acceptance.h"
 #include "dyn_hop_proposal.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libspecialfunctions;
 
 /// libdyn namespace
 namespace libdyn{

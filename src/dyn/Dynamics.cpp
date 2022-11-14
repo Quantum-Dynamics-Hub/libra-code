@@ -875,31 +875,29 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Apply phase correction and state reordering as needed
-//  if(prms.rep_tdse==1){
-    if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
+  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
-      /// Compute the time-overlap directly, using previous MO vectors
-      if(prms.time_overlap_method==0){  St = compute_St(ham, Uprev, prms.isNBRA);   }
+    /// Compute the time-overlap directly, using previous MO vectors
+    if(prms.time_overlap_method==0){  St = compute_St(ham, Uprev, prms.isNBRA);   }
 
-      /// Read the existing time-overlap
-      else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
-      Eadi = get_Eadi(ham);           // these are raw properties
-      perms = compute_permutations(prms, Eadi, St, rnd);
-      insta_proj = compute_projectors(prms, St, perms);
-      
-      /// Adiabatic Amplitudes
-      for(traj=0; traj<ntraj; traj++){
-        t2[0] = traj;
-        pop_submatrix(Cadi, c_tmp, t3, t2);
-        c_tmp = insta_proj[traj] * c_tmp;
-        push_submatrix(Cadi, c_tmp, t3, t2);
-      }
-
-      /// Adiabatic states are permuted
-      act_states = permute_states(perms, act_states);
-
+    /// Read the existing time-overlap
+    else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
+    Eadi = get_Eadi(ham);           // these are raw properties
+    perms = compute_permutations(prms, Eadi, St, rnd);
+    insta_proj = compute_projectors(prms, St, perms);
+    
+    /// Adiabatic Amplitudes
+    for(traj=0; traj<ntraj; traj++){
+      t2[0] = traj;
+      pop_submatrix(Cadi, c_tmp, t3, t2);
+      c_tmp = insta_proj[traj] * c_tmp;
+      push_submatrix(Cadi, c_tmp, t3, t2);
     }
-//  }// rep_tdse == 1
+
+    /// Adiabatic states are permuted
+    act_states = permute_states(perms, act_states);
+
+  }
 
 
   // In case, we select to compute scalar NACs from time-overlaps

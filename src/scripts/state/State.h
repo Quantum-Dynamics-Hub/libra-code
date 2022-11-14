@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -14,7 +14,7 @@
 
 #include "../../dyn/libdyn.h"
 #include "../../chemobjects/libchemobjects.h"
-#include "../../hamiltonian/libhamiltonian.h"
+#include "../../atomistic/libatomistic.h"
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_random/librandom.h"
 #include "../../io/libio.h"
@@ -25,13 +25,27 @@ namespace liblibra{
 using namespace libio;
 using namespace libdyn;
 using namespace libdyn::libbarostat;
+using namespace libdyn::libelectronic;
+using namespace libdyn::libnuclear;
+
+
 using namespace libchemobjects;
-using namespace libhamiltonian;
+using namespace libatomistic;
 using namespace liblinalg;
 using namespace librandom;
 
 namespace libscripts{
 namespace libstate{
+
+
+double compute_kinetic_energy(Nuclear* mol);
+double compute_kinetic_energy(Nuclear& mol);
+
+double compute_potential_energy(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
+double compute_potential_energy(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
+
+double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
+double compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
 
 
 class MD{

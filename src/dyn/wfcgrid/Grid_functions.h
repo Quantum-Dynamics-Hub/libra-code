@@ -20,7 +20,7 @@
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_random/librandom.h"
 #include "../../math_specialfunctions/libspecialfunctions.h"
-#include "../../hamiltonian/libhamiltonian.h"
+//#include "../../hamiltonian/libhamiltonian.h"
 #include "../../Units.h"
 
 /// liblibra namespace
@@ -29,7 +29,7 @@ namespace liblibra{
 using namespace liblinalg;
 using namespace librandom;
 using namespace libspecialfunctions;
-using namespace libhamiltonian;
+//using namespace libhamiltonian;
 
 
 /// libdyn namespace

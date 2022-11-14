@@ -23,7 +23,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(wfcgrid2      wfcgrid_stat hamiltonian_stat linalg_stat random_stat meigen_stat specialfunctions_stat ${ext_libs})
-TARGET_LINK_LIBRARIES(wfcgrid2_stat wfcgrid_stat hamiltonian_stat linalg_stat random_stat meigen_stat specialfunctions_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(wfcgrid2      wfcgrid_stat nhamiltonian_stat linalg_stat random_stat meigen_stat specialfunctions_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(wfcgrid2_stat wfcgrid_stat nhamiltonian_stat linalg_stat random_stat meigen_stat specialfunctions_stat ${ext_libs})
 
 

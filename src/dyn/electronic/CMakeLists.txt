@@ -23,10 +23,10 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(electronic      hamiltonian_stat 
+TARGET_LINK_LIBRARIES(electronic      nhamiltonian_stat 
                       linalg_stat meigen_stat random_stat operators_stat ${ext_libs} )
 
-TARGET_LINK_LIBRARIES(electronic_stat hamiltonian_stat
+TARGET_LINK_LIBRARIES(electronic_stat nhamiltonian_stat
                       linalg_stat meigen_stat random_stat operators_stat ${ext_libs} )
 
 

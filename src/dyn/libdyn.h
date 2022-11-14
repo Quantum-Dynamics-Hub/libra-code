@@ -27,7 +27,7 @@
 #include "barostat/libbarostat.h"
 #include "wfcgrid/libwfcgrid.h"
 #include "wfcgrid2/libwfcgrid2.h"
-#include "ensemble/libensemble.h"
+//#include "ensemble/libensemble.h"
 #include "gwp/libgwp.h"
 #include "heom/libheom.h"
 #include "qtag/libqtag.h"
@@ -35,7 +35,7 @@
 // General dynamics
 #include "Energy_and_Forces.h"
 #include "Surface_Hopping.h"
-#include "Dynamics_Nuclear.h"
+//#include "Dynamics_Nuclear.h"
 //#include "Dynamics_Ensemble.h"
 
 

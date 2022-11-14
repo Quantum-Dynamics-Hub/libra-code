@@ -39,7 +39,7 @@ using namespace libthermostat;
 using namespace libbarostat;
 using namespace libwfcgrid;
 using namespace libwfcgrid2;
-using namespace libensemble;
+//using namespace libensemble;
 using namespace libgwp;
 using namespace libheom;
 using namespace libqtag;
@@ -678,11 +678,12 @@ void export_Energy_Forces_objects(){
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v11);
   double (*expt_compute_kinetic_energy_v12)(MATRIX& p, MATRIX& invM) = &compute_kinetic_energy;
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v12);
+/*
   double (*expt_compute_kinetic_energy_v2)(Nuclear& mol) = &compute_kinetic_energy;
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v2);
   double (*expt_compute_kinetic_energy_v3)(Ensemble& ens) = &compute_kinetic_energy;
   def("compute_kinetic_energy",expt_compute_kinetic_energy_v3);
-
+*/
 
   vector<double> (*expt_compute_kinetic_energies_v1)(MATRIX& p, MATRIX& invM, vector<int>& which_dofs) = &compute_kinetic_energies;
   def("compute_kinetic_energies",expt_compute_kinetic_energies_v1);
@@ -735,6 +736,7 @@ void export_Energy_Forces_objects(){
   vector<CMATRIX> (*expt_get_Eadi_v1)(nHamiltonian& ham) = &get_Eadi;
   def("get_Eadi", expt_get_Eadi_v1);
 
+/*
   double (*expt_compute_potential_energy_v1)(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt) = &compute_potential_energy;
   def("compute_potential_energy",expt_compute_potential_energy_v1);
 
@@ -746,6 +748,7 @@ void export_Energy_Forces_objects(){
 
   double (*expt_compute_forces_v2)(Ensemble& ens, int opt) = &compute_forces;
   def("compute_forces",expt_compute_forces_v2);
+*/
 
 }
 
@@ -848,7 +851,7 @@ void export_Dyn_objects(){
   export_Barostat_objects();
   export_Wfcgrid_objects();
   export_Wfcgrid2_objects();
-  export_Ensemble_objects();
+  //export_Ensemble_objects();
   export_gwp_objects();
   export_heom_objects();
   export_qtag_objects();

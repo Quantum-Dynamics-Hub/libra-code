@@ -608,8 +608,11 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
     model_params.update({"timestep":icond})    
-    update_Hamiltonian_q(dyn_params, dyn_var, ham, compute_model, model_params)
-    update_Hamiltonian_p(dyn_params, dyn_var, ham)  
+    #update_Hamiltonian_q(dyn_params, dyn_var, ham, compute_model, model_params)
+    #update_Hamiltonian_p(dyn_params, dyn_var, ham)  
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, compute_model, model_params, 0)
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, compute_model, model_params, 1)
+
 
     U = []
     if is_nbra == 1:

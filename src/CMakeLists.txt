@@ -80,10 +80,12 @@ ADD_SUBDIRECTORY("libint2_wrappers")
 
 
 
-
-
 MESSAGE("Going into subdirectory calculators...")
 ADD_SUBDIRECTORY("calculators")
+
+
+MESSAGE("Going into subdirectory models...")
+ADD_SUBDIRECTORY("models")
 
 
 MESSAGE("Going into subdirectory context...")
@@ -129,8 +131,13 @@ ADD_SUBDIRECTORY("basis_setups")
 
 
 
-MESSAGE("Going into subdirectory hamiltonian...")
-ADD_SUBDIRECTORY("hamiltonian")
+MESSAGE("Going into subdirectory atomistic...")
+ADD_SUBDIRECTORY("atomistic")
+
+
+
+MESSAGE("Going into subdirectory nhamiltonian...")
+ADD_SUBDIRECTORY("nhamiltonian")
 
 
 MESSAGE("Going into subdirectory montecarlo...")
@@ -207,6 +214,7 @@ TARGET_LINK_LIBRARIES(libra_core
                       integrators_stat
                       solvers_stat
                       qchem_tools_stat
+                      atomistic_stat
                       scripts_stat
                       converters_stat
                       montecarlo_stat
@@ -216,8 +224,9 @@ TARGET_LINK_LIBRARIES(libra_core
                       common_types_stat                    
                       basis_setups_stat
                       model_parameters_stat
+                      models_stat
                       control_parameters_stat
-                      hamiltonian_stat
+                      nhamiltonian_stat
                       util_stat
                       forcefield_stat
                       opt_stat
@@ -237,6 +246,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       integrators_stat
                       solvers_stat
                       qchem_tools_stat
+                      atomistic_stat
                       scripts_stat
                       converters_stat
                       montecarlo_stat
@@ -246,8 +256,9 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       common_types_stat
                       basis_setups_stat
                       model_parameters_stat
+                      models_stat
                       control_parameters_stat
-                      hamiltonian_stat
+                      nhamiltonian_stat
                       util_stat
                       forcefield_stat
                       opt_stat

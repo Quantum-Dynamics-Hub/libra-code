@@ -23,12 +23,12 @@
 
 // External dependencies
 #include "../math_linalg/liblinalg.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
-#include "ensemble/libensemble.h"
+//#include "ensemble/libensemble.h"
 #include "dyn_control_params.h"
 #include "dyn_variables.h"
 
@@ -36,14 +36,14 @@
 /// liblibra namespace
 namespace liblibra{
 
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 
 /// libdyn namespace
 namespace libdyn{
 
 using namespace libnuclear;
 using namespace libelectronic;
-using namespace libensemble;
+//using namespace libensemble;
 
 
 double compute_kinetic_energy(MATRIX& p, MATRIX& invM, vector<int>& which_dofs);
@@ -76,7 +76,7 @@ MATRIX aux_get_forces(bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& proje
 vector<CMATRIX> get_Eadi(nHamiltonian& ham);
 
 
-
+/*
 double compute_kinetic_energy(Nuclear* mol);
 double compute_kinetic_energy(Nuclear& mol);
 double compute_kinetic_energy(Ensemble& ens);
@@ -89,7 +89,7 @@ double compute_forces(Nuclear* mol, Electronic* el, Hamiltonian* ham, int opt);
 double compute_forces(Nuclear& mol, Electronic& el, Hamiltonian& ham, int opt);
 double compute_forces(Ensemble& ens,int opt);
 
-
+*/
 
 }// namespace libdyn
 }// liblibra

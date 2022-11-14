@@ -22,8 +22,8 @@ ADD_SUBDIRECTORY("wfcgrid")
 MESSAGE("Going into subdirectory wfcgrid2...")
 ADD_SUBDIRECTORY("wfcgrid2")
 
-MESSAGE("Going into subdirectory ensemble...")
-ADD_SUBDIRECTORY("ensemble")
+#MESSAGE("Going into subdirectory ensemble...")
+#ADD_SUBDIRECTORY("ensemble")
 
 MESSAGE("Going into subdirectory gwp...")
 ADD_SUBDIRECTORY("gwp")
@@ -64,26 +64,26 @@ endif()
 TARGET_LINK_LIBRARIES(dyn      
                       heom_stat
                       qtag_stat
-                      gwp_stat ensemble_stat 
+                      gwp_stat
                       wfcgrid_stat 
                       wfcgrid2_stat 
                       barostat_stat thermostat_stat 
                       electronic_stat 
                       nuclear_stat 
-                      hamiltonian_stat
+                      nhamiltonian_stat
                       converters_stat
                       linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(dyn_stat
                       heom_stat
                       qtag_stat
-                      gwp_stat ensemble_stat 
+                      gwp_stat
                       wfcgrid_stat 
                       wfcgrid2_stat 
                       barostat_stat thermostat_stat 
                       electronic_stat 
                       nuclear_stat 
-                      hamiltonian_stat
+                      nhamiltonian_stat
                       converters_stat
                       linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
 

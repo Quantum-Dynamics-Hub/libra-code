@@ -14,7 +14,7 @@
     
 */
 
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
 #include "dyn_hop_proposal.h"

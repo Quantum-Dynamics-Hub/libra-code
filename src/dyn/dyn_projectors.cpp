@@ -31,10 +31,13 @@
 #include "Dynamics.h"
 #include "../util/libutil.h"
 #include "dyn_control_params.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libspecialfunctions;
 
 /// libdyn namespace
 namespace libdyn{

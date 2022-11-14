@@ -13,10 +13,10 @@
   \brief The file implements the methods for electronic dyn vars
 */
 
-#include "dyn_variables.h"
 #include "../util/libutil.h"
 #include "../converters/libconverters.h"
-
+#include "dyn_variables.h"
+#include "dyn_ham.h"
 
 
 /// liblibra namespace
@@ -119,7 +119,9 @@ void dyn_variables::update_amplitudes(dyn_control_params& dyn_params, bp::object
     ham.init_all(2,1);
 
     //# Compute the Hamiltonian transformation
-    update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
+    //update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
+    update_Hamiltonian_variables(dyn_params, *this, ham, compute_model, model_params, 0);
+
 
     // The diabatic rep is the major, so we update the adiabatic amplitudes
     if(dyn_params.rep_tdse==0){   ham.ampl_dia2adi(ampl_dia, ampl_adi, 0, 1);  }
@@ -251,7 +253,8 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, bp::ob
   ham.init_all(2,1);
 
   //# Compute the Hamiltonian transformation
-  update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
+  update_Hamiltonian_variables(dyn_params, *this, ham, compute_model, model_params, 0);
+  //update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
   update_density_matrix(dyn_params, ham, lvl);
 
 }
@@ -269,7 +272,8 @@ void dyn_variables::update_density_matrix(bp::dict dyn_params, bp::object comput
   ham.init_all(2,1);
 
   //# Compute the Hamiltonian transformation
-  update_Hamiltonian_q(_prms, *q, ham, compute_model, model_params);
+  //update_Hamiltonian_q(_prms, *q, ham, compute_model, model_params);
+  update_Hamiltonian_variables(_prms, *this, ham, compute_model, model_params, 0);
 
   update_density_matrix(_prms, ham, lvl);
 
@@ -749,10 +753,6 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
 
   for(int i=0; i<sz; i++){ res[i] = ave.get(i,i); }
 
-  // 
-  //cout<<"compute_average_se_pop<<endl";
-  //for(const auto& x: res){  cout<< x<<" "; }  cout<<endl;
- 
   return res;
 
 }
@@ -770,10 +770,6 @@ vector<double> dyn_variables::compute_average_sh_pop(){
   }
   
   for(int j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj; }
-
-  //cout<<"compute_average_se_pop<<endl";
-  //for(const auto& x: res){  cout<< x<<" "; }  cout<<endl;
-
 
   return res;
 }

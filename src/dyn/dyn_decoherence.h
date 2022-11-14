@@ -20,15 +20,16 @@
 // External dependencies
 #include "../math_linalg/liblinalg.h"
 #include "../io/libio.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
-
+#include "../Units.h"
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
+
 namespace bp = boost::python;
 
 /// libdyn namespace

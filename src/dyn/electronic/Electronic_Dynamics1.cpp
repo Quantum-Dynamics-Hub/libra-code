@@ -29,6 +29,8 @@ namespace liblibra{
 
 
 using namespace libmeigen;
+using namespace libnhamiltonian;
+
 
 /// libdyn namespace 
 namespace libdyn{
@@ -126,9 +128,9 @@ void Electronic::collapse(int i){
 }
 
 
+/**
 
 void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
-/**
   \brief Propagate electronic DOF using sequential rotations in the MMTS variables
 
   Methodologically: This version is based on the Hamiltonian formulation of TD-SE
@@ -141,12 +143,13 @@ void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
   \param[in] dt The integration time step (also the duration of propagation)
   \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
 
-*/ 
   libdyn::libelectronic::propagate_electronic(dt,this,ham);
 }
+*/ 
+
+/**
 
 void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
-/**
   \brief Propagate electronic DOF using sequential rotations in the MMTS variables
 
   Methodologically: This version is based on the Hamiltonian formulation of TD-SE
@@ -159,13 +162,13 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
   \param[in] dt The integration time step (also the duration of propagation)
   \param[in] ham The reference to Hamiltonian object, that affects the dynamics
 
-*/ 
   libdyn::libelectronic::propagate_electronic(dt,this,&ham);
 }
+*/ 
 
+/**
 
 void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
-/**
   \brief Propagate electronic DOF using sequential rotations in the MMTS variables
 
   Methodologically: This version is based on the Hamiltonian formulation of TD-SE
@@ -179,7 +182,6 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
   \param[in,out] el The pointer to the Electronic object containing the electronic DOF
   \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
 
-*/ 
 
   int i,j;
 
@@ -230,6 +232,8 @@ void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
 
 
 }// propagate_electronic
+
+*/ 
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
@@ -676,15 +680,14 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
 
 }// propagate_electronic
 
+/**
 
 void Electronic::propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S){
-/**
   \brief Propagate electronic DOF 
 
   Same as 
   void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S)
 
-*/ 
   CMATRIX* Hvib; Hvib = new CMATRIX(nstates, nstates);
 
   for(int i=0;i<nstates;i++){
@@ -698,6 +701,8 @@ void Electronic::propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S){
   delete Hvib;
 
 }
+
+*/ 
 
 
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){

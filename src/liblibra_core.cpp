@@ -55,7 +55,10 @@ using namespace libpot;
 using namespace libforcefield;
 
 using namespace libcontrol_parameters;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
+
+using namespace libatomistic;
+using namespace libmodels;
 
 using namespace libfgr;
 using namespace libivr;
@@ -101,6 +104,8 @@ void export_libra_core_objects(){
 
   export_calculators_objects();
 
+  export_models_objects();
+
   export_RigidBody_objects();
   export_chemobjects_objects();
   export_Cell_objects();
@@ -113,7 +118,9 @@ void export_libra_core_objects(){
   export_Model_Parameters_objects();
   export_basis_setups_objects();
 
-  export_Hamiltonian_objects();
+  export_atomistic_objects();
+
+  export_nhamiltonian_objects();
 
   export_fgr_objects();
   export_ivr_objects();

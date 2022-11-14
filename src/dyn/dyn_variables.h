@@ -27,7 +27,7 @@
 #include "../math_linalg/liblinalg.h"
 #include "../math_random/librandom.h"
 #include "../math_specialfunctions/libspecialfunctions.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
 
 
@@ -38,7 +38,7 @@ namespace liblibra{
 
 using namespace liblinalg;
 using namespace librandom;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 
 
 /// libdyn namespace

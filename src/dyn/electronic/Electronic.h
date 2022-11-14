@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -19,13 +19,14 @@
 
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_random/librandom.h"
-#include "../../hamiltonian/libhamiltonian.h"
+#include "../../nhamiltonian/libnhamiltonian.h"
 /// liblibra namespace
 namespace liblibra{
 
 using namespace liblinalg;
 using namespace librandom;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
+
 
 /// libdyn namespace 
 namespace libdyn{
@@ -99,9 +100,9 @@ class Electronic{
   void collapse(int i);
   void collapse(int i, int phase_flag);
 
-  void propagate_electronic(double dt,Hamiltonian* ham);
-  void propagate_electronic(double dt,Hamiltonian& ham);
-  void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);
+//  void propagate_electronic(double dt,Hamiltonian* ham);
+//  void propagate_electronic(double dt,Hamiltonian& ham);
+//  void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);
 
 
   friend bool operator == (const Electronic& e1, const Electronic& e2){
@@ -124,7 +125,7 @@ typedef std::vector< Electronic > ElectronicList; ///< Type containing the vecto
 
 // In Electronic_Dynamics1.cpp
 
-void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
+//void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
 void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
 
 // The following two do the same stuff, but the second one doesn't need intermediate Electronic objects

@@ -23,7 +23,7 @@ namespace liblibra{
 
 using namespace liblinalg;
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 
