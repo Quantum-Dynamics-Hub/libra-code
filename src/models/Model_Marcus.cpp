@@ -17,8 +17,8 @@ namespace liblibra{
 using namespace liblinalg;
 
 
-namespace libhamiltonian{
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 void Marcus_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
@@ -87,6 +87,5 @@ boost::python::list Marcus_Ham(double x, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

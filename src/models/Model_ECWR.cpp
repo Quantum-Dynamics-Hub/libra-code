@@ -17,8 +17,8 @@ namespace liblibra{
 using namespace liblinalg;
 
 
-namespace libhamiltonian{
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 void model_ECWR(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
@@ -149,6 +149,5 @@ boost::python::list ECWR_Ham(double x, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

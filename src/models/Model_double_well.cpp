@@ -23,11 +23,8 @@ namespace liblibra{
 
 using namespace liblinalg;
 
-/// libhamiltonian namespace
-namespace libhamiltonian{
-
-/// libhamiltonian_model namespace
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 void double_well_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
@@ -116,6 +113,5 @@ boost::python::list double_well_Ham(double x, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

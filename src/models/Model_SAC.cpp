@@ -22,11 +22,8 @@ namespace liblibra{
 using namespace liblinalg;
 
 
-/// libhamiltonian namespace
-namespace libhamiltonian{
-
-/// libhamiltonian_model namespace
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 void model_SAC(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
@@ -210,6 +207,5 @@ boost::python::list SAC_Ham(double x, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

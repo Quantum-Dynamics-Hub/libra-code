@@ -16,10 +16,9 @@ namespace liblibra{
 
 using namespace liblinalg;
 
+/// libmodels namespace
+namespace libmodels{
 
-
-namespace libhamiltonian{
-namespace libhamiltonian_model{
 
 void sin_2D_Ham(double x, double y, MATRIX* H, 
                 MATRIX* dH1,  MATRIX* dH2, 
@@ -127,6 +126,5 @@ boost::python::list sin_2D_Ham(double x, double y, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

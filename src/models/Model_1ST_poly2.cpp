@@ -21,11 +21,8 @@ namespace liblibra{
 
 using namespace liblinalg;
 
-/// libhamiltonian namespace
-namespace libhamiltonian{
-
-/// libhamiltonian_model namespace
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 void model_1S_1D_poly2(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
@@ -127,6 +124,6 @@ void model_1S_1D_poly2(CMATRIX* Hdia, CMATRIX* Sdia, vector<CMATRIX*>& d1ham_dia
 
 
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra
+

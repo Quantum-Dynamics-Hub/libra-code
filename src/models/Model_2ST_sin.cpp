@@ -20,11 +20,8 @@ namespace liblibra{
 
 using namespace liblinalg;
 
-/// libhamiltonian namespace
-namespace libhamiltonian{
-
-/// libhamiltonian_model namespace
-namespace libhamiltonian_model{
+/// libmodels namespace
+namespace libmodels{
 
 
 vector<double> set_params_2S_1D_sin(std::string model){
@@ -351,6 +348,5 @@ void model_2S_2D_sin(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, v
 
 
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra

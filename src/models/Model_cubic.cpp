@@ -21,11 +21,9 @@
 /// liblibra namespace
 namespace liblibra{
 
-/// libhamiltonian namespace
-namespace libhamiltonian{
+/// libmodels namespace
+namespace libmodels{
 
-/// libhamiltonian_model namespace
-namespace libhamiltonian_model{
 
 void cubic_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params){ 
 /** The metastable potential - e.g. see Donoso, A.; Martens, C. Quantum Tunneling Using Entangled Classical Trajectories. Phys. Rev. Lett. 2001, 87, 223202.
@@ -127,6 +125,5 @@ boost::python::list cubic_Ham(double x, boost::python::list params_){
 
 }
 
-}// namespace libhamiltonian_model
-}// namespace libhamiltonian
+}// namespace libmodels
 }// liblibra
