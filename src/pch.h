@@ -1,6 +1,8 @@
 #ifndef PCH_H
 #define PCH_H
 
+
+
 #include <string.h>
 #include <time.h>
 #include <stdio.h>
@@ -56,6 +58,8 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <boost/foreach.hpp>
 
+
+#define BOOST_PYTHON_MAX_ARITY 30
 
 
 #endif // PCH_H

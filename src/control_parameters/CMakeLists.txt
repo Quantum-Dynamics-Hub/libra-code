@@ -24,7 +24,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES( control_parameters      common_types_stat linalg_stat ${ext_libs})
-TARGET_LINK_LIBRARIES( control_parameters_stat common_types_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES( control_parameters      common_types linalg)
+TARGET_LINK_LIBRARIES( control_parameters_stat common_types_stat linalg_stat)
 
 

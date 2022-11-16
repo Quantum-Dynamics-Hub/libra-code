@@ -62,17 +62,17 @@ endif()
 #  Link to external libraries
 #
 TARGET_LINK_LIBRARIES(dyn      
-                      heom_stat
-                      qtag_stat
-                      gwp_stat
-                      wfcgrid_stat 
-                      wfcgrid2_stat 
-                      barostat_stat thermostat_stat 
-                      electronic_stat 
-                      nuclear_stat 
-                      nhamiltonian_stat
+                      heom
+                      qtag
+                      gwp
+                      wfcgrid
+                      wfcgrid2
+                      barostat thermostat
+                      electronic 
+                      nuclear
+                      nhamiltonian
                       converters_stat
-                      linalg_stat meigen_stat util_stat specialfunctions_stat ${ext_libs} )
+                      linalg meigen util specialfunctions ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(dyn_stat
                       heom_stat

@@ -24,7 +24,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(nhamiltonian      io_stat linalg_stat meigen_stat ${ext_libs})
 TARGET_LINK_LIBRARIES(nhamiltonian_stat io_stat linalg_stat meigen_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(nhamiltonian  nhamiltonian_stat)
 
 

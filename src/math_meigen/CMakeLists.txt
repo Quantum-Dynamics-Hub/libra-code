@@ -47,7 +47,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(meigen      linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(meigen      linalg ${ext_libs})
 TARGET_LINK_LIBRARIES(meigen_stat linalg_stat ${ext_libs})
 
 

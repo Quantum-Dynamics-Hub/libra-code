@@ -22,7 +22,7 @@ endif()
 #  Link to external libraries
 #
 
-TARGET_LINK_LIBRARIES(ann      specialfunctions_stat data_stat linalg_stat ${ext_libs} )
+TARGET_LINK_LIBRARIES(ann      specialfunctions data linalg ${ext_libs} )
 TARGET_LINK_LIBRARIES(ann_stat specialfunctions_stat data_stat linalg_stat ${ext_libs} )
 
 

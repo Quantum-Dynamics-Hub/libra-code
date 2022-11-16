@@ -80,7 +80,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
     else if(prms.ham_update_method==1){  
       ham.compute_diabatic(py_funct, q, model_params, 1);  
     }
-    else if(prms.rep_ham==2){  
+    else if(prms.ham_update_method==2){  
       ham.compute_adiabatic(py_funct, q, model_params, 1);  
     }
 

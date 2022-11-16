@@ -21,7 +21,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(linalg      io_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(linalg      io ${ext_libs})
 TARGET_LINK_LIBRARIES(linalg_stat io_stat ${ext_libs})
 
                                                  

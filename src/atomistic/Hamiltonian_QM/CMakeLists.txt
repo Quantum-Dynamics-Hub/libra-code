@@ -26,18 +26,18 @@ ADD_LIBRARY(hamiltonian_qm_stat STATIC ${HAMILTONIAN_QM_SRC})
 #  Link to external libraries
 #
 TARGET_LINK_LIBRARIES( hamiltonian_qm    
-                       basis_setups_stat calculators_stat   
-                       common_types_stat
-                       model_parameters_stat control_parameters_stat 
-                       qobjects_stat chemobjects_stat 
-                       linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                       basis_setups calculators
+                       common_types
+                       model_parameters control_parameters
+                       qobjects chemobjects
+                       linalg meigen specialfunctions)
 
 TARGET_LINK_LIBRARIES( hamiltonian_qm_stat 
                        basis_setups_stat calculators_stat   
                        common_types_stat
                        model_parameters_stat control_parameters_stat 
                        qobjects_stat chemobjects_stat 
-                       linalg_stat meigen_stat specialfunctions_stat ${ext_libs} )
+                       linalg_stat meigen_stat specialfunctions_stat)
 
 
 

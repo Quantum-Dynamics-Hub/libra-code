@@ -23,7 +23,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(specialfunctions      linalg_stat meigen_stat random_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(specialfunctions      linalg meigen random ${ext_libs})
 TARGET_LINK_LIBRARIES(specialfunctions_stat linalg_stat meigen_stat random_stat ${ext_libs})
 
                                                  

@@ -23,7 +23,7 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(symmetry      linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(symmetry      linalg ${ext_libs})
 TARGET_LINK_LIBRARIES(symmetry_stat linalg_stat ${ext_libs})
 
 

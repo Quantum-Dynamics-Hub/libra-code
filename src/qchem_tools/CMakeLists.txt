@@ -32,11 +32,11 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(qchem_tools      chemobjects_stat 
-                      atomistic_stat qobjects_stat
-                      basis_setups_stat control_parameters_stat
-                      model_parameters_stat
-                      linalg_stat ${ext_libs} )
+TARGET_LINK_LIBRARIES(qchem_tools      chemobjects
+                      atomistic qobjects
+                      basis_setups control_parameters
+                      model_parameters
+                      linalg ${ext_libs} )
 
 TARGET_LINK_LIBRARIES(qchem_tools_stat      chemobjects_stat 
                       atomistic_stat qobjects_stat

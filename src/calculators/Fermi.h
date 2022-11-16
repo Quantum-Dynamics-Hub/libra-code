@@ -17,6 +17,9 @@
 #ifndef FERMI_H
 #define FERMI_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <vector>
 #include <string.h>
 #include <time.h>
@@ -27,6 +30,8 @@
 
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
+
 #include "../math_linalg/liblinalg.h"
 
 /// liblibra namespace

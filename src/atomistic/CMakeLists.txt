@@ -36,14 +36,13 @@ endif()
 #  Link to external libraries
 #
 TARGET_LINK_LIBRARIES( atomistic 
-                       common_types_stat
-                       calculators_stat
-                       hamiltonian_mm_stat 
-                       hamiltonian_qm_stat
-                       hamiltonian_generic_stat
-                       chemobjects_stat
-                       linalg_stat meigen_stat ${ext_libs})
-
+                       common_types
+                       calculators
+                       hamiltonian_mm
+                       hamiltonian_qm
+                       hamiltonian_generic
+                       chemobjects
+                       linalg meigen)
 
 
 TARGET_LINK_LIBRARIES( atomistic_stat
@@ -53,5 +52,5 @@ TARGET_LINK_LIBRARIES( atomistic_stat
                        hamiltonian_qm_stat
                        hamiltonian_generic_stat
                        chemobjects_stat
-                       linalg_stat meigen_stat ${ext_libs})
+                       linalg_stat meigen_stat)
 

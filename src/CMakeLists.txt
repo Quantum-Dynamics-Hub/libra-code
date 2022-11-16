@@ -188,8 +188,10 @@ set(LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.h ${CMAKE_CURRENT_SO
 set(LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.cpp ${LIBRA_HEADERS})
 
 
-ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
 ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
+ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
+
+#ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
 
 
 #
@@ -209,37 +211,6 @@ endif()
 
 
 
-
-TARGET_LINK_LIBRARIES(libra_core
-                      integrators_stat
-                      solvers_stat
-                      qchem_tools_stat
-                      atomistic_stat
-                      scripts_stat
-                      converters_stat
-                      montecarlo_stat
-                      fgr_stat
-                      ivr_stat
-                      dyn_stat
-                      common_types_stat                    
-                      basis_setups_stat
-                      model_parameters_stat
-                      models_stat
-                      control_parameters_stat
-                      nhamiltonian_stat
-                      util_stat
-                      forcefield_stat
-                      opt_stat
-                      pot_stat
-                      cell_stat
-                      chemobjects_stat
-                      rigidbody_stat
-                      basis_stat
-                      qobjects_stat
-                      libint2_wrappers_stat
-                      molint_stat
-                      linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
-                      context_stat io_stat calculators_stat ${ext_libs}  )
 
 
 TARGET_LINK_LIBRARIES(libra_core_stat
@@ -272,6 +243,11 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       molint_stat
                       linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
                       context_stat io_stat calculators_stat ${ext_libs}  )
+
+
+TARGET_LINK_LIBRARIES(libra_core libra_core_stat)
+
+
 
 #
 #  Copy python files

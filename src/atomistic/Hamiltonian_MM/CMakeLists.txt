@@ -25,17 +25,17 @@ endif()
 #  Link to external libraries
 #
 TARGET_LINK_LIBRARIES( hamiltonian_mm  
-                       chemobjects_stat 
-                       forcefield_stat
-                       pot_stat
-                       cell_stat 
-                       linalg_stat specialfunctions_stat meigen_stat ${ext_libs})
+                       chemobjects
+                       forcefield
+                       pot
+                       cell
+                       linalg specialfunctions meigen)
 
 TARGET_LINK_LIBRARIES( hamiltonian_mm_stat 
                        chemobjects_stat
                        forcefield_stat
                        pot_stat
                        cell_stat
-                       linalg_stat specialfunctions_stat meigen_stat ${ext_libs})
+                       linalg_stat specialfunctions_stat meigen_stat)
 
 

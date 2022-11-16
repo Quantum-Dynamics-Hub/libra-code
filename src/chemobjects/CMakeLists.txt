@@ -33,11 +33,20 @@ ADD_LIBRARY(chemobjects      SHARED ${CHEMOBJECTS_SRC})
 ADD_LIBRARY(chemobjects_stat STATIC ${CHEMOBJECTS_SRC})
 
 
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16 AND USING_PCH)  # Support for PCHs in CMake was added in 3.16
+   message(STATUS "Compiling using pre-compiled header support: chemobjects")
+   target_precompile_headers(chemobjects REUSE_FROM pch) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(chemobjects_stat REUSE_FROM pch_stat) # With PUBLIC they will be used by targets using this target
+endif()
+
+
+
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(chemobjects      chemsys_stat mol_stat universe_stat linalg_stat ${ext_libs})   
-TARGET_LINK_LIBRARIES(chemobjects_stat chemsys_stat mol_stat universe_stat linalg_stat ${ext_libs})  
+TARGET_LINK_LIBRARIES(chemobjects      chemsys mol universe linalg)   
+TARGET_LINK_LIBRARIES(chemobjects_stat chemsys_stat mol_stat universe_stat linalg_stat)  
 
 
 
