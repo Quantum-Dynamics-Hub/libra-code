@@ -306,26 +306,35 @@ def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_proper
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Energy, a.u.', fontsize=axes_label_fontsize[1])   
-        
+    
+
+
+    res = 0 
     indx = -1
     for istate in range(nstates):
         if istate in which_states:
             indx = indx + 1
             for tr in range(ntraj):
                 if tr in which_trajectories:                    
-                    if no_label:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
-                                 label="",
-                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+                    if "time/data" in hdf_file.keys() and F"{ham_property_type}/data" in hdf_file.keys():
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                     hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                     label="",
+                                     linewidth=Lw, color = colors[ clrs_index[indx] ])
+                            res = 1
 
-                    else:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
-                                 label=F"traj={tr}, state={istate}",
-                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                     hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                     label=F"traj={tr}, state={istate}",
+                                     linewidth=Lw, color = colors[ clrs_index[indx] ])
+                            res = 1
+
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
+
+    return res
     
 
 def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
@@ -731,22 +740,27 @@ def add_time_overlaps_projectors(plt, hdf_file, plot_params_, prop_type):
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Magnitude', fontsize=axes_label_fontsize[1])   
-            
+
     
+    res = 0
     indx = -1
     for istate in range(nstates):
         if istate in which_states:
             indx = indx + 1
             for tr in range(ntraj):
                 if tr in which_trajectories:
-                    plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                             hdf_file[F"{prop_type}/data"][:, tr, istate, istate], 
-                         label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
+                    if "time/data" in hdf_file.keys() and F"{prop_type}/data" in hdf_file.keys():
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                 hdf_file[F"{prop_type}/data"][:, tr, istate, istate], 
+                                 label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
+                        res = 1
                     
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()   
     
+    return res
     
+
 def add_basis_transform(plt, hdf_file, plot_params_):
     """
     Adds the plotting of the adiabatic-to-diabatic transforms vs. time    
@@ -788,7 +802,7 @@ def add_basis_transform(plt, hdf_file, plot_params_):
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Magnitude', fontsize=axes_label_fontsize[1])   
             
-    
+    res = 0 
     indx = -1
     for istate in range(nadi):
         if istate in which_adi_states:
@@ -801,18 +815,17 @@ def add_basis_transform(plt, hdf_file, plot_params_):
                     
                     for tr in range(ntraj):
                         if tr in which_trajectories:                                     
-                            plt.plot(hdf_file["time/data"][:]/units.fs2au,
-                                     hdf_file["basis_transform/data"][:, tr, istate2, istate], 
-                                     label=lbl, linewidth=Lw, 
-                                     color = colors[ clrs_index[indx] ])     
+                            if "time/data" in hdf_file.keys() and "basis_transform/data" in hdf_file.keys():
+                                plt.plot(hdf_file["time/data"][:]/units.fs2au,
+                                         hdf_file["basis_transform/data"][:, tr, istate2, istate], 
+                                         label=lbl, linewidth=Lw, 
+                                         color = colors[ clrs_index[indx] ])     
+                                res = 1
                             
-                            
-
-
-
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()   
-        
+
+    return res        
         
     
 def plot_dynamics(plot_params_):
@@ -931,48 +944,49 @@ def plot_dynamics(plot_params_):
                                        
                        
         #===== Trajectory-resolved adiabatic energies =========
-        if output_level>=4:
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+        if "traj_resolved_adiabatic_ham" in what_to_plot:
+            plt.figure(num=10, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
-            if "traj_resolved_adiabatic_ham" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
+            plt.subplot(1,1,1)
+            res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/hvib_adi.png", dpi=plot_params["dpi"])
 
-            if "traj_resolved_diabatic_ham" in what_to_plot:
-                plt.subplot(1,2,2)
-                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/traj-res_energies-vs-t.png", dpi=plot_params["dpi"])
-
+        if "traj_resolved_adiabatic_ham" in what_to_plot:
+            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/hvib_dia.png", dpi=plot_params["dpi"])
 
 
         #===== Time-overlaps and projectors =========
-        if output_level>=4:        
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                       edgecolor='black', frameon=plot_params["frameon"])  
-            
-            if "time_overlaps" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_time_overlaps_projectors(plt, f, plot_params, "St")
-        
-            if "projectors" in what_to_plot:
-                plt.subplot(1,2,2)
-                add_time_overlaps_projectors(plt, f, plot_params, "projector")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/St-projectors-vs-t.png", dpi=plot_params["dpi"])
-        
-        
+        if "time_overlaps" in what_to_plot:
+            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_time_overlaps_projectors(plt, f, plot_params, "St")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/time_overlaps.png", dpi=plot_params["dpi"])
+
+
+        if "time_overlaps" in what_to_plot:
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_time_overlaps_projectors(plt, f, plot_params, "projector")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/projectors.png", dpi=plot_params["dpi"])
+
+
         #===== Basis transforms =========
-        if output_level>=4:        
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+        if "basis_transform" in what_to_plot:
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])          
-            if "basis_transform" in what_to_plot:
-                plt.subplot(1,1,1)
-                add_basis_transform(plt, f, plot_params)
-                    
-            if plot_params["save_figures"]==1:
+            plt.subplot(1,1,1)
+            res = add_basis_transform(plt, f, plot_params)                   
+            if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/basist_transform-vs-t.png", dpi=plot_params["dpi"])            
 
         

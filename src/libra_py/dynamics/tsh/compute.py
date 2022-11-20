@@ -637,10 +637,10 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # Do the propagation
     for i in range(nsteps):
 
-        print(F"========== step {i} ===============")
+        #print(F"========== step {i} ===============")
         #========= Update variables, compute properties, and save ============    
-        dyn_var.update_amplitudes(dyn_params, ham);
-        dyn_var.update_density_matrix(dyn_params, ham, 1);
+        #dyn_var.update_amplitudes(dyn_params, ham);
+        #dyn_var.update_density_matrix(dyn_params, ham, 1);
          
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0

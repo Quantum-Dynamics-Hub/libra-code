@@ -1021,7 +1021,8 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
     CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
     CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
 
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    //propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
 
   }
 
