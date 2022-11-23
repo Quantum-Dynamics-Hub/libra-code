@@ -971,7 +971,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/time_overlaps.png", dpi=plot_params["dpi"])
 
 
-        if "time_overlaps" in what_to_plot:
+        if "projector" in what_to_plot:
             plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)

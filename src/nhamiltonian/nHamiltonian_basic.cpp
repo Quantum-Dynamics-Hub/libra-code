@@ -70,22 +70,22 @@ nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
 
 //  parent = NULL;
 
-  ovlp_dia = NULL;             ovlp_dia_mem_status = 0; 
+  ovlp_dia = nullptr;             ovlp_dia_mem_status = 0; 
 
-  ham_dia = NULL;              ham_dia_mem_status = 0;
-  nac_dia = NULL;              nac_dia_mem_status = 0;
-  hvib_dia = NULL;             hvib_dia_mem_status = 0;
+  ham_dia = nullptr;              ham_dia_mem_status = 0;
+  nac_dia = nullptr;              nac_dia_mem_status = 0;
+  hvib_dia = nullptr;             hvib_dia_mem_status = 0;
 
-  ham_adi = NULL;              ham_adi_mem_status = 0;
-  nac_adi = NULL;              nac_adi_mem_status = 0;
-  hvib_adi = NULL;             hvib_adi_mem_status = 0;
+  ham_adi = nullptr;              ham_adi_mem_status = 0;
+  nac_adi = nullptr;              nac_adi_mem_status = 0;
+  hvib_adi = nullptr;             hvib_adi_mem_status = 0;
 
-  basis_transform = NULL;      basis_transform_mem_status = 0;
+  basis_transform = nullptr;      basis_transform_mem_status = 0;
 
-  time_overlap_adi = NULL;     time_overlap_adi_mem_status = 0;
-  time_overlap_dia = NULL;     time_overlap_dia_mem_status = 0;
+  time_overlap_adi = nullptr;     time_overlap_adi_mem_status = 0;
+  time_overlap_dia = nullptr;     time_overlap_dia_mem_status = 0;
 
-  cum_phase_corr = NULL;       cum_phase_corr_mem_status = 0;
+  cum_phase_corr = nullptr;       cum_phase_corr_mem_status = 0;
 
 
   /**  Control parameters  */
@@ -126,7 +126,7 @@ nHamiltonian::~nHamiltonian(){
 /**
   Deallocate memory only if it was allocated internally
 */
-  if(this!=NULL){
+  if(this!=nullptr){
   
   cout<<"nHamiltonian destructor at level "<<level<<" address "<<this<<endl;
   
@@ -134,69 +134,69 @@ nHamiltonian::~nHamiltonian(){
 //  level = 0;
   int n;
  
-  delete ordering_adi;  ordering_adi = NULL;
+  delete ordering_adi;  ordering_adi = nullptr;
  
-  if(ovlp_dia_mem_status == 1){ delete ovlp_dia;  ovlp_dia = NULL; ovlp_dia_mem_status = 0;}
+  if(ovlp_dia_mem_status == 1){ delete ovlp_dia;  ovlp_dia = nullptr; ovlp_dia_mem_status = 0;}
 
   for(n=0;n<dc1_dia.size();n++){
-    if(dc1_dia_mem_status[n] == 1){ delete dc1_dia[n];  dc1_dia[n] = NULL; dc1_dia_mem_status[n] = 0;}
+    if(dc1_dia_mem_status[n] == 1){ delete dc1_dia[n];  dc1_dia[n] = nullptr; dc1_dia_mem_status[n] = 0;}
   } 
   dc1_dia.clear();
   dc1_dia_mem_status.clear();
 
-  if(ham_dia_mem_status == 1){ delete ham_dia; ham_dia = NULL; ham_dia_mem_status = 0;}
-  if(nac_dia_mem_status == 1){ delete nac_dia; nac_dia = NULL; nac_dia_mem_status = 0;}
-  if(hvib_dia_mem_status == 1){ delete hvib_dia; hvib_dia = NULL; hvib_dia_mem_status = 0;}
+  if(ham_dia_mem_status == 1){ delete ham_dia; ham_dia = nullptr; ham_dia_mem_status = 0;}
+  if(nac_dia_mem_status == 1){ delete nac_dia; nac_dia = nullptr; nac_dia_mem_status = 0;}
+  if(hvib_dia_mem_status == 1){ delete hvib_dia; hvib_dia = nullptr; hvib_dia_mem_status = 0;}
 
   for(n=0;n<d1ham_dia.size();n++){
-    if(d1ham_dia_mem_status[n] == 1){ delete d1ham_dia[n];  d1ham_dia[n] = NULL; d1ham_dia_mem_status[n] = 0;}
+    if(d1ham_dia_mem_status[n] == 1){ delete d1ham_dia[n];  d1ham_dia[n] = nullptr; d1ham_dia_mem_status[n] = 0;}
   } 
   d1ham_dia.clear();
   d1ham_dia_mem_status.clear();
 
   for(n=0;n<d2ham_dia.size();n++){
-    if(d2ham_dia_mem_status[n] == 1){ delete d2ham_dia[n];  d2ham_dia[n] = NULL; d2ham_dia_mem_status[n] = 0;}
+    if(d2ham_dia_mem_status[n] == 1){ delete d2ham_dia[n];  d2ham_dia[n] = nullptr; d2ham_dia_mem_status[n] = 0;}
   } 
   d2ham_dia.clear();
   d2ham_dia_mem_status.clear();
 
 
   for(n=0;n<dc1_adi.size();n++){
-    if(dc1_adi_mem_status[n] == 1){ delete dc1_adi[n];  dc1_adi[n] = NULL; dc1_adi_mem_status[n] = 0;}
+    if(dc1_adi_mem_status[n] == 1){ delete dc1_adi[n];  dc1_adi[n] = nullptr; dc1_adi_mem_status[n] = 0;}
   } 
   dc1_adi.clear();
   dc1_adi_mem_status.clear();
 
 
-  if(ham_adi_mem_status == 1){ delete ham_adi; ham_adi = NULL; ham_adi_mem_status = 0; }
-  if(nac_adi_mem_status == 1){ delete nac_adi; nac_adi = NULL; nac_adi_mem_status = 0;}
-  if(hvib_adi_mem_status == 1){ delete hvib_adi; hvib_adi = NULL; hvib_adi_mem_status = 0;}
+  if(ham_adi_mem_status == 1){ delete ham_adi; ham_adi = nullptr; ham_adi_mem_status = 0; }
+  if(nac_adi_mem_status == 1){ delete nac_adi; nac_adi = nullptr; nac_adi_mem_status = 0;}
+  if(hvib_adi_mem_status == 1){ delete hvib_adi; hvib_adi = nullptr; hvib_adi_mem_status = 0;}
 
 
   for(n=0;n<d1ham_adi.size();n++){
-    if(d1ham_adi_mem_status[n] == 1){ delete d1ham_adi[n];  d1ham_adi[n] = NULL; d1ham_adi_mem_status[n] = 0;}
+    if(d1ham_adi_mem_status[n] == 1){ delete d1ham_adi[n];  d1ham_adi[n] = nullptr; d1ham_adi_mem_status[n] = 0;}
   } 
   d1ham_adi.clear();
   d1ham_adi_mem_status.clear();
 
   for(n=0;n<d2ham_adi.size();n++){
-    if(d2ham_adi_mem_status[n] == 1){ delete d2ham_adi[n];  d2ham_adi[n] = NULL; d2ham_adi_mem_status[n] = 0;}
+    if(d2ham_adi_mem_status[n] == 1){ delete d2ham_adi[n];  d2ham_adi[n] = nullptr; d2ham_adi_mem_status[n] = 0;}
   } 
   d2ham_adi.clear();
   d2ham_adi_mem_status.clear();
 
-  if(basis_transform_mem_status == 1){ delete basis_transform; basis_transform = NULL; basis_transform_mem_status = 0;}
+  if(basis_transform_mem_status == 1){ delete basis_transform; basis_transform = nullptr; basis_transform_mem_status = 0;}
 
-  if(time_overlap_adi_mem_status == 1){ delete time_overlap_adi; time_overlap_adi = NULL; time_overlap_adi_mem_status = 0;}
+  if(time_overlap_adi_mem_status == 1){ delete time_overlap_adi; time_overlap_adi = nullptr; time_overlap_adi_mem_status = 0;}
 
-  if(time_overlap_dia_mem_status == 1){ delete time_overlap_dia; time_overlap_dia = NULL; time_overlap_dia_mem_status = 0;}
+  if(time_overlap_dia_mem_status == 1){ delete time_overlap_dia; time_overlap_dia = nullptr; time_overlap_dia_mem_status = 0;}
 
-  if(cum_phase_corr_mem_status == 1){ delete cum_phase_corr; cum_phase_corr = NULL; cum_phase_corr_mem_status = 0;}
+  if(cum_phase_corr_mem_status == 1){ delete cum_phase_corr; cum_phase_corr = nullptr; cum_phase_corr_mem_status = 0;}
 
 
   /// Deallocate children if they aren't deallocated yet
   for(n=0; n<children.size(); n++){  
-    if(children[n]!=NULL){  children[n]->~nHamiltonian(); }    
+    if(children[n]!=nullptr){  children[n]->~nHamiltonian(); }    
   }// for n 
   children.clear();
 

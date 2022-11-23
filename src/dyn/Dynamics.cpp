@@ -741,8 +741,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     CMATRIX& Cadi = *dyn_var.ampl_adi;
     CMATRIX& Cdia = *dyn_var.ampl_dia;
     CMATRIX& Cact = Cdia;  // active rep amplitudes
-    if(prms.rep_tdse==0){ Cact  = *dyn_var.ampl_dia; }
-    else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; }
+    if(prms.rep_tdse==0){ Cact  = Cadi; } //*dyn_var.ampl_dia; }
+    else if(prms.rep_tdse==1){ Cact = Cdia; } //*dyn_var.ampl_adi; }
 
     vector<int>& act_states = dyn_var.act_states;
     MATRIX& q = *dyn_var.q;
@@ -887,7 +887,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     insta_proj = compute_projectors(prms, St, perms);
     
 
-    if(prms.rep_tdse==1){
+  //  if(prms.rep_tdse==1){
 
     /// Adiabatic Amplitudes
     for(traj=0; traj<ntraj; traj++){
@@ -897,7 +897,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       push_submatrix(Cadi, c_tmp, t3, t2);
     }
 
-    }
+//    }
 
     /// Adiabatic states are permuted
     act_states = permute_states(perms, act_states);
