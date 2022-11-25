@@ -880,12 +880,18 @@ void export_Dyn_objects(){
   vector<CMATRIX> (*expt_compute_St_v1)(nHamiltonian& ham, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v1);
   vector<CMATRIX> (*expt_compute_St_v2)(nHamiltonian& ham) = &compute_St;
-  def("compute_St", expt_compute_St_v2);
+  def("compute_St", expt_compute_St_v2);  
+  vector<CMATRIX> (*expt_compute_St_v3)(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA) = &compute_St;
+  def("compute_St", expt_compute_St_v3);
+  vector<CMATRIX> (*expt_compute_St_v4)(nHamiltonian& ham, nHamiltonian& ham_prev) = &compute_St;
+  def("compute_St", expt_compute_St_v4);
+
+/*
   vector<CMATRIX> (*expt_compute_St_v3)(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA) = &compute_St;
   def("compute_St", expt_compute_St_v3);
   vector<CMATRIX> (*expt_compute_St_v4)(nHamiltonian& ham, vector<CMATRIX>& Uprev) = &compute_St;
   def("compute_St", expt_compute_St_v4);
-
+*/
 
 
 
@@ -908,7 +914,7 @@ void export_Dyn_objects(){
   def("compute_dynamics", expt_compute_dynamics_v3);
 
   void (*expt_compute_dynamics_v4)
-  (dyn_variables& dyn_var, bp::dict dyn_params, nHamiltonian& ham, 
+  (dyn_variables& dyn_var, bp::dict dyn_params, nHamiltonian& ham, nHamiltonian& ham_aux, 
    bp::object py_funct, bp::dict model_params, Random& rnd, vector<Thermostat>& therm) = &compute_dynamics;
   def("compute_dynamics", expt_compute_dynamics_v4);
 

@@ -975,9 +975,12 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
     CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
     CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
+//    Hvib = Hvib 
 
-    //propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-    propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    //propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+
+    //propagate_electronic_nonHermitian(dt, C, Hvib);
 
   }
 
@@ -990,28 +993,6 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
 
 }
 
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep){
-
-  if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
-    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
-
-    Hvib = projector.H() * Hvib * projector;
-
-    //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
-  }
-
-}
 
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
@@ -1021,8 +1002,8 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
     CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
     CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
 
-    //propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-    propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    //propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
 
   }
 
@@ -1034,42 +1015,6 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
   }
 
 }
-
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep){
-
-  if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
-    CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
-
-//    cout<<"Before propagate: "<<(C.H() * C).tr()<<endl;
-//    cout<<"Hvib = "; Hvib.show_matrix();
-
-
-    Hvib = projector.H() * Hvib * projector;
-
-//    cout<<"Hvib(transformed) = "; Hvib.show_matrix();
-//    cout<<"Projector = "; projector.show_matrix();
-//    cout<<"C(before) = "; C.show_matrix();
-
-   // propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-    propagate_electronic_eig(dt, C, Hvib);  // in this case C - adiabatic coeffs
-
-//    cout<<"After propagate: "<<(C.H() * C).tr()<<endl;
-//    cout<<"C(after) = "; C.show_matrix();
-  }
-
-}
-
-
 
 
 void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
@@ -1134,12 +1079,8 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
 }
 
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep){
 
-  int is_nbra = 0;
-  propagate_electronic(dt, C, projector, ham, rep);
 
-}
 
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
@@ -1169,43 +1110,6 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int
   }
 
 }
-
-
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level){
-
-  vector<nHamiltonian*> branches; 
-  branches = ham.get_branches(level);
-
-  if(C.n_cols!=branches.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<branches.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
-
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, projector[traj], branches[traj], rep);
-
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
-
-  }
-
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -1248,13 +1152,6 @@ void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
   U = S_i_half * expH * S_half;
 
   
-  // Clean temporary memory
-  //delete expH;
-  //delete Hvib_eff;
-  //delete S_i_half;
-  //delete S_half;
-
-
 
 }// propagate_electronic
 

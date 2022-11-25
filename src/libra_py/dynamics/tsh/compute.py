@@ -634,6 +634,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_bcsh()
 
 
+    ham_aux = nHamiltonian(ham)
+
     # Do the propagation
     for i in range(nsteps):
 
@@ -670,7 +672,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         model_params.update({"timestep":index})
 
 
-        compute_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd, therm);
+        compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm);
 
             
         if _savers["txt_saver"]!=None:
@@ -803,6 +805,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
 
     # Finally, start the dynamics calculations
+    
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)
 
     return res

@@ -255,9 +255,14 @@ public:
   **/
   ///< In nHamiltonian_basic.cpp
 
+  void init_mem_status(int ndia_, int nadi_, int nnucl_);
+
   ///< Constructors
 //  nHamiltonian(); 
   nHamiltonian(int ndia_, int nadi_, int nnucl_); 
+
+  ///< Copy Constructor:
+  nHamiltonian(const nHamiltonian&); 
  
   ///< Destructor
   ~nHamiltonian();    
@@ -271,8 +276,14 @@ public:
   vector<nHamiltonian*> get_branches(int target_level);
 
 
+  void copy_content(const nHamiltonian& src);
+  void copy_content(nHamiltonian* src);
+  void copy_level_content(nHamiltonian* src); ///< To copy content if all the memory is allocated
+
   void init_all(int der_lvl);
   void init_all(int der_lvl, int lvl);
+
+  void show_memory_status(vector<int>& id_);
 
 
   ///< Setters:

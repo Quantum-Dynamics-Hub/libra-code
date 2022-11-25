@@ -64,7 +64,8 @@ void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham){
 
 
 //vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA){
+//vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA){
+vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
@@ -74,31 +75,33 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA
   int ntraj = ham.children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+
   if(isNBRA==1){
-    St[0] = Uprev[0].H() * ham.children[0]->get_basis_transform();
-    ham.children[0]->set_time_overlap_adi_by_val(St[0]);
+    St[0] = ham_prev.children[0]->get_basis_transform().H() * ham.children[0]->get_basis_transform();    
+    // AVA: temporarily comment on 11/25/2022
+    //ham.children[0]->set_time_overlap_adi_by_val(St[0]);
   }
   else{
-  for(int traj=0; traj<ntraj; traj++){
-    St[traj] = Uprev[traj].H() * ham.children[traj]->get_basis_transform();
-    ham.children[traj]->set_time_overlap_adi_by_val(St[0]);
-  }
+    for(int traj=0; traj<ntraj; traj++){
+      St[traj] = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
+      //ham.children[traj]->set_time_overlap_adi_by_val(St[0]);
+    }
   }
   return St;
 
 }
 
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+//vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev){
+vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev){
 
   int is_nbra = 0;
-  return compute_St(ham, Uprev, is_nbra);
+  return compute_St(ham, ham_prev, is_nbra);
 
 }
 
 vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
-
 */
 
   int nst = ham.nadi;
@@ -109,19 +112,20 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
     St[0] = ham.children[0]->get_time_overlap_adi();
   }
   else{
-  for(int traj=0; traj<ntraj; traj++){
-    St[traj] = ham.children[traj]->get_time_overlap_adi();
-  }
+    for(int traj=0; traj<ntraj; traj++){
+      St[traj] = ham.children[traj]->get_time_overlap_adi();
+    }
   }
   return St;
 
 }
 
 vector<CMATRIX> compute_St(nHamiltonian& ham){
-  int is_nbra = 1;
+  int is_nbra = 0;
 
   return compute_St(ham, is_nbra);
 }
+
 
 
 void apply_afssh(dyn_variables& dyn_var, CMATRIX& C, vector<int>& act_states, MATRIX& invM,
@@ -690,7 +694,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 
 void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
-              nHamiltonian& ham, bp::object py_funct, bp::dict params,  Random& rnd,
+              nHamiltonian& ham, nHamiltonian& ham_aux, bp::object py_funct, bp::dict params,  Random& rnd,
               vector<Thermostat>& therm){
 /**
   \brief One step of the TSH algorithm for electron-nuclear DOFs for one trajectory
@@ -737,18 +741,19 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //if(prms.decoherence_algo==2){   dyn_var.allocate_afssh(); }
 
-    //========== Aliases ===============================
-    CMATRIX& Cadi = *dyn_var.ampl_adi;
-    CMATRIX& Cdia = *dyn_var.ampl_dia;
-    CMATRIX& Cact = Cdia;  // active rep amplitudes
-    if(prms.rep_tdse==0){ Cact  = Cadi; } //*dyn_var.ampl_dia; }
-    else if(prms.rep_tdse==1){ Cact = Cdia; } //*dyn_var.ampl_adi; }
+  //========== Aliases ===============================
+  CMATRIX& Cadi = *dyn_var.ampl_adi;
+  CMATRIX& Cdia = *dyn_var.ampl_dia;
+  CMATRIX& Cact = Cdia;  // active rep amplitudes
+  if(prms.rep_tdse==0){ Cact  = Cadi; } //*dyn_var.ampl_dia; }
+  else if(prms.rep_tdse==1){ Cact = Cdia; } //*dyn_var.ampl_adi; }
 
-    vector<int>& act_states = dyn_var.act_states;
-    MATRIX& q = *dyn_var.q;
-    MATRIX& p = *dyn_var.p;
-    MATRIX& invM = *dyn_var.iM;
+  vector<int>& act_states = dyn_var.act_states;
+  MATRIX& q = *dyn_var.q;
+  MATRIX& p = *dyn_var.p;
+  MATRIX& invM = *dyn_var.iM;
   
+  //nHamiltonian ham_prev(ham);
 
   //======== General variables =======================
   int i,j, cdof, traj, dof, idof, ntraj1, n_therm_dofs;
@@ -761,7 +766,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
  
-  vector<CMATRIX> Uprev;
+  //vector<CMATRIX> Uprev;
   // Defining ntraj1 as a reference for making these matrices
   // ntraj is defined as q.n_cols as since it would be large in NBRA
   // we can define another variable like ntraj1 and build the matrices based on that.
@@ -810,6 +815,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // In case, we may need phase correction & state reordering
   // prepare the temporary files
 //  if(prms.rep_tdse==1){      
+/*
     if(prms.do_phase_correction || prms.state_tracking_algo > 0){
 
       // On-the-fly calculations, from the wavefunctions
@@ -821,6 +827,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         }
       }      
     }// do_phase_correction || state_tracking_algo > 0
+*/
 //  }// rep == 1
 
 
@@ -871,6 +878,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Recompute the matrices at the new geometry and apply any necessary fixes 
+  ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 0);
 
 
@@ -878,26 +886,26 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
     /// Compute the time-overlap directly, using previous MO vectors
-    if(prms.time_overlap_method==0){  St = compute_St(ham, Uprev, prms.isNBRA);   }
-
+    if(prms.time_overlap_method==0){  St = compute_St(ham, ham_aux, prms.isNBRA);   }
     /// Read the existing time-overlap
     else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
+
+
     Eadi = get_Eadi(ham);           // these are raw properties
     perms = compute_permutations(prms, Eadi, St, rnd);
     insta_proj = compute_projectors(prms, St, perms);
     
 
-  //  if(prms.rep_tdse==1){
+    if(prms.rep_tdse==1){
 
-    /// Adiabatic Amplitudes
-    for(traj=0; traj<ntraj; traj++){
-      t2[0] = traj;
-      pop_submatrix(Cadi, c_tmp, t3, t2);
-      c_tmp = insta_proj[traj] * c_tmp;
-      push_submatrix(Cadi, c_tmp, t3, t2);
+      /// Adiabatic Amplitudes
+      for(traj=0; traj<ntraj; traj++){
+        t2[0] = traj;
+        pop_submatrix(Cadi, c_tmp, t3, t2);
+        c_tmp = insta_proj[traj] * c_tmp;
+        push_submatrix(Cadi, c_tmp, t3, t2);
+      }
     }
-
-//    }
 
     /// Adiabatic states are permuted
     act_states = permute_states(perms, act_states);
@@ -1077,11 +1085,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   project_out_states.clear();
 
-  if(prms.rep_tdse==1){      
-    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
-      if(prms.time_overlap_method==0){  Uprev.clear();  }
-    }
-  }
+
+//  if(prms.rep_tdse==1){      
+//    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
+//      if(prms.time_overlap_method==0){  Uprev.clear();  }
+//    }
+//  }
 
 
 }

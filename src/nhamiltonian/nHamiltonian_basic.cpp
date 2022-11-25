@@ -55,7 +55,87 @@ nHamiltonian::nHamiltonian(){
 }
 */
 
-nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){ 
+
+void nHamiltonian::show_memory_status(vector<int>& id_){
+
+
+  int n;
+
+  if(id_.size()==1){ 
+
+    if(id_[0]==id){
+
+      cout<<"ovlp_dia_mem_status = "<<ovlp_dia_mem_status<<endl;
+      cout<<"dc1_dia_mem_status = "; for(n=0; n<dc1_dia_mem_status.size(); n++){ cout<<dc1_dia_mem_status[n]<<" "; } cout<<endl;
+      cout<<"ham_dia_mem_status = "<<ham_dia_mem_status<<endl;
+      cout<<"nac_dia_mem_status = "<<nac_dia_mem_status<<endl;
+      cout<<"hvib_dia_mem_status = "<<hvib_dia_mem_status<<endl;
+      cout<<"d1ham_dia_mem_status = "; for(n=0; n<d1ham_dia_mem_status.size(); n++){ cout<<d1ham_dia_mem_status[n]<<" "; } cout<<endl;
+      cout<<"d2ham_dia_mem_status = "; for(n=0; n<d2ham_dia_mem_status.size(); n++){ cout<<d2ham_dia_mem_status[n]<<" "; } cout<<endl;
+      cout<<"dc1_adi_mem_status = "; for(n=0; n<dc1_adi_mem_status.size(); n++){ cout<<dc1_adi_mem_status[n]<<" "; } cout<<endl;
+      cout<<"ham_adi_mem_status = "<<ham_adi_mem_status<<endl;
+      cout<<"nac_adi_mem_status = "<<nac_adi_mem_status<<endl;
+      cout<<"hvib_adi_mem_status = "<<hvib_adi_mem_status<<endl;
+      cout<<"d1ham_adi_mem_status = "; for(n=0; n<d1ham_adi_mem_status.size(); n++){ cout<<d1ham_adi_mem_status[n]<<" "; } cout<<endl;
+      cout<<"d2ham_adi_mem_status = "; for(n=0; n<d2ham_adi_mem_status.size(); n++){ cout<<d2ham_adi_mem_status[n]<<" "; } cout<<endl;
+      cout<<"basis_transform_mem_status = "<<basis_transform_mem_status<<endl;
+      cout<<"time_overlap_adi_mem_status = "<<time_overlap_adi_mem_status<<endl;
+      cout<<"time_overlap_dia_mem_status = "<<time_overlap_dia_mem_status<<endl;
+      cout<<"cum_phase_corr_mem_status = "<<cum_phase_corr_mem_status<<endl;
+    }
+    else{ cout<<"ERROR in nHamiltonian::show_memory_status: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->show_memory_status(next);
+  }
+
+}
+
+nHamiltonian::nHamiltonian(const nHamiltonian& src){
+
+  //this->nHamiltonian(src.ndia, src.nadi, src.nnucl);
+
+  // Memory status for the new object created
+  init_mem_status(src.ndia, src.nadi, src.nnucl);
+
+  
+  // Determine the depth of the hierarchy, etc.
+  int ntraj = src.children.size();
+  int lvl = 0;
+  if(ntraj>0){  lvl = 1; }
+  
+  if(lvl==1){
+    this->add_new_children(src.ndia, src.nadi, src.nnucl, ntraj);
+  }
+
+  int der_lvl=0;
+  if(src.d1ham_dia_mem_status.size()>0){  
+    if(src.d1ham_dia_mem_status[0] != 0) {der_lvl = 1; }
+  }
+  if(src.d2ham_dia_mem_status.size()>0){
+    if(src.d2ham_dia_mem_status[0] != 0){ der_lvl = 2; }
+  }      
+
+  cout<<"In cctor: lvl = "<<lvl<<" der_lvl = "<<der_lvl<<"\n";
+
+  // Allocate memory for all the levels
+  this->init_all(der_lvl, lvl);
+
+  // Copy content for all the levels
+  copy_content(src);
+  
+
+}
+
+
+nHamiltonian::nHamiltonian(int ndia_, int nadi_, int nnucl_){
+
+  init_mem_status(ndia_, nadi_, nnucl_);
+
+}
+
+void nHamiltonian::init_mem_status(int ndia_, int nadi_, int nnucl_){ 
 /** Constructor of the nHamiltonian class
 */
 
@@ -205,6 +285,81 @@ nHamiltonian::~nHamiltonian(){
 //  this = NULL;
 
 }
+
+
+void nHamiltonian::copy_content(nHamiltonian* src){
+
+  //cout<<"In copy_content = "<<this<<endl;
+
+  this->copy_level_content(src);
+
+  for(int n=0; n<children.size(); n++){
+    //cout<<"  child "<<n<<endl;
+    if(children[n]!=nullptr){  children[n]->copy_content(src->children[n]);  }
+  }// for n
+
+}
+
+void nHamiltonian::copy_content(const nHamiltonian& src){
+
+  copy_content(&src);
+
+}
+
+void nHamiltonian::copy_level_content(nHamiltonian* src){
+/**
+  Copy allocated variables only if they are allocated in the source and target (this) objects
+  The copying is applied only to the current level, and not to any children
+*/
+
+  //cout<<"in copy_level_content "<<this<<endl;
+  int n;
+
+  if(ovlp_dia_mem_status != 0  && src->ovlp_dia_mem_status != 0 ){  *ovlp_dia = *(src->ovlp_dia);  }
+  if(ham_dia_mem_status != 0  && src->ham_dia_mem_status != 0 ){   *ham_dia = *(src->ham_dia);  }
+  if(nac_dia_mem_status != 0  && src->nac_dia_mem_status != 0 ){   *nac_dia = *(src->nac_dia);  }
+  if(hvib_dia_mem_status != 0  && src->hvib_dia_mem_status != 0 ){   *hvib_dia = *(src->hvib_dia);  }
+
+  for(n=0;n<dc1_dia.size();n++){  
+    if(dc1_dia_mem_status[n] != 0  && src->dc1_dia_mem_status[n] != 0 ){  *dc1_dia[n] = *(src->dc1_dia[n]);   }
+  }
+  for(n=0;n<d1ham_dia.size();n++){
+    if(d1ham_dia_mem_status[n] != 0  && src->d1ham_dia_mem_status[n] != 0 ){  *d1ham_dia[n] = *(src->d1ham_dia[n]);   }
+  }
+  for(n=0;n<d2ham_dia.size();n++){
+    if(d2ham_dia_mem_status[n] != 0  && src->d2ham_dia_mem_status[n] != 0 ){  *d2ham_dia[n] = *(src->d2ham_dia[n]);   }
+  }
+
+
+//  if(ovlp_adi_mem_status != 0  && src->ovlp_adi_mem_status != 0 ){   *ovlp_dia = *(src->ovlp_dia);  }
+  if(ham_adi_mem_status != 0  && src->ham_adi_mem_status != 0 ){   *ham_adi = *(src->ham_adi);  }
+  if(nac_adi_mem_status != 0  && src->nac_adi_mem_status != 0 ){   *nac_adi = *(src->nac_adi);  }
+  if(hvib_adi_mem_status != 0  && src->hvib_adi_mem_status != 0 ){   *hvib_adi = *(src->hvib_adi);  }
+
+  for(n=0;n<dc1_adi.size();n++){
+    if(dc1_adi_mem_status[n] != 0  && src->dc1_adi_mem_status[n] != 0 ){  *dc1_adi[n] = *(src->dc1_adi[n]);   }
+  }
+  for(n=0;n<d1ham_adi.size();n++){
+    if(d1ham_adi_mem_status[n] != 0  && src->d1ham_adi_mem_status[n] != 0 ){  *d1ham_adi[n] = *(src->d1ham_adi[n]);   }
+  }
+  for(n=0;n<d2ham_adi.size();n++){
+    if(d2ham_adi_mem_status[n] != 0  && src->d2ham_adi_mem_status[n] != 0 ){  *d2ham_adi[n] = *(src->d2ham_adi[n]);   }
+  }
+
+
+
+  if(basis_transform_mem_status != 0  && src->basis_transform_mem_status != 0 ){   *basis_transform = *(src->basis_transform);  }
+  if(time_overlap_dia_mem_status != 0  && src->time_overlap_dia_mem_status != 0 ){   *time_overlap_adi = *(src->time_overlap_dia); }
+  if(time_overlap_adi_mem_status != 0  && src->time_overlap_adi_mem_status != 0 ){   *time_overlap_adi = *(src->time_overlap_adi); }
+  if(cum_phase_corr_mem_status != 0  && src->cum_phase_corr_mem_status != 0 ){   *cum_phase_corr = *(src->cum_phase_corr); }
+
+
+
+
+
+}// copy_level_content
+
+
 
 
 void nHamiltonian::init_all(int der_lvl){ 

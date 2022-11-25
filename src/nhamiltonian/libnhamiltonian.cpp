@@ -292,8 +292,14 @@ void export_nhamiltonian_objects(){
   void (nHamiltonian::*expt_init_all_v2)(int der_lvl, int lvl) = &nHamiltonian::init_all;
 
 
+  void (nHamiltonian::*expt_copy_content_v1)(const nHamiltonian& src) = &nHamiltonian::copy_content;
+
+
+  void (nHamiltonian::*expt_show_memory_status_v1)(vector<int>& id_) = &nHamiltonian::show_memory_status;
+
 
   class_<nHamiltonian>("nHamiltonian",init<int,int,int>())
+      .def(init<const nHamiltonian&>())
 //      .def("__copy__", &generic__copy__<Hamiltonian>)
 //      .def("__deepcopy__", &generic__deepcopy__<Hamiltonian>)
       .def_readwrite("id", &nHamiltonian::id)
@@ -304,15 +310,16 @@ void export_nhamiltonian_objects(){
 
       .def_readwrite("eigen_algo", &nHamiltonian::eigen_algo)
       .def_readwrite("phase_corr_ovlp_tol", &nHamiltonian::phase_corr_ovlp_tol)
-
-
+  
       .def("set_levels", &nHamiltonian::set_levels)
       .def("add_child", &nHamiltonian::add_child)
       .def("add_new_children", &nHamiltonian::add_new_children)
       .def("get_full_id", &nHamiltonian::get_full_id)
 
+      .def("copy_content", expt_copy_content_v1)
       .def("init_all", expt_init_all_v1)
       .def("init_all", expt_init_all_v2)
+      .def("show_memory_status", expt_show_memory_status_v1)
 
       .def("init_ovlp_dia", &nHamiltonian::init_ovlp_dia)
       .def("set_ovlp_dia_by_ref", &nHamiltonian::set_ovlp_dia_by_ref)

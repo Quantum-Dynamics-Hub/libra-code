@@ -141,16 +141,16 @@ void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX
 void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep);
+//void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep);
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep);
+//void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep);
 
 void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep);
+//void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep);
 void propagate_electronic(double dt, CMATRIX& C, /*vector<CMATRIX>& projector,*/ vector<nHamiltonian*>& ham, int rep, int isNBRA);
 
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level);
+//void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level);
 //void propagate_electronic(double dt, nHamiltonian& ham, int rep);
 
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);

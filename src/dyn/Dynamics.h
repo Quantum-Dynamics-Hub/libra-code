@@ -75,8 +75,11 @@ void update_nacs(dyn_control_params& prms, nHamiltonian& ham);
 vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham);
 
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA);
-vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
+vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA);
+vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev);
+
+//vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA);
+//vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
 
 
@@ -91,7 +94,7 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
               nHamiltonian& ham, bp::object py_funct, bp::dict& model_params, bp::dict& dyn_params, Random& rnd, 
               vector<Thermostat>& therm, dyn_variables& dyn_var);
 
-void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params, nHamiltonian& ham, 
+void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params, nHamiltonian& ham, nHamiltonian& ham_aux, 
                       bp::object py_funct, bp::dict model_params, Random& rnd, vector<Thermostat>& therm);
 
 
