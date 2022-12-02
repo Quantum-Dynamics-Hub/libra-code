@@ -79,12 +79,12 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA
   if(isNBRA==1){
     St[0] = ham_prev.children[0]->get_basis_transform().H() * ham.children[0]->get_basis_transform();    
     // AVA: temporarily comment on 11/25/2022
-    //ham.children[0]->set_time_overlap_adi_by_val(St[0]);
+    ham.children[0]->set_time_overlap_adi_by_val(St[0]);
   }
   else{
     for(int traj=0; traj<ntraj; traj++){
       St[traj] = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
-      //ham.children[traj]->set_time_overlap_adi_by_val(St[0]);
+      ham.children[traj]->set_time_overlap_adi_by_val(St[traj]);      
     }
   }
   return St;
@@ -836,8 +836,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Evolve electronic DOFs for all trajectories
   // Adding the prms.isNBRA to the propagate electronic
 
-  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
-  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
+//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+//  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
 
 
   //============== Nuclear propagation ===================
@@ -880,6 +880,20 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 0);
+  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+
+//  for(i=0; i<num_el; i++){   propagate_electronic(dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
+  for(i=0; i<num_el; i++){   
+    propagate_electronic(dt_el, Cact, ham.children, ham_aux.children, prms.rep_tdse, prms.electronic_integrator);  
+  }
+
+//  Cdia.show_matrix();
+
+//  if(prms.rep_tdse==0){   ham.ampl_dia2adi(Cdia, Cadi, 0, 1);  }
+
+  // The adiabatic rep is the major, so we update the diabatic amplitudes
+  //else if(dyn_params.rep_tdse==1){   ham.ampl_adi2dia(ampl_dia, ampl_adi, 0, 1);  }
+
 
 
   // Apply phase correction and state reordering as needed
@@ -900,22 +914,34 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
       /// Adiabatic Amplitudes
       for(traj=0; traj<ntraj; traj++){
+        //*dyn_var.insta_proj_adi[traj] = insta_proj[traj];
+      
+
+        //cout<<"Before switch\n";
+        //Cadi.show_matrix();
         t2[0] = traj;
         pop_submatrix(Cadi, c_tmp, t3, t2);
         c_tmp = insta_proj[traj] * c_tmp;
         push_submatrix(Cadi, c_tmp, t3, t2);
+        //cout<<"After switch\n";
+        //Cadi.show_matrix();
+        
       }
-    }
+    
 
     /// Adiabatic states are permuted
-    act_states = permute_states(perms, act_states);
+//    act_states = permute_states(perms, act_states);
+    }
 
   }
 
+//  if(prms.rep_tdse==0 || prms.rep_tdse==1){   ham.ampl_adi2dia(Cdia, Cadi, 0, 1);  }
+
+  dyn_var.update_density_matrix(prms, ham, 1); // This one is okay
 
   // In case, we select to compute scalar NACs from time-overlaps
 //  update_nacs(prms, ham);
-  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
 
 
   // NVT dynamics
@@ -949,8 +975,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
-  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
+//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+//  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
 
 
 
@@ -958,9 +984,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 //  Hvib = ham.children[0]->get_hvib_adi();
 
 
+// TEMPORARY COMMENT
+  //dyn_var.update_amplitudes(prms, ham);  // Don't do this - then we are fine with the diabatic picture
 
-  dyn_var.update_amplitudes(prms, ham);
-  dyn_var.update_density_matrix(prms, ham, 1);
+//  dyn_var.update_density_matrix(prms, ham, 1); // This one is okay
 
 
   //============== Begin the TSH part ===================
@@ -1016,8 +1043,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   //========= Use the resulting amplitudes to do the hopping =======
-  dyn_var.update_amplitudes(prms, ham);
-  dyn_var.update_density_matrix(prms, ham, 1);
+  //dyn_var.update_amplitudes(prms, ham);
+  //dyn_var.update_density_matrix(prms, ham, 1);
 
 
   // Adiabatic dynamics

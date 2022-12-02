@@ -121,6 +121,15 @@ class dyn_variables{
 
 
   /**
+    Instantaneous permutation/projection matrices for adiabatic states
+
+    Options:
+    vector<ntraj, CMATRIX(nadi, nadi)>
+  */
+  vector<CMATRIX*> insta_proj_adi;
+
+
+  /**
     Electronic density matrix in diabatic representation
     
     Options:

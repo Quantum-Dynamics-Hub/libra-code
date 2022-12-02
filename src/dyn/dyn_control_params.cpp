@@ -36,7 +36,7 @@ dyn_control_params::dyn_control_params(){
 
   ///================= Computing Hamiltonian-related properties ====================
   rep_tdse = 1;
-  rep_ham = 0;
+//  rep_ham = 0;
   ham_update_method = 1;
   ham_transform_method = 1;
   rep_sh = 1;
@@ -98,7 +98,7 @@ dyn_control_params::dyn_control_params(){
 
   dt = 41.0;
   num_electronic_substeps = 1;
-
+  electronic_integrator = 0;
 }
 
 
@@ -106,7 +106,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   //cout<<"dyn_control_params cctor\n";
 
   rep_tdse = x.rep_tdse;
-  rep_ham = x.rep_ham;
+//  rep_ham = x.rep_ham;
   ham_update_method = x.ham_update_method;
   ham_transform_method = x.ham_transform_method;
   rep_sh = x.rep_sh;
@@ -166,6 +166,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   dt = x.dt;
   num_electronic_substeps = x.num_electronic_substeps;
+  electronic_integrator = x.electronic_integrator;
 
   decoherence_rates = new MATRIX(x.decoherence_rates->n_rows, x.decoherence_rates->n_cols);  
   *decoherence_rates = *x.decoherence_rates;
@@ -258,7 +259,7 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     ///================= Computing Hamiltonian-related properties ====================
     if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
-    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
+//    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
     else if(key=="ham_update_method") { ham_update_method = bp::extract<int>(params.values()[i]);   }
     else if(key=="ham_transform_method") { ham_transform_method = bp::extract<int>(params.values()[i]);   }
     else if(key=="rep_sh") { rep_sh = bp::extract<int>(params.values()[i]);  }
@@ -348,6 +349,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     }
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
     else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
+    else if(key=="electronic_integrator"){ electronic_integrator = bp::extract<int>(params.values()[i]); }
 
   }// for i
 

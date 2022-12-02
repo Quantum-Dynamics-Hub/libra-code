@@ -526,7 +526,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     #================= Bath, Constraints, and Dynamical controls ===================
     default_params.update( { "Temperature":300.0, "ensemble":0, "thermostat_params":{},
                              "quantum_dofs":None, "thermostat_dofs":[], "constrained_dofs":[],
-                             "dt":1.0*units.fs2au, "num_electronic_substeps":1
+                             "dt":1.0*units.fs2au, "num_electronic_substeps":1,
+                             "electronic_integrator":0
                            } )
 
     #================= Variables specific to Python version: saving ================
@@ -673,6 +674,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
         compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm);
+
+        #dyn_var.update_amplitudes(dyn_params, ham);
+        #dyn_var.update_density_matrix(dyn_params, ham, 1);
 
             
         if _savers["txt_saver"]!=None:

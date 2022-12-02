@@ -199,7 +199,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
 
   for(int traj=0; traj<ntraj; traj++){
 
-    indx[1] = traj;
+    if(lvl==1){  indx[1] = traj; }
   
     S = ham.get_ovlp_dia(indx);
     U = ham.get_basis_transform(indx);
@@ -207,7 +207,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
     /// Diabatic wfc representation
     if(dyn_params.rep_tdse==0){
       cd = ampl_dia->col(traj);
-      *dm_dia[traj] = S * (cd * cd.H()) * S;  
+      *dm_dia[traj] = S * (cd * cd.H()) * S; 
       *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
     }  
     /// Adiabatic wfc representation
@@ -724,14 +724,14 @@ void dyn_variables::init_electronic_dyn_var(bp::dict _params, Random& rnd){
 CMATRIX dyn_variables::compute_average_dm(int rep){
 
   int sz;
-  if(rep==0){ sz = ndia; }
-  else if(rep==1){ sz = nadi; }
+  if(rep==0 || rep==2){ sz = ndia; }
+  else if(rep==1 || rep==3){ sz = nadi; }
 
   CMATRIX res(sz, sz);
 
   for(int traj=0; traj<ntraj; traj++){
-    if(rep==0){   res += *dm_dia[traj]; }
-    else if(rep==1){ res += *dm_adi[traj]; }
+    if(rep==0 || rep==2){   res += *dm_dia[traj]; }
+    else if(rep==1 || rep==3){ res += *dm_adi[traj]; }
   }
 
   res = res / (float)ntraj;
@@ -743,8 +743,8 @@ CMATRIX dyn_variables::compute_average_dm(int rep){
 vector<double> dyn_variables::compute_average_se_pop(int rep){
 
   int sz; 
-  if(rep==0){ sz = ndia; }
-  else if(rep==1){ sz = nadi; }
+  if(rep==0 || rep==2){ sz = ndia; }
+  else if(rep==1 || rep==3){ sz = nadi; }
 
   MATRIX ave(sz, sz);
   ave = compute_average_dm(rep).real();  

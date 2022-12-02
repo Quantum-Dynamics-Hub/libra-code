@@ -967,90 +967,194 @@ void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX
 
 }// propagate_electronic_qtag
 
+void propagate_electronic_qtag2(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& Hvib_old, CMATRIX& S, CMATRIX& S_old){
+/**
+  Solves the generalized time-dependent Schrodinger equation:
+
+  i*hbar*S*dc/dt = Hvib*c
+
+  using the approach described in the QTAG paper:
 
 
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
+  U = Z(t+dt) * exp(-i/hbar *E(t+dt) *dt) * Z(t)^+  * S(t)
 
- if(rep==0){  // diabatic
+  This is a potentially more robust integrator that the other one, where we compute S^+/-{1/2}
 
-    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
-    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
-//    Hvib = Hvib 
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
 
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-    //propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+*/
 
-    //propagate_electronic_nonHermitian(dt, C, Hvib);
 
+  int i;
+
+  // Let us first diagonalize the overlap matrix Hvib
+  int sz = Hvib.n_cols;
+  CMATRIX Z(sz, sz);
+  CMATRIX Z_old(sz, sz);
+  CMATRIX E(sz, sz);
+  CMATRIX E_old(sz, sz);
+
+  // Transformation to adiabatic basis
+  libmeigen::solve_eigen(Hvib, S, E, Z, 0);  // Hvib(t+dt) * Z(t+dt) = S(t+dt) * Z(t+dt) * E(t+dt)
+  libmeigen::solve_eigen(Hvib_old, S_old, E_old, Z_old, 0);  // Hvib(t) * Z(t) = S(t) * Z(t) * E(t)
+
+  // Diagonal form expH
+  CMATRIX expE(sz, sz);
+  for(i=0;i<sz;i++){
+    double argg = - 0.5*(E.get(i,i) + E_old.get(i,i)).real()*dt;
+    double _cs = cos(argg);
+    double _si = sin(argg);
+    expE.set(i,i, complex<double>(_cs, _si)  );
   }
 
-  else if(rep==1){  // adiabatic
 
-    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
-
-    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-  }
+  // This is a supposedly more efficient form of Coeff = (Z(t+dt) * expE(t+dt/2) * Z(t).H() * S(t)) * Coeff
+  Coeff = S_old * Coeff;
+  Coeff = Z_old.H() * Coeff;
+  Coeff = expE * Coeff;
+  Coeff = Z * Coeff;
 
 }
 
 
 
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
+
+/*
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int method){
+
+ propagate_electronic(dt, C, &ham, rep, method);
+
+}
+
+
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep, int method){
 
   if(rep==0){  // diabatic
-
     CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
     CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
 
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-    //propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    if(method==0 || method==100){
+      propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
+    else if(method==1 || method==101){
+      propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
 
   }
 
   else if(rep==1){  // adiabatic
-
     CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
-    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+
+    if(metho==0 || method==100){
+      propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+    }
 
   }
 
 }
-
-
-void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
-
-  if(C.n_cols!=ham.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
-
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, ham[traj], rep);
-
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
-
-  }
-
-}
-
-void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep, int isNBRA){
-/**
-  if isNBRA == 1, then only the first element of ham (ham[0]) will be used. However, we assume that the C matrix still
-  has the full dimensionality, that is it consist of ntraj columns
 */
 
-  if(!isNBRA){  
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, nHamiltonian& ham_prev, int rep, int method){
+
+ propagate_electronic(dt, C, &ham, &ham_prev, rep, method);
+
+}
+
+void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, nHamiltonian* ham_prev, int rep, int method){
+
+  if(rep==0){  // diabatic
+    CMATRIX Hvib(ham->ndia, ham->ndia);
+    CMATRIX Sdia(ham->ndia, ham->ndia);
+
+    if(method==0 || method==100){
+      // Based on Lowdin transformations, using mid-point Hvib
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
+    else if(method==1 || method==101){
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
+    else if(method==2 || method==102){
+      Hvib = ham->get_ham_dia();
+      Sdia = ham->get_ovlp_dia();
+      CMATRIX Hvib_old(ham->ndia, ham->ndia);   Hvib_old = ham_prev->get_ham_dia();
+      CMATRIX Sdia_old(ham->ndia, ham->ndia);   Sdia_old = ham_prev->get_ovlp_dia();
+
+      propagate_electronic_qtag2(dt, C, Hvib, Hvib_old, Sdia, Sdia_old);
+    }
+    else if(method==3 || method==103){
+      // Using exp(S^-1 * Hvib_dia * dt)
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      CMATRIX invS(ham->ndia, ham->ndia); 
+      FullPivLU_inverse(Sdia, invS);
+      Hvib = invS * Hvib;
+      propagate_electronic_nonHermitian(dt, C, Hvib);
+    }
+
+  }// rep == 0 // diabatic
+
+  else if(rep==1){  // adiabatic
+
+    if(method==0 || method==100){
+      CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = 0.5*(ham->get_hvib_adi() + ham_prev->get_hvib_dia());
+      propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+    }
+    else if(method==1 || method==101){
+      // Local diabatization
+      CMATRIX U_old(ham->nadi, ham->nadi);   U_old = ham_prev->get_basis_transform();
+      CMATRIX U(ham->nadi, ham->nadi);   U = ham->get_basis_transform();
+
+      CMATRIX st(ham->nadi, ham->nadi); st = U_old * U.H();
+      CMATRIX st2(ham->nadi, ham->nadi); st2 = st.H() * st; 
+      CMATRIX st2_half(ham->nadi, ham->nadi);
+      CMATRIX st2_i_half(ham->nadi, ham->nadi);
+      CMATRIX T(ham->nadi, ham->nadi);
+
+      sqrt_matrix(st2, st2_half, st2_i_half);
+      T = st * st2_i_half;
+
+      CMATRIX Z(ham->nadi, ham->nadi);
+
+      Z = 0.5 * (ham_prev->get_ham_adi() + T * ham->get_ham_adi() * T.H() );
+
+      propagate_electronic_rot(dt, C, Z); 
+
+      C = T.H() * C;
+
+    }// method == 1
+   
+  }
+
+}
+
+
+/*
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep, int method){
+
+//  This function propagates the coefficients from C(t-dt) to C(t)
+
+//  dt - integration timestep
+//  C - the matrix of amplitudes  nstates x ntraj
+//  ham - Hamiltonian at time t (or at another point)
+//  rep - representation: 0 - diabatic, 1 - adiabatic
+//  method - anything above 100 (but below 200), including are the same methods as normal, but with the NBRA approximation
+
+//           for the NBRA, only the first element of ham (ham[0]) will be used. However, we assume that
+//           the C matrix still has the full dimensionality, that is it consist of ntraj columns
+
+
+  if(! (method >= 100 and method <200) ){
     if(C.n_cols!=ham.size()){
-      cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
+      cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, \
+             vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep, int method): \n";
       cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
       cout<<"Exiting...\n";
       exit(0);
@@ -1063,26 +1167,78 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int
   CMATRIX ctmp(nst, 1);
 
   for(int traj=0; traj<ntraj; traj++){
-
     ctmp = C.col(traj);
-
-    int traj1 = traj; 
-    if(isNBRA==1){ traj1 = 0; }
-
-    propagate_electronic(dt, ctmp, ham[traj1], rep);
+    int traj1 = traj;  if(method >=100 and method <200){ traj1 = 0; }
+    propagate_electronic(dt, ctmp, ham[traj1], rep, method);
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+  }
 
+}
+*/
+
+/*
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
+
+  int isNBRA = 0;
+  propagate_electronic(dt, C, ham, rep, isNBRA);
+
+}
+*/
+
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep, int method){
+/**
+  This function propagates the coefficients from C(t-dt) to C(t)
+
+  dt - integration timestep 
+  C - the matrix of amplitudes  nstates x ntraj
+  ham - Hamiltonian at time t
+  ham_prev - Hamiltonian at time t - dt (or any other interval ends)
+  rep - representation: 0 - diabatic, 1 - adiabatic   
+  method - anything above 100 (but below 200), including are the same methods as normal, but with the NBRA approximation
+
+           for the NBRA, only the first element of ham (ham[0]) will be used. However, we assume that 
+           the C matrix still has the full dimensionality, that is it consist of ntraj columns
+*/
+
+
+  if(! (method >= 100 and method <200) ){
+    if(C.n_cols!=ham.size()){
+      cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, \
+             vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep, int method): \n";
+      cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
+      cout<<"Exiting...\n";
+      exit(0);
+    }
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    int traj1 = traj;  if(method >=100 and method <200){ traj1 = 0; }
+    propagate_electronic(dt, ctmp, ham[traj1], ham_prev[traj1], rep, method);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
   }
 
 }
 
+/*
+void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep){
 
+  int isNBRA = 0;
+  propagate_electronic(dt, C, ham, ham_prev, rep, isNBRA);
 
+}
+*/
 
-
-
+/*
 void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
 
   vector<nHamiltonian*> branches; 
@@ -1110,7 +1266,7 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int
   }
 
 }
-
+*/
 
 
 

@@ -42,7 +42,9 @@ using namespace libmeigen;
 void nHamiltonian::ampl_dia2adi(CMATRIX& ampl_dia, CMATRIX& ampl_adi){
 /**
 
-  |PSI> = |psi_dia> * C_dia
+  |PSI> = |psi_dia> * C_dia = |psi_adi> * C_adi
+
+  |psi_adi> = |psi_dia> * U, so:
 
   C_dia = U * C_adi
 

@@ -62,7 +62,7 @@ void export_dyn_control_params_objects(){
 
       ///================= Computing Hamiltonian-related properties ====================
       .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
-      .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
+//      .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
       .def_readwrite("ham_update_method", &dyn_control_params::ham_update_method)    
       .def_readwrite("ham_transform_method", &dyn_control_params::ham_transform_method)    
       .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
@@ -766,7 +766,7 @@ void export_dyn_ham(){
   def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v1);
   def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v2);
 
-
+/*
   void (*expt_update_Hamiltonian_q_v1)
   (dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 
    bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q;
@@ -803,14 +803,10 @@ void export_dyn_ham(){
   void (*expt_update_Hamiltonian_q_ethd_v4)
   (bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, bp::object py_funct, bp::object model_params) = &update_Hamiltonian_q_ethd;
 
-
   def("update_Hamiltonian_q_ethd", expt_update_Hamiltonian_q_ethd_v1);
   def("update_Hamiltonian_q_ethd", expt_update_Hamiltonian_q_ethd_v2);
   def("update_Hamiltonian_q_ethd", expt_update_Hamiltonian_q_ethd_v3);
   def("update_Hamiltonian_q_ethd", expt_update_Hamiltonian_q_ethd_v4);
-
-
-
 
 
   void (*expt_update_Hamiltonian_p_v1)
@@ -833,7 +829,7 @@ void export_dyn_ham(){
 
   void (*expt_update_nacs_v1)(dyn_control_params& prms, nHamiltonian& ham) = &update_nacs;
   def("update_nacs", expt_update_nacs_v1);
-
+*/
 
 }
 

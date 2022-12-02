@@ -71,7 +71,7 @@ class dyn_control_params{
      - 1: adiabatic representation 
 
   */
-  int rep_ham;  /// TO BE REPLACED BY the ham_update_method
+  //int rep_ham;  /// TO BE REPLACED BY the ham_update_method
 
 
   /** 
@@ -594,6 +594,19 @@ class dyn_control_params{
   */
   int num_electronic_substeps; 
 
+  /**
+    the method for electronic TD-SE integration:
+
+    tdse_rep = 0 (diabatic):
+
+      - 0 (100) : based on Lowdin orthogonalization (100 - with NBRA) [ default ]
+      - 1 (101) : based on QTAG propagator (101 - with NBRA )
+    
+    tdse_rep = 1 (adiabatic):
+
+      - 0 (100) : based on rotations (100 - with NBRA)  [ default ]
+  */
+  int electronic_integrator;
 
 
 
