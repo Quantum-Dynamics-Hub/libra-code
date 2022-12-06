@@ -72,15 +72,20 @@ void update_nacs(dyn_control_params& prms, nHamiltonian& ham);
 */
 
 // Adding the NBRA flag to the functions in the header
+vector<CMATRIX> compute_St(nHamiltonian* ham, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham);
 
+vector<CMATRIX> compute_St(nHamiltonian* ham, nHamiltonian* ham_prev, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA);
 vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev);
 
 //vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA);
 //vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
+
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms, Random& rnd);
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms, Random& rnd);
 
 
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 

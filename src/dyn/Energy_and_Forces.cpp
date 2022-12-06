@@ -315,6 +315,20 @@ vector<CMATRIX> get_Eadi(nHamiltonian& ham){
 
 }
 
+vector<CMATRIX> get_Eadi(nHamiltonian* ham){
+
+  int nst = ham->nadi;
+  int ntraj = ham->children.size();
+
+  vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));
+
+  for(int traj=0; traj<ntraj; traj++){
+    Eadi[traj] = ham->children[traj]->get_ham_adi();
+  }
+
+  return Eadi;
+
+}
 
 
 

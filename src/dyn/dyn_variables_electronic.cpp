@@ -211,11 +211,28 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
       *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
     }  
     /// Adiabatic wfc representation
-    else if(dyn_params.rep_tdse==1){
+    else if(dyn_params.rep_tdse==1){  
+
+      CMATRIX T(nadi, nadi); T = *proj_adi[traj];
+      CMATRIX iT(nadi, nadi);
+      FullPivLU_inverse(T, iT);
+
       ca = ampl_adi->col(traj);
       *dm_adi[traj] = ca * ca.H();
-      su = S * U;
-      *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H();
+      
+     
+ 
+      //su = S * U;
+      //*dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); 
+
+
+      //*dm_adi[traj] = iT * (*dm_adi[traj]) * iT.H();
+
+      su = S * U * T;
+      *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); //- this actually works
+
+      *dm_adi[traj] = iT * (*dm_adi[traj]) * iT.H();
+       
     }
     /// Diabatic DM representation
     else if(dyn_params.rep_tdse==2){

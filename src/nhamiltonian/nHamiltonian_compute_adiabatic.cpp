@@ -379,8 +379,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
         // also: http://www.theochem.ruhr-uni-bochum.de/~nikos.doltsinis/nic_10_doltsinis.pdf
         *tmp = (*basis_transform).H() * (*d1ham_dia[n]) * (*basis_transform);
 
-        *dtilda = (*basis_transform) * (*dc1_dia[n]).H() * (*basis_transform).H() * (*ham_adi);
+//        *dtilda = (*basis_transform) * (*dc1_dia[n]).H() * (*basis_transform).H() * (*ham_adi);
+        *dtilda = (*basis_transform).H() * (*dc1_dia[n]) * (*basis_transform) * (*ham_adi);
         *dtilda = (*dtilda + (*dtilda).H() );
+
         *tmp -= *dtilda;
 
         // Adiabatic "forces"
@@ -391,12 +393,19 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
         *dc1_adi[n] = 0.0;
 
         for(i=0;i<nadi;i++){
-          for(j=0;j<nadi;j++){
+          for(j=i+1;j<nadi;j++){
 
-            if(i==j){  dc1_adi[n]->set(i,j, 0.0, 0.0); }
-            else{
+            //if(i==j){  dc1_adi[n]->set(i,j, 0.0, 0.0); }
+            //else{
  
               double dE = (ham_adi->get(j,j) - ham_adi->get(i,i) ).real();
+              complex<double> val = tmp->get(i,j)/dE;
+              
+              dc1_adi[n]->set(i,j, val);
+              dc1_adi[n]->set(j,i,-val);
+
+
+              /*
               if(fabs(dE)<1e-100){ 
                 //dE = 1e-10 * (dE>0.0 ? 1.0 : -1.0);                 
                 dE = 1e-100;
@@ -406,8 +415,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
           
                 dc1_adi[n]->set(i,j, tmp->get(i,j)/dE );
               }
+              */
 
-            }
+            //}
+
           }// for j
         }// for i
       }// for n

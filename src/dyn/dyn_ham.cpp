@@ -184,6 +184,9 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
   }// update_type==0 || update_type==1
 
 
+  // Now apply the projectors to reflect any state switches that may have occurred in the meantime
+
+
 }
 
 

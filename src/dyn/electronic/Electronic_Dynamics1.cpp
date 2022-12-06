@@ -1104,7 +1104,9 @@ void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, nHamiltonian
   else if(rep==1){  // adiabatic
 
     if(method==0 || method==100){
-      CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = 0.5*(ham->get_hvib_adi() + ham_prev->get_hvib_dia());
+      CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = 0.5*(ham->get_hvib_adi() + ham_prev->get_hvib_adi());
+
+      cout<<"Integration with Hvib = "; Hvib.show_matrix();
       propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
     }
     else if(method==1 || method==101){

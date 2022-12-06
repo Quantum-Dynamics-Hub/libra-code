@@ -66,25 +66,30 @@ void aux_get_transforms(CMATRIX** Uprev, nHamiltonian& ham){
 //vector<CMATRIX> compute_St(nHamiltonian& ham, CMATRIX** Uprev){
 //vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA){
 vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA){
+
+  return compute_St(&ham, &ham_prev, isNBRA);
+}
+
+vector<CMATRIX> compute_St(nHamiltonian* ham, nHamiltonian* ham_prev, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 
 */
 
-  int nst = ham.nadi;
-  int ntraj = ham.children.size();
+  int nst = ham->nadi;
+  int ntraj = ham->children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
 
   if(isNBRA==1){
-    St[0] = ham_prev.children[0]->get_basis_transform().H() * ham.children[0]->get_basis_transform();    
+    St[0] = ham_prev->children[0]->get_basis_transform().H() * ham->children[0]->get_basis_transform();    
     // AVA: temporarily comment on 11/25/2022
-    ham.children[0]->set_time_overlap_adi_by_val(St[0]);
+    ham->children[0]->set_time_overlap_adi_by_val(St[0]);
   }
   else{
     for(int traj=0; traj<ntraj; traj++){
-      St[traj] = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
-      ham.children[traj]->set_time_overlap_adi_by_val(St[traj]);      
+      St[traj] = ham_prev->children[traj]->get_basis_transform().H() * ham->children[traj]->get_basis_transform();
+      ham->children[traj]->set_time_overlap_adi_by_val(St[traj]);      
     }
   }
   return St;
@@ -95,35 +100,41 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev, int isNBRA
 vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev){
 
   int is_nbra = 0;
-  return compute_St(ham, ham_prev, is_nbra);
+  return compute_St(&ham, &ham_prev, is_nbra);
 
 }
 
-vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
+vector<CMATRIX> compute_St(nHamiltonian* ham, int isNBRA){
 /**
   This function computes the time-overlap matrices for all trajectories
 */
 
-  int nst = ham.nadi;
-  int ntraj = ham.children.size();
+  int nst = ham->nadi;
+  int ntraj = ham->children.size();
 
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
   if(isNBRA==1){
-    St[0] = ham.children[0]->get_time_overlap_adi();
+    St[0] = ham->children[0]->get_time_overlap_adi();
   }
   else{
     for(int traj=0; traj<ntraj; traj++){
-      St[traj] = ham.children[traj]->get_time_overlap_adi();
+      St[traj] = ham->children[traj]->get_time_overlap_adi();
     }
   }
   return St;
 
 }
 
+
+vector<CMATRIX> compute_St(nHamiltonian& ham, int isNBRA){
+
+  return compute_St(&ham, isNBRA);
+}
+
 vector<CMATRIX> compute_St(nHamiltonian& ham){
   int is_nbra = 0;
 
-  return compute_St(ham, is_nbra);
+  return compute_St(&ham, is_nbra);
 }
 
 
@@ -691,6 +702,279 @@ void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMA
 
 }
 
+void apply_projectors(CMATRIX& C, vector<CMATRIX>& proj){
+
+  int ntraj = proj.size();
+  int nst = C.n_rows;
+
+  int i;
+  vector<int> t2(1,0);
+  vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
+  CMATRIX c_tmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    t2[0] = traj;
+    pop_submatrix(C, c_tmp, t3, t2);
+    c_tmp = proj[traj] * c_tmp;
+    push_submatrix(C, c_tmp, t3, t2);
+  }
+}
+
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms, Random& rnd){
+
+  propagate_electronic(dt, C, proj, &ham, &ham_prev, prms, rnd);
+
+}
+
+
+void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms, Random& rnd){
+
+  int itraj;
+  int ntraj = Ham->children.size();
+  int nst = Coeff.n_rows;
+  CMATRIX C(nst, 1);
+
+  int rep = prms.rep_tdse;
+  int method = prms.electronic_integrator;
+
+
+//  cout<<"ntraj = "<<ntraj<<" nst = "<<nst<<" rep = "<<rep<<" method = "<<method<<endl;
+//  exit(0);
+//  int i;
+//  vector<int> t2(1,0);
+//  vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
+//  CMATRIX c_tmp(nst, 1);
+
+  //==================== Determine the state-consistency transformations =================
+  // Apply phase correction and state reordering as needed
+  vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
+  vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+  vector<CMATRIX> T_new(ntraj, CMATRIX(nst, nst));
+
+//  cout<<"Point 0\n"; exit(0);
+  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
+
+    ///==================== Time-overlaps =====================
+    //vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
+    /// Compute the time-overlap directly, using previous MO vectors
+    if(prms.time_overlap_method==0){  St = compute_St(Ham, Ham_prev, prms.isNBRA);   }
+    /// Read the existing time-overlap
+    else if(prms.time_overlap_method==1){    St = compute_St(Ham, prms.isNBRA);   }
+
+//    cout<<"Point 1\n"; exit(0);
+
+    ///==================== Energies ===========================
+    //vector<CMATRIX> Eadi(ntraj, CMATRIX(nst, nst));
+    //Eadi = get_Eadi(Ham);           // these are raw properties
+
+    ///==== Compute permutations and insta projections =========
+    //vector< vector<int> > perms;
+    //perms = compute_permutations(prms, Eadi, St, rnd);
+
+    //vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
+    //insta_proj = compute_projectors(prms, St, perms);
+
+    ///New approach to compute projectors:
+    //CMATRIX TP(nst, nst);
+   
+    //for(itraj=0; itraj<ntraj;itraj++){        
+    //    TP = (*proj[itraj]).H() * St[itraj];
+    //    FullPivLU_inverse(TP, T_new[itraj]);
+    //}
+    
+
+    //if(prms.rep_tdse==1){   apply_projectors(C, insta_proj); }
+    /// Adiabatic states are permuted
+//    act_states = permute_states(perms, act_states);
+  }
+
+//  cout<<"Here\n"; exit(0);
+
+  ///======================== Now do the integration of the TD-SE ===================
+  for(itraj=0; itraj<ntraj;itraj++){
+
+    C = Coeff.col(itraj);
+
+    int traj1 = itraj;  if(method >=100 and method <200){ traj1 = 0; }
+
+    nHamiltonian* ham = Ham->children[traj1];
+    nHamiltonian* ham_prev = Ham_prev->children[traj1];
+
+
+  if(rep==0){  // diabatic
+    CMATRIX Hvib(ham->ndia, ham->ndia);
+    CMATRIX Sdia(ham->ndia, ham->ndia);
+
+    if(method==0 || method==100){
+      // Based on Lowdin transformations, using mid-point Hvib
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
+    else if(method==1 || method==101){
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      propagate_electronic_qtag(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+    }
+    else if(method==2 || method==102){
+      Hvib = ham->get_ham_dia();
+      Sdia = ham->get_ovlp_dia();
+      CMATRIX Hvib_old(ham->ndia, ham->ndia);   Hvib_old = ham_prev->get_ham_dia();
+      CMATRIX Sdia_old(ham->ndia, ham->ndia);   Sdia_old = ham_prev->get_ovlp_dia();
+
+      propagate_electronic_qtag2(dt, C, Hvib, Hvib_old, Sdia, Sdia_old);
+    }
+    else if(method==3 || method==103){
+      // Using exp(S^-1 * Hvib_dia * dt)
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
+      Sdia = ham->get_ovlp_dia();
+      CMATRIX invS(ham->ndia, ham->ndia);
+      FullPivLU_inverse(Sdia, invS);
+      Hvib = invS * Hvib;
+      propagate_electronic_nonHermitian(dt, C, Hvib);
+    }
+
+  }// rep == 0 // diabatic
+
+  else if(rep==1){  // adiabatic
+
+    if(method==0 || method==100){
+      CMATRIX Hvib(ham->nadi, ham->nadi);  
+      CMATRIX T(nst, nst); T = *proj[itraj];
+      CMATRIX iT(nst, nst);
+      CMATRIX TP(nst, nst);
+      CMATRIX T_new(nst, nst); 
+      CMATRIX iTP(nst, nst);
+
+      TP = T.H() * St[itraj];
+      FullPivLU_inverse(TP, T_new);
+
+      Hvib = T.H() * ham_prev->get_hvib_adi() * T;
+      Hvib += T_new.H() * ham->get_hvib_adi() * T_new;
+      Hvib *= 0.5;
+
+  
+      FullPivLU_inverse(T, iT);
+      C = iT * C;
+
+      //cout<<"Integration with projector T = "; T.show_matrix();
+      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+      propagate_electronic_nonHermitian(dt, C, Hvib);
+
+      //CMATRIX I(nst, nst); I.load_identity();
+      //propagate_electronic(dt, C, Hvib, I);
+
+      C = T_new * C;
+
+      *proj[itraj] = T_new;
+
+
+      //CMATRIX invSt(ham->nadi, ham->nadi);
+      //FullPivLU_inverse(St[itraj], invSt);
+
+      //apply_projectors(C, insta_proj); 
+      //C = invSt * C;
+          
+      //Hvib = ham->get_hvib_adi();
+      //Hvib = insta_proj[itraj] * ham->get_hvib_adi() * insta_proj[itraj].H();
+ 
+      //cout<<"Integration with Hvib (second half) = "; Hvib.show_matrix();      
+      
+      //propagate_electronic_rot(0.5*dt, C, Hvib);
+
+      //C = insta_proj[itraj] * C;
+
+    }
+
+    else if(method==1 || method==101){
+      CMATRIX Hvib(ham->nadi, ham->nadi);
+      Hvib = ham_prev->get_hvib_adi();
+      Hvib += insta_proj[itraj] * ham->get_hvib_adi() * insta_proj[itraj].H();
+      Hvib *= 0.5;
+
+//      cout<<"Integration with Hvib = "; Hvib.show_matrix();
+      propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+
+      //apply_projectors(C, insta_proj);
+      C = insta_proj[itraj] * C;
+
+      //Hvib = ham->get_hvib_adi();
+
+      //propagate_electronic_rot(0.5*dt, C, Hvib);
+
+    }
+
+
+
+    else if(method==2 || method==102){
+      // Local diabatization
+      CMATRIX U_old(ham->nadi, ham->nadi);   U_old = ham_prev->get_basis_transform();
+      CMATRIX U(ham->nadi, ham->nadi);   U = ham->get_basis_transform();
+
+      CMATRIX st(ham->nadi, ham->nadi); st = U_old * U.H();
+      CMATRIX st2(ham->nadi, ham->nadi); st2 = st.H() * st;
+      CMATRIX st2_half(ham->nadi, ham->nadi);
+      CMATRIX st2_i_half(ham->nadi, ham->nadi);
+      CMATRIX T(ham->nadi, ham->nadi);
+
+      sqrt_matrix(st2, st2_half, st2_i_half);
+      T = st * st2_i_half;
+
+      CMATRIX Z(ham->nadi, ham->nadi);
+
+      Z = 0.5 * (ham_prev->get_ham_adi() + T * ham->get_ham_adi() * T.H() );
+
+      propagate_electronic_rot(dt, C, Z);
+
+      C = T.H() * C;
+
+    }// method == 1
+
+  }// rep == 1 - adiabatic
+
+
+
+  // Insert the propagated result back
+  for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
+
+  }// for itraj - all trajectories
+
+
+}
+
+
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, dyn_control_params& prms, Random& rnd){
+
+  int rep = prms.rep_tdse;
+  int method = prms.electronic_integrator;
+
+
+  if(! (method >= 100 and method <200) ){
+    if(C.n_cols!=ham.size()){
+      cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, \
+             vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep, int method): \n";
+      cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
+      cout<<"Exiting...\n";
+      exit(0);
+    }
+  }
+
+  int nst = C.n_rows;
+  int ntraj = C.n_cols;
+
+  CMATRIX ctmp(nst, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    ctmp = C.col(traj);
+    int traj1 = traj;  if(method >=100 and method <200){ traj1 = 0; }
+    propagate_electronic(dt, ctmp, proj, ham[traj1], ham_prev[traj1], prms, rnd);
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+  }
+
+
+}
 
 
 void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
@@ -735,6 +1019,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
+  //cout<<"Start dyn func\n"; exit(0);
+
   int nst;
   if(prms.rep_tdse==0){ nst = ndia; }
   else if(prms.rep_tdse==1){ nst = nadi; }
@@ -757,14 +1043,14 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //======== General variables =======================
   int i,j, cdof, traj, dof, idof, ntraj1, n_therm_dofs;
-  vector< vector<int> > perms;
+//  vector< vector<int> > perms;
 
 
   MATRIX coherence_time(nst, ntraj);     // for DISH
   MATRIX coherence_interval(nst, ntraj); // for DISH
   vector<int> project_out_states(ntraj);  // for DISH
 
-  vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
+//  vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
  
   //vector<CMATRIX> Uprev;
   // Defining ntraj1 as a reference for making these matrices
@@ -775,7 +1061,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else{  ntraj1 = ntraj;  }
 
   // Defining matrices based on ntraj1
-  vector<CMATRIX> St(ntraj1, CMATRIX(nst, nst));
+//  vector<CMATRIX> St(ntraj1, CMATRIX(nst, nst));
   vector<CMATRIX> Eadi(ntraj1, CMATRIX(nst, nst));  
   vector<MATRIX> decoherence_rates(ntraj1, MATRIX(nst, nst)); 
   vector<double> Ekin(ntraj1, 0.0);  
@@ -785,7 +1071,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
   vector<int> t2(1,0);
   vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
-  CMATRIX c_tmp(nst, 1);
+//  CMATRIX c_tmp(nst, 1);
   MATRIX F_eff(nst, ntraj);
 
 
@@ -882,9 +1168,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 0);
   update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
 
+//  cout<<"Exit here\n"; exit(0);
 //  for(i=0; i<num_el; i++){   propagate_electronic(dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
   for(i=0; i<num_el; i++){   
-    propagate_electronic(dt_el, Cact, ham.children, ham_aux.children, prms.rep_tdse, prms.electronic_integrator);  
+//    propagate_electronic(dt_el, Cact, ham.children, ham_aux.children, prms.rep_tdse, prms.electronic_integrator);  
+      propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms, rnd);
   }
 
 //  Cdia.show_matrix();
@@ -897,43 +1185,39 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Apply phase correction and state reordering as needed
-  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
+//  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
     /// Compute the time-overlap directly, using previous MO vectors
-    if(prms.time_overlap_method==0){  St = compute_St(ham, ham_aux, prms.isNBRA);   }
+//    if(prms.time_overlap_method==0){  St = compute_St(ham, ham_aux, prms.isNBRA);   }
     /// Read the existing time-overlap
-    else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
+//    else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
 
-
-    Eadi = get_Eadi(ham);           // these are raw properties
-    perms = compute_permutations(prms, Eadi, St, rnd);
-    insta_proj = compute_projectors(prms, St, perms);
-    
-
-    if(prms.rep_tdse==1){
+//    Eadi = get_Eadi(ham);           // these are raw properties
+//    perms = compute_permutations(prms, Eadi, St, rnd);
+//    insta_proj = compute_projectors(prms, St, perms);
+   
+//    if(prms.rep_tdse==1){
 
       /// Adiabatic Amplitudes
-      for(traj=0; traj<ntraj; traj++){
-        //*dyn_var.insta_proj_adi[traj] = insta_proj[traj];
-      
-
+//      for(traj=0; traj<ntraj; traj++){
+//        *dyn_var.insta_proj_adi[traj] = insta_proj[traj] * *dyn_var.insta_proj_adi[traj];
         //cout<<"Before switch\n";
         //Cadi.show_matrix();
-        t2[0] = traj;
-        pop_submatrix(Cadi, c_tmp, t3, t2);
-        c_tmp = insta_proj[traj] * c_tmp;
-        push_submatrix(Cadi, c_tmp, t3, t2);
+//        t2[0] = traj;
+//        pop_submatrix(Cadi, c_tmp, t3, t2);
+//        c_tmp = insta_proj[traj] * c_tmp;
+//        push_submatrix(Cadi, c_tmp, t3, t2);
         //cout<<"After switch\n";
         //Cadi.show_matrix();
         
-      }
+//      }
     
 
     /// Adiabatic states are permuted
 //    act_states = permute_states(perms, act_states);
-    }
+//    }
+//  }
 
-  }
 
 //  if(prms.rep_tdse==0 || prms.rep_tdse==1){   ham.ampl_adi2dia(Cdia, Cadi, 0, 1);  }
 

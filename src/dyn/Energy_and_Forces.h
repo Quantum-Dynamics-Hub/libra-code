@@ -74,7 +74,7 @@ MATRIX aux_get_forces(bp::dict prms, CMATRIX& amplitudes, vector<CMATRIX>& proje
                       nHamiltonian& ham);
 */
 vector<CMATRIX> get_Eadi(nHamiltonian& ham);
-
+vector<CMATRIX> get_Eadi(nHamiltonian* ham);
 
 /*
 double compute_kinetic_energy(Nuclear* mol);

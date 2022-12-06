@@ -121,12 +121,14 @@ class dyn_variables{
 
 
   /**
-    Instantaneous permutation/projection matrices for adiabatic states
+    Cumulative projection matrices for adiabatic states:
+
+    |psi_adi_ordered(t)> = |psi_adi_raw(t)> * proj_adi(t)
 
     Options:
     vector<ntraj, CMATRIX(nadi, nadi)>
   */
-  vector<CMATRIX*> insta_proj_adi;
+  vector<CMATRIX*> proj_adi;
 
 
   /**

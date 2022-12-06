@@ -31,13 +31,13 @@ void dyn_variables::allocate_electronic_vars(){
 
     ampl_dia = new CMATRIX(ndia, ntraj);
     ampl_adi = new CMATRIX(nadi, ntraj);
-    insta_proj_adi = vector<CMATRIX*>(ntraj);
+    proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
-      insta_proj_adi[itraj] = new CMATRIX(nadi, nadi);
-      insta_proj_adi[itraj]->load_identity();
+      proj_adi[itraj] = new CMATRIX(nadi, nadi);
+      proj_adi[itraj]->load_identity();
       dm_dia[itraj] = new CMATRIX(ndia, ndia);
       dm_adi[itraj] = new CMATRIX(nadi, nadi);
     }
@@ -154,7 +154,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *ampl_dia = *x.ampl_dia;
     *ampl_adi = *x.ampl_adi;
     for(itraj=0; itraj<ntraj; itraj++){
-      *insta_proj_adi[itraj] = *x.insta_proj_adi[itraj];
+      *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
       *dm_adi[itraj] = *x.dm_adi[itraj];
     }
@@ -206,11 +206,11 @@ dyn_variables::~dyn_variables(){
 
   if(electronic_vars_status==1){ 
     for(int itraj=0; itraj<ntraj; itraj++){
-      delete insta_proj_adi[itraj];
+      delete proj_adi[itraj];
       delete dm_dia[itraj];
       delete dm_adi[itraj];
     }
-    insta_proj_adi.clear();
+    proj_adi.clear();
     dm_dia.clear();
     dm_adi.clear();
     
