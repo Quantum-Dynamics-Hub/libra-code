@@ -192,7 +192,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T){
 /**
   \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
 
@@ -229,7 +229,13 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
 
   CMATRIX res(nnucl,1);
 
-  CMATRIX* tmp; tmp = new CMATRIX(nadi, nadi);
+  CMATRIX tmp(nadi, nadi);
+
+  CMATRIX iT(nadi, nadi);
+  FullPivLU_inverse(T, iT);
+  
+  CMATRIX C(nadi, 1);
+  C = iT * ampl_adi;  //
 
 
   for(int n=0;n<nnucl;n++){
@@ -241,22 +247,22 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
 
-    *tmp = (*dc1_adi[n]).H() * (*ham_adi);
-    *tmp = (*tmp + (*tmp).H() );
+    tmp = ( iT * (*dc1_adi[n]) * T ).H() *  iT * (*ham_adi) * T;
+    tmp = (tmp + tmp.H());
 
-    res.M[n] = -( ampl_adi.H() * (*d1ham_adi[n] - *tmp ) * ampl_adi ).M[0];
+    res.M[n] = -( C.H() * (  iT*(*d1ham_adi[n])*T - tmp ) * C ).M[0];
 
   }// for n
 
   res /= norm; 
-  delete tmp;
+  //delete tmp;
 
   return res;
 }
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<CMATRIX*>& T, int lvl){
 /**
   \brief Computes the Ehrenfest forces in the adiabatic basis
 
@@ -309,10 +315,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
     pop_submatrix(ampl_adi, ampl_tmp, stenc_ampl, stenc_col);
 
     if(lvl==0){
-        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp);
+        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp, *T[i]);
     }
     if(lvl==1){
-        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp);
+        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp, *T[i]);
     }
 
     push_submatrix(F, frc_tmp, stenc_frc, stenc_col);

@@ -489,6 +489,8 @@ public:
   CMATRIX forces_adi(vector<int>& act_states);   // -dH_adi/dR in the adiabatic basis for several trajectories
   CMATRIX forces_dia(vector<int>& act_states);   // -dH_dia/dR in the diabatic basis for several trajectories
 
+  CMATRIX all_forces_adi(vector<int>& id_);
+
   
 /*
   These variables are poorly-defined and unnecessary, so we are going to deprecate them, AVA 9/15/2022
@@ -540,8 +542,8 @@ public:
   CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia);               ///< Ehrenfest forces in diabatic basis
   CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl);           ///< Ehrenfest forces in diabatic basis
 //  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  ///< Ehrenfest forces in diabatic basis
-  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);               ///< Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);           ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T);    ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<CMATRIX*>& T, int lvl);   ///< Ehrenfest forces in adiabatic basis
 //  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  ///< Ehrenfest forces in adiabatic basis
 
 

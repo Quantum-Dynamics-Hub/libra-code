@@ -203,7 +203,9 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
         int ist = effective_states[itraj];
-        res[itraj] = ham.get_ham_adi(id).get(ist, ist).real();   
+
+        CMATRIX& T = *dyn_vars.proj_adi[itraj];
+        res[itraj] = (T.H() * ham.get_ham_adi(id) * T).get(ist, ist).real();   
       }
     }
 
@@ -246,11 +248,17 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
     Compute the force depending on the method used
   */
 
+  //cout<<"aux_get_forces \n";
+
   int ndof = ham.nnucl;
   int nst = ham.nadi;
   int ntraj = dyn_vars.ntraj;
 
   MATRIX F(ndof, ntraj);
+  CMATRIX f_all(nst, ndof);
+  CMATRIX f_diag(nst, nst);
+  CMATRIX f(ndof, 1);
+  vector<int> id(2, 0); 
 
   if(prms.force_method==0){  // No forces
 
@@ -261,10 +269,9 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
   else if(prms.force_method==1){   // State-specific forces
 
     // TSH or adiabatic (including excited states)
-    // state-specific forces
-
+    // state-specific forces   
     vector<int> effective_states(dyn_vars.act_states);
-
+  
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
     }
@@ -272,7 +279,25 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
     // Diabatic 
     if(prms.rep_force==0){  F = ham.forces_dia(effective_states).real();   }
     // Adiabatic 
-    else if(prms.rep_force==1){  F = ham.forces_adi(effective_states).real();  }
+    else if(prms.rep_force==1){  
+      //F = ham.forces_adi(effective_states).real(); - older approach, without reordering
+      for(int traj=0; traj<ntraj; traj++){
+
+        id[0] = 0; id[1] = traj;
+        f_all = ham.all_forces_adi( id ); // forces on all adiabatic states of traj `traj`
+        CMATRIX& T = *dyn_vars.proj_adi[traj];
+
+        for(int idof=0; idof<ndof; idof++){  
+          for(int ist=0; ist<nst; ist++){  f_diag.set(ist, ist, f_all.get(ist, idof) ); }
+          f_diag =  T.H() * f_diag * T;
+          F.set(idof, traj, f_diag.get( effective_states[traj],  effective_states[traj] ).real() );  
+        }
+
+
+      } // for traj
+
+
+    }// rep_force == 1
 
   }// TSH && adiabatic
 
@@ -281,7 +306,15 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
     if(prms.rep_force==0){  F = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();   }
 
     // Adiabatic 
-    else if(prms.rep_force==1){ F = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1).real(); }
+    //cout<<"Ampl = \n";
+    //dyn_vars.ampl_adi->show_matrix();
+    else if(prms.rep_force==1){ F = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, dyn_vars.proj_adi, 1).real(); }
+
+    //cout<<"Ampl = "<<dyn_vars.ampl_adi<<endl;
+    
+    //dyn_vars.ampl_adi->show_matrix();
+
+    //cout<<"Ehrenfest force \n"; F.show_matrix();
   
   }// Ehrenfest
 

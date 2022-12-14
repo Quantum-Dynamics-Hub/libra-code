@@ -28,7 +28,8 @@ namespace libdyn{
 namespace bp = boost::python;
 
 
-void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_var, 
+                                  nHamiltonian& ham, nHamiltonian& ham_prev,
                                   bp::object py_funct, bp::object model_params, int update_type){
 /**
   This is a new function to replace all other "update_Hamiltonian functions"
@@ -66,6 +67,9 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
      - 1: update according to changed NACs and energies
      
 */ 
+
+  int nadi = ham.nadi;
+  int ntraj = ham.children.size();
 
   MATRIX& q = *dyn_var.q;
   MATRIX& p = *dyn_var.p;
@@ -111,6 +115,21 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
       cout<<"ERROR in update_Hamiltonian_q_ethd: The entanglement option = "<<prms.entanglement_opt<<" is not avaialable\n";
       exit(0);
     }
+
+    //============================== Time-overlaps ======================
+    /// Don't update time-overlaps
+    if(prms.time_overlap_method==0){  ;; }  // maybe it is already pre-computed and stored
+
+    /// Compute the time-overlap directly, using previous MO vectors
+    else if(prms.time_overlap_method==1){   // Explicitly compute it:
+
+      CMATRIX st(nadi, nadi);
+      for(int traj=0; traj<ntraj; traj++){
+        st = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
+        ham.children[traj]->set_time_overlap_adi_by_val(st);
+      }
+    }// 1 
+
   }// update_type == 0
 
 
@@ -145,20 +164,20 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 
       int isNBRA = prms.isNBRA;
       double dt = prms.dt;
-      int nst = ham.nadi;
-      int ntraj = ham.children.size();
-      CMATRIX st(nst,nst);
-      MATRIX st_re(nst, nst);
-      MATRIX st_im(nst, nst);
+      //int nst = ham.nadi;
+      //int ntraj = ham.children.size();
+      CMATRIX st(nadi,nadi);
+      MATRIX st_re(nadi, nadi);
+      MATRIX st_im(nadi, nadi);
  
-      CMATRIX nac(nst, nst);
-      MATRIX nac_re(nst, nst);
-      MATRIX nac_im(nst, nst);
+      CMATRIX nac(nadi, nadi);
+      MATRIX nac_re(nadi, nadi);
+      MATRIX nac_im(nadi, nadi);
 
       for(int traj=0; traj<ntraj; traj++){
         st = ham.children[traj]->get_time_overlap_adi();
 
-        if(prms.nac_algo==0){        nac = 0.5*dt*(st-st.H());    }
+        if(prms.nac_algo==0){        nac = (0.5/dt)*(st-st.H());    }
         else if(prms.nac_algo==1){   
           st_re = st.real();
           nac_re = nac_npi(st_re, dt); 
@@ -190,13 +209,14 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 }
 
 
-void update_Hamiltonian_variables(bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+void update_Hamiltonian_variables(bp::dict prms, dyn_variables& dyn_var, 
+                                  nHamiltonian& ham, nHamiltonian& ham_prev,
                                   bp::object py_funct, bp::object model_params, int update_type){
 
   dyn_control_params _prms;
   _prms.set_parameters(prms);
 
-  update_Hamiltonian_variables(_prms, dyn_var, ham, py_funct, model_params, update_type);
+  update_Hamiltonian_variables(_prms, dyn_var, ham, ham_prev, py_funct, model_params, update_type);
 
 
 }

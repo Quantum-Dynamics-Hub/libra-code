@@ -757,10 +757,11 @@ void export_dyn_ham(){
 
 
   void (*expt_update_Hamiltonian_variables_v1)
-  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev,
    bp::object py_funct, bp::object model_params, int update_type) = &update_Hamiltonian_variables;
+
   void (*expt_update_Hamiltonian_variables_v2)
-  (bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, 
+  (bp::dict prms, dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev,
    bp::object py_funct, bp::object model_params, int update_type) = &update_Hamiltonian_variables;
   
   def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v1);

@@ -96,6 +96,42 @@ CMATRIX nHamiltonian::forces_dia(vector<int>& act_states){
 
 
 
+CMATRIX nHamiltonian::all_forces_adi(vector<int>& id_){
+/**
+  These are forces on all states for a Hamiltonian of given level, given by its id
+*/
+
+  if(id_.size()==1){
+    if(id_[0]==id){   
+      // This is where the content of the function is
+      CMATRIX res(nadi, nnucl); 
+
+      for(int n=0;n<nnucl;n++){
+        if(d1ham_adi_mem_status[n]==0){ 
+          cout<<"Error in all_forces_adi(): the derivatives of the Hamiltonian matrix in the \
+                adiabatic basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is \
+                needed for the calculations \n"; exit(0); 
+        }
+
+        for(int ist=0; ist<nadi; ist++){
+          res.set(ist, n,  -d1ham_adi[n]->get(ist, ist) ); 
+        }
+
+      }// for n
+
+      return res; 
+
+    }// id_[0]==id
+    else{ cout<<"ERROR in all_forces_adi: No Hamiltonian matching the requested id\n"; exit(0); }
+  }
+  else{
+    vector<int> next(id_.begin()+1,id_.end());
+    return children[id_[1]]->all_forces_adi(next);
+  }
+
+}
+
+
 
 }// namespace libnhamiltonian
 }// liblibra

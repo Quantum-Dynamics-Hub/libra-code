@@ -120,7 +120,7 @@ void dyn_variables::update_amplitudes(dyn_control_params& dyn_params, bp::object
 
     //# Compute the Hamiltonian transformation
     //update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
-    update_Hamiltonian_variables(dyn_params, *this, ham, compute_model, model_params, 0);
+    update_Hamiltonian_variables(dyn_params, *this, ham, ham, compute_model, model_params, 0);
 
 
     // The diabatic rep is the major, so we update the adiabatic amplitudes
@@ -217,21 +217,20 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
       CMATRIX iT(nadi, nadi);
       FullPivLU_inverse(T, iT);
 
+      //ca = T * ampl_adi->col(traj);      
+      //ca = T.H() * ampl_adi->col(traj);
       ca = ampl_adi->col(traj);
-      *dm_adi[traj] = ca * ca.H();
+      *dm_adi[traj] = ca * ca.H();      
       
-     
- 
+      su = S * U;
       //su = S * U;
-      //*dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); 
+      *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); 
 
+      //*dm_adi[traj] = T.H() * (*dm_adi[traj]) * T;
 
-      //*dm_adi[traj] = iT * (*dm_adi[traj]) * iT.H();
-
-      su = S * U * T;
-      *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); //- this actually works
-
-      *dm_adi[traj] = iT * (*dm_adi[traj]) * iT.H();
+      //su = S * U * T;
+      //*dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); //- this actually works
+      //*dm_adi[traj] = T * (*dm_adi[traj]) * T.H();
        
     }
     /// Diabatic DM representation
@@ -270,7 +269,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, bp::ob
   ham.init_all(2,1);
 
   //# Compute the Hamiltonian transformation
-  update_Hamiltonian_variables(dyn_params, *this, ham, compute_model, model_params, 0);
+  update_Hamiltonian_variables(dyn_params, *this, ham, ham, compute_model, model_params, 0);
   //update_Hamiltonian_q(dyn_params, *q, ham, compute_model, model_params);
   update_density_matrix(dyn_params, ham, lvl);
 
@@ -290,7 +289,7 @@ void dyn_variables::update_density_matrix(bp::dict dyn_params, bp::object comput
 
   //# Compute the Hamiltonian transformation
   //update_Hamiltonian_q(_prms, *q, ham, compute_model, model_params);
-  update_Hamiltonian_variables(_prms, *this, ham, compute_model, model_params, 0);
+  update_Hamiltonian_variables(_prms, *this, ham, ham, compute_model, model_params, 0);
 
   update_density_matrix(_prms, ham, lvl);
 

@@ -309,7 +309,8 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamilt
   vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
 
   vector<int> act_states(ntraj, 0);
-  F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+  /// AVA - commented for now, 12/7/2022
+  ///F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
 
   for(int i=0;i<nstates; i++){

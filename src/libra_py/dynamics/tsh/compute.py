@@ -611,16 +611,16 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     model_params.update({"timestep":icond})    
     #update_Hamiltonian_q(dyn_params, dyn_var, ham, compute_model, model_params)
     #update_Hamiltonian_p(dyn_params, dyn_var, ham)  
-    update_Hamiltonian_variables( dyn_params, dyn_var, ham, compute_model, model_params, 0)
-    update_Hamiltonian_variables( dyn_params, dyn_var, ham, compute_model, model_params, 1)
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 0)
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
 
 
-    U = []
-    if is_nbra == 1:
-        U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
-    else:
-        for tr in range(ntraj):
-            U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
+    #U = []
+    #if is_nbra == 1:
+    #    U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
+    #else:
+    #    for tr in range(ntraj):
+    #        U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
 
     therm = ThermostatList();
     if ensemble==1:
@@ -663,7 +663,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
         """
 
-        save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham, U)
+        save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
 
         #============ Propagate ===========        
@@ -781,8 +781,8 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     dyn_params1 = dict(dyn_params)        
     dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
     #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
-    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, compute_model, model_params1, 0)
-    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, compute_model, model_params1, 1)
+    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
 
 
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
