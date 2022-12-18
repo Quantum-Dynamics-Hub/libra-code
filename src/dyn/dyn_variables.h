@@ -192,7 +192,13 @@ class dyn_variables{
     Options:
      MATRIX(ndof, ntraj)
   */
-  MATRIX* p; 
+  MATRIX* p;
+
+
+  /**
+    Nuclear forces (active)
+  */
+  MATRIX* f;
 
 
 
@@ -271,6 +277,7 @@ class dyn_variables{
   MATRIX get_imass(){ return *iM; }
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
+  MATRIX get_forces(){ return *f; }
   
 
 
@@ -302,6 +309,7 @@ class dyn_variables{
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
 
+
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop();
@@ -320,6 +328,9 @@ class dyn_variables{
 
 };
 
+
+vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T);
+CMATRIX orthogonalized_T(CMATRIX& T);
 
 
 } // libdyn

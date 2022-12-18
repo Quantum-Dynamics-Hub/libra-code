@@ -64,8 +64,10 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 vector<double> potential_energies(bp::dict prms, dyn_variables& dyn_vars, nHamiltonian& ham);
 
 
-MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars,  nHamiltonian& ham);
-MATRIX aux_get_forces(bp::dict prms, dyn_variables& dynvars, nHamiltonian& ham);
+//MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dynvars,  nHamiltonian& ham);
+//MATRIX aux_get_forces(bp::dict prms, dyn_variables& dynvars, nHamiltonian& ham);
+void update_forces(dyn_control_params& prms, dyn_variables& dynvars,  nHamiltonian& ham);
+void update_forces(bp::dict prms, dyn_variables& dynvars, nHamiltonian& ham);
 
 /* old way
 MATRIX aux_get_forces(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, vector<int>& act_states, 

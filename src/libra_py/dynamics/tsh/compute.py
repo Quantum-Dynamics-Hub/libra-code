@@ -538,7 +538,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
                                    "se_pop_adi", "se_pop_dia", "sh_pop_adi",
-                                   "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
+                                   "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "f", "Cadi", "Cdia", 
                                    "hvib_adi", "hvib_dia", "St", "basis_transform", "projector" ] 
                            } )
 

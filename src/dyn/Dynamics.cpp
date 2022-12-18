@@ -871,7 +871,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
  
     else if(method==0 || method==100){
 
-      cout<<"============= Start integration =============\n";
+//      cout<<"============= Start integration =============\n";
       // A new approach
       CMATRIX Hvib(ham->nadi, ham->nadi);
       CMATRIX A(ham->nadi, ham->nadi);
@@ -882,20 +882,38 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
       CMATRIX P(ham->nadi, ham->nadi);
       CMATRIX iP(ham->nadi, ham->nadi);
       CMATRIX TP(ham->nadi, ham->nadi);
+      proj[itraj]->load_identity();
+
       CMATRIX T(ham->nadi, ham->nadi);  T = *proj[itraj];
       CMATRIX T_new(ham->nadi, ham->nadi);
       P = U_old.H() * U;
+
+      P = orthogonalized_T( P );
+
       FullPivLU_inverse(P, iP);
 
-      cout<<"T(t) = \n"; T.show_matrix();
+//      cout<<"P(t) = \n"; P.show_matrix();
+//      cout<<"P^+ P = \n"; (P.H() * P).show_matrix();
+
 
       TP = T.H() * P;
       FullPivLU_inverse(TP, T_new);
 
-      *proj[itraj] = T_new; // *proj[itraj] * P; // load_identity();
-      cout<<"T(t+dt) = \n"; T_new.show_matrix();
+//      cout<<"T_new = \n"; T_new.show_matrix();
 
-    
+/*
+      CMATRIX st2(ham->nadi, ham->nadi); st2 = T_new.H() * T_new;
+      CMATRIX st2_half(ham->nadi, ham->nadi);
+      CMATRIX st2_i_half(ham->nadi, ham->nadi);
+      sqrt_matrix(st2, st2_half, st2_i_half);
+      T_new = T_new * st2_i_half;
+*/
+//      T_new = orthogonalized_T( T_new );
+
+      *proj[itraj] = T_new; // *proj[itraj] * P; // load_identity();
+//      cout<<"T(t+dt) = \n"; T_new.show_matrix();
+
+//      cout<<"In electronic evolution \n"; T_new.show_matrix();
 
       //Hvib = T.H() * ham_prev->get_hvib_adi() * T;
       //Hvib += T_new.H() * ham->get_hvib_adi() * T_new;
@@ -910,11 +928,11 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
       //Hvib = ham_prev->get_ham_adi();
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
-      cout<<"H_prev = \n"; Hvib.show_matrix();
+//      cout<<"H_prev = \n"; Hvib.show_matrix();
 
       Hvib = T_new.H() * ham->get_ham_adi() * T_new;
       //Hvib = ham->get_ham_adi();
-      cout<<"H = \n"; Hvib.show_matrix();
+//      cout<<"H = \n"; Hvib.show_matrix();
 
       B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
@@ -927,17 +945,18 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
 //      C = P.H() * A * iP.H() * B * iP * A * C;
 //      C = B * iP * A * C;
-      cout<<"C(t) = \n"; C.show_matrix();
+//      cout<<"C(t) = \n"; C.show_matrix();
         C = B * iP * A * C;
+//        C = B * A * C;
 //      C = A * C;
 
-      cout<<"C(t+dt) = \n"; C.show_matrix();
+//      cout<<"C(t+dt) = \n"; C.show_matrix();
 //      C = T_new * 
 
       // 
 //      *proj[itraj] = *proj[itraj] * P; // load_identity();
 
-      cout<<"============= End of integration =============\n";
+//      cout<<"============= End of integration =============\n";
 
     }
     else if(method==1 || method==101){
@@ -1031,6 +1050,37 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, vector<
 }
 */
 
+/*
+vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
+
+//   act_states[itraj] - index of the active adiabatic state for the trajectory `itraj`
+//                       in terms of the time-ordered states
+
+
+  int ntraj = act_state.size();
+  int nst = T[0]->n_cols;
+  vector<int> res( act_states);
+  
+  CMATRIX t2(nst,nst);
+  CMATRIX t2_half(nst, nst);
+  CMATRIX t2_i_half(nst, nst);
+  CMATRIX coeff(nst, 1);
+  complex<double> max_val;  
+ 
+  for(int itraj=0; itraj<ntraj; itraj++){
+    CMATRIX& t = *T[itraj]; 
+    t2 = t.H() * t; 
+    sqrt_matrix(t2, t2_half, t2_i_half);
+    t2 = t * t2_i_half; 
+    coeff.set(act_state[itraj], 0, complex<double>(1.0, 0.0));
+    coeff = t2 * coeff;
+    coeff.max_col_elt(0, max_val, res[itraj]);
+  }// for itraj
+
+  return res;
+}
+*/
+
 void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
               nHamiltonian& ham, nHamiltonian& ham_aux, bp::object py_funct, bp::dict params,  Random& rnd,
               vector<Thermostat>& therm){
@@ -1091,10 +1141,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; } //*dyn_var.ampl_adi; }
 
 //  cout<<"Cadi = \n"; Cadi.show_matrix(); 
-  cout<<"dyn_var_adi = \n"; dyn_var.ampl_adi->show_matrix();
+//  cout<<"dyn_var_adi = \n"; dyn_var.ampl_adi->show_matrix();
 //  cout<<"Cdia = \n"; Cdia.show_matrix();
-  cout<<"dyn_var_dia = \n"; dyn_var.ampl_dia->show_matrix();
-  cout<<"Cact = \n"; Cact.show_matrix();
+//  cout<<"dyn_var_dia = \n"; dyn_var.ampl_dia->show_matrix();
+//  cout<<"Cact = \n"; Cact.show_matrix();
 
   vector<int>& act_states = dyn_var.act_states;
   MATRIX& q = *dyn_var.q;
@@ -1134,7 +1184,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   vector<int> t2(1,0);
   vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
 //  CMATRIX c_tmp(nst, 1);
-  MATRIX F_eff(nst, ntraj);
+  //MATRIX F_eff(ndof, ntraj);
 
 
   //============ Sanity checks ==================
@@ -1159,34 +1209,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }
   }
 
-  //============ Update the Hamiltonian object =============
-  // In case, we may need phase correction & state reordering
-  // prepare the temporary files
-//  if(prms.rep_tdse==1){      
-/*
-    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
-
-      // On-the-fly calculations, from the wavefunctions
-      if(prms.time_overlap_method==0){
-        Uprev = vector<CMATRIX>(ntraj, CMATRIX(nst, nst));
-
-        for(traj=0; traj<ntraj; traj++){
-          Uprev[traj] = ham.children[traj]->get_basis_transform();  
-        }
-      }      
-    }// do_phase_correction || state_tracking_algo > 0
-*/
-//  }// rep == 1
 
 
 
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   // Adding the prms.isNBRA to the propagate electronic
-
-//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
-//  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
-
 
   //============== Nuclear propagation ===================
   // NVT dynamics
@@ -1199,8 +1227,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// idof 
   }
 
-  F_eff = aux_get_forces(prms, dyn_var, ham); 
-  p = p + F_eff * 0.5 * prms.dt;
+  //F_eff = aux_get_forces(prms, dyn_var, ham); 
+  //p = p + F_eff * 0.5 * prms.dt;
+  *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -1233,77 +1262,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 //  cout<<"Exit here\n"; exit(0);
 //  for(i=0; i<num_el; i++){   propagate_electronic(dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
   for(i=0; i<num_el; i++){   
-//    propagate_electronic(dt_el, Cact, ham.children, ham_aux.children, prms.rep_tdse, prms.electronic_integrator);  
-      cout<<"Before prop = \n"; Cact.show_matrix();
-//      if(prms.rep_tdse==0){
         propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms, rnd);
-//      }
-//      else if(prms.rep_tdse==1){
-//        propagate_electronic(dt_el, Cadi, dyn_var.proj_adi, ham, ham_aux, prms, rnd);
-//      }
-      cout<<"After prop = \n"; Cact.show_matrix();
   }
-  
-//  dyn_var.proj_adi[0]->show_matrix();
-//  ham.children[0]->basis_transform->show_matrix();
 
-//  Cdia.show_matrix();
+  //update_forces(prms, dyn_var, ham);
 
-//  if(prms.rep_tdse==0){   ham.ampl_dia2adi(Cdia, Cadi, 0, 1);  }
-
-  // The adiabatic rep is the major, so we update the diabatic amplitudes
-  //else if(dyn_params.rep_tdse==1){   ham.ampl_adi2dia(ampl_dia, ampl_adi, 0, 1);  }
-
-
-
-  // Apply phase correction and state reordering as needed
-//  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
-
-    /// Compute the time-overlap directly, using previous MO vectors
-//    if(prms.time_overlap_method==0){  St = compute_St(ham, ham_aux, prms.isNBRA);   }
-    /// Read the existing time-overlap
-//    else if(prms.time_overlap_method==1){    St = compute_St(ham, prms.isNBRA);   }
-
-//    Eadi = get_Eadi(ham);           // these are raw properties
-//    perms = compute_permutations(prms, Eadi, St, rnd);
-//    insta_proj = compute_projectors(prms, St, perms);
-   
-//    if(prms.rep_tdse==1){
-
-      /// Adiabatic Amplitudes
-//      for(traj=0; traj<ntraj; traj++){
-//        *dyn_var.insta_proj_adi[traj] = insta_proj[traj] * *dyn_var.insta_proj_adi[traj];
-        //cout<<"Before switch\n";
-        //Cadi.show_matrix();
-//        t2[0] = traj;
-//        pop_submatrix(Cadi, c_tmp, t3, t2);
-//        c_tmp = insta_proj[traj] * c_tmp;
-//        push_submatrix(Cadi, c_tmp, t3, t2);
-        //cout<<"After switch\n";
-        //Cadi.show_matrix();
-        
-//      }
-    
-
-    /// Adiabatic states are permuted
-//    act_states = permute_states(perms, act_states);
-//    }
-//  }
-
-
-//  if(prms.rep_tdse==0 || prms.rep_tdse==1){   ham.ampl_adi2dia(Cdia, Cadi, 0, 1);  }
+  //cout<<"Before: "<<dyn_var.act_states[0]<<endl;
+  //update_active_states(dyn_var.act_states, dyn_var.proj_adi);
+  //cout<<"After: "<<dyn_var.act_states[0]<<endl;
 
   dyn_var.update_density_matrix(prms, ham, 1); // This one is okay
-   
-
-   
-  //cout<<"Ampl = "<<Cact<<"  "<<dyn_var.ampl_adi<<" "<<dyn_var.ampl_dia<<endl;
-  //Cact.show_matrix();
-  //dyn_var.ampl_adi->show_matrix();
-
-  // In case, we select to compute scalar NACs from time-overlaps
-//  update_nacs(prms, ham);
-//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
+  dyn_var.act_states = update_active_states(dyn_var.act_states, dyn_var.proj_adi); 
+  update_forces(prms, dyn_var, ham);
 
 
   // NVT dynamics
@@ -1317,11 +1287,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   }
 
-  F_eff = aux_get_forces(prms, dyn_var, ham); 
-  p = p + F_eff * 0.5 * prms.dt;
+//  F_eff = aux_get_forces(prms, dyn_var, ham); 
+//  p = p + F_eff * 0.5 * prms.dt;
+  *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
 
-  //cout<<"In dyn\n";
-  //F_eff.show_matrix();
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1338,17 +1307,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// idof 
   }
 
+
+  update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
+
+
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
-//  update_Hamiltonian_variables(prms, dyn_var, ham, py_funct, params, 1);
-//  for(i=0; i<num_el; i++){   propagate_electronic(0.5*dt_el, Cact, ham.children, prms.rep_tdse, prms.isNBRA);  }
-
-
-
-//  CMATRIX Hvib(ham.children[0]->nadi, ham.children[0]->nadi);  
-//  Hvib = ham.children[0]->get_hvib_adi();
-
-
 // TEMPORARY COMMENT
   //dyn_var.update_amplitudes(prms, ham);  // Don't do this - then we are fine with the diabatic picture
 
@@ -1481,11 +1445,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; } //*dyn_var.ampl_dia; }
   else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; } //*dyn_var.ampl_adi; }
 
-//  if(prms.rep_tdse==1){      
-//    if(prms.do_phase_correction || prms.state_tracking_algo > 0){
-//      if(prms.time_overlap_method==0){  Uprev.clear();  }
-//    }
-//  }
 
 
 }

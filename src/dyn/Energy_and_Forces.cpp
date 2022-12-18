@@ -185,10 +185,13 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     // state-specific forces
 
     vector<int> effective_states(dyn_vars.act_states);
+    //vector<int> eff_states(dyn_vars.act_states);
 
     if(prms.enforce_state_following==1){ 
       for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
     }
+
+    //eff_states = update_active_states(effective_states, dyn_vars.proj_adi);
 
     // Diabatic 
     if(prms.rep_force==0){  
@@ -204,8 +207,20 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
         id[1] = itraj;
         int ist = effective_states[itraj];
 
-        CMATRIX& T = *dyn_vars.proj_adi[itraj];
+        //CMATRIX& T = *dyn_vars.proj_adi[itraj];
+        int nst = dyn_vars.nadi;
+/*
+        CMATRIX T(nst, nst);
+        T = orthogonalized_T( *dyn_vars.proj_adi[itraj] );
         res[itraj] = (T.H() * ham.get_ham_adi(id) * T).get(ist, ist).real();   
+*/
+        res[itraj] = ham.get_ham_adi(id).get(ist,ist).real();
+
+//        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
+//          cout<<"E_pot = "<<ham.get_ham_adi(id).get(ist, ist).real()<<"  "<<res[itraj]<<endl;
+//          cout<<" states: active = "<<effective_states[0]<<"  corrected eff states = "<<eff_states[0]<<endl;
+//        }
+
       }
     }
 
@@ -243,7 +258,8 @@ vector<double> potential_energies(bp::dict params, dyn_variables& dyn_vars, nHam
 
 }
 
-MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
+//MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
+void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltonian& ham){
   /**
     Compute the force depending on the method used
   */
@@ -254,11 +270,12 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
   int nst = ham.nadi;
   int ntraj = dyn_vars.ntraj;
 
-  MATRIX F(ndof, ntraj);
+  //MATRIX F(ndof, ntraj);
   CMATRIX f_all(nst, ndof);
   CMATRIX f_diag(nst, nst);
   CMATRIX f(ndof, 1);
   vector<int> id(2, 0); 
+  
 
   if(prms.force_method==0){  // No forces
 
@@ -271,44 +288,70 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
     // TSH or adiabatic (including excited states)
     // state-specific forces   
     vector<int> effective_states(dyn_vars.act_states);
+    vector<int> eff_states(dyn_vars.act_states);
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
     }
 
+    //eff_states = update_active_states(effective_states, dyn_vars.proj_adi);
+
     // Diabatic 
-    if(prms.rep_force==0){  F = ham.forces_dia(effective_states).real();   }
+    if(prms.rep_force==0){  *dyn_vars.f = ham.forces_dia(effective_states).real();   }
+
     // Adiabatic 
     else if(prms.rep_force==1){  
-      //F = ham.forces_adi(effective_states).real(); - older approach, without reordering
+      *dyn_vars.f = ham.forces_adi(effective_states).real(); //- older approach, without reordering
+
+/*
+        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
+        cout<<"q = \n"; dyn_vars.q->show_matrix();  dyn_vars.proj_adi[0]->show_matrix(); 
+        cout<<"f = \n"; dyn_vars.f->show_matrix();
+        cout<<" states: active = "<<effective_states[0]<<"  corrected eff states = "<<eff_states[0]<<endl;
+        //cout<<"==\n";
+        }
+
+*/
+/*
       for(int traj=0; traj<ntraj; traj++){
 
         id[0] = 0; id[1] = traj;
         f_all = ham.all_forces_adi( id ); // forces on all adiabatic states of traj `traj`
-        CMATRIX& T = *dyn_vars.proj_adi[traj];
+        //CMATRIX& T = *dyn_vars.proj_adi[traj];
+        
+        CMATRIX T(nst, nst);       
+        T = orthogonalized_T( *dyn_vars.proj_adi[traj] );
+
+        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
+        cout<<"q = \n"; dyn_vars.q->show_matrix();  dyn_vars.proj_adi[traj]->show_matrix(); T.show_matrix();
+        cout<<"initial f = \n"; dyn_vars.f->show_matrix();
+        //cout<<"==\n";
+        }
 
         for(int idof=0; idof<ndof; idof++){  
           for(int ist=0; ist<nst; ist++){  f_diag.set(ist, ist, f_all.get(ist, idof) ); }
           f_diag =  T.H() * f_diag * T;
-          F.set(idof, traj, f_diag.get( effective_states[traj],  effective_states[traj] ).real() );  
+          dyn_vars.f->set(idof, traj, f_diag.get( effective_states[traj],  effective_states[traj] ).real() );  
         }
 
+        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
+          cout<<"final f = \n"; dyn_vars.f->show_matrix();
+        }
 
       } // for traj
-
+*/
 
     }// rep_force == 1
-
   }// TSH && adiabatic
 
   else if(prms.force_method==2){  // Ehrenfest forces
     // Diabatic 
-    if(prms.rep_force==0){  F = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();   }
+    if(prms.rep_force==0){  *dyn_vars.f = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();   }
 
     // Adiabatic 
     //cout<<"Ampl = \n";
     //dyn_vars.ampl_adi->show_matrix();
-    else if(prms.rep_force==1){ F = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, dyn_vars.proj_adi, 1).real(); }
+    else if(prms.rep_force==1){ *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, dyn_vars.proj_adi, 1).real(); }
 
     //cout<<"Ampl = "<<dyn_vars.ampl_adi<<endl;
     
@@ -319,15 +362,17 @@ MATRIX aux_get_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamilt
   }// Ehrenfest
 
 
-  return F;
+//  return F;
 }
 
-MATRIX aux_get_forces(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
+//MATRIX aux_get_forces(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
+void update_forces(bp::dict params, dyn_variables& dyn_vars, nHamiltonian& ham){
 
   dyn_control_params prms;
   prms.set_parameters(params);
 
-  return aux_get_forces(prms, dyn_vars, ham);
+  update_forces(prms, dyn_vars, ham);
+//  return aux_get_forces(prms, dyn_vars, ham);
   
 }
 

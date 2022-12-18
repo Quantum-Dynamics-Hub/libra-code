@@ -339,6 +339,7 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
     if(basis_transform_mem_status==0){ cout<<"Error in compute_adiabatic(): the basis_transform (eigenvector) matrix is\
     not allocated but it is used to collect the results of the calculations\n"; exit(0); }
 
+    eigen_algo = 1;
 
     if(nadi==1 && ndia==1){
       *ham_adi = *ham_dia;
@@ -346,10 +347,10 @@ void nHamiltonian::compute_adiabatic(int der_lvl, int lvl){
     }
     else{   
       if(eigen_algo==0){
-          solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 0);  
+          solve_eigen(ham_dia, ovlp_dia, ham_adi, basis_transform, 1);  
       }
       else if(eigen_algo==1){
-          solve_eigen_nosort(ham_dia, ham_adi, basis_transform, 0);       ///< references
+          solve_eigen_nosort(ham_dia, ham_adi, basis_transform, 1);       ///< references
       }
     }
 

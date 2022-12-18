@@ -56,6 +56,7 @@ void dyn_variables::allocate_nuclear_vars(){
     iM = new MATRIX(ndof, 1);
     q = new MATRIX(ndof, ntraj);
     p = new MATRIX(ndof, ntraj);
+    f = new MATRIX(ndof, ntraj);
 
     nuclear_vars_status = 1;
   }
@@ -170,6 +171,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *iM = *x.iM;
     *q = *x.q;
     *p = *x.p;
+    *f = *x.f;
   }
 
   // AFSSH vars - only if initialized
@@ -203,6 +205,14 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
 dyn_variables::~dyn_variables(){  
   //cout<<"dyn_variables destructor!!!\n";
+
+  if(nuclear_vars_status==1){
+    delete iM;
+    delete q;
+    delete p;
+    delete f;
+    nuclear_vars_status = 0;
+  }
 
   if(electronic_vars_status==1){ 
     for(int itraj=0; itraj<ntraj; itraj++){

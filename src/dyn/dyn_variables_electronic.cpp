@@ -737,6 +737,53 @@ void dyn_variables::init_electronic_dyn_var(bp::dict _params, Random& rnd){
 }
 
 
+vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
+/*
+   act_states[itraj] - index of the active adiabatic state for the trajectory `itraj`
+                       in terms of the time-ordered states
+*/
+
+  int ntraj = act_states.size();
+  int nst = T[0]->n_cols;
+  vector<int> res( act_states);
+
+  CMATRIX t2(nst,nst);
+  CMATRIX t2_half(nst, nst);
+  CMATRIX t2_i_half(nst, nst);
+  CMATRIX coeff(nst, 1);
+  complex<double> max_val;
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    CMATRIX& t = *T[itraj];
+    t2 = t.H() * t;
+    sqrt_matrix(t2, t2_half, t2_i_half);
+    t2 = t * t2_i_half;
+    coeff.set(act_states[itraj], 0, complex<double>(1.0, 0.0));
+    coeff = t2 * coeff;
+    coeff.max_col_elt(0, max_val, res[itraj]);
+  }// for itraj
+
+  return res;
+}
+
+CMATRIX orthogonalized_T(CMATRIX& T){
+/*
+*/
+
+  int nst = T.n_cols;
+
+  CMATRIX t2(nst,nst);
+  CMATRIX t2_half(nst, nst);
+  CMATRIX t2_i_half(nst, nst);
+    
+  t2 = T.H() * T;
+  sqrt_matrix(t2, t2_half, t2_i_half);
+  t2 = T * t2_i_half;
+
+  return T;
+
+}
+
 CMATRIX dyn_variables::compute_average_dm(int rep){
 
   int sz;
@@ -779,9 +826,11 @@ vector<double> dyn_variables::compute_average_sh_pop(){
   int sz = nadi; 
 
   vector<double> res(sz, 0.0);
+  vector<int> effective_states( update_active_states(act_states, proj_adi) );
 
   for(int traj=0; traj<ntraj; traj++){
-    int i = act_states[traj];
+
+    int i = effective_states[traj];
     res[i] += 1.0;
   }
   

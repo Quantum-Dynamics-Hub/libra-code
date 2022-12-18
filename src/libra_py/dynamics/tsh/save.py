@@ -163,6 +163,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "p" in saver.keywords: # and "p" in saver.np_data.keys():
             saver.add_dataset("p", (_nsteps, _ntraj, _ndof), "R") 
 
+        # Trajectory-resolved active forces
+        if "f" in saver.keywords: # and "f" in saver.np_data.keys():
+            saver.add_dataset("f", (_nsteps, _ntraj, _ndof), "R")
+
         # Trajectory-resolved adiabatic TD-SE amplitudes
         if "Cadi" in saver.keywords: # and "Cadi" in saver.np_data.keys():
             saver.add_dataset("Cadi", (_nsteps, _ntraj, _nadi), "C") 
@@ -504,6 +508,11 @@ def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_ra
     if "p" in saver.keywords and "p" in saver.np_data.keys():
         saver.save_matrix(t, "p", p.T()) 
 
+    # Trajectory-resolved active forces
+    # Format: saver.add_dataset("f", (_nsteps, _ntraj, _dof), "R")
+#    if "f" in saver.keywords and "f" in saver.np_data.keys():
+#        saver.save_matrix(t, "f", f.T())
+
     # Trajectory-resolved adiabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 
     if "Cadi" in saver.keywords and "Cadi" in saver.np_data.keys():
@@ -553,6 +562,12 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "p" in saver.keywords and "p" in saver.np_data.keys():
         p = dyn_var.get_momenta()
         saver.save_matrix(t, "p", p.T()) 
+
+    # Trajectory-resolved active forces
+    # Format: saver.add_dataset("f", (_nsteps, _ntraj, _dof), "R")
+    if "f" in saver.keywords and "f" in saver.np_data.keys():
+        f = dyn_var.get_forces()
+        saver.save_matrix(t, "f", f.T())
 
     # Trajectory-resolved adiabatic TD-SE amplitudes
     # Format: saver.add_dataset("C_adi", (_nsteps, _ntraj, _nadi), "C") 

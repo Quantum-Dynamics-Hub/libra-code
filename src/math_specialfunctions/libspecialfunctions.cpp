@@ -119,6 +119,17 @@ void export_SpecialFunctions_objects(){
   def("deviation", expt_deviation_v1); 
   def("deviation", expt_deviation_v2); 
 
+  MATRIX (*expt_variance_v1)(MATRIX& X, int opt) = &variance;
+  MATRIX (*expt_variance_v2)(CMATRIX& X, int opt) = &variance;
+  def("variance", expt_variance_v1);
+  def("variance", expt_variance_v2);
+
+  MATRIX (*expt_std_dev_v1)(MATRIX& X, int opt) = &std_dev;
+  MATRIX (*expt_std_dev_v2)(CMATRIX& X, int opt) = &std_dev;
+  def("std_dev", expt_std_dev_v1);
+  def("std_dev", expt_std_dev_v2);
+
+
   MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
   MATRIX (*expt_covariance_v2)(MATRIX& X, MATRIX& Y) = &covariance;
   CMATRIX (*expt_covariance_v3)(CMATRIX& X) = &covariance;

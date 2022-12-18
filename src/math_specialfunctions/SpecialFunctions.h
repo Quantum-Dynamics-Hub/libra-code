@@ -129,6 +129,12 @@ CMATRIX mean(CMATRIX& X);
 MATRIX deviation(MATRIX& X);
 CMATRIX deviation(CMATRIX& X);
 
+MATRIX variance(MATRIX& X, int opt);
+MATRIX variance(CMATRIX& X, int opt);
+
+MATRIX std_dev(MATRIX& X, int opt);
+MATRIX std_dev(CMATRIX& X, int opt);
+
 MATRIX covariance(MATRIX& X);
 MATRIX covariance(MATRIX& X, MATRIX& Y);
 CMATRIX covariance(CMATRIX& X);

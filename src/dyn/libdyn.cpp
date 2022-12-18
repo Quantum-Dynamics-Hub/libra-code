@@ -135,6 +135,9 @@ void export_dyn_variables_objects(){
 
   def("transform_amplitudes", expt_transform_amplitudes_v1);
 
+  CMATRIX (*expt_orthogonalized_T_v1)(CMATRIX& T) = &orthogonalized_T;
+  def("orthogonalized_T", expt_orthogonalized_T_v1);
+
 
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
@@ -197,6 +200,7 @@ void export_dyn_variables_objects(){
       .def("get_imass", &dyn_variables::get_imass)
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
+      .def("get_forces", &dyn_variables::get_forces)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -724,7 +728,7 @@ void export_Energy_Forces_objects(){
   def("potential_energies", expt_potential_energies_v2);
 
 
-
+/*
   MATRIX (*expt_aux_get_forces_v1)
   (dyn_control_params& prms, dyn_variables& dynvars, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v1);
@@ -732,6 +736,16 @@ void export_Energy_Forces_objects(){
   MATRIX (*expt_aux_get_forces_v2)
   (bp::dict params, dyn_variables& dynvars, nHamiltonian& ham) = &aux_get_forces;
   def("aux_get_forces", expt_aux_get_forces_v2);
+*/
+  void (*expt_update_forces_v1)
+  (dyn_control_params& prms, dyn_variables& dynvars, nHamiltonian& ham) = &update_forces;
+  def("update_forces", expt_update_forces_v1);
+
+  void (*expt_update_forces_v2)
+  (bp::dict params, dyn_variables& dynvars, nHamiltonian& ham) = &update_forces;
+  def("update_forces", expt_update_forces_v2);
+
+
 
   vector<CMATRIX> (*expt_get_Eadi_v1)(nHamiltonian& ham) = &get_Eadi;
   def("get_Eadi", expt_get_Eadi_v1);

@@ -444,7 +444,7 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
     plt.xticks(fontsize=axes_fontsize[0])
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
-    plt.ylabel('Coordinate, a.u.', fontsize=axes_label_fontsize[1])   
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
 
 
     res = 0
@@ -475,7 +475,76 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
     plt.tight_layout()
 
     return res        
+
+
+def add_forces_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved momenta vs. time
+    This function does not plot it though
+
+    Call it after adding a sub-plot
+    """
+
+    plot_params = common_defaults(plot_params_)
+
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]
+
+    which_trajectories = plot_params["which_trajectories"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+
+
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
         
+    plt.title('Time-dependent Forces, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Force, a.u.', fontsize=axes_label_fontsize[1])
+
+
+    res = 0
+    ntraj, ndof = 0, 0
+
+    if "f/data" in hdf_file.keys():
+        ntraj = hdf_file["f/data"].shape[1]
+        ndofs = hdf_file["f/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():
+        for tr in range(ntraj):
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f/data"][:, tr, dof],
+                                     label="", linewidth=Lw,
+                                     color = colors[ clrs_index[dof] ])
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw,
+                                     color = colors[ clrs_index[dof] ])
+    else:
+        res =  0
+
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res
+
+
 
 def add_phase_space(plt, hdf_file, plot_params_):
     """
@@ -899,9 +968,18 @@ def plot_dynamics(plot_params_):
             if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/p-vs-t.png", dpi=plot_params["dpi"])
 
+        #===== Forces vs Time  =========
+        if "forces" in what_to_plot:
+            plt.figure(num=5, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_forces_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/f-vs-t.png", dpi=plot_params["dpi"])
+
         #===== Phase space  =========            
         if "phase_space" in what_to_plot:
-            plt.figure(num=5, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=6, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_phase_space(plt, f, plot_params)
@@ -911,7 +989,7 @@ def plot_dynamics(plot_params_):
 
         #====== Populations of all kinds ================
         if "se_pop_adi" in what_to_plot:
-            plt.figure(num=6, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=7, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])        
             plt.subplot(1,1,1)            
             res = add_populations(plt, f, plot_params_, "se_pop_adi")
@@ -919,7 +997,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/se_pop_adi.png", dpi=plot_params["dpi"])
 
         if "se_pop_dia" in what_to_plot:
-            plt.figure(num=7, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=8, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])        
             plt.subplot(1,1,1)            
             res = add_populations(plt, f, plot_params_, "se_pop_dia")
@@ -927,7 +1005,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/se_pop_dia.png", dpi=plot_params["dpi"])
 
         if "sh_pop_adi" in what_to_plot:
-            plt.figure(num=8, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=9, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])        
             plt.subplot(1,1,1)            
             res = add_populations(plt, f, plot_params_, "sh_pop_adi")
@@ -935,7 +1013,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/sh_pop_adi.png", dpi=plot_params["dpi"])
 
         if "sh_pop_dia" in what_to_plot:
-            plt.figure(num=9, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=10, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])        
             plt.subplot(1,1,1)            
             res = add_populations(plt, f, plot_params_, "sh_pop_dia")
@@ -945,7 +1023,7 @@ def plot_dynamics(plot_params_):
                        
         #===== Trajectory-resolved adiabatic energies =========
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=10, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
@@ -953,7 +1031,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/hvib_adi.png", dpi=plot_params["dpi"])
 
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
@@ -963,7 +1041,7 @@ def plot_dynamics(plot_params_):
 
         #===== Time-overlaps and projectors =========
         if "time_overlaps" in what_to_plot:
-            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "St")
@@ -972,7 +1050,7 @@ def plot_dynamics(plot_params_):
 
 
         if "projector" in what_to_plot:
-            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "projector")
@@ -982,7 +1060,7 @@ def plot_dynamics(plot_params_):
 
         #===== Basis transforms =========
         if "basis_transform" in what_to_plot:
-            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])          
             plt.subplot(1,1,1)
             res = add_basis_transform(plt, f, plot_params)                   

@@ -25,7 +25,7 @@ namespace libspecialfunctions{
 
 MATRIX mean(MATRIX& X){
 /** 
-  Compute the mean of the data in X:
+  Compute the mean of the data in each row of X:
 
   mean_i = <X_i> = (1/nsampl) sum_k { X_ik }
 
@@ -52,7 +52,7 @@ MATRIX mean(MATRIX& X){
 
 CMATRIX mean(CMATRIX& X){
 /** 
-  Compute the mean of the data in X:
+  Compute the mean of the data in each row of X:
 
   mean_i = <X_i> = (1/nsampl) sum_k { X_ik }
 
@@ -122,6 +122,83 @@ CMATRIX deviation(CMATRIX& X){
   return res;
 }
 
+MATRIX variance(MATRIX& X, int opt){
+/** 
+  opt: 0 - population; 1 - sample;
+*/
+
+  int ndof = X.n_rows;
+  int sz = X.n_cols;
+  double denom = 1;
+  if(opt==0){ denom = sz; }
+  else if(opt==1){ denom = sz-1; }  
+
+  MATRIX dx(ndof, sz);
+  dx = deviation(X);
+
+  MATRIX res(ndof, 1);
+  for(int i=0; i<ndof; i++){
+    double tmp = 0.0;
+
+    for(int t=0; t<sz; t++){
+      tmp += dx.get(i, t) * dx.get(i, t); 
+    }
+    res.set(i, 0,  tmp/denom );
+  }// for i
+
+  return res;
+
+}
+
+MATRIX variance(CMATRIX& X, int opt){
+/**
+  opt: 0 - population; 1 - sample;
+*/
+
+  int ndof = X.n_rows;
+  int sz = X.n_cols;
+  double denom = 1;
+  if(opt==0){ denom = sz; }
+  else if(opt==1){ denom = sz-1; }
+
+  CMATRIX dx(ndof, sz);
+  dx = deviation(X);
+
+  MATRIX res(ndof, 1);
+  for(int i=0; i<ndof; i++){
+    double tmp = 0.0;
+
+    for(int t=0; t<sz; t++){
+      tmp += (std::conj(dx.get(i, t)) * dx.get(i, t)).real();
+    }
+    res.set(i, 0,  tmp/denom );
+  }// for i
+
+  return res;
+
+}
+
+MATRIX std_dev(MATRIX& X, int opt){
+
+  int ndof = X.n_rows;
+  MATRIX var(ndof, 1);  
+  var = variance(X, opt);
+
+  for(int i=0; i<ndof; i++){  var.set(i, 0,  sqrt(var.get(i, 0)) ); }
+  return var;
+
+}
+
+MATRIX std_dev(CMATRIX& X, int opt){
+
+  int ndof = X.n_rows;
+  MATRIX var(ndof, 1);
+  var = variance(X, opt);
+
+  for(int i=0; i<ndof; i++){  var.set(i, 0,  sqrt(var.get(i, 0)) ); }
+  return var;
+
+}
 
 MATRIX covariance(MATRIX& X){
 /** 
