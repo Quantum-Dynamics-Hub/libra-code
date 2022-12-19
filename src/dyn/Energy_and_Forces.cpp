@@ -288,7 +288,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     // TSH or adiabatic (including excited states)
     // state-specific forces   
     vector<int> effective_states(dyn_vars.act_states);
-    vector<int> eff_states(dyn_vars.act_states);
+//    vector<int> eff_states(dyn_vars.act_states);
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -301,17 +301,17 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 
     // Adiabatic 
     else if(prms.rep_force==1){  
-      *dyn_vars.f = ham.forces_adi(effective_states).real(); //- older approach, without reordering
+      *dyn_vars.f = ham.forces_adi(effective_states).real(); //- older approach, without reordering 
 
-/*
-        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
-        cout<<"q = \n"; dyn_vars.q->show_matrix();  dyn_vars.proj_adi[0]->show_matrix(); 
-        cout<<"f = \n"; dyn_vars.f->show_matrix();
-        cout<<" states: active = "<<effective_states[0]<<"  corrected eff states = "<<eff_states[0]<<endl;
+
+//        if(dyn_vars.q->get(0,0)>-1.0 && dyn_vars.q->get(0,0)<3.0 ){
+//        cout<<"q = \n"; dyn_vars.q->show_matrix();  dyn_vars.proj_adi[0]->show_matrix(); 
+//        cout<<"f = \n"; dyn_vars.f->show_matrix();
+//        cout<<" states: active = "<<effective_states[0]<<endl;
         //cout<<"==\n";
-        }
+//        }
 
-*/
+
 /*
       for(int traj=0; traj<ntraj; traj++){
 

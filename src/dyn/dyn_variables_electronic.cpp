@@ -206,23 +206,28 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
 
     /// Diabatic wfc representation
     if(dyn_params.rep_tdse==0){
+      CMATRIX& T = *proj_adi[traj];
+
       cd = ampl_dia->col(traj);
       *dm_dia[traj] = S * (cd * cd.H()) * S; 
+
       *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
+      *dm_adi[traj] = T * (*dm_adi[traj]) * T.H(); 
+
     }  
     /// Adiabatic wfc representation
     else if(dyn_params.rep_tdse==1){  
 
-      CMATRIX T(nadi, nadi); T = *proj_adi[traj];
-      CMATRIX iT(nadi, nadi);
-      FullPivLU_inverse(T, iT);
+      CMATRIX& T = *proj_adi[traj];
+      //CMATRIX iT(nadi, nadi);
+      //FullPivLU_inverse(T, iT);
 
       //ca = T * ampl_adi->col(traj);      
       //ca = T.H() * ampl_adi->col(traj);
       ca = ampl_adi->col(traj);
       *dm_adi[traj] = ca * ca.H();      
       
-      su = S * U;
+      su = S * U * T;  // T here reflects the fact that we are looking at states ordered in a different way
       //su = S * U;
       *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); 
 

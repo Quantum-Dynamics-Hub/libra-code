@@ -747,19 +747,20 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
   //==================== Determine the state-consistency transformations =================
   // Apply phase correction and state reordering as needed
+/*
   vector<CMATRIX> insta_proj(ntraj, CMATRIX(nst, nst));
   vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
   vector<CMATRIX> T_new(ntraj, CMATRIX(nst, nst));
-
+*/
 //  cout<<"Point 0\n"; exit(0);
-  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
+//  if(prms.state_tracking_algo > 0 || prms.do_phase_correction){
 
     ///==================== Time-overlaps =====================
     //vector<CMATRIX> St(ntraj, CMATRIX(nst, nst));
     /// Compute the time-overlap directly, using previous MO vectors
-    if(prms.time_overlap_method==0){  St = compute_St(Ham, Ham_prev, prms.isNBRA);   }
+//    if(prms.time_overlap_method==0){  St = compute_St(Ham, Ham_prev, prms.isNBRA);   }
     /// Read the existing time-overlap
-    else if(prms.time_overlap_method==1){    St = compute_St(Ham, prms.isNBRA);   }
+//    else if(prms.time_overlap_method==1){    St = compute_St(Ham, prms.isNBRA);   }
 
 //    cout<<"Point 1\n"; exit(0);
 
@@ -786,7 +787,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
     //if(prms.rep_tdse==1){   apply_projectors(C, insta_proj); }
     /// Adiabatic states are permuted
 //    act_states = permute_states(perms, act_states);
-  }
+//  }
 
 //  cout<<"Here\n"; exit(0);
 
@@ -799,6 +800,17 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
     nHamiltonian* ham = Ham->children[traj1];
     nHamiltonian* ham_prev = Ham_prev->children[traj1];
+
+
+    CMATRIX P(ham->nadi, ham->nadi);
+    proj[itraj]->load_identity();
+    CMATRIX& T = *proj[itraj];
+    CMATRIX T_new(ham->nadi, ham->nadi);
+
+    P = ham->get_time_overlap_adi();  // U_old.H() * U;
+    P = orthogonalized_T( P );
+    FullPivLU_inverse(P, T_new);
+    
 
 
   if(rep==0){  // diabatic
@@ -839,6 +851,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
   else if(rep==1){  // adiabatic
 
     if(method==-1 || method==100){
+/*
       CMATRIX Hvib(ham->nadi, ham->nadi);  
       CMATRIX T(nst, nst); T = *proj[itraj];
       CMATRIX iT(nst, nst);
@@ -867,6 +880,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
       C = T_new * C;
 
       *proj[itraj] = T_new;
+*/
     }
  
     else if(method==0 || method==100){
@@ -877,27 +891,11 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
       CMATRIX A(ham->nadi, ham->nadi);
       CMATRIX B(ham->nadi, ham->nadi);
 
-      CMATRIX U_old(ham->nadi, ham->nadi);   U_old = ham_prev->get_basis_transform();
-      CMATRIX U(ham->nadi, ham->nadi);   U = ham->get_basis_transform();
-      CMATRIX P(ham->nadi, ham->nadi);
-      CMATRIX iP(ham->nadi, ham->nadi);
-      CMATRIX TP(ham->nadi, ham->nadi);
-      proj[itraj]->load_identity();
-
-      CMATRIX T(ham->nadi, ham->nadi);  T = *proj[itraj];
-      CMATRIX T_new(ham->nadi, ham->nadi);
-      P = U_old.H() * U;
-
-      P = orthogonalized_T( P );
-
-      FullPivLU_inverse(P, iP);
-
-//      cout<<"P(t) = \n"; P.show_matrix();
-//      cout<<"P^+ P = \n"; (P.H() * P).show_matrix();
 
 
-      TP = T.H() * P;
-      FullPivLU_inverse(TP, T_new);
+//      TP = T.H() * P;
+//      FullPivLU_inverse(TP, T_new);
+//       T_new = iP;
 
 //      cout<<"T_new = \n"; T_new.show_matrix();
 
@@ -910,7 +908,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 */
 //      T_new = orthogonalized_T( T_new );
 
-      *proj[itraj] = T_new; // *proj[itraj] * P; // load_identity();
+//      *proj[itraj] = T_new; // *proj[itraj] * P; // load_identity();
 //      cout<<"T(t+dt) = \n"; T_new.show_matrix();
 
 //      cout<<"In electronic evolution \n"; T_new.show_matrix();
@@ -946,7 +944,9 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 //      C = P.H() * A * iP.H() * B * iP * A * C;
 //      C = B * iP * A * C;
 //      cout<<"C(t) = \n"; C.show_matrix();
-        C = B * iP * A * C;
+//        C = B * iP * A * C;
+       C = B * T_new * A * C;
+
 //        C = B * A * C;
 //      C = A * C;
 
@@ -962,14 +962,14 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
     else if(method==1 || method==101){
       CMATRIX Hvib(ham->nadi, ham->nadi);
       Hvib = ham_prev->get_hvib_adi();
-      Hvib += insta_proj[itraj] * ham->get_hvib_adi() * insta_proj[itraj].H();
+      //Hvib += insta_proj[itraj] * ham->get_hvib_adi() * insta_proj[itraj].H();
       Hvib *= 0.5;
 
 //      cout<<"Integration with Hvib = "; Hvib.show_matrix();
       propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
 
       //apply_projectors(C, insta_proj);
-      C = insta_proj[itraj] * C;
+      //C = insta_proj[itraj] * C;
 
       //Hvib = ham->get_hvib_adi();
 
@@ -1006,6 +1006,7 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
   }// rep == 1 - adiabatic
 
 
+  *proj[itraj] = T_new;
 
   // Insert the propagated result back
   for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
