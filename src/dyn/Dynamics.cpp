@@ -1027,10 +1027,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
-      q.add(dof, traj,  invM.get(dof,0) * p.get(dof,traj) * prms.dt ); 
+      dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
 
       if(prms.entanglement_opt==22){
-        q.add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
+        dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
 
     }
