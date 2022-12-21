@@ -785,7 +785,7 @@ CMATRIX orthogonalized_T(CMATRIX& T){
   sqrt_matrix(t2, t2_half, t2_i_half);
   t2 = T * t2_i_half;
 
-  return T;
+  return t2;
 
 }
 

@@ -729,7 +729,7 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamilt
 
 void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms, Random& rnd){
 
-  int itraj;
+  int itraj, i, j;
   int ntraj = Ham->children.size();
   int nst = Coeff.n_rows;
   CMATRIX C(nst, 1);
@@ -760,6 +760,8 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
     FullPivLU_inverse(P, T_new);
     
 
+//     cout<<"In electronic int, proj = \n"; proj[0]->show_matrix();
+//     cout<<" time-overlap = \n"; P.show_matrix();
 
   if(rep==0){  // diabatic
     CMATRIX Hvib(ham->ndia, ham->ndia);
@@ -876,6 +878,14 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
 
   *proj[itraj] = T_new;
+  //proj[itraj]->set(T_new);
+
+  //for(i=0; i<nst; i++){ 
+  //  for(j=0; j<nst; j++){
+  //    proj[itraj]->set(i, j,  T_new.get(i,j) ); 
+  //  }
+  // }
+
 
   // Insert the propagated result back
   for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
@@ -1045,18 +1055,23 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+//  cout<<"Before propagate_electronic\n"; dyn_var.proj_adi[0]->show_matrix();
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){  propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms, rnd);  }
+//  cout<<"After propagate_electronic\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // Recompute density matrices in response to the updated amplitudes
   dyn_var.update_density_matrix(prms, ham, 1); 
+//  cout<<"After update_dens_matrix\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
   dyn_var.act_states = update_active_states(dyn_var.act_states, dyn_var.proj_adi); 
+//  cout<<"After update_active_states\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
+//  cout<<"Before update forces\n"; dyn_var.proj_adi[0]->show_matrix();
   update_forces(prms, dyn_var, ham);
 
 

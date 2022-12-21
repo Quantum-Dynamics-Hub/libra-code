@@ -542,8 +542,8 @@ public:
   CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia);               ///< Ehrenfest forces in diabatic basis
   CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl);           ///< Ehrenfest forces in diabatic basis
 //  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  ///< Ehrenfest forces in diabatic basis
-  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T);    ///< Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<CMATRIX*>& T, int lvl);   ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);    ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);   ///< Ehrenfest forces in adiabatic basis
 //  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  ///< Ehrenfest forces in adiabatic basis
 
 

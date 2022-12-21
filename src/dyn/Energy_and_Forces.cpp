@@ -294,7 +294,13 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     // Adiabatic 
     //cout<<"Ampl = \n";
     //dyn_vars.ampl_adi->show_matrix();
-    else if(prms.rep_force==1){ *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, dyn_vars.proj_adi, 1).real(); }
+    else if(prms.rep_force==1){ 
+//      cout<<"ampl =\n"; dyn_vars.ampl_adi->show_matrix();
+//      cout<<"proj = \n"; dyn_vars.proj_adi[0]->show_matrix();
+      *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1).real(); 
+
+//      cout<<"f = \n"; dyn_vars.f->show_matrix();
+    }
 
     //cout<<"Ampl = "<<dyn_vars.ampl_adi<<endl;
     

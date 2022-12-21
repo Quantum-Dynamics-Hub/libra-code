@@ -192,7 +192,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
 /**
   \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
 
@@ -228,14 +228,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T){
   complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
 
   CMATRIX res(nnucl,1);
-
   CMATRIX tmp(nadi, nadi);
-
-  CMATRIX iT(nadi, nadi);
-  FullPivLU_inverse(T, iT);
-  
-  CMATRIX C(nadi, 1);
-  C = iT * ampl_adi;  //
 
 
   for(int n=0;n<nnucl;n++){
@@ -247,10 +240,9 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T){
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
 
-    tmp = ( iT * (*dc1_adi[n]) * T ).H() *  iT * (*ham_adi) * T;
+    tmp = dc1_adi[n]->H() * (*ham_adi);
     tmp = (tmp + tmp.H());
-
-    res.M[n] = -( C.H() * (  iT*(*d1ham_adi[n])*T - tmp ) * C ).M[0];
+    res.M[n] = -( ampl_adi.H() * (  *d1ham_adi[n] - tmp ) * ampl_adi ).M[0];
 
   }// for n
 
@@ -262,7 +254,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, CMATRIX& T){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<CMATRIX*>& T, int lvl){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
 /**
   \brief Computes the Ehrenfest forces in the adiabatic basis
 
@@ -315,10 +307,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<CMATRIX*>& 
     pop_submatrix(ampl_adi, ampl_tmp, stenc_ampl, stenc_col);
 
     if(lvl==0){
-        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp, *T[i]);
+        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp);
     }
     if(lvl==1){
-        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp, *T[i]);
+        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp);
     }
 
     push_submatrix(F, frc_tmp, stenc_frc, stenc_col);

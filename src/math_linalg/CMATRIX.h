@@ -103,6 +103,8 @@ public:
     set(indx, complex<double>(value1,value2));
   }
 
+  void set(CMATRIX& value1){ set(value1); }
+
   ///< Sets the "row","col" matrix emelent of the M array to the input value (real and imaginary components) 
   void set(int row,int col,double value1,double value2){
     set(row, col, complex<double>(value1,value2));

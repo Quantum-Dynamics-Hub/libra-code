@@ -205,6 +205,8 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 
   // Now apply the projectors to reflect any state switches that may have occurred in the meantime
 
+  //cout<<"In update_Hamiltonian_variables... St = \n";
+  //ham.children[0]->get_time_overlap_adi().show_matrix();
 
 }
 

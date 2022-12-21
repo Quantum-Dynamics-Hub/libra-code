@@ -117,7 +117,7 @@ public:
 
 //    cout<<"In base destructor\n";
     delete [] M; 
-    M = NULL;
+    M = nullptr;
     n_rows = n_cols = n_elts = 0;
   } 
 
@@ -134,6 +134,10 @@ public:
     }
     else{   M[i] = val;  }
   } 
+
+  void set(base_matrix<T1>& val){
+    for(int i=0; i<n_elts; i++){  M[i] = val.M[i]; }
+  }
 
   void set(int i, int j, T1 val){ 
   /** Sets the "row","col" matrix emelent of the M array to the input value 
