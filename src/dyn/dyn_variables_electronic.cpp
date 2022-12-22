@@ -192,7 +192,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
   CMATRIX cd(ndia, 1);
   CMATRIX ca(nadi, 1);
 
-
+  //cout<<"In update density matrix\n";
   vector<int> indx;    
   if(lvl==0){ indx = vector<int>(1, 0); }
   else if(lvl==1) { indx = vector<int>(2, 0); } 
@@ -206,19 +206,21 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
 
     /// Diabatic wfc representation
     if(dyn_params.rep_tdse==0){
-      CMATRIX& T = *proj_adi[traj];
+      //CMATRIX& T = *proj_adi[traj];
 
       cd = ampl_dia->col(traj);
       *dm_dia[traj] = S * (cd * cd.H()) * S; 
 
       *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
-      *dm_adi[traj] = T * (*dm_adi[traj]) * T.H(); 
+      //*dm_adi[traj] = T * (*dm_adi[traj]) * T.H(); 
 
     }  
     /// Adiabatic wfc representation
     else if(dyn_params.rep_tdse==1){  
 
       CMATRIX& T = *proj_adi[traj];
+//      cout<<"T for traj = "<<traj<<endl;
+//      T.show_matrix();
       //CMATRIX iT(nadi, nadi);
       //FullPivLU_inverse(T, iT);
 
@@ -227,7 +229,7 @@ void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamil
       ca = ampl_adi->col(traj);
       *dm_adi[traj] = ca * ca.H();      
       
-      su = S * U * T;  // T here reflects the fact that we are looking at states ordered in a different way
+      su = S * U; // * T;  // T here reflects the fact that we are looking at states ordered in a different way
       //su = S * U;
       *dm_dia[traj] =  su * (*dm_adi[traj]) * su.H(); 
 
@@ -742,15 +744,19 @@ void dyn_variables::init_electronic_dyn_var(bp::dict _params, Random& rnd){
 }
 
 
-vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
+//vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
+void dyn_variables:: update_active_states(){
 /*
    act_states[itraj] - index of the active adiabatic state for the trajectory `itraj`
-                       in terms of the time-ordered states
+                       in terms of the energy-ordered (instantaneous) eign-states
 */
 
-  int ntraj = act_states.size();
-  int nst = T[0]->n_cols;
-  vector<int> res( act_states);
+  //cout<<"========= in update_active_states=============\n";
+  //int ntraj = act_states.size();
+  //int nst = T[0]->n_cols;
+  //vector<int> res(ntraj, 0);
+
+  int nst = nadi;
 
   CMATRIX t2(nst,nst);
   CMATRIX t2_half(nst, nst);
@@ -759,16 +765,28 @@ vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
   complex<double> max_val;
 
   for(int itraj=0; itraj<ntraj; itraj++){
-    CMATRIX& t = *T[itraj];
+    //cout<<"itraj = "<<itraj<<endl;
+
+    CMATRIX t(*proj_adi[itraj]);
     t2 = t.H() * t;
     sqrt_matrix(t2, t2_half, t2_i_half);
     t2 = t * t2_i_half;
+
+    coeff = 0.0;
     coeff.set(act_states[itraj], 0, complex<double>(1.0, 0.0));
+    //cout<<"initial coeff = \n"; coeff.show_matrix();
+    //cout<<"t2 = \n"; t2.show_matrix();
     coeff = t2 * coeff;
-    coeff.max_col_elt(0, max_val, res[itraj]);
+    //cout<<"new coeff = \n"; coeff.show_matrix();
+    coeff.max_col_elt(0, max_val, act_states[itraj]);
+    //cout<<" max_val = "<<max_val<<" in position = "<<act_states[itraj]<<endl;
+    //cout<<"itraj = "<<itraj<<"  "<<act_states[itraj]<<endl; //#<<" -> "<<res[itraj]<<endl;
+
   }// for itraj
 
-  return res;
+  //cout<<"============ done with the update ================\n";
+
+//  return res;
 }
 
 CMATRIX orthogonalized_T(CMATRIX& T){
@@ -830,16 +848,25 @@ vector<double> dyn_variables::compute_average_sh_pop(){
 
   int sz = nadi; 
 
+  //cout<<"In compute_average_sh_pop...\n";
+
   vector<double> res(sz, 0.0);
-  vector<int> effective_states( update_active_states(act_states, proj_adi) );
+//  vector<int> effective_states( update_active_states(act_states, proj_adi) );
+  vector<int> effective_states( act_states );
 
   for(int traj=0; traj<ntraj; traj++){
 
     int i = effective_states[traj];
     res[i] += 1.0;
+    //cout<<" traj = "<<traj<<" act_state = "<<act_states[traj]<<" eff state = "<<i<<endl;
   }
   
-  for(int j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj; }
+//  cout<<" Populations : ";
+  for(int j=0; j<sz; j++){   
+    res[j] = res[j] / (float)ntraj; 
+  //  cout<<res[j]<<" ";
+  }
+  //cout<<endl;
 
   return res;
 }

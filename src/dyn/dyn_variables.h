@@ -197,6 +197,9 @@ class dyn_variables{
 
   /**
     Nuclear forces (active)
+    
+    Options:
+      MATRIX(ndof, ntraj)
   */
   MATRIX* f;
 
@@ -302,6 +305,8 @@ class dyn_variables{
   void update_density_matrix(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
   void update_density_matrix(bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
 
+  void update_active_states();
+
   void init_amplitudes(bp::dict params, Random& rnd);
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
@@ -329,7 +334,7 @@ class dyn_variables{
 };
 
 
-vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T);
+//vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T);
 CMATRIX orthogonalized_T(CMATRIX& T);
 
 

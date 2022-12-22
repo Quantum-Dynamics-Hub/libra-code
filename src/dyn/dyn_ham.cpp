@@ -160,7 +160,12 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
     }
 
     // Compute NAC from the time-overlaps
-    else if(prms.nac_update_method==2){
+    else if(prms.nac_update_method==2 && update_type==0){
+
+      // Don't update NACs and time-overlaps in response to p
+      // if they are computed via the time-overlaps - only in response to 
+      // change of q
+
 
       int isNBRA = prms.isNBRA;
       double dt = prms.dt;
@@ -187,6 +192,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
         ham.children[traj]->set_nac_adi_by_val(nac);
 
       }// for traj
+
     }// for nac_update_method == 2
 
     

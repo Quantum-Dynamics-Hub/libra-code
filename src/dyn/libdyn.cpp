@@ -219,6 +219,8 @@ void export_dyn_variables_objects(){
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
 
+      .def("update_active_states", &dyn_variables::update_active_states)
+
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
       .def("init_active_states", &dyn_variables::init_active_states)
