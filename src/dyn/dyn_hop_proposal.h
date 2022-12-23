@@ -53,8 +53,12 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
        nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
-vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, 
-       dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
+
+vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms,
+       dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev);
+
+//vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, 
+//       dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& prev_ham_dia);
 
 
 int hop(vector<double>& prob, double ksi);

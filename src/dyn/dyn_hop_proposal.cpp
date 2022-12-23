@@ -678,7 +678,9 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
 }
 
 
-vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& prev_ham_dia){
+vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, dyn_variables& dyn_var, 
+nHamiltonian& ham, nHamiltonian& ham_prev){
+//vector<MATRIX>& prev_ham_dia){
 /**
   This function computes the hop probabilities for each trajectory to hop from any state to all states
 

@@ -958,9 +958,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; } //*dyn_var.ampl_adi; }
 
 
-  vector<int>& act_states = dyn_var.act_states;
-  MATRIX& q = *dyn_var.q;
-  MATRIX& p = *dyn_var.p;
+  vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
+  MATRIX q(*dyn_var.q);
+  MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
   //cout<<"Here \n"; exit(0);
@@ -1219,23 +1219,59 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
     /// of that trajectory
     vector< vector<double> > g;
-    g = hop_proposal_probabilities(prms, dyn_var, ham, prev_ham_dia);
+    g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
 
+/*
+    cout<<"g = \n";
+    for(int a=0; a<g.size(); a++){      
+      for(int b=0; b<g[a].size(); b++){
+        cout<<g[a][b]<<" ";
+      }
+      cout<<"\n";
+    }
+
+    cout<<"Current states:\n";
+    for(int a=0; a<dyn_var.ntraj;a++){
+      cout<<dyn_var.act_states[a]<<" ";
+    }
+    cout<<endl;
+*/    
 
     // Propose new discrete states for all trajectories
     vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
+
+//    cout<<"Proposed states:\n";
+//    for(int a=0; a<dyn_var.ntraj;a++){
+//      cout<<prop_states[a]<<" ";
+//    }
+//    cout<<endl;
 
     
     // Decide if to accept the transitions (and then which)
     // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
     vector<int> old_states(ntraj); //act_states);
-    for(traj=0; traj<ntraj; traj++){ old_states[traj] = act_states[traj]; }
-    act_states = accept_hops(prms, q, p, invM, Cact, ham, prop_states, act_states, rnd);    
+    for(traj=0; traj<ntraj; traj++){ old_states[traj] = dyn_var.act_states[traj]; }
+    //p = *dyn_var.p;
+    act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+    //*dyn_var.p = p;
 
+/*
+    cout<<"Accepted states:\n";
+    for(int a=0; a<dyn_var.ntraj;a++){
+      cout<<act_states[a]<<" ";
+    }
+    cout<<endl;
+*/
 
+//    cout<<"Before p rescaling:\n"; dyn_var.p->show_matrix();
     // Velocity rescaling: however here we may be changing velocities
     //
-    handle_hops_nuclear(prms, q, p, invM, Cact, ham, act_states, old_states);
+    p = *dyn_var.p;
+    handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
+    *dyn_var.p = p;
+    dyn_var.act_states = act_states;
+//    cout<<"After p rescaling:\n"; dyn_var.p->show_matrix();
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
 
 
     if(prms.decoherence_algo==1){

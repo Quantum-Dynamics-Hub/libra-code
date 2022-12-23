@@ -517,10 +517,16 @@ void export_dyn_hop_proposal_objects(){
   def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v1);
 
   vector< vector<double> > (*expt_hop_proposal_probabilities_v2)
+  (dyn_control_params& prms, dyn_variables& dyn_var,
+   nHamiltonian& ham, nHamiltonian& ham_prev) = &hop_proposal_probabilities;
+  def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v2);
+
+/*
+  vector< vector<double> > (*expt_hop_proposal_probabilities_v2)
   (dyn_control_params& prms, dyn_variables& dyn_var, 
    nHamiltonian& ham, vector<MATRIX>& prev_ham_dia) = &hop_proposal_probabilities;
   def("hop_proposal_probabilities", expt_hop_proposal_probabilities_v2);
-
+*/
 
 
 

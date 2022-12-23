@@ -456,13 +456,16 @@ vector<int> accept_hops(dyn_control_params& prms,
   CMATRIX nac(nst, nst);
   CMATRIX df(nst, nst);
 
+//  cout<<"In accept_hops with algo = "<<prms.hop_acceptance_algo<<endl;
+//  cout<<"ntraj_active = "<<ntraj_active<<endl;
 
-  if(prms.hop_acceptance_algo==0){  // Just accept all the hops
+
+  if(prms.hop_acceptance_algo==0){  // Just accept all the proposed hops
 
     for(itraj=0; itraj<ntraj_active; itraj++){
       traj = which_trajectories[itraj];
 
-      fstates[traj] = initial_states[traj];
+      fstates[traj] = proposed_states[traj];
     }
 
   }// algo = 0
@@ -496,6 +499,8 @@ vector<int> accept_hops(dyn_control_params& prms,
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
         double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+
+//        cout<<"E_i = "<<E_i<<" E_f = "<<E_f<<" T_i = "<<T_i<<" T_f = "<<T_f<<endl;
 
         if(T_f>=0.0){  // hop is possible - accept it
           fstates[traj] = proposed_states[traj];
