@@ -290,7 +290,7 @@ MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
   //CMATRIX* denmat_dot; denmat_dot = new CMATRIX(nstates, nstates);   
   CMATRIX denmat_dot(nstates, nstates);
-  denmat_dot = ( denmat *  Hvib.conj() - Hvib * denmat) * complex<double>(0.0, 1.0);
+  denmat_dot = ( denmat *  Hvib.H() - Hvib * denmat) * complex<double>(0.0, 1.0);
 
 
 
@@ -398,7 +398,7 @@ vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& den
   vector<double> g(nstates, 0.0);
 
   CMATRIX denmat_dot(nstates, nstates);
-  denmat_dot = ( denmat *  Hvib.conj() - Hvib * denmat) * complex<double>(0.0, 1.0);
+  denmat_dot = ( denmat *  Hvib.H() - Hvib * denmat) * complex<double>(0.0, 1.0);
 
 
   // compute a_kk and a_dot_kk
@@ -577,6 +577,174 @@ vector<double> hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& den
 
 
 
+//MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia){
+vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+/**
+  \brief This function computes the surface hopping probabilities according to Landau-Zener formula.
+
+  See more details in:
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061<96>1071. - the original paper
+  (2) Belyaev, A. K.; Lebedev, O. V. Nonadiabatic nuclear dynamics of atomic collisions based on branching classical trajectories
+  Phys. Rev. A 2011, 84, 014701
+
+  \param[in] ham Is the nHamiltonian object that organizes energy-related calculations
+  \param[in] ham_prev Is the nHamiltonian object of previous step or geometry - needed to locate the diabatic crossing
+  \param[in] act_state_indx - index of the current adiabatic state
+  \param[in] rep index selecting the type of representation to be used: 0 - diabatic, 1 - adiabatic
+  \param[in] p [ndof x 1] or [ndof x ntraj] matrix of nuclear momenta
+  \param[in] invM [ndof x 1] matrix of inverse nuclear masses
+
+  Returns:
+      A nstates-vector of hopping probabilities to all states from the current active state
+
+*/
+  int i,j,k;
+  int nstates;
+  int ndof = ham->nnucl;
+
+  // Determine the dimensions
+  if(rep==0){ nstates = ham->ndia;  }
+  else if(rep==1){  nstates = ham->nadi;  }
+
+//  MATRIX g(nstates,nstates);
+  vector<double> g(nstates, 0.0);
+
+  i = act_state_indx;
+
+  /** Diabatic representation:
+
+   p_{i->j} = exp( - 2 * pi * H_ij^2 / (hbar*v*(|H'_ii - H;_jj| )) )
+ 
+  */
+  
+  if(rep==0){
+
+    // Diabatic Ham matrices
+    MATRIX ham_dia(nstates,nstates);
+    MATRIX ham_dia_prev(nstates, nstates);
+    ham_dia = ham->get_ham_dia().real();
+    ham_dia_prev = ham_prev->get_ham_dia().real();
+
+    // Get denominator
+    MATRIX dham(nstates,nstates); // H'_ii * v
+    MATRIX dHv(nstates,nstates); // |H'_ii - H'_jj| * v
+
+    for(k=0;k<ndof;k++){
+      dham = ham->get_d1ham_dia(k).real() * p.get(k,0) * invM.get(k,0);
+
+      for(j=0;j<nstates;j++){
+        double dmod = fabs(dham.get(i,i) - dham.get(j,j));
+        dHv.add(i,j, dmod);
+        dHv.add(j,i, dmod);
+      }// for j
+    }// for k
+
+
+    //========== Now calculate the hopping probabilities ===========
+    
+    // Off-diagonal elements - only, if we meet the gap minimum
+    for(j=0; j<nstates; j++){
+
+      if(j!=i){
+        double dh = ham_dia.get(i,i) - ham_dia.get(j,j);
+        double dh_prev = ham_dia_prev.get(i,i) - ham_dia_prev.get(j,j);
+
+        if(dh * dh_prev < 0.0){
+
+          double h_ij = ham_dia.get(i,j);
+          double g_ij = exp(-2.0*M_PI*h_ij*h_ij / dHv.get(i,j) );
+
+          g[j] = g_ij;
+          //g.set(i,j,g_ij);
+          //g.set(j,i,g_ij);
+
+        }// only if minimum is located 
+        else{ g[j] = 0.0; }
+
+      }// j!=i
+    }// for j
+  }// rep == 0 diabatic
+
+
+  // Adiabatic representation
+  else if(rep==1){
+
+    // Update adiabatic NACs - assume those are updated 
+    //ham->compute_nac_adi(p, invM);
+
+    // Now calculate the hopping probabilities
+//    MATRIX ham_dia(nstates,nstates);
+    MATRIX ham_adi(nstates,nstates);
+    MATRIX nac_adi(nstates,nstates);
+    MATRIX ham_adi_prev(nstates,nstates);
+
+//    ham_dia = ham->get_ham_dia().real();
+    ham_adi = ham->get_ham_adi().real();
+    nac_adi = ham->get_nac_adi().real();
+    ham_adi_prev = ham_prev->get_ham_adi().real();
+
+
+
+    // Off-diagonal elements
+    for(j=0;j<nstates;j++){
+      if(j!=i){
+        double dh = ham_adi.get(i,i) - ham_adi.get(j,j);
+        double dh_prev = ham_adi_prev.get(i,i) - ham_adi_prev.get(j,j);
+
+        if(dh * dh_prev < 0.0){
+          double g_ij = 0.0;
+          double Z_ij = fabs(ham_adi.get(i,i) - ham_adi.get(j,j));
+          double nac_ij = fabs(nac_adi.get(i,j));
+          if(nac_ij > 0.0){ g_ij = exp(-0.25*M_PI*Z_ij/nac_ij);     }         
+          g[j] = g_ij;
+        }
+        else{ g[j] = 0.0; }
+
+      }// j!=i
+    }// for j
+  }// rep == 1 adiabatic
+
+  // Diagonal elements - common for both reps
+  for(i=0;i<nstates;i++){
+    double sum = 0.0;
+    for(j=0;j<nstates;j++){
+      if(j!=i){  sum += g[j];   }
+    }// for i
+    g[i] = 1.0 - sum;
+  }
+
+  return g;
+
+}// lz
+
+
+//MATRIX compute_hopping_probabilities_lz(nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia){
+vector<double> compute_hopping_probabilities_lz(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+/**
+  \brief This function computes the surface hopping probabilities according to Landau-Zener formula.
+
+  See more details in:
+  (1) Tully, J. C. Molecular Dynamics with Electronic Transitions. J. Chem. Phys. 1990, 93, 1061<96>1071. - the original paper
+  (2) Belyaev, A. K.; Lebedev, O. V. Nonadiabatic nuclear dynamics of atomic collisions based on branching classical trajectories
+  Phys. Rev. A 2011, 84, 014701
+
+  \param[in] ham Is the nHamiltonian object that organizes energy-related calculations
+  \param[in] rep index selecting the type of representation to be used: 0 - diabatic, 1 - adiabatic
+  \param[in] p [ndof x 1] or [ndof x ntraj] matrix of nuclear momenta
+  \param[in] invM [ndof x 1] matrix of inverse nuclear masses
+  \param[in] prev_ham_dia [nstates x nstates] the matrix of previous diabatic Hamiltonian - needed to locate the diabatic crossing
+
+  Returns:
+      A matrix with the hopping probabilities between all pairs of states is returned
+      Convention: P(i,j) is the probability for the i->j transition
+
+*/
+
+  return compute_hopping_probabilities_lz(&ham, &ham_prev, act_state_indx, rep, p, invM);
+
+}
+
+
 
 
 /*
@@ -660,8 +828,8 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
     }
     else if(prms.tsh_method == 3){ // LZ
 
-      pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
-      g[traj] = compute_hopping_probabilities_lz(ham.children[traj], prms.rep_lz, p_traj, invM, prev_ham_dia[traj]);
+//      pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
+//      g[traj] = compute_hopping_probabilities_lz(ham.children[traj], prms.rep_lz, p_traj, invM, prev_ham_dia[traj]);
 
     }
 
@@ -748,9 +916,9 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
     }
     else if(prms.tsh_method == 3){ // LZ
 
-      /// AVA on 11/7/2022 - temporarily comment the next 2 lines
-      //pop_submatrix(p, p_traj, nucl_stenc_x, nucl_stenc_y);
-      //g[traj] = compute_hopping_probabilities_lz(ham.children[traj], prms.rep_lz, p_traj, invM, prev_ham_dia[traj]);
+      pop_submatrix(*dyn_var.p, p_traj, nucl_stenc_x, nucl_stenc_y);
+      g[traj] = compute_hopping_probabilities_lz(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj], 
+                prms.rep_lz, p_traj, *dyn_var.iM);
 
     }
 

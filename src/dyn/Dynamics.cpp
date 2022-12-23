@@ -1089,14 +1089,15 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //Cact.show_matrix();
   //dyn_var.ampl_adi->show_matrix();
 
-  // Recompute density matrices in response to the updated amplitudes
+  // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_density_matrix(prms, ham, 1); 
 //  cout<<"After update_dens_matrix\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  //dyn_var.act_states = update_active_states(dyn_var.act_states, dyn_var.proj_adi); 
-  dyn_var.update_active_states();
+  if(prms.tsh_method != 3){  // Don't update states based on amplitudes, in the LZ method
+    dyn_var.update_active_states();
+  }
 //  cout<<"After update_active_states\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
@@ -1211,7 +1212,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   if(prms.tsh_method==-1){ ;; } 
 
   // FSSH, GFSH, MSSH
-  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2){
+  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3){
 
     // Compute hopping probabilities
     // vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, ham, prev_ham_dia) );
@@ -1283,7 +1284,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
     }// AFSSH
         
-  }// tsh_method == 0, 1, 2, 4
+  }// tsh_method == 0, 1, 2, 3
   
 /*
   // DISH

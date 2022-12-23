@@ -504,6 +504,16 @@ void export_dyn_hop_proposal_objects(){
   def("hopping_probabilities_mssh", expt_hopping_probabilities_mssh_v2);
 
 
+//  MATRIX (*expt_compute_hopping_probabilities_lz_v1)
+//  (nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia) = &compute_hopping_probabilities_lz;
+//  def("compute_hopping_probabilities_lz",expt_compute_hopping_probabilities_lz_v1);
+
+  vector<double> (*expt_compute_hopping_probabilities_lz_v1)
+  (nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, 
+  MATRIX& p, const MATRIX& invM) = &compute_hopping_probabilities_lz;
+  def("compute_hopping_probabilities_lz", expt_compute_hopping_probabilities_lz_v1);
+
+
 /*
   vector<MATRIX> (*expt_hop_proposal_probabilities_v1)
   (dyn_control_params& prms,
@@ -657,6 +667,7 @@ void export_dyn_projectors_objects(){
 
 }
 
+/*
 void export_LZ_hopping_probabilities_objects(){
 
 
@@ -666,7 +677,7 @@ void export_LZ_hopping_probabilities_objects(){
   def("compute_hopping_probabilities_lz",expt_compute_hopping_probabilities_lz_v1);
 
 }
-
+*/
 
 
 void export_permutation_objects(){
@@ -884,7 +895,7 @@ void export_Dyn_objects(){
   export_dyn_projectors_objects();
 
   
-  export_LZ_hopping_probabilities_objects();
+//  export_LZ_hopping_probabilities_objects();
   export_permutation_objects();
 
   export_Energy_Forces_objects();
