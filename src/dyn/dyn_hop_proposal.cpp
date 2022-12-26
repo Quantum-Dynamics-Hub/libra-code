@@ -590,7 +590,8 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
   \param[in] ham Is the nHamiltonian object that organizes energy-related calculations
   \param[in] ham_prev Is the nHamiltonian object of previous step or geometry - needed to locate the diabatic crossing
   \param[in] act_state_indx - index of the current adiabatic state
-  \param[in] rep index selecting the type of representation to be used: 0 - diabatic, 1 - adiabatic
+  \param[in] rep index selecting the type of representation to be used: 0 - diabatic, 1 - adiabatic based on the min of diabatic 
+  gap, 2 - adiabatic, based on the switch of the NAC sign
   \param[in] p [ndof x 1] or [ndof x ntraj] matrix of nuclear momenta
   \param[in] invM [ndof x 1] matrix of inverse nuclear masses
 
@@ -604,7 +605,7 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
 
   // Determine the dimensions
   if(rep==0){ nstates = ham->ndia;  }
-  else if(rep==1){  nstates = ham->nadi;  }
+  else if(rep==1 || rep==2){  nstates = ham->nadi;  }
 
 //  MATRIX g(nstates,nstates);
   vector<double> g(nstates, 0.0);
@@ -613,7 +614,7 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
 
   /** Diabatic representation:
 
-   p_{i->j} = exp( - 2 * pi * H_ij^2 / (hbar*v*(|H'_ii - H;_jj| )) )
+   p_{i->j} = exp( - 2 * pi * H_ij^2 / (hbar*v*(|H'_ii - H'_jj| )) )
  
   */
   
@@ -667,31 +668,44 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
 
 
   // Adiabatic representation
-  else if(rep==1){
+  else if(rep==1 || rep==2){
 
     // Update adiabatic NACs - assume those are updated 
     //ham->compute_nac_adi(p, invM);
 
     // Now calculate the hopping probabilities
-//    MATRIX ham_dia(nstates,nstates);
+    MATRIX ham_dia(nstates,nstates);
     MATRIX ham_adi(nstates,nstates);
     MATRIX nac_adi(nstates,nstates);
     MATRIX ham_adi_prev(nstates,nstates);
+    MATRIX ham_dia_prev(nstates,nstates);
+    MATRIX nac_adi_prev(nstates,nstates);
 
-//    ham_dia = ham->get_ham_dia().real();
+    ham_dia = ham->get_ham_dia().real();
     ham_adi = ham->get_ham_adi().real();
     nac_adi = ham->get_nac_adi().real();
     ham_adi_prev = ham_prev->get_ham_adi().real();
-
-
+    ham_dia_prev = ham_prev->get_ham_dia().real();
+    nac_adi_prev = ham_prev->get_nac_adi().real();
 
     // Off-diagonal elements
     for(j=0;j<nstates;j++){
       if(j!=i){
-        double dh = ham_adi.get(i,i) - ham_adi.get(j,j);
-        double dh_prev = ham_adi_prev.get(i,i) - ham_adi_prev.get(j,j);
 
-        if(dh * dh_prev < 0.0){
+        int nonzero = 0;
+        if(rep==1){
+          double dh = ham_dia.get(i,i) - ham_dia.get(j,j);
+          double dh_prev = ham_dia_prev.get(i,i) - ham_dia_prev.get(j,j);
+          if( dh * dh_prev < 0.0){ nonzero = 1; }
+        }
+        else if(rep==2){
+          double nac = nac_adi.get(i,j);
+          double nac_prev = nac_adi_prev.get(i,j);
+          if( nac * nac_prev < 0.0){ nonzero = 1; }
+        }
+
+        if(nonzero==1){  // This is the condition of intersection of diabatic surfaces, alternatively, we 
+                         // could be looking to locate the adiabatic surfaces minimum
           double g_ij = 0.0;
           double Z_ij = fabs(ham_adi.get(i,i) - ham_adi.get(j,j));
           double nac_ij = fabs(nac_adi.get(i,j));
@@ -705,13 +719,11 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
   }// rep == 1 adiabatic
 
   // Diagonal elements - common for both reps
-  for(i=0;i<nstates;i++){
-    double sum = 0.0;
-    for(j=0;j<nstates;j++){
-      if(j!=i){  sum += g[j];   }
-    }// for i
-    g[i] = 1.0 - sum;
-  }
+  double sum = 0.0;
+  for(j=0;j<nstates;j++){
+    if(j!=i){  sum += g[j];   }
+  }// for i
+  g[i] = 1.0 - sum;
 
   return g;
 

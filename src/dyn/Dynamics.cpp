@@ -1020,12 +1020,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
   // Adding the prms.isNBRA to the propagate electronic
-
-//   dyn_var.p->show_matrix();
+/*
+  cout<<"q \n";
+   dyn_var.q->show_matrix();
 //   dyn_var.f->show_matrix();
 
+    cout<<"Current states at the beginning of the step:\n";
+    for(int a=0; a<dyn_var.ntraj;a++){
+      cout<<dyn_var.act_states[a]<<" ";
+    }
+    cout<<endl;
 //exit(0);
-
+*/
   //============== Nuclear propagation ===================
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -1236,7 +1242,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       cout<<dyn_var.act_states[a]<<" ";
     }
     cout<<endl;
-*/    
+*/
 
     // Propose new discrete states for all trajectories
     vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
@@ -1308,8 +1314,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   project_out_states.clear();
-
-
+/*
+    cout<<"Current states at the end of the step:\n";
+    for(int a=0; a<dyn_var.ntraj;a++){
+      cout<<dyn_var.act_states[a]<<" ";
+    }
+    cout<<endl;
+*/
 //  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; } 
 //  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; } 
 
