@@ -83,9 +83,13 @@ vector<CMATRIX> compute_St(nHamiltonian& ham, nHamiltonian& ham_prev);
 //vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev, int isNBRA);
 //vector<CMATRIX> compute_St(nHamiltonian& ham, vector<CMATRIX>& Uprev);
 
+/*
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms);
+*/
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms, Random& rnd);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms, Random& rnd);
+void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
+void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms);
 
 
 void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, vector<int>& act_states, 

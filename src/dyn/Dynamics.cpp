@@ -720,22 +720,52 @@ void apply_projectors(CMATRIX& C, vector<CMATRIX>& proj){
   }
 }
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms, Random& rnd){
 
-  propagate_electronic(dt, C, proj, &ham, &ham_prev, prms, rnd);
+/*
+
+void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
+
+  propagate_electronic(dt, C, proj, &ham, &ham_prev, prms);
+
+}
+*/
+
+
+void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
+
+  propagate_electronic(dyn_var, &ham, &ham_prev, prms);
 
 }
 
 
-void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms, Random& rnd){
+//void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
+void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
   int itraj, i, j;
-  int ntraj = Ham->children.size();
-  int nst = Coeff.n_rows;
-  CMATRIX C(nst, 1);
 
+  int num_el = prms.num_electronic_substeps;
+  double dt = prms.dt / num_el;
   int rep = prms.rep_tdse;
   int method = prms.electronic_integrator;
+
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst;
+  if(prms.rep_tdse==0){ nst = ndia; }
+  else if(prms.rep_tdse==1){ nst = nadi; }
+
+
+  CMATRIX C(nst, 1);
+  CMATRIX vRHO(nst*nst, 1); // vectorized DM
+  CMATRIX RHO(nst, nst);    // DM
+  CMATRIX L(nst*nst, nst*nst); // Liouvillian
+  CMATRIX Coeff(nst, ntraj);
+  if(prms.rep_tdse==0){ Coeff = *dyn_var.ampl_dia; }
+  else if(prms.rep_tdse==1){ Coeff = *dyn_var.ampl_adi; }
 
 
   ///======================== Now do the integration of the TD-SE ===================
@@ -751,8 +781,8 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
     //================= Basis re-expansion ===================
     CMATRIX P(ham->nadi, ham->nadi);
-    proj[itraj]->load_identity();
-    CMATRIX T(*proj[itraj]);
+    //proj[itraj]->load_identity();
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
     CMATRIX T_new(ham->nadi, ham->nadi);
 
     P = ham->get_time_overlap_adi();  // U_old.H() * U;
@@ -876,21 +906,53 @@ void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHa
 
   }// rep == 1 - adiabatic
 
+  else if(rep==2){  // diabatic, density matrix formalism
 
-  *proj[itraj] = T_new;
-  //proj[itraj]->set(T_new);
+    if(method==0 || method==100){
+      // Based on Lowdin transformations, using mid-point Hvib
 
-  //for(i=0; i<nst; i++){ 
-  //  for(j=0; j<nst; j++){
-  //    proj[itraj]->set(i, j,  T_new.get(i,j) ); 
-  //  }
-  // }
+      CMATRIX Hvib(ham->ndia, ham->ndia);
+      Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
 
+      L = make_Liouvillian(Hvib);
+      vRHO = vectorize_density_matrix( dyn_var.dm_dia[itraj] ); 
+      propagate_electronic_rot(dt, vRHO, L);
+      *dyn_var.dm_dia[itraj] = unvectorize_density_matrix( vRHO ); 
+
+    }// method == 0 
+
+  }// rep == 2 - diabatic, density matrix
+
+  else if(rep==3){  // adiabatic, density matrix formalism
+
+    if(method==0 || method==100){
+      // Based on Lowdin transformations, using mid-point Hvib
+
+      CMATRIX Hvib(ham->nadi, ham->nadi);
+      Hvib = 0.5 * (T_new.H() * ham->get_hvib_adi() * T_new + ham_prev->get_hvib_adi());
+
+      L = make_Liouvillian(Hvib);
+      vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
+      propagate_electronic_rot(dt, vRHO, L);
+      *dyn_var.dm_adi[itraj] = unvectorize_density_matrix( vRHO );
+
+    }// method == 0
+
+  }// rep == 3 - adiabatic, density matrix  
+
+
+
+  *dyn_var.proj_adi[itraj] = T_new;
 
   // Insert the propagated result back
   for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
 
+
   }// for itraj - all trajectories
+
+
+  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Coeff; }
+  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Coeff; }
 
 
 }
@@ -1087,9 +1149,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 //  cout<<"Before propagate_electronic\n"; dyn_var.proj_adi[0]->show_matrix();
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
-  for(i=0; i<num_el; i++){  propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms, rnd);  }
-  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; }
-  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; }
+//  for(i=0; i<num_el; i++){  propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms);  }
+  for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
+
+//  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; }
+//  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; }
 
   //cout<<"After propagate_electronic\n"; //dyn_var.proj_adi[0]->show_matrix();
   //Cact.show_matrix();
@@ -1204,10 +1268,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // MFSD
   else if(prms.decoherence_algo==4){
-    Cact = mfsd(*dyn_var.p, Cact, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+    *dyn_var.ampl_adi = mfsd(*dyn_var.p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
   }
 
 
+  dyn_var.update_density_matrix(prms, ham, 1);
 
   //========= Use the resulting amplitudes to do the hopping =======
   //dyn_var.update_amplitudes(prms, ham);

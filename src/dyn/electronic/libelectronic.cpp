@@ -128,6 +128,16 @@ void export_Electronic_objects(){
   def("grid_propagator", expt_grid_propagator_v1);
 
 
+  CMATRIX (*expt_vectorize_density_matrix_v1)(CMATRIX& rho) = &vectorize_density_matrix;
+  def("vectorize_density_matrix", expt_vectorize_density_matrix_v1);
+
+  CMATRIX (*expt_unvectorize_density_matrix_v1)(CMATRIX& rho_vec) = &unvectorize_density_matrix;
+  def("unvectorize_density_matrix", expt_unvectorize_density_matrix_v1);
+
+  CMATRIX (*expt_make_Liouvillian_v1)(CMATRIX& ham) = &make_Liouvillian;
+  def("make_Liouvillian", expt_make_Liouvillian_v1);
+
+
 }
 
 

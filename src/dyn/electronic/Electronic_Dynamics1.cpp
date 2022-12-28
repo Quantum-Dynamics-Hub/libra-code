@@ -1309,10 +1309,106 @@ void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
   // Propagator
   U = S_i_half * expH * S_half;
 
+}// grid_propagator
+
+
+CMATRIX vectorize_density_matrix(CMATRIX* rho){
+
+  if(rho->n_cols != rho->n_rows){
+    cout<<"Error in vectorize_density_matrix: rho matrix should be a square matrix\n";
+    cout<<"Current dimensions: "<<rho->n_cols<<" "<<rho->n_rows<<endl;
+    cout<<"Exiting now...\n"; 
+    exit(0);
+  }
+
+  int nst = rho->n_cols; 
+  int sz = nst * nst;
+
+  CMATRIX res(sz, 1);
+
+  int cnt = 0;
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+      res.set(cnt, 0,  rho->get(i, j) );
+      cnt++; 
+    }
+  }
+
+  return res;
+}
+
+CMATRIX vectorize_density_matrix(CMATRIX& rho){
+  return vectorize_density_matrix(&rho);
+}
+
+CMATRIX unvectorize_density_matrix(CMATRIX& rho_vec){
+
+  int sz = rho_vec.n_rows; 
+  double n_fl = sqrt(sz);
+  int n = int(n_fl);
+  if( n*n != sz ){  
   
+    cout<<"Error in unvectorize_density_matrix: The number of elements in the input vector should be a full square of an integer\n";
+    cout<<"The current size is "<<sz<<endl;
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+  
+  CMATRIX res(n, n);
 
-}// propagate_electronic
+  int cnt = 0;
+  for(int i=0; i<n; i++){
+    for(int j=0; j<n; j++){
+      res.set(i, j, rho_vec.get(cnt, 0));
+      cnt++; 
+    }
+  }
+  
+  return res;
 
+}
+
+CMATRIX make_Liouvillian(CMATRIX& ham){
+
+  if(ham.n_cols != ham.n_rows){
+    cout<<"Error in make_Liouvillian: Hamiltonian matrix should be a square matrix\n";
+    cout<<"Current dimensions: "<<ham.n_cols<<" "<<ham.n_rows<<endl;
+    cout<<"Exiting now...\n";
+    exit(0);
+  }
+
+  int nst = ham.n_cols;
+  int sz = nst * nst;
+
+  complex<double> Lijab; 
+  CMATRIX L(sz, sz);
+  int ij, ab;
+
+  ij = 0;
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+      
+      ab = 0;
+      for(int a=0; a<nst; a++){
+        for(int b=0; b<nst; b++){
+          ab++;
+          
+          Lijab = 0.0; 
+          if(j==b){  Lijab += ham.get(i, a); }
+          if(i==a){  Lijab -= std::conj(ham.get(j, b)); }
+
+          L.set(ij, ab,  Lijab );
+
+        }// for b
+      }// for a
+
+      ij++;
+
+    }// for j
+  }// for i
+
+  return L;
+}
 
 
 }// namespace libelectronic

@@ -54,8 +54,10 @@ class dyn_control_params{
     time-dependent wavefunction and the one used to integrate the TD-SE
     
     Options:
-     - 0: diabatic representation 
-     - 1: adiabatic representation [ default ]
+     - 0: diabatic representation, wfc
+     - 1: adiabatic representation, wfc [ default ]
+     - 2: diabatic representation, density matrix (e.g. Liouville's picture)
+     - 3: adiabatic representation, density matrix (e.g. Liouville's picture)
   */
   int rep_tdse;
 
@@ -113,8 +115,11 @@ class dyn_control_params{
     The representation to compute LZ probabilitieis.
  
     Options:
-      - 0: diabatic [ default ]
-      - 1: adiabatic, this will use Belyaev-Lebedev approach
+      - 0: diabatic, Eq. 1 of the Belyaev-Lebedev paper [ default ]
+      - 1: adiabatic, Eq. 3 of the Belyaev-Lebedev paper, crossing point is determined
+           by the sign change of the diabatic gap
+      - 2: adiabatic, Eq. 3 of the Belyaev-Lebedev paper, crossing point is determined
+           by the sign change of the NAC
   */
   int rep_lz;
 

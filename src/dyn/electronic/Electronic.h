@@ -160,6 +160,11 @@ void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, vec
 
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);
 
+CMATRIX vectorize_density_matrix(CMATRIX* rho);
+CMATRIX vectorize_density_matrix(CMATRIX& rho);
+CMATRIX unvectorize_density_matrix(CMATRIX& rho_vec);
+CMATRIX make_Liouvillian(CMATRIX& ham);
+
 
 }// namespace libelectronic
 
