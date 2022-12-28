@@ -916,7 +916,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       L = make_Liouvillian(Hvib);
       vRHO = vectorize_density_matrix( dyn_var.dm_dia[itraj] ); 
-      propagate_electronic_rot(dt, vRHO, L);
+
+      vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
+//      propagate_electronic_rot(dt, vRHO, L);
+
       *dyn_var.dm_dia[itraj] = unvectorize_density_matrix( vRHO ); 
 
     }// method == 0 
@@ -935,11 +938,13 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       L = make_Liouvillian(Hvib);
 //      cout<<"L = \n"; L.show_matrix();
       vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
-      propagate_electronic_rot(dt, vRHO, L);
+
+//      propagate_electronic_rot(dt, vRHO, L);
+      vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
+
       RHO = unvectorize_density_matrix( vRHO );
       RHO = T_new.H() * RHO * T_new;
       *dyn_var.dm_adi[itraj] = RHO; //unvectorize_density_matrix( vRHO );
-
 
     }// method == 0
 
