@@ -1391,13 +1391,13 @@ CMATRIX make_Liouvillian(CMATRIX& ham){
       ab = 0;
       for(int a=0; a<nst; a++){
         for(int b=0; b<nst; b++){
-          ab++;
-          
+         
           Lijab = 0.0; 
           if(j==b){  Lijab += ham.get(i, a); }
           if(i==a){  Lijab -= std::conj(ham.get(j, b)); }
 
           L.set(ij, ab,  Lijab );
+          ab++;
 
         }// for b
       }// for a

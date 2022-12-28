@@ -755,8 +755,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   int ndia = dyn_var.ndia;
 
   int nst;
-  if(prms.rep_tdse==0){ nst = ndia; }
-  else if(prms.rep_tdse==1){ nst = nadi; }
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
 
   CMATRIX C(nst, 1);
@@ -929,12 +929,17 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // Based on Lowdin transformations, using mid-point Hvib
 
       CMATRIX Hvib(ham->nadi, ham->nadi);
-      Hvib = 0.5 * (T_new.H() * ham->get_hvib_adi() * T_new + ham_prev->get_hvib_adi());
+      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
 
+//      cout<<"Hvib = \n"; Hvib.show_matrix();
       L = make_Liouvillian(Hvib);
+//      cout<<"L = \n"; L.show_matrix();
       vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
       propagate_electronic_rot(dt, vRHO, L);
-      *dyn_var.dm_adi[itraj] = unvectorize_density_matrix( vRHO );
+      RHO = unvectorize_density_matrix( vRHO );
+      RHO = T_new.H() * RHO * T_new;
+      *dyn_var.dm_adi[itraj] = RHO; //unvectorize_density_matrix( vRHO );
+
 
     }// method == 0
 
@@ -1007,21 +1012,21 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int ndia = dyn_var.ndia;
 
   //cout<<"Start dyn func\n"; exit(0);
-  if(prms.rep_tdse==0){ nst = ndia; }
-  else if(prms.rep_tdse==1){ nst = nadi; }
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
   //if(prms.decoherence_algo==2){   dyn_var.allocate_afssh(); }
 
   //cout<<" ndof = "<<ndof<<" nst = "<<nst<<" ntraj = "<<ntraj<<endl;
   //exit(0);
   //========== Aliases ===============================
-  CMATRIX Cact(nst, ntraj);  
-  if(prms.rep_tdse==0){ Cact  = *dyn_var.ampl_dia; } //*dyn_var.ampl_dia; }
-  else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; } //*dyn_var.ampl_adi; }
+//  CMATRIX Cact(nst, ntraj);  
+//  if(prms.rep_tdse==0){ Cact  = *dyn_var.ampl_dia; } //*dyn_var.ampl_dia; }
+//  else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; } //*dyn_var.ampl_adi; }
 
 
   vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
-  MATRIX q(*dyn_var.q);
+//  MATRIX q(*dyn_var.q);
   MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
@@ -1115,13 +1120,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
-    p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
+    dyn_var.p->scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
 
   //cout<<"Here\n"; exit(0);
 
   if(prms.entanglement_opt==22){
-    gamma = ETHD3_friction(q, p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
+    gamma = ETHD3_friction(*dyn_var.q, *dyn_var.p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
   }
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
@@ -1146,7 +1151,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-//  cout<<"Before propagate_electronic\n"; dyn_var.proj_adi[0]->show_matrix();
+//  cout<<"Before propagate_electronic\n"; dyn_var.dm_adi[0]->show_matrix();
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
 //  for(i=0; i<num_el; i++){  propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms);  }
@@ -1155,13 +1160,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 //  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; }
 //  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; }
 
-  //cout<<"After propagate_electronic\n"; //dyn_var.proj_adi[0]->show_matrix();
+//  cout<<"After propagate_electronic\n"; dyn_var.dm_adi[0]->show_matrix();
   //Cact.show_matrix();
   //dyn_var.ampl_adi->show_matrix();
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_density_matrix(prms, ham, 1); 
-//  cout<<"After update_dens_matrix\n"; dyn_var.proj_adi[0]->show_matrix();
+//  cout<<"After update_dens_matrix\n"; dyn_var.dm_adi[0]->show_matrix();
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
@@ -1176,7 +1181,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
  
 
 //  cout<<"states = \n";
-//  for(int a=0; a<3; a++){  cout<<dyn_var.act_states[a]<<" "; }
+//  for(int a=0; a<ntraj; a++){  cout<<dyn_var.act_states[a]<<" "; }
 //  cout<<endl;
 
   // NVT dynamics
@@ -1195,7 +1200,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
-    p.scale(prms.constrained_dofs[cdof], -1, 0.0); 
+    dyn_var.p->scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
 
   // NVT dynamics
@@ -1203,7 +1208,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     for(idof=0; idof<n_therm_dofs; idof++){
       dof = prms.thermostat_dofs[idof];
       for(traj=0; traj<ntraj; traj++){
-        p.scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+        dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
       }// traj
     }// idof 
   }
@@ -1348,7 +1353,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     if(prms.decoherence_algo==1){
       // Instantaneous decoherence 
-      instantaneous_decoherence(Cact, act_states, prop_states, old_states, prms.instantaneous_decoherence_variant, prms.collapse_option);
+      instantaneous_decoherence(*dyn_var.ampl_adi, act_states, prop_states, old_states, prms.instantaneous_decoherence_variant, prms.collapse_option);
     } 
     else if(prms.decoherence_algo==2){
       /// Temporarily commented AVA 11/7/2022
