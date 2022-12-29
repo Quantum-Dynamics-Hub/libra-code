@@ -289,6 +289,8 @@ class dyn_variables{
   void init_nuclear_dyn_var(bp::dict _params, Random& rnd);
   double compute_average_kinetic_energy();
   double compute_average_kinetic_energy(vector<int>& which_dofs);
+  double compute_kinetic_energy(int itraj);
+  double compute_kinetic_energy(int itraj, vector<int>& which_dofs);
   vector<double> compute_kinetic_energies();
   vector<double> compute_kinetic_energies(vector<int>& which_dofs);
 

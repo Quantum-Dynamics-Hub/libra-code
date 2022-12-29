@@ -88,6 +88,8 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamilt
 void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms);
 */
 
+CMATRIX Zhu_Liouvillian(double Etot, CMATRIX& Ham, CMATRIX& rho);
+
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms);
 

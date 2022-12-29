@@ -229,6 +229,31 @@ double dyn_variables::compute_average_kinetic_energy(vector<int>& which_dofs){
 }
 
 
+double dyn_variables::compute_kinetic_energy(int itraj){
+  double res = 0.0;
+
+  for(int idof = 0; idof < ndof; idof++){
+    res += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+  }
+  res *= 0.5;
+
+  return res;
+}
+
+
+double dyn_variables::compute_kinetic_energy(int itraj, vector<int>& which_dofs){
+  double res = 0.0;
+
+  for(auto idof : which_dofs){
+    res += p->get(idof, itraj) * p->get(idof, itraj) * iM->get(idof, 0);
+  }
+  res *= 0.5;
+
+  return res;
+}
+
+
+
 vector<double> dyn_variables::compute_kinetic_energies(){
   vector<double> res(ntraj, 0.0);
 

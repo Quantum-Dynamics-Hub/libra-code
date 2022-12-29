@@ -730,6 +730,49 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamilt
 }
 */
 
+CMATRIX Zhu_Liouvillian(double Etot, CMATRIX& Ham, CMATRIX& rho){
+/**
+  This is the Liouvillian based on Eqs. 3.34 and 3.35 of my Chapter, but withing the local diabatization
+  approach, that is when NACs are dropped and Hvib is replaced by Hadi. 
+*/
+
+  int nst = Ham.n_cols;
+  int sz = nst * nst;
+
+  CMATRIX L(sz, sz);
+  int ij;
+
+  double Eeff = 0.0;
+  for(int i=0; i<nst; i++){
+    Eeff += Ham.get(i,i).real() * rho.get(i,i).real(); 
+  }
+  Eeff = Etot - Eeff;
+  if(Eeff < 0.0){ Eeff = 0.0; } 
+  else{ Eeff = sqrt(Eeff); }
+
+  vector<double> sqE_Ei(nst, 0.0);
+  for(int i=0; i<nst; i++){    
+    sqE_Ei[i] = Etot - Ham.get(i,i).real(); 
+    if(sqE_Ei[i]<0.0){ sqE_Ei[i] = 0.0; }
+    else{ sqE_Ei[i] = sqrt(sqE_Ei[i]); }
+    sqE_Ei[i] *= Eeff;
+  }
+
+
+  ij = 0;
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+
+      L.set(ij, ij, complex<double>(2.0*(sqE_Ei[j] - sqE_Ei[i]), 0.0) );
+
+      ij++;
+    }// for j
+  }// for i
+
+  return L;
+  
+}
+
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
 
@@ -767,6 +810,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   if(prms.rep_tdse==0){ Coeff = *dyn_var.ampl_dia; }
   else if(prms.rep_tdse==1){ Coeff = *dyn_var.ampl_adi; }
 
+//  dyn_var.compute_kinetic_energies()
 
   ///======================== Now do the integration of the TD-SE ===================
   for(itraj=0; itraj<ntraj; itraj++){
@@ -930,23 +974,45 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
     if(method==0 || method==100){
       // Based on Lowdin transformations, using mid-point Hvib
-
       CMATRIX Hvib(ham->nadi, ham->nadi);
       Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
 
-//      cout<<"Hvib = \n"; Hvib.show_matrix();
       L = make_Liouvillian(Hvib);
-//      cout<<"L = \n"; L.show_matrix();
       vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
-
 //      propagate_electronic_rot(dt, vRHO, L);
       vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
 
       RHO = unvectorize_density_matrix( vRHO );
       RHO = T_new.H() * RHO * T_new;
-      *dyn_var.dm_adi[itraj] = RHO; //unvectorize_density_matrix( vRHO );
+      *dyn_var.dm_adi[itraj] = RHO;
+    }// method == 0 or 100
 
-    }// method == 0
+    else if(method==1 || method==101){
+      // Here goes the Zhu's method, Eqs. 3.34-3.35 of my Chapter
+      // run this with a TSH versions, not Ehrenfest, cause the total energies
+      // are different in these groups of methods
+
+      CMATRIX Hvib(ham->nadi, ham->nadi);
+      Hvib = ham_prev->get_ham_adi(); // + ham_prev->get_ham_adi());
+
+      int st_indx = dyn_var.act_states[itraj];
+      double Epot = Hvib.get(st_indx, st_indx).real(); 
+      double Ekin = dyn_var.compute_kinetic_energy(itraj);
+     
+
+      L = Zhu_Liouvillian(Epot + Ekin, Hvib, *dyn_var.dm_adi[itraj] );
+
+
+//      L = make_Liouvillian(Hvib);
+      vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
+//      propagate_electronic_rot(dt, vRHO, L);
+      vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
+
+      RHO = unvectorize_density_matrix( vRHO );
+      RHO = T_new.H() * RHO * T_new;
+      *dyn_var.dm_adi[itraj] = RHO; 
+
+    }// method == 1 or 101
 
   }// rep == 3 - adiabatic, density matrix  
 

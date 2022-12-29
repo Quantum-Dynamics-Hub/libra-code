@@ -164,6 +164,8 @@ void export_dyn_variables_objects(){
 
   double (dyn_variables::*expt_compute_average_kinetic_energy_v1)() = &dyn_variables::compute_average_kinetic_energy;
   double (dyn_variables::*expt_compute_average_kinetic_energy_v2)(vector<int>& which_dofs) = &dyn_variables::compute_average_kinetic_energy;
+  double (dyn_variables::*expt_compute_kinetic_energy_v1)(int itraj) = &dyn_variables::compute_kinetic_energy;
+  double (dyn_variables::*expt_compute_kinetic_energy_v2)(int itraj, vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energy;
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v1)() = &dyn_variables::compute_kinetic_energies;
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
 
@@ -205,6 +207,8 @@ void export_dyn_variables_objects(){
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v2)
+      .def("compute_kinetic_energy", expt_compute_kinetic_energy_v1)
+      .def("compute_kinetic_energy", expt_compute_kinetic_energy_v2)
       .def("compute_kinetic_energies", expt_compute_kinetic_energies_v1)
       .def("compute_kinetic_energies", expt_compute_kinetic_energies_v2)
 
