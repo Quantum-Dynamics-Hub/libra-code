@@ -927,6 +927,20 @@ void export_Dyn_objects(){
   def("compute_St", expt_compute_St_v4);
 */
 
+  MATRIX (*expt_momenta_on_excited_states_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, int itraj) = &momenta_on_excited_states;
+  def("momenta_on_excited_states", expt_momenta_on_excited_states_v1);
+
+  void (*expt_SSY_correction_v1)
+  (CMATRIX& Ham, dyn_variables& dyn_var, nHamiltonian& ham, int itraj) = &SSY_correction;
+  def("SSY_correction", expt_SSY_correction_v1);
+
+  CMATRIX (*expt_Zhu_Liouvillian_v1)(double Etot, CMATRIX& Ham, CMATRIX& rho) = Zhu_Liouvillian;
+  def("Zhu_Liouvillian", expt_Zhu_Liouvillian_v1);
+
+  void (*expt_propagate_electronic_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &propagate_electronic;
+  def("propagate_electronic", expt_propagate_electronic_v1);
 
 
   void (*expt_compute_dynamics_v1)

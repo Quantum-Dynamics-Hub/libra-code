@@ -49,6 +49,7 @@ dyn_control_params::dyn_control_params(){
   nac_update_method = 1;
   nac_algo = -1;
   hvib_update_method = 1;
+  do_ssy = 0;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = 2;
@@ -119,6 +120,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   nac_update_method = x.nac_update_method;
   nac_algo = x.nac_algo;
   hvib_update_method = x.hvib_update_method;
+  do_ssy = x.do_ssy;
   do_phase_correction = x.do_phase_correction;
   phase_correction_tol = x.phase_correction_tol; 
   state_tracking_algo = x.state_tracking_algo;
@@ -272,6 +274,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="nac_update_method") { nac_update_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="nac_algo") { nac_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="hvib_update_method") { hvib_update_method = bp::extract<int>(params.values()[i]);   }
+    else if(key=="do_ssy") { do_ssy = bp::extract<int>(params.values()[i]);   }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }

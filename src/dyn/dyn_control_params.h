@@ -213,6 +213,18 @@ class dyn_control_params{
 
 
   /** 
+    Whether to modify the Hamiltonian in the dynamics according the Shenvi-Subotnik-Yang (SSY)
+    method, see my Chapter Eq. 3.27
+    Note, that this is only applied in the adiabatic representation
+
+    Options:
+      - 0: don't [ default ]
+      - 1: do
+  */
+  int do_ssy;
+
+
+  /** 
     The algorithm to correct phases on adiabatic states
 
     Options: 
@@ -598,6 +610,7 @@ class dyn_control_params{
     the number of electronic integration substeps per a nuclear step, such that dt_el = dt_nucl / num_electronic_substeps
   */
   int num_electronic_substeps; 
+
 
   /**
     the method for electronic TD-SE integration:

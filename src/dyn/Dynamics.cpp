@@ -774,6 +774,87 @@ CMATRIX Zhu_Liouvillian(double Etot, CMATRIX& Ham, CMATRIX& rho){
 }
 
 
+MATRIX momenta_on_excited_states(dyn_variables& dyn_var, nHamiltonian* ham, int itraj){
+/**
+  Compute the momenta on all excited states given the momentum on the current active 
+  state such that the total energy is conserved. All done for a given trajectory `itraj`.
+  This is done in the adiabatic basis.
+  
+  The resulting momenta are taken to be parallel to the current momentum
+
+  Returns: MATRIX(ndof, nadi)
+*/
+
+  int nst = dyn_var.nadi;
+  int ndof = dyn_var.ndof;
+  CMATRIX Ham(nst, nst);
+  Ham = ham->get_ham_adi();
+
+  int st_indx = dyn_var.act_states[itraj];
+  double Ekin = dyn_var.compute_kinetic_energy(itraj);
+  double Epot = Ham.get(st_indx, st_indx).real();
+
+  MATRIX res(ndof, nst);
+  MATRIX p_i(ndof, 1);
+  MATRIX p(ndof, 1); p = dyn_var.p->col(itraj);
+
+  for(int i=0; i<nst; i++){
+
+    if(Ekin > 0.0){
+      double Epot_i = Ham.get(i, i).real();
+      double Ekin_i = Ekin + Epot - Epot_i; 
+      if(Ekin_i<0.0){ Ekin_i = 0.0; }
+
+      p_i = p * sqrt(Ekin_i / Ekin);
+    }
+    else{ p_i = 0.0; }
+ 
+    for(int j=0; j<ndof; j++){  res.set(j, i, p_i.get(j, 0) );  }
+
+  }// for i - all states
+
+  return res;
+}
+
+MATRIX momenta_on_excited_states(dyn_variables& dyn_var, nHamiltonian& ham, int itraj){
+  return momenta_on_excited_states(dyn_var, &ham, itraj);
+
+}
+
+void SSY_correction(CMATRIX& Ham, dyn_variables& dyn_var, nHamiltonian* ham, int itraj){
+/**
+  This is a correction of a Hamiltonian according to the phase-correction of Shenvi-Subotnik-Yang, 2011
+
+  See my Chapter, Eq. 3.27
+*/
+
+  int ndof = dyn_var.ndof;
+  int nst = dyn_var.nadi;
+  
+  MATRIX p(ndof, nst); 
+  p = momenta_on_excited_states(dyn_var, ham, itraj);
+  int st_indx = dyn_var.act_states[itraj]; // active state index
+  MATRIX p_act(ndof, 1); p_act = p.col(st_indx);
+  MATRIX p_tmp(ndof, 1);
+
+   
+  for(int i=0; i<nst; i++){
+    p_tmp = p.col(i);
+    p_tmp.dot_product( p_tmp,  *dyn_var.iM);
+    p_tmp.dot_product( p_tmp, p_act);   
+    double sm = p_tmp.sum(); 
+
+    Ham.set(i, i, complex<double>(-sm, 0.0) );
+
+  }// for i
+
+}
+
+void SSY_correction(CMATRIX& Ham, dyn_variables& dyn_var, nHamiltonian& ham, int itraj){
+  SSY_correction(Ham, dyn_var, &ham, itraj);
+}
+
+
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
 
   propagate_electronic(dyn_var, &ham, &ham_prev, prms);
@@ -790,6 +871,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   double dt = prms.dt / num_el;
   int rep = prms.rep_tdse;
   int method = prms.electronic_integrator;
+  int is_ssy = prms.do_ssy;
 
   //======= Parameters of the dyn variables ==========
   int ndof = dyn_var.ndof;
@@ -886,9 +968,12 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       
       //Hvib = T.H() * ham_prev->get_ham_adi() * T;
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
-      Hvib = T_new.H() * ham->get_ham_adi() * T_new;
+      Hvib = ham->get_ham_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+      Hvib = T_new.H() * Hvib * T_new;
       B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
 
@@ -911,6 +996,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       Hvib = ham_prev->get_hvib_adi();
       //Hvib += insta_proj[itraj] * ham->get_hvib_adi() * insta_proj[itraj].H();
       Hvib *= 0.5;
+
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
 //      cout<<"Integration with Hvib = "; Hvib.show_matrix();
       propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
@@ -976,6 +1063,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // Based on Lowdin transformations, using mid-point Hvib
       CMATRIX Hvib(ham->nadi, ham->nadi);
       Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
+
+     if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
       L = make_Liouvillian(Hvib);
       vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );

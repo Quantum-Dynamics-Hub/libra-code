@@ -494,10 +494,10 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     default_params = {}
     #================= Computing Hamiltonian-related properties ====================
     default_params.update( { "rep_tdse":1, "rep_ham":0, "ham_update_method":1, "ham_transform_method":1,
-                             "hvib_update_method":1,
                              "rep_sh":1, "rep_lz":0, "rep_force":1,
                              "force_method":1, "enforce_state_following":0, "enforced_state_index":0, 
-                             "time_overlap_method":0, "nac_update_method":1, 
+                             "time_overlap_method":0, "nac_update_method":1, "nac_algo":0,
+                             "hvib_update_method":1, "do_ssy":0, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 

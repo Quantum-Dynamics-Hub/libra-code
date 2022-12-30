@@ -88,6 +88,13 @@ void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamilt
 void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX*>& proj, nHamiltonian* ham, nHamiltonian* ham_prev, dyn_control_params& prms);
 */
 
+
+MATRIX momenta_on_excited_states(dyn_variables& dyn_var, nHamiltonian* ham, int itraj);
+MATRIX momenta_on_excited_states(dyn_variables& dyn_var, nHamiltonian& ham, int itraj);
+
+void SSY_correction(CMATRIX& Ham, dyn_variables& dyn_var, nHamiltonian* ham, int itraj);
+void SSY_correction(CMATRIX& Ham, dyn_variables& dyn_var, nHamiltonian& ham, int itraj);
+
 CMATRIX Zhu_Liouvillian(double Etot, CMATRIX& Ham, CMATRIX& rho);
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
