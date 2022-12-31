@@ -1330,7 +1330,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  if(prms.tsh_method != 3){  // Don't update states based on amplitudes, in the LZ method
+  if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
     dyn_var.update_active_states();
   }
 //  cout<<"After update_active_states\n"; dyn_var.proj_adi[0]->show_matrix();
@@ -1447,8 +1447,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH
-  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3){
+  // FSSH, GFSH, MSSH, LZ, ZN
+  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 || prms.tsh_method == 4){
 
     // Compute hopping probabilities
     // vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, ham, prev_ham_dia) );

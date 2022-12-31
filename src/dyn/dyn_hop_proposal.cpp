@@ -756,7 +756,113 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian& ham, nHamiltonian&
 
 }
 
+vector<double> compute_hopping_probabilities_zn(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+/**
+  \brief This function computes the surface hopping probabilities according to Zhu-Nakamura generalized to multiple dimensons 
+  according to formula of Yu et al. See my Chapter, Eqs. 3.89 - 3.91
 
+  See more details in:
+
+  \param[in] ham Is the nHamiltonian object that organizes energy-related calculations
+  \param[in] ham_prev Is the nHamiltonian object of previous step or geometry - needed to locate the diabatic crossing
+  \param[in] act_state_indx - index of the current adiabatic state
+  \param[in] rep index selecting the type of representation to be used: 0 - diabatic, 1 - adiabatic based on the min of diabatic
+  gap, 2 - adiabatic, based on the switch of the NAC sign
+  \param[in] p [ndof x 1] or [ndof x ntraj] matrix of nuclear momenta
+  \param[in] invM [ndof x 1] matrix of inverse nuclear masses
+
+  Returns:
+      A nstates-vector of hopping probabilities to all states from the current active state
+
+*/
+  int i,j,k;
+
+  int ndof = ham->nnucl;
+  int nstates = ham->ndia; 
+//  int ntraj = ham->children.size();
+
+  vector<double> g(nstates, 0.0);
+
+  i = act_state_indx;
+
+  /** Diabatic representation:
+
+   p_{i->j} = exp( - (pi / 4.0 * |a|) * sqrt(  2 / (b^2 + sqrt( | b^4  + sign(F_i * F_j) |)) ) )
+
+  */
+
+  // Diabatic Ham matrices
+  MATRIX ham_dia(nstates,nstates);
+  MATRIX ham_dia_prev(nstates, nstates);
+  ham_dia = ham->get_ham_dia().real();
+  ham_dia_prev = ham_prev->get_ham_dia().real();
+
+  MATRIX F(ndof, nstates);
+  MATRIX Fi(ndof, 1);
+  MATRIX Fj(ndof, 1);
+  MATRIX tmp(ndof, 1);
+  vector<int> st(1, ham->id);
+
+  F = ham->all_forces_adi(st).real().T();
+  Fi = F.col(i);
+
+  // Off-diagonal elements - only, if we meet the gap minimum
+  for(j=0; j<nstates; j++){
+
+    if(j!=i){
+      double dh = ham_dia.get(i,i) - ham_dia.get(j,j);
+      double dh_prev = ham_dia_prev.get(i,i) - ham_dia_prev.get(j,j);
+
+      if(dh * dh_prev < 0.0){
+        Fj = F.col(j);
+
+        double sgn = (Fi.T() * Fj).get(0);
+        sgn = SIGN(sgn);
+        
+        // |Fi * Fj| = sqrt( |Fi^T * iM * F_j |)
+        tmp.dot_product( Fi,  Fj);
+        tmp.dot_product( tmp, invM);
+        double x = sqrt(fabs(tmp.sum()));
+
+        // |F_i - F_j | = sqrt( (F_i - F_j)^T * iM * (F_i - F_j) )
+        Fj = Fi - Fj;
+        tmp.dot_product( Fj, Fj );
+        tmp.dot_product( tmp, invM);
+        double y = sqrt( fabs(tmp.sum() ) );
+
+        double h = fabs(ham_dia.get(i,j));
+
+        if(h > 0.0 && x > 0.0){
+          double a2 = 0.0625 * x * y / (h * h * h);
+          double b2 = 0.5 * y/(x * h) ;
+          double g_ij = exp( -(0.25*M_PI / sqrt(a2) ) * sqrt(2.0 / ( b2 + sqrt(b2*b2 + sgn )  )) );
+
+          g[j] = g_ij;
+        }
+        else{ g[j] = 0.0; }
+
+      }// only if minimum is located
+      else{ g[j] = 0.0; }
+
+    }// j!=i
+  }// for j
+
+  // Diagonal elements - common for both reps
+  double sum = 0.0;
+  for(j=0;j<nstates;j++){
+    if(j!=i){  sum += g[j];   }
+  }// for i
+  g[i] = 1.0 - sum;
+
+  return g;
+
+}
+
+vector<double> compute_hopping_probabilities_zn(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+
+  return compute_hopping_probabilities_zn(&ham, &ham_prev, act_state_indx, rep, p, invM);
+
+}
 
 
 /*
@@ -933,9 +1039,16 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
                 prms.rep_lz, p_traj, *dyn_var.iM);
 
     }
+    else if(prms.tsh_method == 4){ // ZN
+
+      pop_submatrix(*dyn_var.p, p_traj, nucl_stenc_x, nucl_stenc_y);
+      g[traj] = compute_hopping_probabilities_zn(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj],
+                prms.rep_lz, p_traj, *dyn_var.iM);
+
+    }
 
     else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, or 3. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, or 4. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }

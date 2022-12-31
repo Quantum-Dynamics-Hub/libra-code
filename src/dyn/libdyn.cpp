@@ -517,13 +517,12 @@ void export_dyn_hop_proposal_objects(){
   MATRIX& p, const MATRIX& invM) = &compute_hopping_probabilities_lz;
   def("compute_hopping_probabilities_lz", expt_compute_hopping_probabilities_lz_v1);
 
+  vector<double> (*expt_compute_hopping_probabilities_zn_v1)
+  (nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep,
+  MATRIX& p, const MATRIX& invM) = &compute_hopping_probabilities_lz;
+  def("compute_hopping_probabilities_zn", expt_compute_hopping_probabilities_zn_v1);
 
-/*
-  vector<MATRIX> (*expt_hop_proposal_probabilities_v1)
-  (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-   nHamiltonian& ham, vector<MATRIX>& prev_ham_dia) = &hop_proposal_probabilities;
-*/
+
   vector<MATRIX> (*expt_hop_proposal_probabilities_v1)
   (dyn_control_params& prms,
    MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
