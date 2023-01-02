@@ -55,14 +55,17 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates, double t
       // (where the total norm may exceeed 1.0), as is the case for too large dt
       // for some algorithms
       cout<<"=== Place 1 =====\n";
-      cout<<"Error in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
+      cout<<"WARNING in CMATRIX sdm(CMATRIX& Coeff, double dt, int act_st, MATRIX& decoh_rates):\n";
       cout<<"The population of the active state is larger than 1: p_aa_old = "<< p_aa_old << endl;
       cout<<"C = \n"; C.show_matrix();
       cout<<"act_st = "<<act_st<<endl;
       cout<<"Coeff = \n"; Coeff.show_matrix();
       cout<<"decoh_rates = \n"; decoh_rates.show_matrix();
       cout<<"initial total pop = "<<(Coeff.H() * Coeff).get(0,0).real();
-      exit(0);
+
+      C *= (1.0/sqrt(p_aa_old));
+      p_aa_old = 1.0;
+      //exit(0);
     }
 
 
