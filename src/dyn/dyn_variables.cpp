@@ -96,7 +96,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= BCSH ====================
   bcsh_vars_status = 0;
 
-
+  ///================= DISH ====================
+  dish_vars_status = 0;
+  
 }
 
 
@@ -135,6 +137,19 @@ void dyn_variables::allocate_bcsh(){
   }
 
 }// allocate_bcsh
+
+
+void dyn_variables::allocate_dish(){
+
+  if(dish_vars_status==0){
+
+    coherence_time = new MATRIX(nadi, ntraj);
+    dish_vars_status = 1;
+
+  }
+
+}// allocate_dish
+
 
 
 
@@ -197,9 +212,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
   }// if BCSH vars
 
-  //*this = x;
+  // DISH vars - only if initialized
+  if(x.dish_vars_status==1){
+    allocate_dish();
+
+    // Copy content
+    *coherence_time = *x.coherence_time;
+
+  }// if DISH vars
   
-}
+}// dyn_variables cctor
 
 
 
@@ -251,6 +273,18 @@ dyn_variables::~dyn_variables(){
     afssh_vars_status = 0;
 
   }// AFSSH variables
+
+  if(bcsh_vars_status==1){
+    delete reversal_events;
+
+    bcsh_vars_status = 0;
+  }
+
+  if(dish_vars_status==1){
+    delete coherence_time;
+
+    dish_vars_status = 0;
+  }
 
 }
 

@@ -258,6 +258,31 @@ class dyn_variables{
   */
   MATRIX* reversal_events;
 
+  
+  ///================= For DISH ===================
+  /**
+    Status of the DISH vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int dish_vars_status;
+
+  /**
+    Coherence times
+
+    Options:
+     MATRIX(nadi, ntraj)
+
+    For Method: DISH
+  */
+  MATRIX* coherence_time;
+
+
+//  MATRIX coherence_time(nst, ntraj);     // for DISH
+//  MATRIX coherence_interval(nst, ntraj); // for DISH
+//  vector<int> project_out_states(ntraj);  // for DISH
+
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -265,6 +290,7 @@ class dyn_variables{
   void allocate_nuclear_vars();
   void allocate_afssh();
   void allocate_bcsh();
+  void allocate_dish();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 

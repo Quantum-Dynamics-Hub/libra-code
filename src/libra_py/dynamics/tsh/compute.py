@@ -567,6 +567,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     is_nbra = dyn_params["is_nbra"]    
     icond = dyn_params["icond"]    # Setting the initial geoemtry in the dynamics    
     nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
+    tsh_method = dyn_params["tsh_method"] 
 
 
     #q = MATRIX(_q)
@@ -633,6 +634,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_afssh()
     elif decoherence_algo==3:
         dyn_var.allocate_bcsh()
+
+    if tsh_method==5:
+        dyn_var.allocate_dish()
 
 
     ham_aux = nHamiltonian(ham)

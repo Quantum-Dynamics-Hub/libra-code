@@ -300,10 +300,12 @@ class dyn_control_params{
 
     Options: 
       - [-1]: adiabatic dynamics, no hops [ default ]
-      - 0: FSSH
-      - 1: GFSH
-      - 2: MSSH
-      - 3: DISH
+      - 0: Fewest Switches Surface Hopping (FSSH)
+      - 1: Global Flux Surface Hopping (GFSH)
+      - 2: Markov-State Surface Hopping (MSSH)
+      - 3: Landau-Zener (LZ) options
+      - 4: Zhu-Nakamura (ZN) options
+      - 5: DISH (to be implemented)
   */
   int tsh_method;
 

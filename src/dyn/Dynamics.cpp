@@ -1232,7 +1232,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
  //cout<<"Here\n"; exit(0);
 
- if(prms.tsh_method == 3){ // DISH
+ if(prms.tsh_method == 5){ // DISH
   //    prev_ham_dia[0] = ham.children[0]->get_ham_dia().real();
   //}
   //else{
@@ -1242,23 +1242,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
 
-//cout<<"Here\n"; exit(0);
 
-  //============== Electronic propagation ===================
-  // Evolve electronic DOFs for all trajectories
-  // Adding the prms.isNBRA to the propagate electronic
-/*
-  cout<<"q \n";
-   dyn_var.q->show_matrix();
-//   dyn_var.f->show_matrix();
-
-    cout<<"Current states at the beginning of the step:\n";
-    for(int a=0; a<dyn_var.ntraj;a++){
-      cout<<dyn_var.act_states[a]<<" ";
-    }
-    cout<<endl;
-//exit(0);
-*/
+  //***************************** Coherent dynamics *******************************
   //============== Nuclear propagation ===================
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -1270,20 +1255,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// idof 
   }
 
-//cout<<"Here\n"; exit(0);
-//   dyn_var.q->show_matrix();
-//   dyn_var.f->show_matrix();
-//exit(0);
   *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
-
-//cout<<"Here\n"; exit(0);
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
     dyn_var.p->scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
-
-  //cout<<"Here\n"; exit(0);
 
   if(prms.entanglement_opt==22){
     gamma = ETHD3_friction(*dyn_var.q, *dyn_var.p, invM, prms.ETHD3_alpha, prms.ETHD3_beta);
@@ -1296,7 +1273,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
-
     }
   }
 
@@ -1444,122 +1420,81 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //dyn_var.update_density_matrix(prms, ham, 1);
 
 
+  //************************************ TSH options ****************************************
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH, LZ, ZN
-  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 || prms.tsh_method == 4){
+  // FSSH, GFSH, MSSH, LZ, ZN, DISH
+  else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 
+       || prms.tsh_method == 4 || prms.tsh_method ==5 ){
 
-    // Compute hopping probabilities
-    // vector<MATRIX> g( hop_proposal_probabilities(prms, q, p, invM, Coeff, ham, prev_ham_dia) );
 
-    /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
-    /// of that trajectory
-    vector< vector<double> > g;
-    g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
+    vector<int> old_states(dyn_var.act_states); 
 
-/*
-    cout<<"g = \n";
-    for(int a=0; a<g.size(); a++){      
-      for(int b=0; b<g[a].size(); b++){
-        cout<<g[a][b]<<" ";
-      }
-      cout<<"\n";
-    }
+    //========================== Hop proposal and acceptance ================================
 
-    cout<<"Current states:\n";
-    for(int a=0; a<dyn_var.ntraj;a++){
-      cout<<dyn_var.act_states[a]<<" ";
-    }
-    cout<<endl;
-*/
+    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4)
+    if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  || prms.tsh_method == 4){
 
-    // Propose new discrete states for all trajectories
-    vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
+      /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
+      /// of that trajectory
+      vector< vector<double> > g;
+      g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
 
-//    cout<<"Proposed states:\n";
-//    for(int a=0; a<dyn_var.ntraj;a++){
-//      cout<<prop_states[a]<<" ";
-//    }
-//    cout<<endl;
-
+      // Propose new discrete states for all trajectories
+      vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
     
-    // Decide if to accept the transitions (and then which)
-    // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-    vector<int> old_states(ntraj); //act_states);
-    for(traj=0; traj<ntraj; traj++){ old_states[traj] = dyn_var.act_states[traj]; }
-    //p = *dyn_var.p;
-    act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
-    //*dyn_var.p = p;
+      // Decide if to accept the transitions (and then which)
+      // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
+      act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
 
-/*
-    cout<<"Accepted states:\n";
-    for(int a=0; a<dyn_var.ntraj;a++){
-      cout<<act_states[a]<<" ";
+
+      //=== Post-hop decoherence options ===
+
+      // Instantaneous decoherence
+      if(prms.decoherence_algo==1){
+        instantaneous_decoherence(*dyn_var.ampl_adi, act_states, prop_states, old_states,
+                                   prms.instantaneous_decoherence_variant, prms.collapse_option);
+      }
+      else if(prms.decoherence_algo==2){
+        /// Temporarily commented AVA 11/7/2022
+        ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
+      }// AFSSH
+
     }
-    cout<<endl;
-*/
+    // DISH
+    else if(prms.tsh_method == 5 ){
 
-//    cout<<"Before p rescaling:\n"; dyn_var.p->show_matrix();
+      /// Advance coherence times
+      dyn_var.coherence_time->add(-1, -1, prms.dt);
+
+      /// New version, as of 8/3/2020
+      act_states = dish(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, dyn_var.act_states, *dyn_var.coherence_time, 
+                        decoherence_rates, rnd);
+
+    }// DISH
+
+
+    //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
-    //
     p = *dyn_var.p;
     handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
     *dyn_var.p = p;
     dyn_var.act_states = act_states;
-//    cout<<"After p rescaling:\n"; dyn_var.p->show_matrix();
+    
+    // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
 
 
-    if(prms.decoherence_algo==1){
-      // Instantaneous decoherence 
-      instantaneous_decoherence(*dyn_var.ampl_adi, act_states, prop_states, old_states, prms.instantaneous_decoherence_variant, prms.collapse_option);
-    } 
-    else if(prms.decoherence_algo==2){
-      /// Temporarily commented AVA 11/7/2022
-      ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
-    }// AFSSH
         
-  }// tsh_method == 0, 1, 2, 3
-  
-/*
-  // DISH
-  else if(prms.tsh_method == 3 ){
+  }// tsh_method == 0, 1, 2, 3, 4, 5
 
-    /// Advance coherence times
-    coherence_time.add(-1, -1, prms.dt);
-
-    /// New version, as of 8/3/2020
-    vector<int> old_states(act_states);
-    act_states = dish(prms, q, p, invM, Coeff, ham, act_states, coherence_time, decoherence_rates, rnd);
-
-    /// Velocity rescaling
-    handle_hops_nuclear(prms, q, p, invM, Coeff, ham, act_states, old_states);
-
-
-  }// tsh_method == 3
-*/
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
 
-
   project_out_states.clear();
-/*
-    cout<<"Current states at the end of the step:\n";
-    for(int a=0; a<dyn_var.ntraj;a++){
-      cout<<dyn_var.act_states[a]<<" ";
-    }
-    cout<<endl;
-*/
-//  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; } 
-//  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; } 
-
-
 
 }
-
-
-
 
 
 
