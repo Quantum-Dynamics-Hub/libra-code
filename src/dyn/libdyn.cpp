@@ -289,9 +289,11 @@ void export_dyn_decoherence_objects(){
 
 
 
-  MATRIX (*expt_wp_reversal_events_v1)
-  (MATRIX& p, MATRIX& invM, vector<int>& act_states, 
-   nHamiltonian& ham, vector<CMATRIX>& projectors, double dt) = &wp_reversal_events;
+//  MATRIX (*expt_wp_reversal_events_v1)
+//  (MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+//   nHamiltonian& ham, vector<CMATRIX>& projectors, double dt) = &wp_reversal_events;
+  void (*expt_wp_reversal_events_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, double dt) = &wp_reversal_events;
   def("wp_reversal_events", expt_wp_reversal_events_v1);
 
   CMATRIX (*expt_bcsh_v1)

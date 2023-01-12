@@ -22,6 +22,7 @@
 #include "../io/libio.h"
 #include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
 #include "../Units.h"
 
 /// liblibra namespace
@@ -47,6 +48,7 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 void project_out(CMATRIX& Coeff, int traj, int i);
 void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option);
+void collapse_dm(CMATRIX* dm, int i);
 
 void instantaneous_decoherence(CMATRIX& Coeff, 
    vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
@@ -58,8 +60,9 @@ void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F
 
 
 // For branching-corrected SH
-MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
-                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt);
+//MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+//                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt);
+void wp_reversal_events(dyn_variables& dyn_var, nHamiltonian& ham, double dt);
 CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events);
 
 

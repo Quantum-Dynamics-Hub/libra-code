@@ -276,6 +276,23 @@ void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option){
 }
 
 
+void collapse_dm(CMATRIX* dm, int i){
+    /** Collapse the density matrix to a given state 
+
+    Args:
+        dm ( CMATRIX(nstates, nstates) ): density matrix to be modified
+        i ( int ): The index of the state onto which the density matrix will be collapsed
+
+    Returns:
+        None: but changes the input variable `dm`
+
+    */
+
+    dm->set(-1, -1, complex<double>(0.0, 0.0));
+    dm->set(i,i, complex<double>(1.0, 0.0));
+
+}
+
 
 void instantaneous_decoherence(CMATRIX& Coeff, 
    vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
@@ -352,14 +369,14 @@ void instantaneous_decoherence(CMATRIX& Coeff,
     for(traj = 0; traj < ntraj; traj++){
 
       if(proposed_states[traj] != initial_states[traj]){
-      // Only apply ID-A, if the proposed states are different from the original ones
+        // Only apply ID-A, if the proposed states are different from the original ones
 
         if(accepted_states[traj] == proposed_states[traj]){
-        // Proposed hop is successful - collapse onto newly accepted state
+          // Proposed hop is successful - collapse onto newly accepted state
           collapse(Coeff, traj, accepted_states[traj], collapse_option);
         }
         else{
-        // Proposed hop is not successful - collapse onto the original state
+          // Proposed hop is not successful - collapse onto the original state
           collapse(Coeff, traj, initial_states[traj], collapse_option);
         }
       }
@@ -372,9 +389,7 @@ void instantaneous_decoherence(CMATRIX& Coeff,
   else if(instantaneous_decoherence_variant==2){
 
     for(traj = 0; traj < ntraj; traj++){
-
       collapse(Coeff, traj, accepted_states[traj], collapse_option);
-
     }// traj
 
   }// ID-C
@@ -513,8 +528,9 @@ void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F
 
 
 
-MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
-                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt){
+//MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+//                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt){
+void wp_reversal_events(dyn_variables& dyn_var, nHamiltonian& ham, double dt){
 /**
    This function computes the flags to decide on whether WP on any given surface of every trajectory
    reflects (1) or not (0).
@@ -526,9 +542,9 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
 */
 
 
-  int ntraj = p.n_cols;
-  int nadi = ham.nadi;
-  int ndof = ham.nnucl;
+  int ntraj = dyn_var.ntraj;  //p.n_cols;
+  int nadi = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
 
   CMATRIX E(nadi, nadi);
   CMATRIX dE(nadi, nadi);
@@ -538,42 +554,31 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
   MATRIX F(ndof, nadi);
   MATRIX fi(ndof, 1);
 
-  MATRIX res(nadi, ntraj);  res = 0.0;
+  dyn_var.reversal_events->set(-1, -1, 0.0);
 
+//  MATRIX res(nadi, ntraj);  res = 0.0;
 
   for(int itraj=0; itraj<ntraj; itraj++){
+    int a = dyn_var.act_states[itraj]; // active state index    
+    pa = dyn_var.p->col(itraj); // this is momentum on the active state
 
-    int a = act_states[itraj]; // active state index
-    
-    pa = p.col(itraj); // this is momentum on the active state
-//    exit(0);
-
-    double T_a = compute_kinetic_energy(pa, invM); // kinetic energy on the active state
+    double T_a = compute_kinetic_energy(pa, *dyn_var.iM); // kinetic energy on the active state
 
     // Energy
     E = ham.children[itraj]->get_ham_adi();
-    E = projectors[itraj].H() * E * projectors[itraj];      
     double E_a = E.get(a, a).real();  // potential energy on the active state
 
-//    exit(0);
-
-    // Forces
+    // Forces on all states
     for(int idof=0; idof<ndof; idof++){
-      dE = ham.children[itraj]->get_d1ham_adi(idof);
-      dE = -1.0 * projectors[itraj].H() * dE * projectors[itraj];
-
-      for(int i=0; i<nadi; i++){
-        F.set(idof, i,  dE.get(i,i).real() );
-      }
+      dE = -1.0 * ham.children[itraj]->get_d1ham_adi(idof);
+      for(int i=0; i<nadi; i++){  F.set(idof, i,  dE.get(i,i).real() );   }
     }
 
 
     for(int i=0; i<nadi; i++){
-
       if(i!=a){
-
         double E_i = E.get(i, i).real();  // potential energy on all other states
-        double T_i = T_a + E_a - E_i;        // predicted kinetic energy on other state i
+        double T_i = T_a + E_a - E_i;      // predicted kinetic energy on other state i
 
         // WP momenta on all surfaces
         if(T_i<0){  pi = 0.0000001 * pa; }   // infinitesimally small along pa
@@ -592,14 +597,10 @@ MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states,
 
       // Different signs: reflection on the i-th surface takes place
       if(dp_old * dp_new < 0.0){
-         res.set(i, itraj, 1.0);
+         dyn_var.reversal_events->set(i, itraj, 1.0);
       }
-
-
     }// for i
   }// for itraj
-
-  return res;
 
 }
 

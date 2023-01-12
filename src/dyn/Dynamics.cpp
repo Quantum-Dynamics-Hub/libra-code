@@ -1190,15 +1190,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
-  //cout<<"Here \n"; exit(0);
-  //nHamiltonian ham_prev(ham);
 
-  //======== General variables =======================
-
-  MATRIX coherence_time(nst, ntraj);     // for DISH
-  MATRIX coherence_interval(nst, ntraj); // for DISH
-  vector<int> project_out_states(ntraj);  // for DISH
- 
+  //======== General variables ======================= 
   // Defining ntraj1 as a reference for making these matrices
   // ntraj is defined as q.n_cols as since it would be large in NBRA
   // we can define another variable like ntraj1 and build the matrices based on that.
@@ -1206,13 +1199,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   if(prms.isNBRA==1){   ntraj1 = 1;  }
   else{  ntraj1 = ntraj;  }
 
-  //cout<<"Here\n"; exit(0);
 
   // Defining matrices based on ntraj1
   vector<CMATRIX> Eadi(ntraj1, CMATRIX(nst, nst));  
   vector<MATRIX> decoherence_rates(ntraj1, MATRIX(nst, nst)); 
   vector<double> Ekin(ntraj1, 0.0);  
-  vector<MATRIX> prev_ham_dia(ntraj1, MATRIX(nst, nst));
   MATRIX gamma(ndof, ntraj);
   MATRIX p_traj(ndof, 1);
   vector<int> t1(ndof, 0); for(dof=0;dof<ndof;dof++){  t1[dof] = dof; }
@@ -1229,18 +1220,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       exit(0);
     }
   }
-
- //cout<<"Here\n"; exit(0);
-
- if(prms.tsh_method == 5){ // DISH
-  //    prev_ham_dia[0] = ham.children[0]->get_ham_dia().real();
-  //}
-  //else{
-    for(traj=0; traj<ntraj1; traj++){
-      prev_ham_dia[traj] = ham.children[traj]->get_ham_dia().real();  
-    }
-  }
-
 
 
   //***************************** Coherent dynamics *******************************
@@ -1280,45 +1259,29 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   ham_aux.copy_content(ham);
 
-//  cout<<"Here\n"; exit(0);
 
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-//  cout<<"Before propagate_electronic\n"; dyn_var.dm_adi[0]->show_matrix();
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
-//  for(i=0; i<num_el; i++){  propagate_electronic(dt_el, Cact, dyn_var.proj_adi, ham, ham_aux, prms);  }
   for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
-
-//  if(prms.rep_tdse==0){ *dyn_var.ampl_dia = Cact; }
-//  else if(prms.rep_tdse==1){ *dyn_var.ampl_adi = Cact; }
-
-//  cout<<"After propagate_electronic\n"; dyn_var.dm_adi[0]->show_matrix();
-  //Cact.show_matrix();
-  //dyn_var.ampl_adi->show_matrix();
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_density_matrix(prms, ham, 1); 
-//  cout<<"After update_dens_matrix\n"; dyn_var.dm_adi[0]->show_matrix();
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
   if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
     dyn_var.update_active_states();
   }
-//  cout<<"After update_active_states\n"; dyn_var.proj_adi[0]->show_matrix();
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
-//  cout<<"Before update forces\n"; dyn_var.proj_adi[0]->show_matrix();
   update_forces(prms, dyn_var, ham);
  
 
-//  cout<<"states = \n";
-//  for(int a=0; a<ntraj; a++){  cout<<dyn_var.act_states[a]<<" "; }
-//  cout<<endl;
 
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -1395,21 +1358,32 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     dephasing_informed_correction(decoherence_rates, Eadi, ave_gaps, prms.isNBRA);
   }
 
-  //============ Apply decoherence corrections ==================
+  //============ Apply pre-TSH decoherence corrections ==================
+
   // SDM and alike methods - only in the adiabatic rep
-  if(prms.decoherence_algo==0 && prms.rep_tdse==1){
-    *dyn_var.ampl_adi = sdm(*dyn_var.ampl_adi, prms.dt, dyn_var.act_states, decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
+  if(prms.decoherence_algo==0){
+    if(prms.rep_tdse==1){
+      *dyn_var.ampl_adi = sdm(*dyn_var.ampl_adi, prms.dt, dyn_var.act_states, 
+                              decoherence_rates, prms.sdm_norm_tolerance, prms.isNBRA);
+    }
+    else{ cout<<"ERROR: SDM/mSDM requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
+  else if(prms.decoherence_algo==1){ /* ID-A. Nothing to do here, this is done in the surface hopping section */ }
+  else if(prms.decoherence_algo==2){ /* A-FSSH. Nothing to do here, this is done in the surface hopping section */ }
   // BCSH
   else if(prms.decoherence_algo==3){ 
-// TEMPORARY COMMENTS - next 2 lines
-//    *dyn_var.reversal_events = wp_reversal_events(p, invM, act_states, ham, projectors, prms.dt);
-//    Coeff = bcsh(Coeff, prms.dt, act_states, *dyn_var.reversal_events);
+    if(prms.rep_tdse==1){
+      wp_reversal_events(dyn_var, ham, prms.dt);
+      *dyn_var.ampl_adi = bcsh(*dyn_var.ampl_adi, prms.dt, dyn_var.act_states, *dyn_var.reversal_events);
+    }
+    else{ cout<<"ERROR: BCSH requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
-
   // MFSD
   else if(prms.decoherence_algo==4){
-    *dyn_var.ampl_adi = mfsd(*dyn_var.p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+    if(prms.rep_tdse==1){
+      *dyn_var.ampl_adi = mfsd(*dyn_var.p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+    }
+    else{ cout<<"ERROR: MSDF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 
 
@@ -1453,8 +1427,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
       // Instantaneous decoherence
       if(prms.decoherence_algo==1){
-        instantaneous_decoherence(*dyn_var.ampl_adi, act_states, prop_states, old_states,
-                                   prms.instantaneous_decoherence_variant, prms.collapse_option);
+        if(prms.rep_tdse==1){
+          instantaneous_decoherence(*dyn_var.ampl_adi, act_states, prop_states, old_states,
+                                    prms.instantaneous_decoherence_variant, prms.collapse_option);
+        }
+        else{ cout<<"ERROR: Instantaneous Decoherence requires rep_tdse = 1\nExiting now...\n"; exit(0); }
       }
       else if(prms.decoherence_algo==2){
         /// Temporarily commented AVA 11/7/2022
@@ -1463,7 +1440,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     }
     // DISH
-    else if(prms.tsh_method == 5 ){
+    else if(prms.tsh_method == 5){
+      if(prms.decoherence_algo==-1){ ;; }
+      else{ cout<<"ERROR: DISH method should be used only with decoherence_algo = -1\nExiting now...\n"; exit(0); }
+        
 
       /// Advance coherence times
       dyn_var.coherence_time->add(-1, -1, prms.dt);
@@ -1490,9 +1470,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }// tsh_method == 0, 1, 2, 3, 4, 5
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
-
-
-  project_out_states.clear();
 
 }
 
