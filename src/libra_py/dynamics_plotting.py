@@ -418,7 +418,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     default_params = {  "colors":colors_, "clrs_index":clrs_index_,
                         "xlim":[-7.5, 15], "ylim":[-0.005, 0.025], "ylim2":[-0.01, 0.01], "do_show":1,
                         "save_figures":1, "prefix":"out", "dpi":300, "nac_idof":0,
-                        "plotting_option":0
+                        "plotting_option":0, "figsize":[36, 18], "titlesize":38, "labelsize":38,
+                        "fontsize": 36, "xticksize":28, "yticksize":28
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
@@ -433,6 +434,14 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     dpi_value = plot_params["dpi"]
     plotting_option = plot_params["plotting_option"]  
     nac_idof = plot_params["nac_idof"]  # index of the DOF for which we plot the derivative coupling
+    _figsize = plot_params["figsize"]
+    _titlesize = plot_params["titlesize"]
+    _labelsize = plot_params["labelsize"]
+    _fontsize = plot_params["fontsize"]
+    _xticksize = plot_params["xticksize"]
+    _yticksize = plot_params["yticksize"]
+
+    fig_size = (_figsize[0], _figsize[1])
 
     
     X = []
@@ -442,11 +451,11 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         X.append(xmin + i * dx)
     
     
-    plt.rc('axes', titlesize=38)      # fontsize of the axes title
-    plt.rc('axes', labelsize=38)      # fontsize of the x and y labels
-    plt.rc('legend', fontsize=36)     # legend fontsize
-    plt.rc('xtick', labelsize=28)     # fontsize of the tick labels
-    plt.rc('ytick', labelsize=28)     # fontsize of the tick labels
+    plt.rc('axes', titlesize=_titlesize)      # fontsize of the axes title
+    plt.rc('axes', labelsize=_labelsize)      # fontsize of the x and y labels
+    plt.rc('legend', fontsize=_fontsize)      # legend fontsize
+    plt.rc('xtick', labelsize=_xticksize)     # fontsize of the tick labels
+    plt.rc('ytick', labelsize=_yticksize)     # fontsize of the tick labels
 
     plt.rc('figure.subplot', left=0.2)
     plt.rc('figure.subplot', right=0.95)
@@ -508,7 +517,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 
         if plotting_option==0:  # Plot diabatic and adiabatic surfaces separately, plot projections too
                     
-            plt.figure(2*iset, figsize=(36, 18)) # dpi=300, frameon=False)
+            plt.figure(2*iset, figsize=fig_size ) # dpi=300, frameon=False)
                 
             plt.subplot(1, 2, 1)    
             plt.ylim(ylim[0], ylim[1])
@@ -535,7 +544,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                 plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
             
                   
-            plt.figure(2*iset+1, figsize=(36, 18)) # dpi=300, frameon=False)            
+            plt.figure(2*iset+1, figsize=fig_size ) # dpi=300, frameon=False)            
             sz1 = len(states_of_interest)
     
             for k2 in states_of_interest:
@@ -565,7 +574,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         elif plotting_option==1:  # Plot diabatic and adiabatic surfaces in one picture, using dashed lines for diabatic
                                   # Plot NACs in a separate panel
 
-            plt.figure(iset, figsize=(36, 18)) # dpi=300, frameon=False)
+            plt.figure(iset, figsize=fig_size) # dpi=300, frameon=False)
 
             plt.subplot(1, 2, 1)
             plt.ylim(ylim[0], ylim[1])
