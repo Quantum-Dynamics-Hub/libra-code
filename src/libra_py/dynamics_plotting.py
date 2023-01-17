@@ -419,7 +419,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                         "xlim":[-7.5, 15], "ylim":[-0.005, 0.025], "ylim2":[-0.01, 0.01], "do_show":1,
                         "save_figures":1, "prefix":"out", "dpi":300, "nac_idof":0,
                         "plotting_option":0, "figsize":[36, 18], "titlesize":38, "labelsize":38,
-                        "fontsize": 36, "xticksize":28, "yticksize":28
+                        "fontsize": 36, "xticksize":28, "yticksize":28, "show_nac_abs":0,
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
@@ -440,6 +440,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     _fontsize = plot_params["fontsize"]
     _xticksize = plot_params["xticksize"]
     _yticksize = plot_params["yticksize"]
+    show_nac_abs = plot_params["show_nac_abs"]
 
     fig_size = (_figsize[0], _figsize[1])
 
@@ -475,19 +476,22 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         ham.init_all(2)
 
         
-        hdia, hadi, nac  = [], [], []
+        hdia, hadi, nac, nac_abs  = [], [], [], []
         uij = []              # projecitions of the MOs onto elementary basis
     
         for k1 in range(nstates):
             hadi.append([])
             hdia.append([])
             nac_k1 = []
+            nac_abs_k1 = []
             uij_k1 = []
             for k2 in range(nstates):
                 uij_k1.append([])
                 nac_k1.append([])
+                nac_abs_k1.append([])
             uij.append(uij_k1)
             nac.append(nac_k1)
+            nac_abs.append(nac_abs_k1)
                 
     
         for i in range(nsteps):
@@ -512,7 +516,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             
                 for k2 in range(nstates):
                     uij[k1][k2].append(U.get(k1,k2).real**2 + U.get(k1,k2).imag**2)
-                    nac[k1][k2].append(ham.get_dc1_adi(0).get(k1, k2).real)
+                    nac_k1_k2 = ham.get_dc1_adi(0).get(k1, k2).real
+                    nac[k1][k2].append(nac_k1_k2)
+                    nac_abs[k1][k2].append( abs(nac_k1_k2) )
 
 
         if plotting_option==0:  # Plot diabatic and adiabatic surfaces separately, plot projections too
@@ -599,8 +605,10 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             cnt = 0
             for k1 in states_of_interest:
                 for k2 in states_of_interest:
-                    if k2>k1:
+                    if k2>k1:                        
                         plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, color = colors[clrs_index[cnt]])
+                        if show_nac_abs:
+                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, ls="--", color = colors[clrs_index[cnt+1]])
                         cnt = cnt + 1
             plt.legend()
 
