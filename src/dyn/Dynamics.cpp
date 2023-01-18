@@ -932,7 +932,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // Based on Lowdin transformations, using mid-point Hvib
       Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
       Sdia = ham->get_ovlp_dia();
-      propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
+      propagate_electronic_eig(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
     }
     else if(method==1 || method==101){
       Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());

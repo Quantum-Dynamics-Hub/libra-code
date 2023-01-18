@@ -123,43 +123,24 @@ class Electronic{
 typedef std::vector< Electronic > ElectronicList; ///< Type containing the vector of Electronic objects
 
 
-// In Electronic_Dynamics1.cpp
+//=================== In Electronic_Dynamics1.cpp ======================
+// Auxiliary functions for rotations-based integrator
+void iL2_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j);
+void iL3_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j);
 
-//void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
-
-// The following two do the same stuff, but the second one doesn't need intermediate Electronic objects
-void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib);
+// Elementary integration algorithms
 void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
-
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
-void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
-
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
+void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
 void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 void propagate_electronic_qtag2(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& Hvib_old, CMATRIX& S, CMATRIX& S_old);
 
-void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
 
-
-
-//void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep);
-//void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep);
-//void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep, int isNBRA);
-//void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep);
-
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, nHamiltonian& ham_prev, int rep, int method);
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, nHamiltonian* ham_prev, int rep, int method);
-void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep, int method);
-//void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, vector<nHamiltonian*>& ham_prev, int rep);
-
-
-//void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level);
-//void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level);
-//void propagate_electronic(double dt, nHamiltonian& ham, int rep);
-
+// For grid integration
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);
 
+// For Liouvillian integration
 CMATRIX vectorize_density_matrix(CMATRIX* rho);
 CMATRIX vectorize_density_matrix(CMATRIX& rho);
 CMATRIX unvectorize_density_matrix(CMATRIX& rho_vec);
