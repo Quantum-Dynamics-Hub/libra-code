@@ -307,7 +307,7 @@ void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
 
 
 
-void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+void propagate_electronic_rot_old(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
   \brief Propagate electronic DOF using sequential rotations in the MMTS variables
 
@@ -422,8 +422,176 @@ void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
   }// for i
 
 
-}// propagate_electronic_rot
+}// propagate_electronic_rot_old
 
+void iL2_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j){
+// Action of iL2 on a pair of coefficients c_i and c_j
+
+  CMATRIX exp_iL2(2, 2);
+  CMATRIX C(2, 1);
+  double A = dt * Hvib.get(i,j).imag();
+  complex<double> one(1.0, 0.0);
+  double cs = cos(A);
+  double si = sin(A);
+
+  exp_iL2.set(0, 0,  cs*one);    exp_iL2.set(0, 1,  si*one);
+  exp_iL2.set(1, 0, -si*one);    exp_iL2.set(1, 1,  cs*one);
+
+  C.set(0,0, Coeff.get(i,0));
+  C.set(1,0, Coeff.get(j,0));
+
+  C = exp_iL2 * C;
+
+  Coeff.set(i,0, C.get(0,0));
+  Coeff.set(j,0, C.get(1,0));
+
+}
+
+void iL3_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j){
+// Action of iL3 on a pair of coefficients c_i and c_j
+
+  CMATRIX exp_iL3(2, 2);
+  CMATRIX C(2, 1);
+  double B = dt * Hvib.get(i,j).real();
+  complex<double> one(1.0, 0.0);
+  complex<double> eye(0.0, 1.0);
+  double cs = cos(B);
+  double si = sin(B);
+
+  exp_iL3.set(0, 0,  cs*one);    exp_iL3.set(0, 1, -si*eye);
+  exp_iL3.set(1, 0, -si*eye);    exp_iL3.set(1, 1,  cs*one);
+
+  C.set(0,0, Coeff.get(i,0));
+  C.set(1,0, Coeff.get(j,0));
+
+  C = exp_iL3 * C;
+
+  Coeff.set(i,0, C.get(0,0));
+  Coeff.set(j,0, C.get(1,0));
+
+}
+
+void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
+/**
+  \brief Propagate electronic DOF using sequential rotations in the amplitudes variables, not MMTS!
+
+  Solves: i * hbar * dC/dt = Hvib * C, where C = Coeff 
+
+  ** phases ** - it is norm-conserving
+  iL^(1) = \sum_i { -i/hbar * H_ii * d/dC_i} 
+ 
+   action:  C_i(t) ->  C(t+dt) = exp(- i/hbar * H_ii * dt ) * C(t)
+
+  ** nonadiabatic population transfer ** - it is norm-conserving
+  iL^2(2) = \sum_{i>i} {  Im(H_ij)/hbar * ( C_j d/dC_i - C_i d/dC_j )}  
+
+   action: 
+           (C_i(t) )        (C_i(t+dt))        (   cos(A)   sin(A) )  ( C_i(t) )
+           (       )   ->   (         )    =   (                   )  (        )
+           (C_j(t) )        (C_j(t+dt))        (  -sin(A)   cos(A) )  ( C_j(t) )
+  
+  A = Im(H_ij)/hbar
+
+  ** diabatic population transfer ** - it is norm-conserving
+  iL^2(3) = \sum_{i>i} {  Re(H_ij)/hbar * ( C_j d/dC_i + C_i d/dC_j )}
+
+   action:
+           (C_i(t) )        (C_i(t+dt))        (   cos(B)   -i*sin(B) )  ( C_i(t) )
+           (       )   ->   (         )    =   (                      )  (        )
+           (C_j(t) )        (C_j(t+dt))        (  -i*sin(B)   cos(B)  )  ( C_j(t) )
+         
+  B = Re(H_ij)/hbar
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff(nst, 1) the adiabatic amplitudes
+  \param[in] Hvib(nst, nst) the vibronic Hamiltonian, must be Hermitian
+
+  This version can have non-zero real components of the off-diagonal elements of Hvib
+  as long as Hvib is kept Hermitian
+
+  This is the Python-friendly function
+*/
+
+
+  int i,j;
+  double ci, cj;
+
+  double dt_half = 0.5*dt;
+  complex<double> tau(0.0, -0.5*dt);  // this is actually -i*dt/2
+
+  if(Coeff.n_cols!=1){
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns in the input amplitudes vector\
+          should be 1, but "<<Coeff.n_cols<<" is given \n";
+    exit(0);
+  }
+  if(Hvib.n_cols!=Hvib.n_rows){
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns and rows of the input Hamiltonian\
+          should be equal to each other, but the numbers are: \n";
+    cout<<"num_of_rows = "<<Hvib.n_rows<<"\n";
+    cout<<"num_of_cols = "<<Hvib.n_cols<<"\n";
+    exit(0);
+  }
+  if(Hvib.n_cols!=Coeff.n_rows){
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns of the input Hamiltonian\
+          should be equal to the number of rows of the amplitudes vector, but what is given: \n";
+    cout<<"Coeff.num_of_rows = "<<Coeff.n_rows<<"\n";
+    cout<<"Hvib.num_of_cols = "<<Hvib.n_cols<<"\n";
+    exit(0);
+  }
+
+
+  int nstates = Coeff.n_rows;
+
+  //------------- Phase evolution according iL^(1) ----------------
+  // exp(iL^(1) * dt/2)
+  for(i=0;i<nstates;i++){
+      Coeff.set(i, 0,  exp(-tau*Hvib.get(i,i)) * Coeff.get(i, 0) ); 
+  }// for i
+
+
+  //------------- Diabatic population transfer, according to iL^(3) ----------------
+  // exp(iL^(3) * dt/2), forward e.g. iL_01 * iL_02 * iL_12
+  for(i=0;i<nstates;i++){
+    for(j=0;j<i;j++){
+      iL3_action(dt_half, Coeff, Hvib, i, j);
+    }// for j
+  }// for i
+
+
+  //------------- Non-adiabatic population transfer, according to iL^(2) ----------------
+  // exp(iL^(2) * dt/2), forward e.g. iL_01 * iL_02 * iL_12
+  for(i=0;i<nstates;i++){
+    for(j=0;j<i;j++){
+      iL2_action(dt_half, Coeff, Hvib, i, j);
+    }// for j
+  }// for i
+
+  // exp(iL^(2) * dt/2), backward e.g. iL_12 * iL_02 * iL_01
+  for(i=nstates-1;i>=0;i--){
+    for(j=i-1;j>=0;j--){
+      iL2_action(dt_half, Coeff, Hvib, i, j);
+    }// for j
+  }// for i
+
+
+  //------------- Diabatic population transfer, according to iL^(3) ----------------
+  // exp(iL^(3) * dt/2), backward e.g. iL_01 * iL_02 * iL_12
+  for(i=nstates-1;i>=0;i--){
+    for(j=i-1;j>=0;j--){
+      iL3_action(dt_half, Coeff, Hvib, i, j);
+    }// for j
+  }// for i
+
+
+  //------------- Phase evolution according iL^(1) ----------------
+  // exp(iL^(1) * dt/2)
+  for(i=0;i<nstates;i++){
+      Coeff.set(i, 0,  exp(-tau*Hvib.get(i,i)) * Coeff.get(i, 0) );
+  }// for i
+
+
+
+}// propagate_electronic_rot
 
 
 

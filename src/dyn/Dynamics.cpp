@@ -965,19 +965,23 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
          0              -  ld, with crude splitting,  with exp_
          1              -  ld, with symmetric splitting, with exp_
-         2              -  ld, original, with exp_
+         2              -  ld, original, with exp_       
          3              -  1-point, Hvib integration, with exp_
          4              -  2-points, Hvib integration, with exp_
          5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
 
+         6              - same as 0, but with rotations
+
     */
+    CMATRIX Hvib(ham->nadi, ham->nadi);
+    CMATRIX Hvib_old(ham->nadi, ham->nadi);
+    CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
+    CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
+
 
     if(method==-1 || method==100){ ;;  } // No evolution
     else if(method==0 || method==100){
       // A crude factorization of the Hamiltonian operator
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-      CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
       
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
@@ -1009,7 +1013,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      //Hvib = T_new.H() * Hvib * T_new;
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       C = T_new * B * T_new.H() * A * T_new * B * C;
@@ -1097,6 +1100,31 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       C = T_new * A * C;
 
     }// method == 5
+
+    else if(method==6 || method==106){
+      // Same as 0 or 100, but with rotations
+
+      Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+      C = T_new * C;
+
+      //A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+
+      Hvib = ham->get_ham_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+      //B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+
+      //C = B * T_new * A * C;
+
+// Consider different integration algorithms
+      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
+      //propagate_electronic_nonHermitian(dt, C, Hvib);
+      //CMATRIX I(nst, nst); I.load_identity();
+      //propagate_electronic(dt, C, Hvib, I);
+
+    }// method == 6 || 106
 
   }// rep == 1 - adiabatic
 
