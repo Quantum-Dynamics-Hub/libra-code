@@ -622,11 +622,28 @@ class dyn_control_params{
       - 0 (100) : based on Lowdin orthogonalization (100 - with NBRA) [ default ]
       - 1 (101) : based on QTAG propagator (101 - with NBRA )
     
-    tdse_rep = 1 (adiabatic):
+    tdse_rep = 1 (adiabatic):  1** - with NBRA
 
-      - 0 (100) : based on rotations (100 - with NBRA)  [ default ]
+        -1              -  No
+
+         0              -  ld, with crude splitting,  with exp_  [ default ]
+         1              -  ld, with symmetric splitting, with exp_
+         2              -  ld, original, with exp_
+         3              -  1-point, Hvib integration, with exp_
+         4              -  2-points, Hvib integration, with exp_
+         5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
+
+        10              -  same as 0, but with rotations
+        11              -  same as 1, but with rotations
+        12              -  same as 2, but with rotations
+        13              -  same as 3, but with rotations
+        14              -  same as 4, but with rotations
+        15              -  same as 5, but with rotations
+
   */
   int electronic_integrator;
+
+
 
 
 

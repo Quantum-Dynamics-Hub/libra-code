@@ -862,7 +862,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 }
 
 
-//void propagate_electronic(double dt, CMATRIX& Coeff, vector<CMATRIX*>& proj, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
   int itraj, i, j;
@@ -913,16 +912,11 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
     P = ham->get_time_overlap_adi();  // U_old.H() * U;
 
-//    P = orthogonalized_T( P );
-//    FullPivLU_inverse(P, T_new);
-
     // More consistent with the new derivations:
     FullPivLU_inverse(P, T_new);
     T_new = orthogonalized_T( T_new );
     
 
-//     cout<<"In electronic int, proj = \n"; proj[0]->show_matrix();
-//     cout<<" time-overlap = \n"; P.show_matrix();
 
   if(rep==0){  // diabatic
     CMATRIX Hvib(ham->ndia, ham->ndia);
@@ -970,7 +964,12 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
          4              -  2-points, Hvib integration, with exp_
          5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
 
-         6              - same as 0, but with rotations
+        10              -  same as 0, but with rotations
+        11              -  same as 1, but with rotations
+        12              -  same as 2, but with rotations
+        13              -  same as 3, but with rotations
+        14              -  same as 4, but with rotations
+        15              -  same as 5, but with rotations
 
     */
     CMATRIX Hvib(ham->nadi, ham->nadi);
@@ -982,7 +981,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     if(method==-1 || method==100){ ;;  } // No evolution
     else if(method==0 || method==100){
       // A crude factorization of the Hamiltonian operator
-      
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
@@ -992,21 +990,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       C = B * T_new * A * C;
+    }// method == 0 && 100
 
-// Consider different integration algorithms
-      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-      //propagate_electronic_nonHermitian(dt, C, Hvib);
-      //CMATRIX I(nst, nst); I.load_identity();
-      //propagate_electronic(dt, C, Hvib, I);
-
-    }
     else if(method==1 || method==101){
       // Trotter-based symmetric splitting
-
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-      CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
-
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
       B = exp_(Hvib, complex<double>(0.0, -0.25*dt) );
@@ -1016,58 +1003,35 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       C = T_new * B * T_new.H() * A * T_new * B * C;
-
     }// method == 1 && 101
-
 
     else if(method==2 || method==102){
       // The local diabatization approach
-      CMATRIX Hvib_old(ham->nadi, ham->nadi);
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-      CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
-
       Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix      
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      Hvib = T_new.H() * Hvib * T_new;
-      
+      Hvib = T_new.H() * Hvib * T_new;      
       Hvib += Hvib_old;
 
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = T_new * A * C;
 
-// Consider different integration algorithms
-      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-      //propagate_electronic_nonHermitian(dt, C, Hvib);
-      //CMATRIX I(nst, nst); I.load_identity();
-      //propagate_electronic(dt, C, Hvib, I);
-
-    }
+    }// method == 2 && 102
 
     else if(method==3 || method==103){
       // 1-point with vibronic Hamiltonian
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-
       Hvib = ham_prev->get_hvib_adi();
 
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
       A = exp_(Hvib, complex<double>(0.0, -dt) );
       C = T_new * A * C;
+    }// method == 3 && 103
 
-      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-
-    }
     else if(method==4 || method==104){
       // 2-point with vibronic Hamiltonian
-      CMATRIX Hvib_old(ham->nadi, ham->nadi);
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-
       Hvib_old = ham_prev->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
 
@@ -1078,16 +1042,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = T_new * A * C;
-
-    }// method == 4
+    }// method == 4 && 104
 
     else if(method==5 || method==105){
-      // The local diabatization approach
-      CMATRIX Hvib_old(ham->nadi, ham->nadi);
-      CMATRIX Hvib(ham->nadi, ham->nadi);
-      CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
-      CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
-
+      // 2-point Hvib with vibronic Hamiltonian and correction
       Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
 
@@ -1098,10 +1056,11 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       Hvib += Hvib_old;
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = T_new * A * C;
+    }// method == 5 && 105
 
-    }// method == 5
 
-    else if(method==6 || method==106){
+    //========================== Rotation-based ============================
+    else if(method==10 || method==110){
       // Same as 0 or 100, but with rotations
 
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
@@ -1109,22 +1068,81 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       propagate_electronic_rot(0.5*dt, C, Hvib);
       C = T_new * C;
 
-      //A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      Hvib = ham->get_ham_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+
+    }// method == 10 && 110
+
+    else if(method==11 || method==111){
+      // Trotter-based symmetric splitting, but with rotations
+      Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+      Hvib = ham->get_ham_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+
+      propagate_electronic_rot(0.25*dt, C, Hvib_old);
+      C = T_new * C;
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+      C = T_new.H() * C;
+      propagate_electronic_rot(0.25*dt, C, Hvib_old);
+      C = T_new * C;
+
+    }// method == 11 && 111
+
+    else if(method==12 || method==12){
+      // The local diabatization approach, but with rotation
+      Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      //B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      Hvib = T_new.H() * Hvib * T_new;
+      Hvib += Hvib_old;
+
       propagate_electronic_rot(0.5*dt, C, Hvib);
+      C = T_new * C;
 
-      //C = B * T_new * A * C;
+    }// method == 12 && 112
 
-// Consider different integration algorithms
-      //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-      //propagate_electronic_nonHermitian(dt, C, Hvib);
-      //CMATRIX I(nst, nst); I.load_identity();
-      //propagate_electronic(dt, C, Hvib, I);
+    else if(method==13 || method==113){
+      // 1-point with vibronic Hamiltonian
+      Hvib = ham_prev->get_hvib_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
-    }// method == 6 || 106
+      propagate_electronic_rot(dt, C, Hvib);
+      C = T_new * C;
+    }// method == 13 && 113
+
+    else if(method==14 || method==114){
+      // 2-point with vibronic Hamiltonian
+      Hvib_old = ham_prev->get_hvib_adi();
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+
+      Hvib = ham->get_hvib_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+
+      Hvib += Hvib_old;
+
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+      C = T_new * C;
+    }// method == 14 && 114
+
+    else if(method==15 || method==115){
+      // 2-point Hvib with vibronic Hamiltonian and correction
+      Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+
+      Hvib = ham->get_hvib_adi();
+      Hvib = T_new.H() * Hvib * T_new;
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+
+      Hvib += Hvib_old;
+
+      propagate_electronic_rot(0.5*dt, C, Hvib);
+      C = T_new * C;
+
+    }// method == 15 && 115
 
   }// rep == 1 - adiabatic
 
