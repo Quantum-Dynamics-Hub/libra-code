@@ -1580,6 +1580,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
+
+  // Update the amplitudes, so that we have them consistent in the output
+  dyn_var.update_amplitudes(prms, ham);
+
 }
 
 
