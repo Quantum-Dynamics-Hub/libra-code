@@ -1167,6 +1167,12 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   }// rep == 2 - diabatic, density matrix
 
   else if(rep==3){  // adiabatic, density matrix formalism
+    /**
+         0              -  mid-point Hvib with the second-point correction of Hvib
+         1              -  Zhu Liouvillian
+
+        10              -  same as 0, but with rotations
+    */
 
     if(method==0 || method==100){
       // Based on Lowdin transformations, using mid-point Hvib
@@ -1196,11 +1202,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       int st_indx = dyn_var.act_states[itraj];
       double Epot = Hvib.get(st_indx, st_indx).real(); 
       double Ekin = dyn_var.compute_kinetic_energy(itraj);
-     
 
       L = Zhu_Liouvillian(Epot + Ekin, Hvib, *dyn_var.dm_adi[itraj] );
-
-
 //      L = make_Liouvillian(Hvib);
       vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
 //      propagate_electronic_rot(dt, vRHO, L);
@@ -1211,6 +1214,24 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       *dyn_var.dm_adi[itraj] = RHO; 
 
     }// method == 1 or 101
+
+    else if(method==10 || method==110){
+      // Same as 0, but with rotations
+      CMATRIX Hvib(ham->nadi, ham->nadi);
+      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
+
+     if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+
+      L = make_Liouvillian(Hvib);
+      vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
+      propagate_electronic_rot(dt, vRHO, L);
+//      vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
+
+      RHO = unvectorize_density_matrix( vRHO );
+      RHO = T_new.H() * RHO * T_new;
+      *dyn_var.dm_adi[itraj] = RHO;
+    }// method == 10 or 110
+
 
   }// rep == 3 - adiabatic, density matrix  
 
