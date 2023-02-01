@@ -1177,17 +1177,19 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     if(method==0 || method==100){
       // Based on Lowdin transformations, using mid-point Hvib
       CMATRIX Hvib(ham->nadi, ham->nadi);
-      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
+      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi()); // "raw" to dyn-const
 
-     if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
       L = make_Liouvillian(Hvib);
-      vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
-//      propagate_electronic_rot(dt, vRHO, L);
+
+      //RHO = T_new.H() * (*dyn_var.dm_adi[itraj]) * T; // "raw" to dyn-const
+      RHO = *dyn_var.dm_adi[itraj];
+      vRHO = vectorize_density_matrix( RHO );
       vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
 
       RHO = unvectorize_density_matrix( vRHO );
-      RHO = T_new.H() * RHO * T_new;
+      RHO = T_new * RHO * T_new.H(); // dyn-const to "raw"
       *dyn_var.dm_adi[itraj] = RHO;
     }// method == 0 or 100
 
@@ -1218,17 +1220,19 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     else if(method==10 || method==110){
       // Same as 0, but with rotations
       CMATRIX Hvib(ham->nadi, ham->nadi);
-      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());
+      Hvib = 0.5 * (T_new.H() * ham->get_ham_adi() * T_new + ham_prev->get_ham_adi());  // "raw" to dyn-const
 
-     if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
 
       L = make_Liouvillian(Hvib);
-      vRHO = vectorize_density_matrix( dyn_var.dm_adi[itraj] );
+      //RHO = T_new.H() * (*dyn_var.dm_adi[itraj]) * T; // "raw" to dyn-const
+      RHO = *dyn_var.dm_adi[itraj];
+      vRHO = vectorize_density_matrix( RHO );
+
       propagate_electronic_rot(dt, vRHO, L);
-//      vRHO = exp_(L, complex<double>(0.0, -dt) ) * vRHO;
 
       RHO = unvectorize_density_matrix( vRHO );
-      RHO = T_new.H() * RHO * T_new;
+      RHO = T_new * RHO * T_new.H(); // dyn-const to "raw"
       *dyn_var.dm_adi[itraj] = RHO;
     }// method == 10 or 110
 
