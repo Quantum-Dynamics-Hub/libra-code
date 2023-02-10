@@ -962,7 +962,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
          2              -  ld, original, with exp_       
          3              -  1-point, Hvib integration, with exp_
          4              -  2-points, Hvib integration, with exp_
-         5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
+         5              -  2-points, Hvib, integration with the second-point correction of Hvib, with exp_
 
         10              -  same as 0, but with rotations
         11              -  same as 1, but with rotations
@@ -1068,7 +1068,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       propagate_electronic_rot(0.5*dt, C, Hvib);
       C = T_new * C;
 
-      Hvib = ham->get_ham_adi();
+      Hvib = ham->get_ham_adi(); 
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
       propagate_electronic_rot(0.5*dt, C, Hvib);
 
@@ -1606,7 +1606,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
 
-  // Update the amplitudes, so that we have them consistent in the output
+  // Update the amplitudes and DM, so that we have them consistent in the output
+  dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_amplitudes(prms, ham);
 
 }

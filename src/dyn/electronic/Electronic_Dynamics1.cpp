@@ -249,7 +249,7 @@ void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
   //------------- Phase evolution according iL^(1) ----------------
   // exp(iL^(1) * dt/2)
   for(i=0;i<nstates;i++){
-      Coeff.set(i, 0,  exp(-tau*Hvib.get(i,i)) * Coeff.get(i, 0) ); 
+      Coeff.set(i, 0,  exp(tau*Hvib.get(i,i)) * Coeff.get(i, 0) ); 
   }// for i
 
 
@@ -290,7 +290,7 @@ void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
   //------------- Phase evolution according iL^(1) ----------------
   // exp(iL^(1) * dt/2)
   for(i=0;i<nstates;i++){
-      Coeff.set(i, 0,  exp(-tau*Hvib.get(i,i)) * Coeff.get(i, 0) );
+      Coeff.set(i, 0,  exp(tau*Hvib.get(i,i)) * Coeff.get(i, 0) );
   }// for i
 
 
