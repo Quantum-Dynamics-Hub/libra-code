@@ -922,7 +922,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     CMATRIX Hvib(ham->ndia, ham->ndia);
     CMATRIX Sdia(ham->ndia, ham->ndia);
 
-    if(method==0 || method==100){
+    if(method==-1){ ;;  } // No evolution
+    else if(method==0 || method==100){
       // Based on Lowdin transformations, using mid-point Hvib
       Hvib = 0.5 * (ham->get_hvib_dia() + ham_prev->get_hvib_dia());
       Sdia = ham->get_ovlp_dia();
@@ -978,7 +979,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
 
 
-    if(method==-1 || method==100){ ;;  } // No evolution
+    if(method==-1){ ;;  } // No evolution
     else if(method==0 || method==100){
       // A crude factorization of the Hamiltonian operator
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
@@ -1057,6 +1058,23 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = T_new * A * C;
     }// method == 5 && 105
+
+    else if(method==6 || method==106){
+      // 2-point with vibronic Hamiltonian, no reordering 
+      Hvib_old = ham_prev->get_hvib_adi();
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+
+      Hvib = ham->get_hvib_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
+
+      Hvib += Hvib_old;
+
+      A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      C = A * C;
+      //T_new.identity();
+    }// method == 4 && 104
+
+
 
 
     //========================== Rotation-based ============================
@@ -1404,6 +1422,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
 
   // Recompute density matrices in response to the updated amplitudes  
+  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 

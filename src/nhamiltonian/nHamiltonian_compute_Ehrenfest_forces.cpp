@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2017-2022 Alexey V. Akimov
+* Copyright (C) 2017-2023 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -37,7 +37,7 @@ using namespace libmeigen;
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
+CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia, int option){
 /**
   \param[in] ampl_dia: MATRIX(ndia, 1) diabatic amplitudes for one trajectory
 
@@ -88,10 +88,14 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
       basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
 
-      *dtilda = (*dc1_dia[n]).H() * (*invS) * (*ham_dia);
-      *dtilda = (*dtilda + (*dtilda).H() ) ;
-
-      res.M[n] = -( ampl_dia.H() * (*d1ham_dia[n] - *dtilda ) * ampl_dia ).M[0];
+      if(option==0){
+        *dtilda = ( (*dc1_dia[n]).H() * (*invS) * (*ham_dia) + (*ham_dia) * (*invS) * (*dc1_dia[n])  );
+        res.M[n] = -( ampl_dia.H() * (*d1ham_dia[n] - *dtilda ) * ampl_dia ).M[0];
+      }
+      else if(option==1){
+        res.M[n] = -( ampl_dia.H() * (*d1ham_dia[n] ) * ampl_dia ).M[0];
+      }
+      
 
   }// for n
 
@@ -106,8 +110,13 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
 }
 
 
+CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
+  return Ehrenfest_forces_dia_unit(ampl_dia, 0);
+}
 
-CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
+
+
+CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl, int option){
 /**
   \brief Computes the Ehrenfest forces in the diabatic basis
 
@@ -160,10 +169,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
     pop_submatrix(ampl_dia, ampl_tmp, stenc_ampl, stenc_col);
 
     if(lvl==0){
-        frc_tmp = Ehrenfest_forces_dia_unit(ampl_tmp);
+        frc_tmp = Ehrenfest_forces_dia_unit(ampl_tmp, option);
     }
     if(lvl==1){
-        frc_tmp = children[i]->Ehrenfest_forces_dia_unit(ampl_tmp);
+        frc_tmp = children[i]->Ehrenfest_forces_dia_unit(ampl_tmp, option);
     }
 
     push_submatrix(F, frc_tmp, stenc_frc, stenc_col);
@@ -173,6 +182,14 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
   return F;
   
 }
+
+
+CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl){
+  return Ehrenfest_forces_dia(ampl_dia, lvl, 0);
+}
+
+
+
 
 /*
 CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
@@ -192,7 +209,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
 /**
   \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
 
@@ -240,9 +257,13 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
 
-    tmp = dc1_adi[n]->H() * (*ham_adi);
-    tmp = (tmp + tmp.H());
-    res.M[n] = -( ampl_adi.H() * (  *d1ham_adi[n] - tmp ) * ampl_adi ).M[0];
+    if(option==1){
+      tmp = dc1_adi[n]->H() * (*ham_adi) + (*ham_adi) * (dc1_adi[n]->H());
+      res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] - tmp ) * ampl_adi ).M[0];
+    }
+    else if(option==1){
+      res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] ) * ampl_adi ).M[0];
+    }
 
   }// for n
 
@@ -252,9 +273,12 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
   return res;
 }
 
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
+  return Ehrenfest_forces_adi_unit(ampl_adi, 0);
+}
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option){
 /**
   \brief Computes the Ehrenfest forces in the adiabatic basis
 
@@ -307,10 +331,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
     pop_submatrix(ampl_adi, ampl_tmp, stenc_ampl, stenc_col);
 
     if(lvl==0){
-        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp);
+        frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp, option);
     }
     if(lvl==1){
-        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp);
+        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp, option);
     }
 
     push_submatrix(F, frc_tmp, stenc_frc, stenc_col);
@@ -318,6 +342,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
   }// for all children
 
   return F;
+}
+
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
+  return Ehrenfest_forces_adi(ampl_adi, lvl, 0);
 }
 
 

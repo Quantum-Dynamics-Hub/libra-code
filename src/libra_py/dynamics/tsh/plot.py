@@ -646,7 +646,7 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
     ylim = plot_params["ylim"]
     Lw = plot_params["linewidth"]
     colors = plot_params["colors"]
-    clrs_index = plot_params["clrs_index"]   
+    clrs_index = plot_params["clrs_index"] * 10  
     
     
     nstates, which_states = 0, []

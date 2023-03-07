@@ -617,14 +617,18 @@ class dyn_control_params{
   /**
     the method for electronic TD-SE integration:
 
-    tdse_rep = 0 (diabatic):
+    tdse_rep = 0 (diabatic): 1** - with NBRA
 
-      - 0 (100) : based on Lowdin orthogonalization (100 - with NBRA) [ default ]
-      - 1 (101) : based on QTAG propagator (101 - with NBRA )
+        -1              - No propagation
+
+         0              - Lowdin exp_ with 2-point Hvib_dia 
+         1              - based on QTAG propagator
+         2              - based on modified QTAG propagator (Z at two times)
+         3              - non-Hermitian integrator with 2-point Hvib_dia
     
     tdse_rep = 1 (adiabatic):  1** - with NBRA
 
-        -1              -  No
+        -1              -  No propagation
 
          0              -  ld, with crude splitting,  with exp_  [ default ]
          1              -  ld, with symmetric splitting, with exp_
@@ -632,6 +636,7 @@ class dyn_control_params{
          3              -  1-point, Hvib integration, with exp_
          4              -  2-points, Hvib integration, with exp_
          5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
+         6              -  same as 4, but without projection matrices (T_new = I)
 
         10              -  same as 0, but with rotations
         11              -  same as 1, but with rotations
@@ -639,6 +644,8 @@ class dyn_control_params{
         13              -  same as 3, but with rotations
         14              -  same as 4, but with rotations
         15              -  same as 5, but with rotations
+
+
 
   */
   int electronic_integrator;

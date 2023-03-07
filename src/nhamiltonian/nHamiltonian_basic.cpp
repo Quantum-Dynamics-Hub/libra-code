@@ -208,7 +208,7 @@ nHamiltonian::~nHamiltonian(){
 */
   if(this!=nullptr){
   
-  cout<<"nHamiltonian destructor at level "<<level<<" address "<<this<<endl;
+  //cout<<"nHamiltonian destructor at level "<<level<<" address "<<this<<endl;
   
 //  id = 0;
 //  level = 0;
@@ -440,11 +440,11 @@ void nHamiltonian::set_levels(int lvl_){
   This function set the level of a given Hamiltonian to the specified value
   and propagates this value to all children of this Hamiltonian
 */
-  cout<<"in set_levels with lvl = "<<lvl_<<endl;
+  //cout<<"in set_levels with lvl = "<<lvl_<<endl;
   level = lvl_;
 
   for(int i=0; i<children.size(); i++){ 
-    cout<<" == child "<<i<<endl;
+    //cout<<" == child "<<i<<endl;
     children[i]->set_levels(lvl_+1);
   }
 
@@ -458,11 +458,11 @@ void nHamiltonian::add_child(nHamiltonian& child){
 */
 
   child.id = children.size();
-  cout<<"in add_child, new child id = "<<child.id<<"\n";
+  //cout<<"in add_child, new child id = "<<child.id<<"\n";
   children.push_back(&child);
 
   child.parent = this;
-  cout<<"parent = "<<child.parent<<endl;
+  //cout<<"parent = "<<child.parent<<endl;
   child.set_levels(level+1);
 
 }

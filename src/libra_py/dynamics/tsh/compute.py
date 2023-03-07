@@ -569,7 +569,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
     tsh_method = dyn_params["tsh_method"] 
 
-
+    
     #q = MATRIX(_q)
     #p = MATRIX(_p)
     #iM = MATRIX(_iM)
@@ -583,6 +583,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     nnucl = dyn_var.ndof #q.num_of_rows
     ntraj = dyn_var.ntraj #q.num_of_cols
 
+
+    #sys.exit(0)
 
     if(dyn_params["quantum_dofs"]==None):
         dyn_params["quantum_dofs"] = list(range(nnucl))
@@ -609,12 +611,16 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "w", 0)
 
 
+    #sys.exit(0)
     model_params.update({"timestep":icond})    
     #update_Hamiltonian_q(dyn_params, dyn_var, ham, compute_model, model_params)
     #update_Hamiltonian_p(dyn_params, dyn_var, ham)  
     update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 0)
+    #sys.exit(0)
     update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
 
+
+    #sys.exit(0)
 
     #U = []
     #if is_nbra == 1:
@@ -630,6 +636,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
+    #sys.exit(0)
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
     elif decoherence_algo==3:
@@ -639,7 +646,11 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_dish()
 
 
+    #sys.exit(0)
     ham_aux = nHamiltonian(ham)
+
+
+    #sys.exit(0)
 
     # Do the propagation
     for i in range(nsteps):
@@ -758,13 +769,19 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Setup the dynamical variables object
     dyn_var = dyn_variables(ndia, nadi, ndof, ntraj)
 
+    #sys.exit(0)
+
     # Initialize nuclear variables 
     dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
+
+    #sys.exit(0)
 
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
     dyn_var.init_active_states(init_elec, rnd)
+
+    #sys.exit(0)
 
     # Setup the hierarchy of Hamiltonians 
     ham = nHamiltonian(ndia, nadi, ndof)
@@ -775,6 +792,8 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     ham.init_all(2,1)     
 
 
+    #sys.exit(0)
+
     # Compute internals of the Hamiltonian objects
     model_params1 = dict(model_params)
     model_params1.update({"model":model_params["model0"], "timestep":0})
@@ -783,11 +802,18 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # followed by the transformation to the adiabatic one - this is what we need to get
     # the transformation matrices to convert amplitudes between the representations
     dyn_params1 = dict(dyn_params)        
-    dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
-    #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
-    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
-    update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
 
+    if(dyn_params["ham_update_method"]==2):        
+        pass
+        #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
+    else:
+        dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
+        #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+        update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
+
+    #sys.exit(0)
 
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
     # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
@@ -796,20 +822,20 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     dyn_var.update_density_matrix( dyn_params, ham, 1)
 
 
-    print("Initial adiabatic amplitudes")
-    dyn_var.get_ampl_adi().show_matrix()
+    #print("Initial adiabatic amplitudes")
+    #dyn_var.get_ampl_adi().show_matrix()
 
-    print("Initial diabatic amplitudes")
-    dyn_var.get_ampl_dia().show_matrix()
+    #print("Initial diabatic amplitudes")
+    #dyn_var.get_ampl_dia().show_matrix()
 
-    print("Initial adiabatic DM")
-    dyn_var.get_dm_adi(0).show_matrix()
+    #print("Initial adiabatic DM")
+    #dyn_var.get_dm_adi(0).show_matrix()
 
-    print("Initial diabatic DM")
-    dyn_var.get_dm_dia(0).show_matrix()
+    #print("Initial diabatic DM")
+    #dyn_var.get_dm_dia(0).show_matrix()
 
-    print("Active states")
-    print(Cpp2Py(dyn_var.act_states))
+    #print("Active states")
+    #print(Cpp2Py(dyn_var.act_states))
 
 
     # Finally, start the dynamics calculations

@@ -533,18 +533,25 @@ public:
 
 
 
-  ///< In nHamiltonian_compute_Ehrenfest.cpp
+
+  ///< In nHamiltonian_compute_Ehrenfest.cpp and nHamiltonian_compute_Ehrenfest_forces.cpp
   complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia);
   complex<double> Ehrenfest_energy_dia(CMATRIX& ampl_dia, vector<int>& id_);
+  CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia, int option);      ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia);                  ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl, int option);  ///< Ehrenfest forces in diabatic basis
+  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl);              ///< Ehrenfest forces in diabatic basis
+
+
+  ///< In nHamiltonian_compute_Ehrenfest.cpp and nHamiltonian_compute_Ehrenfest_forces.cpp
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option);      ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);                  ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option);  ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);              ///< Ehrenfest forces in adiabatic basis
 
-  CMATRIX Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia);               ///< Ehrenfest forces in diabatic basis
-  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, int lvl);           ///< Ehrenfest forces in diabatic basis
-//  CMATRIX Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_);  ///< Ehrenfest forces in diabatic basis
-  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);    ///< Ehrenfest forces in adiabatic basis
-  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);   ///< Ehrenfest forces in adiabatic basis
-//  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, vector<int>& id_);  ///< Ehrenfest forces in adiabatic basis
+
 
 
   vector<CMATRIX> Ehrenfest_forces_tens_adi(CMATRIX& ampl_adi);  // Force tensor in adiabatic basis, assuming Cadi = Cadi(t)

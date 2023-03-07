@@ -289,25 +289,21 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 
   else if(prms.force_method==2){  // Ehrenfest forces
     // Diabatic 
-    if(prms.rep_force==0){  *dyn_vars.f = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();   }
+    if(prms.rep_force==0){  
+     *dyn_vars.f = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real();  
 
-    // Adiabatic 
-    //cout<<"Ampl = \n";
-    //dyn_vars.ampl_adi->show_matrix();
-    else if(prms.rep_force==1){ 
-//      cout<<"ampl =\n"; dyn_vars.ampl_adi->show_matrix();
-//      cout<<"proj = \n"; dyn_vars.proj_adi[0]->show_matrix();
-      *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1).real(); 
-
-//      cout<<"f = \n"; dyn_vars.f->show_matrix();
+     //cout<<"dia MF forces\n"; dyn_vars.f->show_matrix();
+     //cout<<"adi MF forces\n"; ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1).real().show_matrix();
     }
 
-    //cout<<"Ampl = "<<dyn_vars.ampl_adi<<endl;
-    
-    //dyn_vars.ampl_adi->show_matrix();
+    // Adiabatic 
+    else if(prms.rep_force==1){
+      int option = 0;
+      if(prms.electronic_integrator==0){ option = 1; } 
 
-    //cout<<"Ehrenfest force \n"; F.show_matrix();
-  
+      *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1, option).real(); 
+
+    }     
   }// Ehrenfest
 
 
