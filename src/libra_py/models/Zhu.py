@@ -21,7 +21,7 @@ import sys
 import math
 import copy
 
-from numba import jit
+#from numba import jit
 
 if sys.platform=="cygwin":
     from cyglibra_core import *

@@ -31,7 +31,7 @@ class tmp:
     pass    
 
 
-def SSY(q, params):
+def SSY(q, params, full_id):
     """
 
     The Hamiltonian of Shenvi-Subotnik-Yang, 2-level, 2-dim. problem
@@ -90,7 +90,10 @@ def SSY(q, params):
 
 
     #=========== Energies & Derivatives ===============
-    x, y = q.get(0), q.get(1)
+
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+    x, y = q.get(0, indx), q.get(1, indx)
 
     # H_00
     obj.ham_dia.set(0,0, E0*(-1.0+0.0j))

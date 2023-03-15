@@ -142,7 +142,7 @@ def get_Faist_Levine_NaI():
    
 
 
-def Faist_Levine(q, params):
+def Faist_Levine(q, params, full_id=None):
     """
 
     Faist and Levine, 2-level, 1-dim. potential describing the
@@ -213,8 +213,13 @@ def Faist_Levine(q, params):
         obj.dc1_dia.append( CMATRIX(2,2) )
 
 
+    indx = 0
+    if full_id !=None:
+        Id = Cpp2Py(full_id)
+        indx = Id[-1]
+
     #=========== Energies & Derivatives ===============
-    R = q.get(0)
+    R = q.get(0, indx)
 
     p1 = 1.0/R
     p2 = p1 * p1
