@@ -1,4 +1,25 @@
 #
+#  Compile PCH first
+#
+#file(SET PCH_HEADERS pch.h)
+#file(SET PCH_SRC pch.cpp pch.h) 
+set(PCH_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/pch.h)
+set(PCH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp ${PCH_HEADERS})
+
+ADD_LIBRARY(pch SHARED ${PCH_SRC})
+ADD_LIBRARY(pch_stat STATIC ${PCH_SRC})
+
+target_precompile_headers(pch PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
+target_precompile_headers(pch_stat PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
+
+
+#add_compile_definitions(USING_PCH)
+
+TARGET_LINK_LIBRARIES(pch      ${ext_libs} )
+TARGET_LINK_LIBRARIES(pch_stat ${ext_libs} )
+
+
+#
 #  Building sub-directories
 #
 MESSAGE("Going into subdirectory util...")
@@ -59,10 +80,12 @@ ADD_SUBDIRECTORY("libint2_wrappers")
 
 
 
-
-
 MESSAGE("Going into subdirectory calculators...")
 ADD_SUBDIRECTORY("calculators")
+
+
+MESSAGE("Going into subdirectory models...")
+ADD_SUBDIRECTORY("models")
 
 
 MESSAGE("Going into subdirectory context...")
@@ -108,8 +131,13 @@ ADD_SUBDIRECTORY("basis_setups")
 
 
 
-MESSAGE("Going into subdirectory hamiltonian...")
-ADD_SUBDIRECTORY("hamiltonian")
+MESSAGE("Going into subdirectory atomistic...")
+ADD_SUBDIRECTORY("atomistic")
+
+
+
+MESSAGE("Going into subdirectory nhamiltonian...")
+ADD_SUBDIRECTORY("nhamiltonian")
 
 
 MESSAGE("Going into subdirectory montecarlo...")
@@ -151,48 +179,45 @@ ADD_SUBDIRECTORY("integrators")
 #
 #  Source files and headers in this directory
 #
-file(GLOB LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
-file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS}) 
+#file(GLOB LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+#file(GLOB LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp ${LIBRA_HEADERS}) 
 
-ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
+#file(GLOB LIBRA_HEADERS liblibra_core.h realtype.h Units.h)
+#file(GLOB LIBRA_SRC liblibra_core.cpp ${LIBRA_HEADERS}) 
+set(LIBRA_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.h ${CMAKE_CURRENT_SOURCE_DIR}/realtype.h ${CMAKE_CURRENT_SOURCE_DIR}/Units.h)
+set(LIBRA_SRC ${CMAKE_CURRENT_SOURCE_DIR}/liblibra_core.cpp ${LIBRA_HEADERS})
+
+
 ADD_LIBRARY(libra_core_stat STATIC ${LIBRA_SRC})
+ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
+
+#ADD_LIBRARY(libra_core SHARED ${LIBRA_SRC})
+
+
+#
+#  PCH (Precompiled header) support
+# 
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.16 AND USING_PCH)  # Support for PCHs in CMake was added in 3.16
+   message(STATUS "Compiling using pre-compiled header support")
+   #target_precompile_headers(libra_core PUBLIC pch.h) # With PUBLIC they will be used by targets using this target
+   #target_precompile_headers(libra_core_stat PUBLIC pch.h) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(libra_core REUSE_FROM pch) # With PUBLIC they will be used by targets using this target
+   target_precompile_headers(libra_core_stat REUSE_FROM pch_stat) # With PUBLIC they will be used by targets using this target
+   set(CMAKE_PCH_INSTANTIATE_TEMPLATES ON)
+   add_compile_definitions(USING_PCH)
+else()
+   message(STATUS "No pre-compiled header support")
+endif()
 
 
 
-TARGET_LINK_LIBRARIES(libra_core
-                      integrators_stat
-                      solvers_stat
-                      qchem_tools_stat
-                      scripts_stat
-                      converters_stat
-                      montecarlo_stat
-                      fgr_stat
-                      ivr_stat
-                      dyn_stat
-                      common_types_stat                    
-                      basis_setups_stat
-                      model_parameters_stat
-                      control_parameters_stat
-                      hamiltonian_stat
-                      util_stat
-                      forcefield_stat
-                      opt_stat
-                      pot_stat
-                      cell_stat
-                      chemobjects_stat
-                      rigidbody_stat
-                      basis_stat
-                      qobjects_stat
-                      libint2_wrappers_stat
-                      molint_stat
-                      linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
-                      context_stat io_stat calculators_stat ${ext_libs}  )
 
 
 TARGET_LINK_LIBRARIES(libra_core_stat
                       integrators_stat
                       solvers_stat
                       qchem_tools_stat
+                      atomistic_stat
                       scripts_stat
                       converters_stat
                       montecarlo_stat
@@ -202,8 +227,9 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       common_types_stat
                       basis_setups_stat
                       model_parameters_stat
+                      models_stat
                       control_parameters_stat
-                      hamiltonian_stat
+                      nhamiltonian_stat
                       util_stat
                       forcefield_stat
                       opt_stat
@@ -217,6 +243,11 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       molint_stat
                       linalg_stat meigen_stat specialfunctions_stat symmetry_stat operators_stat random_stat graph_stat data_stat ann_stat timer_stat 
                       context_stat io_stat calculators_stat ${ext_libs}  )
+
+
+TARGET_LINK_LIBRARIES(libra_core libra_core_stat)
+
+
 
 #
 #  Copy python files

@@ -25,7 +25,8 @@ import math
 import cmath
 import re
 
-import psi4
+# Uncomment if you have psi4 installed
+#from psi4 import energy, gradient
 import numpy as np
 
 if sys.platform=="cygwin":
@@ -149,12 +150,12 @@ def run_psi4_adi(q, params_, full_id):
             if verbosity >0:
                 print("Doing state 0 energy")
                 
-            E, wfc = psi4.energy(grad_method_gs, molecule=mol, return_wfn=True)
+            E, wfc = energy(grad_method_gs, molecule=mol, return_wfn=True)
 
             # Compute force at the converged density
             if verbosity >0:
                 print("Doing state 0 gradient")
-            grad = np.asarray(psi4.gradient(grad_method_gs, ref_wfn=wfc))            
+            grad = np.asarray(gradient(grad_method_gs, ref_wfn=wfc))            
             
         else:
     
@@ -166,13 +167,13 @@ def run_psi4_adi(q, params_, full_id):
             if verbosity >0:
                 print(F"Doing state {istate} energy")
                 
-            E, wfc = psi4.energy(grad_method_ex, molecule=mol, return_wfn=True)
+            E, wfc = energy(grad_method_ex, molecule=mol, return_wfn=True)
 
             # Compute force at the converged density
             if verbosity >0:
                 print(F"Doing state {istate} gradient")
             
-            grad = np.asarray(psi4.gradient(grad_method_ex, ref_wfn=wfc))
+            grad = np.asarray(gradient(grad_method_ex, ref_wfn=wfc))
 
         
         obj.ham_adi.set(istate, istate, E * (1.0+0.0j) )

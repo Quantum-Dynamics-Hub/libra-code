@@ -16,6 +16,7 @@ __all__ = ["Beswick_Jortner",
            "Libra",
            "LVC",
            "Martens",
+           "Morse",
            "SSY",
            "Subotnik",
            "Tully"

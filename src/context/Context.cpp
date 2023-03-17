@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -24,8 +24,10 @@ namespace libcontext{
 void Context::set_path(std::string new_path){
   path = new_path;
   int i= 0;
-  BOOST_FOREACH(ptree::value_type &v, ctx_pt){ 
-    if(i==0){ v.first = new_path; } i++;  
+  BOOST_FOREACH(ptree::value_type& v, ctx_pt){ 
+  //BOOST_FOREACH(auto& v, ctx_pt){ 
+  //for (auto& v : ctx_pt){  // C++11
+   // if(i==0){ v.first = std::move(new_path); } i++;    AVA: Temporary comment it to be able to compile with C++11
   } 
 
 }

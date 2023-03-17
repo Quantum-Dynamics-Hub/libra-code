@@ -11,13 +11,19 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 #
 
 
-PROJECT("libra")
+project("libra")
+
 
 #
 #  User-defined Find modules
 #
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
+
+#
+# Try using the PCH - it will only work if you have the right version of cmake
+#
+option(USING_PCH "Build using pre-compiled header support" ON)
 
 
 #
@@ -29,7 +35,8 @@ MESSAGE("Hint to self: -DPYTHON_INCLUDE_DIR=/home/Alexey_2/Soft/Python-2.6.7/bin
 
 # For Linux and Cygwin
 # Adapt it according to your system
-FIND_PACKAGE(PythonLibs 3.6 REQUIRED)
+#FIND_PACKAGE(PythonLibs 3.6 REQUIRED)
+FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
 #FIND_PACKAGE(PythonLibs 3.7 REQUIRED)
 
 IF(PYTHONLIBS_FOUND)
@@ -60,13 +67,15 @@ SET(Boost_USE_MULTITHREADED=OFF)
 SET(Boost_USE_STATIC_RUNTIME=OFF)
 
 # Adapt it according to your system
-FIND_PACKAGE(Boost 1.73.0 REQUIRED)
+#FIND_PACKAGE(Boost 1.73.0 REQUIRED)
+FIND_PACKAGE(Boost 1.80.0 REQUIRED)
 #FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
   INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}") 
   # Adapt it based on your system
-  FIND_PACKAGE(Boost COMPONENTS python36 regex) # it seems that it is important to find sub-packages too!!!
+  #FIND_PACKAGE(Boost COMPONENTS python36 regex) # it seems that it is important to find sub-packages too!!!
+  FIND_PACKAGE(Boost COMPONENTS python37 regex)
   #FIND_PACKAGE(Boost COMPONENTS python37 regex)
 ELSEIF(NOT Boost_FOUND)
   MESSAGE(FATAL_ERROR "Unable to find correct Boost version. Did you set BOOST_ROOT?")
@@ -126,14 +135,16 @@ ELSE()
 ENDIF()
 
 
+
 #
 #  Cmake configuration
 #
 MESSAGE("Setting up the CMake configuration...")
 IF(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "RELEASE")
-  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -g -I ${Boost_INCLUDE_DIRS} -fopenmp")
+  SET(CMAKE_CXX_FLAGS "-fPIC -O2 -fpermissive -w -I ${Boost_INCLUDE_DIRS} -fopenmp")
 ENDIF()
+
 
 
 #

@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -12,13 +12,20 @@
 #ifndef SPECIALFUNCTIONS_H
 #define SPECIALFUNCTIONS_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
+
+#endif
+
 #include "../math_linalg/liblinalg.h"
+#include "../math_random/librandom.h"
 
 
 /// liblibra namespace
@@ -33,6 +40,9 @@ using liblinalg::MATRIX;
 using liblinalg::CMATRIX;
 using liblinalg::MATRIX3x3;
 using liblinalg::QUATERNION;
+
+using librandom::Random;
+
 
 #define POW(x,y) ((x>=0)?pow(x,y):-pow(-x,y))
 #define DELTA(i,j) ((i==j)?1.0:0.0)
@@ -77,6 +87,10 @@ void Ellint(double m,double sinphi,double tol,double& Km_,double& value);
 
 
 int randperm(int size,int of_size,vector<int>& result);
+void sample(MATRIX& x, MATRIX& mean_x, MATRIX& sigma_x, Random& rnd);
+void sample(MATRIX* x, MATRIX& mean_x, MATRIX& sigma_x, Random& rnd);
+int set_random_state(vector<double>& prob, double ksi);
+
 
 double RANDOM(double a,double b);
 
@@ -114,6 +128,12 @@ CMATRIX mean(CMATRIX& X);
 
 MATRIX deviation(MATRIX& X);
 CMATRIX deviation(CMATRIX& X);
+
+MATRIX variance(MATRIX& X, int opt);
+MATRIX variance(CMATRIX& X, int opt);
+
+MATRIX std_dev(MATRIX& X, int opt);
+MATRIX std_dev(CMATRIX& X, int opt);
 
 MATRIX covariance(MATRIX& X);
 MATRIX covariance(MATRIX& X, MATRIX& Y);

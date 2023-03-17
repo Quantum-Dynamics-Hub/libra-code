@@ -19,16 +19,18 @@
 
 // External dependencies
 #include "../math_linalg/liblinalg.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "../io/libio.h"
 #include "dyn_control_params.h"
+#include "dyn_variables.h"
+#include "../Units.h"
 
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 /// libdyn namespace
@@ -49,23 +51,24 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt);
 
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd,
        vector<int>& which_trajectories);
 
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd);
 
 
+
 vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& act_states, Random& rnd);
 
 
 
 void handle_hops_nuclear(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
        nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states);
 
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -17,12 +17,18 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
+#endif 
+
 #include "../io/libio.h"
 
 

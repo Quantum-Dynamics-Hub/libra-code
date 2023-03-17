@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021 Alexey V. Akimov
+* Copyright (C) 2021-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -25,6 +25,47 @@ namespace libdyn{
 
 namespace bp = boost::python;
 
+void dyn_variables::allocate_electronic_vars(){
+
+  if(electronic_vars_status==0){ 
+
+    ampl_dia = new CMATRIX(ndia, ntraj);
+    ampl_adi = new CMATRIX(nadi, ntraj);
+    proj_adi = vector<CMATRIX*>(ntraj);
+    dm_dia = vector<CMATRIX*>(ntraj);
+    dm_adi = vector<CMATRIX*>(ntraj);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      proj_adi[itraj] = new CMATRIX(nadi, nadi);
+      proj_adi[itraj]->load_identity();
+      dm_dia[itraj] = new CMATRIX(ndia, ndia);
+      dm_adi[itraj] = new CMATRIX(nadi, nadi);
+    }
+
+    act_states = vector<int>(ntraj, 0);
+
+    electronic_vars_status = 1;
+  }
+
+}
+
+void dyn_variables::allocate_nuclear_vars(){
+
+  if(nuclear_vars_status==0){ 
+
+    iM = new MATRIX(ndof, 1);
+    q = new MATRIX(ndof, ntraj);
+    p = new MATRIX(ndof, ntraj);
+    f = new MATRIX(ndof, ntraj);
+
+    nuclear_vars_status = 1;
+  }
+
+}
+
+
+
+
 dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
 /**
@@ -33,7 +74,7 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
 */
 
-  cout<<"dyn_variables constructor!!!\n";  
+  //cout<<"dyn_variables constructor!!!\n";  
 
   ///================= Dimension numbers =============
   ndia = _ndia;
@@ -41,29 +82,28 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ndof = _ndof;
   ntraj = _ntraj;
 
-/*
-  ///================= General variables, for OOP implementation ===================
-  q = NULL;
-  p = NULL;
-  ampl_dia = NULL;
-  ampl_adi = NULL;
-  projectors = NULL;
-*/
+
+  ///================= Electronic and nuclear variables, for OOP implementation ================
+  electronic_vars_status = 0;
+  allocate_electronic_vars();
+    
+  nuclear_vars_status = 0;
+  allocate_nuclear_vars();
 
   ///================= A-FSSH ====================
   afssh_vars_status = 0;
-  //dR = NULL;
-  //dP = NULL;
 
   ///================= BCSH ====================
   bcsh_vars_status = 0;
 
-
+  ///================= DISH ====================
+  dish_vars_status = 0;
+  
 }
 
 
 void dyn_variables::allocate_afssh(){
-//     cout<<"dyn_variables allocate_afssh!!!\n";  
+
 
   if(afssh_vars_status==0){
 
@@ -88,7 +128,6 @@ void dyn_variables::allocate_afssh(){
 
 
 void dyn_variables::allocate_bcsh(){
-//     cout<<"dyn_variables allocate_bcsh!!!\n";  
 
   if(bcsh_vars_status==0){
 
@@ -100,19 +139,120 @@ void dyn_variables::allocate_bcsh(){
 }// allocate_bcsh
 
 
+void dyn_variables::allocate_dish(){
+
+  if(dish_vars_status==0){
+
+    coherence_time = new MATRIX(nadi, ntraj);
+    dish_vars_status = 1;
+
+  }
+
+}// allocate_dish
+
+
+
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
-     cout<<"dyn_variables copy constructor!!!\n";
-     *this = x;
-//    decoherence_rates = new MATRIX( *x.decoherence_rates );  
+  //cout<<"dyn_variables copy constructor\n";
+  int itraj, idof;
 
-}
+  ndia = x.ndia;
+  nadi = x.nadi;
+  ndof = x.ndof;
+  ntraj = x.ntraj;
+
+  // copy content of electronic vars, only if initialized 
+  if(x.electronic_vars_status==1){
+
+    allocate_electronic_vars();
+
+    *ampl_dia = *x.ampl_dia;
+    *ampl_adi = *x.ampl_adi;
+    for(itraj=0; itraj<ntraj; itraj++){
+      *proj_adi[itraj] = *x.proj_adi[itraj];
+      *dm_dia[itraj] = *x.dm_dia[itraj];
+      *dm_adi[itraj] = *x.dm_adi[itraj];
+    }
+    act_states = x.act_states;
+
+  }
+
+  // copy content of nuclear vars, only if initialized 
+  if(x.nuclear_vars_status==1){
+
+    allocate_nuclear_vars();
+
+    *iM = *x.iM;
+    *q = *x.q;
+    *p = *x.p;
+    *f = *x.f;
+  }
+
+  // AFSSH vars - only if initialized
+  if(x.afssh_vars_status==1){
+    allocate_afssh();
+    
+    // Copy content
+    for(itraj=0; itraj<ntraj; itraj++){
+      for(idof=0; idof<ndof; idof++){
+        *dR[itraj][idof] = *x.dR[itraj][idof];
+        *dP[itraj][idof] = *x.dP[itraj][idof];
+      }
+    }
+
+  }// if AFSSH vars
+
+  // BCSH vars - only if initialized
+  if(x.bcsh_vars_status==1){
+    allocate_bcsh();
+
+    // Copy content
+    *reversal_events = *x.reversal_events;
+
+  }// if BCSH vars
+
+  // DISH vars - only if initialized
+  if(x.dish_vars_status==1){
+    allocate_dish();
+
+    // Copy content
+    *coherence_time = *x.coherence_time;
+
+  }// if DISH vars
+  
+}// dyn_variables cctor
 
 
 
 dyn_variables::~dyn_variables(){  
-     cout<<"dyn_variables destructor!!!\n";
-/*
+  //cout<<"dyn_variables destructor!!!\n";
+
+  if(nuclear_vars_status==1){
+    delete iM;
+    delete q;
+    delete p;
+    delete f;
+    nuclear_vars_status = 0;
+  }
+
+  if(electronic_vars_status==1){ 
+    for(int itraj=0; itraj<ntraj; itraj++){
+      delete proj_adi[itraj];
+      delete dm_dia[itraj];
+      delete dm_adi[itraj];
+    }
+    proj_adi.clear();
+    dm_dia.clear();
+    dm_adi.clear();
+    
+    delete ampl_dia;
+    delete ampl_adi;
+
+    act_states.clear();
+    electronic_vars_status = 0;
+  }
+
   if(afssh_vars_status==1){
 
     for(int itraj; itraj<ntraj; itraj++){
@@ -133,7 +273,18 @@ dyn_variables::~dyn_variables(){
     afssh_vars_status = 0;
 
   }// AFSSH variables
-*/
+
+  if(bcsh_vars_status==1){
+    delete reversal_events;
+
+    bcsh_vars_status = 0;
+  }
+
+  if(dish_vars_status==1){
+    delete coherence_time;
+
+    dish_vars_status = 0;
+  }
 
 }
 
@@ -152,7 +303,7 @@ void dyn_variables::set_parameters(bp::dict params){
 //    if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
 //    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
 
-}
+  }
 }
 
 

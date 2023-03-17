@@ -416,14 +416,33 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     # Parameters and dimensions
     critical_params = [  ] 
     default_params = {  "colors":colors_, "clrs_index":clrs_index_,
-                        "xlim":[-7.5, 15], "ylim":[-0.005, 0.025]
+                        "xlim":[-7.5, 15], "ylim":[-0.005, 0.025], "ylim2":[-0.01, 0.01], "do_show":1,
+                        "save_figures":1, "prefix":"out", "dpi":300, "nac_idof":0,
+                        "plotting_option":0, "figsize":[36, 18], "titlesize":38, "labelsize":38,
+                        "fontsize": 36, "xticksize":28, "yticksize":28, "show_nac_abs":0,
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
     colors = plot_params["colors"]
     clrs_index = plot_params["clrs_index"]
     xlim = plot_params["xlim"]
-    ylim = plot_params["ylim"]
+    ylim = plot_params["ylim"] # range of diabatic and adiabatic energies
+    ylim2 = plot_params["ylim2"] # range of NACs
+    do_show = plot_params["do_show"]
+    save_figures = plot_params["save_figures"]
+    prefix = plot_params["prefix"]
+    dpi_value = plot_params["dpi"]
+    plotting_option = plot_params["plotting_option"]  
+    nac_idof = plot_params["nac_idof"]  # index of the DOF for which we plot the derivative coupling
+    _figsize = plot_params["figsize"]
+    _titlesize = plot_params["titlesize"]
+    _labelsize = plot_params["labelsize"]
+    _fontsize = plot_params["fontsize"]
+    _xticksize = plot_params["xticksize"]
+    _yticksize = plot_params["yticksize"]
+    show_nac_abs = plot_params["show_nac_abs"]
+
+    fig_size = (_figsize[0], _figsize[1])
 
     
     X = []
@@ -433,11 +452,11 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         X.append(xmin + i * dx)
     
     
-    plt.rc('axes', titlesize=38)      # fontsize of the axes title
-    plt.rc('axes', labelsize=38)      # fontsize of the x and y labels
-    plt.rc('legend', fontsize=36)     # legend fontsize
-    plt.rc('xtick', labelsize=28)     # fontsize of the tick labels
-    plt.rc('ytick', labelsize=28)     # fontsize of the tick labels
+    plt.rc('axes', titlesize=_titlesize)      # fontsize of the axes title
+    plt.rc('axes', labelsize=_labelsize)      # fontsize of the x and y labels
+    plt.rc('legend', fontsize=_fontsize)      # legend fontsize
+    plt.rc('xtick', labelsize=_xticksize)     # fontsize of the tick labels
+    plt.rc('ytick', labelsize=_yticksize)     # fontsize of the tick labels
 
     plt.rc('figure.subplot', left=0.2)
     plt.rc('figure.subplot', right=0.95)
@@ -457,16 +476,22 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         ham.init_all(2)
 
         
-        hdia, hadi  = [], []  
+        hdia, hadi, nac, nac_abs  = [], [], [], []
         uij = []              # projecitions of the MOs onto elementary basis
     
         for k1 in range(nstates):
             hadi.append([])
             hdia.append([])
+            nac_k1 = []
+            nac_abs_k1 = []
             uij_k1 = []
             for k2 in range(nstates):
                 uij_k1.append([])
+                nac_k1.append([])
+                nac_abs_k1.append([])
             uij.append(uij_k1)
+            nac.append(nac_k1)
+            nac_abs.append(nac_abs_k1)
                 
     
         for i in range(nsteps):
@@ -491,54 +516,107 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             
                 for k2 in range(nstates):
                     uij[k1][k2].append(U.get(k1,k2).real**2 + U.get(k1,k2).imag**2)
-                    
+                    nac_k1_k2 = ham.get_dc1_adi(0).get(k1, k2).real
+                    nac[k1][k2].append(nac_k1_k2)
+                    nac_abs[k1][k2].append( abs(nac_k1_k2) )
 
+
+        if plotting_option==0:  # Plot diabatic and adiabatic surfaces separately, plot projections too
                     
-        plt.figure(2*iset, figsize=(36, 18)) # dpi=300, frameon=False)
+            plt.figure(2*iset, figsize=fig_size ) # dpi=300, frameon=False)
                 
-        plt.subplot(1, 2, 1)    
-        plt.ylim(ylim[0], ylim[1])
-        plt.xlim(xlim[0], xlim[1])
+            plt.subplot(1, 2, 1)    
+            plt.ylim(ylim[0], ylim[1])
+            plt.xlim(xlim[0], xlim[1])
     
-        #plt.title('Params set %i: Ham_dia' % (iset) )
-        plt.xlabel('Coordinate, a.u.')
-        plt.ylabel('Energy, a.u.')
-        for k1 in states_of_interest:
-            plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, color = colors[clrs_index[k1]])     
-        plt.legend()    
-    
-        plt.subplot(1, 2, 2)
-        plt.ylim(ylim[0], ylim[1])
-        plt.xlim(xlim[0], xlim[1])
-        #plt.title('Params set %i: Ham_adi' % (iset))
-        plt.xlabel('Coordinate, a.u.')
-        plt.ylabel('Energy, a.u.')
-        for k1 in states_of_interest:
-            plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])     
-        plt.legend()    
-            
-            
-          
-        plt.figure(2*iset+1, figsize=(36, 18)) # dpi=300, frameon=False)            
-        sz1 = len(states_of_interest)
-    
-        for k2 in states_of_interest:
-            indx = states_of_interest.index(k2)
-
-            plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
-
-            #plt.subplot(1, sz1, 1+indx)
-            #plt.subplot(1, 1, 1+indx)
-            #plt.title('Params set %i: Adi state %i' % (iset, k2) )
+            #plt.title('Params set %i: Ham_dia' % (iset) )
             plt.xlabel('Coordinate, a.u.')
-            plt.ylabel('Projection')
+            plt.ylabel('Energy, a.u.')
+            for k1 in states_of_interest:
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, color = colors[clrs_index[k1]])     
+            plt.legend()    
     
-            for k1 in range(nstates):
-#                plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
-                plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
-            plt.legend()               
+            plt.subplot(1, 2, 2)
+            plt.ylim(ylim[0], ylim[1])
+            plt.xlim(xlim[0], xlim[1])
+            #plt.title('Params set %i: Ham_adi' % (iset))
+            plt.xlabel('Coordinate, a.u.')
+            plt.ylabel('Energy, a.u.')
+            for k1 in states_of_interest:
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])     
+            plt.legend()    
+
+            if save_figures:
+                plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
+            
+                  
+            plt.figure(2*iset+1, figsize=fig_size ) # dpi=300, frameon=False)            
+            sz1 = len(states_of_interest)
     
+            for k2 in states_of_interest:
+                indx = states_of_interest.index(k2)
 
-        plt.show()
-        plt.close()          
+                plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
 
+                #plt.subplot(1, sz1, 1+indx)
+                #plt.subplot(1, 1, 1+indx)
+                #plt.title('Params set %i: Adi state %i' % (iset, k2) )
+                plt.xlabel('Coordinate, a.u.')
+                plt.ylabel('Projection')
+    
+                for k1 in range(nstates):
+                    #plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
+                    plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
+                plt.legend()               
+
+            if save_figures:
+                plt.savefig(F"{prefix}/projections_set_{iset}.png", dpi=dpi_value)            
+    
+            if do_show:
+                plt.show()
+        
+            plt.close()          
+
+        elif plotting_option==1:  # Plot diabatic and adiabatic surfaces in one picture, using dashed lines for diabatic
+                                  # Plot NACs in a separate panel
+
+            plt.figure(iset, figsize=fig_size) # dpi=300, frameon=False)
+
+            plt.subplot(1, 2, 1)
+            plt.ylim(ylim[0], ylim[1])
+            plt.xlim(xlim[0], xlim[1])
+
+            #plt.title('Params set %i: Ham_dia' % (iset) )
+            plt.xlabel('Coordinate, a.u.')
+            plt.ylabel('Energy, a.u.')
+
+            for k1 in states_of_interest:
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, ls="--", color = colors[clrs_index[k1]])
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])
+            plt.legend()
+
+
+            plt.subplot(1, 2, 2)
+            plt.ylim(ylim2[0], ylim2[1])
+            plt.xlim(xlim[0], xlim[1])
+            #plt.title('Params set %i: Ham_adi' % (iset))
+            plt.xlabel('Coordinate, a.u.')
+            plt.ylabel('NAC, a.u.')
+            cnt = 0
+            for k1 in states_of_interest:
+                for k2 in states_of_interest:
+                    if k2>k1:                        
+                        plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, color = colors[clrs_index[cnt]])
+                        if show_nac_abs:
+                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, ls="--", color = colors[clrs_index[cnt+1]])
+                        cnt = cnt + 1
+            plt.legend()
+
+
+            if save_figures:
+                plt.savefig(F"{prefix}/Ham_dia_E_adi_NAC_set_{iset}.png", dpi=dpi_value)
+
+            if do_show:
+                plt.show()
+
+            plt.close()

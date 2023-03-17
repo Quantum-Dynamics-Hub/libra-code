@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2021 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -12,10 +12,16 @@
 #ifndef NEURAL_NETWORK_H
 #define NEURAL_NETWORK_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <fstream>
 #include <string>
 #include <vector>
 #include <boost/python.hpp>
+
+#endif 
 
 #include "../math_linalg/liblinalg.h"
 #include "../math_data/libdata.h"

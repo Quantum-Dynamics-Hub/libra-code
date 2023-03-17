@@ -17,9 +17,15 @@
 #ifndef DYN_CONTROL_PARAMS_H
 #define DYN_CONTROL_PARAMS_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif
+
 #include "../math_linalg/liblinalg.h"
+#include "../Units.h"
 
 
 /// liblibra namespace
@@ -48,8 +54,10 @@ class dyn_control_params{
     time-dependent wavefunction and the one used to integrate the TD-SE
     
     Options:
-     - 0: diabatic representation 
-     - 1: adiabatic representation [ default ]
+     - 0: diabatic representation, wfc
+     - 1: adiabatic representation, wfc [ default ]
+     - 2: diabatic representation, density matrix (e.g. Liouville's picture)
+     - 3: adiabatic representation, density matrix (e.g. Liouville's picture)
   */
   int rep_tdse;
 
@@ -65,7 +73,32 @@ class dyn_control_params{
      - 1: adiabatic representation 
 
   */
-  int rep_ham;
+  //int rep_ham;  /// TO BE REPLACED BY the ham_update_method
+
+
+  /** 
+   How to update Hamiltonian and which type of Hamiltonian to update
+
+   Options:
+     - 0: don't update any Hamiltonians
+     - 1: recompute only diabatic Hamiltonian [ default ]
+     - 2: recompute only adiabatic Hamiltonian
+  */
+  int ham_update_method;
+
+
+  /** 
+   How to transform the Hamiltonians between representations
+
+   Options:
+     - 0: don't do any transforms
+     - 1: diabatic->adiabatic according to internal diagonalization [ default ]
+     - 2: diabatic->adiabatic according to internally stored basis transformation matrix
+     - 3: adiabatic->diabatic according to internally stored basis transformation matrix
+     - 4: adiabatic->diabatic according to local diabatization method
+
+  */
+  int ham_transform_method;
 
 
   /**
@@ -82,8 +115,11 @@ class dyn_control_params{
     The representation to compute LZ probabilitieis.
  
     Options:
-      - 0: diabatic [ default ]
-      - 1: adiabatic, this will use Belyaev-Lebedev approach
+      - 0: diabatic, Eq. 1 of the Belyaev-Lebedev paper [ default ]
+      - 1: adiabatic, Eq. 3 of the Belyaev-Lebedev paper, crossing point is determined
+           by the sign change of the diabatic gap
+      - 2: adiabatic, Eq. 3 of the Belyaev-Lebedev paper, crossing point is determined
+           by the sign change of the NAC
   */
   int rep_lz;
 
@@ -145,7 +181,7 @@ class dyn_control_params{
 
 
   /** 
-    How to update NACs and vibronic Hamiltonian before electronic TD-SE propagation.
+    How to update NACs 
 
     Options:
       - 0: don't update them (e.g. for simplest NAC)
@@ -164,6 +200,28 @@ class dyn_control_params{
       -  1: use NPI of Meek and Levine (if nac_update_method==2)
   */
   int nac_algo;
+
+
+  /** 
+    How to update Hvib 
+
+    Options:
+      - 0: don't update them (e.g. if it is read externally)
+      - 1: update according to regular formula: Hvib = Ham - i * hbar * NAC [ default ]
+  */
+  int hvib_update_method;
+
+
+  /** 
+    Whether to modify the Hamiltonian in the dynamics according the Shenvi-Subotnik-Yang (SSY)
+    method, see my Chapter Eq. 3.27
+    Note, that this is only applied in the adiabatic representation
+
+    Options:
+      - 0: don't [ default ]
+      - 1: do
+  */
+  int do_ssy;
 
 
   /** 
@@ -242,10 +300,12 @@ class dyn_control_params{
 
     Options: 
       - [-1]: adiabatic dynamics, no hops [ default ]
-      - 0: FSSH
-      - 1: GFSH
-      - 2: MSSH
-      - 3: DISH
+      - 0: Fewest Switches Surface Hopping (FSSH)
+      - 1: Global Flux Surface Hopping (GFSH)
+      - 2: Markov-State Surface Hopping (MSSH)
+      - 3: Landau-Zener (LZ) options
+      - 4: Zhu-Nakamura (ZN) options
+      - 5: DISH (to be implemented)
   */
   int tsh_method;
 
@@ -554,19 +614,49 @@ class dyn_control_params{
   int num_electronic_substeps; 
 
 
+  /**
+    the method for electronic TD-SE integration:
+
+    tdse_rep = 0 (diabatic): 1** - with NBRA
+
+        -1              - No propagation
+
+         0              - Lowdin exp_ with 2-point Hvib_dia 
+         1              - based on QTAG propagator
+         2              - based on modified QTAG propagator (Z at two times)
+         3              - non-Hermitian integrator with 2-point Hvib_dia
+    
+    tdse_rep = 1 (adiabatic):  1** - with NBRA
+
+        -1              -  No propagation
+
+         0              -  ld, with crude splitting,  with exp_  [ default ]
+         1              -  ld, with symmetric splitting, with exp_
+         2              -  ld, original, with exp_
+         3              -  1-point, Hvib integration, with exp_
+         4              -  2-points, Hvib integration, with exp_
+         5              -  3-points, Hvib, integration with the second-point correction of Hvib, with exp_
+         6              -  same as 4, but without projection matrices (T_new = I)
+
+        10              -  same as 0, but with rotations
+        11              -  same as 1, but with rotations
+        12              -  same as 2, but with rotations
+        13              -  same as 3, but with rotations
+        14              -  same as 4, but with rotations
+        15              -  same as 5, but with rotations
+
+
+
+  */
+  int electronic_integrator;
+
+
+
 
 
   dyn_control_params();
-  dyn_control_params(const dyn_control_params& x){ 
-    *this = x;
-    decoherence_rates = new MATRIX( *x.decoherence_rates );  
-    ave_gaps = new MATRIX( *x.ave_gaps );
-    schwartz_decoherence_inv_alpha = new MATRIX( *x.schwartz_decoherence_inv_alpha );
-  }
-  ~dyn_control_params() {  
-    delete decoherence_rates;  
-    delete ave_gaps;
-  }
+  dyn_control_params(const dyn_control_params& x);
+  ~dyn_control_params();
 
   void sanity_check();
   void set_parameters(bp::dict params);

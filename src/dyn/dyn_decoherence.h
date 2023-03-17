@@ -20,15 +20,17 @@
 // External dependencies
 #include "../math_linalg/liblinalg.h"
 #include "../io/libio.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
-
+#include "dyn_variables.h"
+#include "../Units.h"
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
+
 namespace bp = boost::python;
 
 /// libdyn namespace
@@ -46,6 +48,7 @@ CMATRIX sdm(CMATRIX& Coeff, double dt, vector<int>& act_st, vector<MATRIX>& deco
 
 void project_out(CMATRIX& Coeff, int traj, int i);
 void collapse(CMATRIX& Coeff, int traj, int i, int collapse_option);
+void collapse_dm(CMATRIX* dm, int i);
 
 void instantaneous_decoherence(CMATRIX& Coeff, 
    vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
@@ -57,8 +60,9 @@ void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F
 
 
 // For branching-corrected SH
-MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
-                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt);
+//MATRIX wp_reversal_events(MATRIX& p, MATRIX& invM, vector<int>& act_states, 
+//                          nHamiltonian& ham, vector<CMATRIX>& projectors, double dt);
+void wp_reversal_events(dyn_variables& dyn_var, nHamiltonian& ham, double dt);
 CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversal_events);
 
 
@@ -87,14 +91,14 @@ void dephasing_informed_correction(vector<MATRIX>& decoh_rates, vector<CMATRIX>&
 MATRIX coherence_intervals(CMATRIX& Coeff, MATRIX& rates);
 MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates);
 
-vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
-vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp);
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp);
+vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp);
 
 
 ///================  In dyn_methods_dish.cpp  ===================================
 
 vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
        vector<MATRIX>& decoherence_rates, Random& rnd);
 

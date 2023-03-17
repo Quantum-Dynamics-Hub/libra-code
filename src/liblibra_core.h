@@ -42,6 +42,8 @@
 
 #include "dyn_rigidbody/librigidbody.h"
 
+#include "models/libmodels.h"
+
 #include "chemobjects/libchemobjects.h"
 
 #include "cell/libcell.h"
@@ -53,7 +55,10 @@
 #include "basis_setups/libbasis_setups.h"
 #include "libint2_wrappers/liblibint2_wrappers.h"
 
-#include "hamiltonian/libhamiltonian.h"
+
+#include "atomistic/libatomistic.h"
+
+#include "nhamiltonian/libnhamiltonian.h"
 
 #include "fgr/libfgr.h"
 

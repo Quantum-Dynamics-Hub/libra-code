@@ -53,7 +53,15 @@ complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omeg
   double wt  = omega*tau;
   double wb  = omega*beta;
 
+  double cs = cos(wt);
+  double si = sin(wt);
   double Coth = 1.0 / tanh(wb*0.5);
+
+  complex<double> one(1.0, 0.0);
+  complex<double> eye(0.0, 1.0);
+
+/*
+  Xiang's stuff
   double u1_re = 0.5/omega * Coth * cos(wt);
   double u1_im =-0.5/omega * sin(wt);
   double u2_re = req * (1.0-cos(wt));
@@ -61,8 +69,19 @@ complex<double> Linear_NE_exact(double tp, double tau, double gamma, double omeg
 
   re = u1_re + 0.25 * (u2_re - 2.0*shift*cos(wtp)) * (u2_re - 2.0*shift*cos(wtp - wt)) - 0.25 * u2_im * u2_im;
   im = u1_im + 0.25 * (u2_re - 2.0*shift*cos(wtp)) * u2_im + 0.25 * (u2_re - 2.0*shift*cos(wtp - wt)) * u2_im;
+*/
+  // Explicit way
+  complex<double> res;
 
-  return gamma*gamma*complex<double>(re, im);
+  res = ( one*(req - 2.0 * shift * cos(wtp) - req * cs) + eye*(req * Coth * si)  );
+  res *= 0.25*( one * (req - 2.0* shift * cos(wtp - wt)  - req * cs ) + eye * (Coth * si) );
+  res += (0.5/omega) * ( Coth * cs * one - si * eye);
+
+  res *= gamma * gamma;
+
+  
+
+  return res; //gamma*gamma*complex<double>(re, im);
 
 }
 
@@ -541,7 +560,7 @@ double NEFGRL_rate(double tp, double omega_DA, double V,
 
   double k = 0.0;  // rate constant
 
-  int N = int(tp/dtau); //static_cast<int>(tp/dtau); 
+  int N = int(tp/dtau) + 1; //static_cast<int>(tp/dtau); 
 
   complex<double> C(0.0, 0.0);
 

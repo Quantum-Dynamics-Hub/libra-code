@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -19,13 +19,14 @@
 
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_random/librandom.h"
-#include "../../hamiltonian/libhamiltonian.h"
+#include "../../nhamiltonian/libnhamiltonian.h"
 /// liblibra namespace
 namespace liblibra{
 
 using namespace liblinalg;
 using namespace librandom;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
+
 
 /// libdyn namespace 
 namespace libdyn{
@@ -99,9 +100,9 @@ class Electronic{
   void collapse(int i);
   void collapse(int i, int phase_flag);
 
-  void propagate_electronic(double dt,Hamiltonian* ham);
-  void propagate_electronic(double dt,Hamiltonian& ham);
-  void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);
+//  void propagate_electronic(double dt,Hamiltonian* ham);
+//  void propagate_electronic(double dt,Hamiltonian& ham);
+//  void propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S);
 
 
   friend bool operator == (const Electronic& e1, const Electronic& e2){
@@ -122,35 +123,28 @@ class Electronic{
 typedef std::vector< Electronic > ElectronicList; ///< Type containing the vector of Electronic objects
 
 
-// In Electronic_Dynamics1.cpp
+//=================== In Electronic_Dynamics1.cpp ======================
+// Auxiliary functions for rotations-based integrator
+void iL2_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j);
+void iL3_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j);
 
-void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib);
-
-// The following two do the same stuff, but the second one doesn't need intermediate Electronic objects
-void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib);
+// Elementary integration algorithms
 void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
-
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S);
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S);
-void propagate_electronic(double dt,CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
-
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
 void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib);
+void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S);
+void propagate_electronic_qtag2(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& Hvib_old, CMATRIX& S, CMATRIX& S_old);
 
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep);
 
-void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA);
-
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level);
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level);
-//void propagate_electronic(double dt, nHamiltonian& ham, int rep);
-
+// For grid integration
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U);
+
+// For Liouvillian integration
+CMATRIX vectorize_density_matrix(CMATRIX* rho);
+CMATRIX vectorize_density_matrix(CMATRIX& rho);
+CMATRIX unvectorize_density_matrix(CMATRIX& rho_vec);
+CMATRIX make_Liouvillian(CMATRIX& ham);
 
 
 }// namespace libelectronic

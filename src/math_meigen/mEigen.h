@@ -12,8 +12,13 @@
 #ifndef MMATH_EIGEN_H
 #define MMATH_EIGEN_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif
+
 #include "../math_linalg/liblinalg.h"
 
 /// liblibra namespace

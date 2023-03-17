@@ -45,6 +45,10 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
+import util.libutil as comn
+#import libra_py.units as units
+#import libra_py.data_outs as data_outs
+import libra_py.data_savers as data_savers
 
 #===================== Exact calculations output ====================
 
@@ -260,5 +264,85 @@ def save_data_mem(step, wfc, saver, params):
         saver.add_data("reciPSI_dia", wfc.reciPSI_dia) 
         saver.add_data("reciPSI_adi", wfc.reciPSI_adi) 
         
+
+
+def init_tsh_savers(params, model_params, nsteps, wfc):
+
+
+    #================ Create savers ==================
+    if params["txt_output_level"] > 0 or params["hdf5_output_level"] > 0 or params["mem_output_level"] > 0:
+        prefix = params["prefix"]
+
+        # Create an output directory, if not present
+        if not os.path.isdir(prefix):
+            os.mkdir(prefix)
+
+        # Simulation parameters
+        f = open(F"{prefix}/_dyn_params.txt","w")
+        f.write( str(params) );  f.close()
+
+        f = open(F"{prefix}/_model_params.txt","w")
+        f.write( str(model_params) );  f.close()
+
+
+    if params["txt2_output_level"] > 0:
+        prefix2 = params["prefix2"]
+
+        # Create an output directory, if not present
+        if not os.path.isdir(prefix2):
+            os.mkdir(prefix2)
+
+        # Simulation parameters
+        f = open(F"{prefix2}/_dyn_params.txt","w")
+        f.write( str(params) );  f.close()
+
+        f = open(F"{prefix2}/_model_params.txt","w")
+        f.write( str(model_params) );  f.close()
+
+
+    properties_to_save = params["properties_to_save"]
+
+    _savers = {"hdf5_saver":None, "txt_saver":None, "mem_saver":None , "txt2_saver":None }
+
+
+    #====== HDF5 ========
+    hdf5_output_level = params["hdf5_output_level"]
+
+    if hdf5_output_level > 0:
+        _savers["hdf5_saver"] = data_savers.hdf5_saver(F"{prefix}/data.hdf", properties_to_save)
+        _savers["hdf5_saver"].set_compression_level(params["use_compression"], params["compression_level"])
+        exact_init_hdf5(_savers["hdf5_saver"], hdf5_output_level, nsteps, wfc.ndof, wfc.nstates, wfc.Npts)
+
+
+    #====== TXT ========
+    txt_output_level = params["txt_output_level"]
+    if params["txt_output_level"] > 0:
+        _savers["txt_saver"] = data_savers.mem_saver(properties_to_save)
+        #_savers["txt_saver"].set_compression_level(params["use_compression"], params["compression_level"])
+
+
+    #====== TXT2: No intermediate memory allocation ========
+    txt2_output_level = params["txt2_output_level"]
+
+    if params["txt2_output_level"] > 0:
+        _savers["txt2_saver"] = data_savers.mem_saver(properties_to_save)
+
+        # Here, nsteps is set to 1 since in this type of saver, we only care about the current values,
+        # not all the timesteps - that would be too consuming
+        #exact_init_hdf5(_saver["hdf5_save"], txt2_output_level, 1, wfc.ndof, wfc.nstates, wfc.Npts)
+
+
+    #====== MEM =========
+    mem_output_level = params["mem_output_level"]
+
+    if mem_output_level > 0:
+        _savers["mem_saver"] =  data_savers.mem_saver(properties_to_save)
+        #print("Saver not implemented")
+        #sys.exit(0)
+        #init_tsh_data(_savers["mem_saver"], mem_output_level, nsteps, ntraj, nnucl, nadi, ndia)
+
+
+    return _savers
+
 
 

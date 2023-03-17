@@ -20,18 +20,18 @@
 
 // External dependencies
 #include "../math_linalg/liblinalg.h"
-#include "../hamiltonian/libhamiltonian.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 
 // Dynamics classes
 #include "nuclear/libnuclear.h"
 #include "electronic/libelectronic.h"
-#include "ensemble/libensemble.h"
+//#include "ensemble/libensemble.h"
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 
@@ -40,12 +40,12 @@ namespace libdyn{
 
 using namespace libnuclear;
 using namespace libelectronic;
-using namespace libensemble;
+//using namespace libensemble;
 
 ///================  In tsh_prob_lz.cpp  ===================================
 
-MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
-MATRIX compute_hopping_probabilities_lz(nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
+//MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
+//MATRIX compute_hopping_probabilities_lz(nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia);
 
 
 

@@ -14,9 +14,14 @@
 
 */
 
-#include "Charge_Density.h"
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <sstream>
+#endif
+
+#include "Charge_Density.h"
 #include "../converters/libconverters.h"
 
 /// liblibra namespace

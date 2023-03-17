@@ -17,7 +17,12 @@
 #ifndef BASIS_H
 #define BASIS_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <sstream>
+#endif
+
 #include "../math_linalg/liblinalg.h"
 #include "../qobjects/libqobjects.h"
 

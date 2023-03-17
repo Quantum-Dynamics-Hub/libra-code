@@ -283,7 +283,7 @@ MATRIX coherence_intervals(CMATRIX& Coeff, vector<MATRIX>& rates){
 }
 
 
-vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp){
 /**
   Compute decoherence rates 1/tau_i for all states and all trajectories according to Schwartz prescription 
   
@@ -309,13 +309,14 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<
   vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
 
   vector<int> act_states(ntraj, 0);
-  F_mf = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+  /// AVA - commented for now, 12/7/2022
+  ///F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
 
   for(int i=0;i<nstates; i++){
     vector<int> act_states(ntraj, i);
     
-    F_st = aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+    F_st = ham.forces_adi(act_states).real();  // aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
     for(int itraj=0; itraj<ntraj; itraj++){
 
@@ -340,7 +341,7 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, vector<
 
 
 
-vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors, nHamiltonian& ham, MATRIX& inv_alp){
+vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp){
 /**
   Compute decoherence rates 1/tau_ij for all pairs of states and all trajectories according to Schwartz state-pair prescription 
   
@@ -360,12 +361,12 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, vector<CMATRIX>& projectors,
 
 
   // Precompute state-resolved forces
-  CMATRIX amplitudes(nstates, ntraj);
+  //CMATRIX amplitudes(nstates, ntraj);
   vector<MATRIX> F(nstates, MATRIX(ndof, ntraj));
 
   for(int i=0; i<nstates; i++){
     vector<int> act_states_i(ntraj, i);
-    F[i] = aux_get_forces(prms_st, amplitudes, projectors, act_states_i, ham);
+    F[i] = ham.forces_adi(act_states_i).real(); //  aux_get_forces(prms_st, amplitudes, projectors, act_states_i, ham);
 
   }// for i
 

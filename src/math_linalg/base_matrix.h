@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -17,6 +17,9 @@
 #ifndef base_matrix_H
 #define base_matrix_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <complex>
 #include <vector>
 #include <string.h>
@@ -25,12 +28,12 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-
+#include <boost/python.hpp>
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
 
 #include "../io/libio.h"
 #include "permutations.h"
-#include <boost/python.hpp>
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 
 
@@ -114,7 +117,7 @@ public:
 
 //    cout<<"In base destructor\n";
     delete [] M; 
-    M = NULL;
+    M = nullptr;
     n_rows = n_cols = n_elts = 0;
   } 
 
@@ -131,6 +134,10 @@ public:
     }
     else{   M[i] = val;  }
   } 
+
+  void set(base_matrix<T1>& val){
+    for(int i=0; i<n_elts; i++){  M[i] = val.M[i]; }
+  }
 
   void set(int i, int j, T1 val){ 
   /** Sets the "row","col" matrix emelent of the M array to the input value 

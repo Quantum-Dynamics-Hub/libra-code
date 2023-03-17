@@ -12,12 +12,16 @@
 #ifndef MATRIX3x3_H
 #define MATRIX3x3_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <fstream>
 #include <iostream>
 #include <iomanip>
 #include <math.h>
 #include <stdlib.h>
 #include <vector>
+#endif 
 
 #include "../io/libio.h"
 

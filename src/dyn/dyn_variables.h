@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021 Alexey V. Akimov
+* Copyright (C) 2021-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -17,9 +17,19 @@
 #ifndef DYN_VARIABLES_H
 #define DYN_VARIABLES_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
+
 #include "../math_linalg/liblinalg.h"
+#include "../math_random/librandom.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
+#include "../nhamiltonian/libnhamiltonian.h"
+#include "dyn_control_params.h"
+
 
 
 /// liblibra namespace
@@ -27,12 +37,18 @@ namespace liblibra{
 
 
 using namespace liblinalg;
+using namespace librandom;
+using namespace libnhamiltonian;
+
 
 /// libdyn namespace
 namespace libdyn{
 
 namespace bp = boost::python;
 
+
+
+CMATRIX transform_amplitudes(int rep_in, int rep_out, CMATRIX& C, nHamiltonian& ham);
 
 
 class dyn_variables{
@@ -77,24 +93,14 @@ class dyn_variables{
   int ntraj;
 
 
-  ///================= General variables, for OOP implementation ===================
+  ///================= Electronic variables, for OOP implementation ===================
   /**
-    Nuclear coordinates 
-    
-    Options:
-     MATRIX(ndof, ntraj)
+    Status of the electronic vars
+
+    0 - not allocated;
+    1 - allocated
   */
-//  MATRIX* q; 
-
-
-  /**
-    Nuclear momenta
-    
-    Options:
-     MATRIX(ndof, ntraj)
-  */
-//  MATRIX* p; 
-
+  int electronic_vars_status; 
 
   /**
     Electronic amplitudes in diabatic representation
@@ -102,7 +108,7 @@ class dyn_variables{
     Options:
      CMATRIX(ndia, ntraj)
   */
-//  CMATRIX* ampl_dia; 
+  CMATRIX* ampl_dia; 
 
 
   /**
@@ -111,7 +117,36 @@ class dyn_variables{
     Options:
      CMATRIX(nadi, ntraj)
   */
-//  CMATRIX* ampl_adi; 
+  CMATRIX* ampl_adi; 
+
+
+  /**
+    Cumulative projection matrices for adiabatic states:
+
+    |psi_adi_ordered(t)> = |psi_adi_raw(t)> * proj_adi(t)
+
+    Options:
+    vector<ntraj, CMATRIX(nadi, nadi)>
+  */
+  vector<CMATRIX*> proj_adi;
+
+
+  /**
+    Electronic density matrix in diabatic representation
+    
+    Options:
+     vector<ntraj, CMATRIX(ndia, ndia)>
+  */
+  vector<CMATRIX*> dm_dia; 
+
+
+  /**
+    Electronic density matrix in adiabatic representation
+    
+    Options:
+     vector<ntraj, CMATRIX(nadi, nadi)>
+  */
+  vector<CMATRIX*> dm_adi; 
 
 
   /**
@@ -120,16 +155,53 @@ class dyn_variables{
     Options:
      vector<int> act_states(ntraj)
   */
-//  vector<int> act_states;
+  vector<int> act_states;
+
+
+  ///================= Nuclear variables, for OOP implementation ===================
+  /**
+    Status of the nuclear vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int nuclear_vars_status; 
 
 
   /**
-    Projectors transforming dynamically-consistent and raw wavefunctions to each other
+    Inverse nuclear masses
     
     Options:
-     projectors(nstates, nstates) x ntraj
+     MATRIX(ndof, 1)
   */
-//  CMATRIX** projectors;
+  MATRIX* iM; 
+
+
+  /**
+    Nuclear coordinates 
+    
+    Options:
+     MATRIX(ndof, ntraj)
+  */
+  MATRIX* q; 
+
+
+  /**
+    Nuclear momenta
+    
+    Options:
+     MATRIX(ndof, ntraj)
+  */
+  MATRIX* p;
+
+
+  /**
+    Nuclear forces (active)
+    
+    Options:
+      MATRIX(ndof, ntraj)
+  */
+  MATRIX* f;
 
 
 
@@ -186,18 +258,97 @@ class dyn_variables{
   */
   MATRIX* reversal_events;
 
+  
+  ///================= For DISH ===================
+  /**
+    Status of the DISH vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int dish_vars_status;
+
+  /**
+    Coherence times
+
+    Options:
+     MATRIX(nadi, ntraj)
+
+    For Method: DISH
+  */
+  MATRIX* coherence_time;
 
 
+//  MATRIX coherence_time(nst, ntraj);     // for DISH
+//  MATRIX coherence_interval(nst, ntraj); // for DISH
+//  vector<int> project_out_states(ntraj);  // for DISH
 
+
+  ///====================== In dyn_variables.cpp =====================
+
+  void allocate_electronic_vars();
+  void allocate_nuclear_vars();
   void allocate_afssh();
   void allocate_bcsh();
+  void allocate_dish();
 
-  //dyn_variables();
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
   ~dyn_variables();
 
   void set_parameters(bp::dict params);
+
+
+  CMATRIX get_ampl_adi(){ return *ampl_adi; }
+  CMATRIX get_ampl_dia(){ return *ampl_dia; }
+  CMATRIX get_dm_adi(int i){  return *dm_adi[i]; }
+  CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
+  MATRIX get_imass(){ return *iM; }
+  MATRIX get_coords(){ return *q; }
+  MATRIX get_momenta(){ return *p; }
+  MATRIX get_forces(){ return *f; }
+  
+
+
+  ///====================== In dyn_variables_nuclear.cpp =====================
+
+  void init_nuclear_dyn_var(bp::dict _params, Random& rnd);
+  double compute_average_kinetic_energy();
+  double compute_average_kinetic_energy(vector<int>& which_dofs);
+  double compute_kinetic_energy(int itraj);
+  double compute_kinetic_energy(int itraj, vector<int>& which_dofs);
+  vector<double> compute_kinetic_energies();
+  vector<double> compute_kinetic_energies(vector<int>& which_dofs);
+
+
+  ///====================== In dyn_variables_electronic.cpp =====================
+
+  void update_amplitudes(dyn_control_params& dyn_params, nHamiltonian& ham);
+  void update_amplitudes(bp::dict dyn_params, nHamiltonian& ham);
+  void update_amplitudes(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params);
+  void update_amplitudes(bp::dict dyn_params, bp::object compute_model, bp::dict model_params);
+
+  void update_density_matrix(dyn_control_params& dyn_params, nHamiltonian& ham, int lvl);
+  void update_density_matrix(bp::dict dyn_params, nHamiltonian& ham, int lvl);
+  void update_density_matrix(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
+  void update_density_matrix(bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
+
+  void update_active_states();
+
+  void init_amplitudes(bp::dict params, Random& rnd);
+  void init_density_matrix(bp::dict _params);
+  void init_active_states(bp::dict _params, Random& rnd);
+
+  void init_electronic_dyn_var(bp::dict params, Random& rnd);
+
+
+
+  CMATRIX compute_average_dm(int rep);
+  vector<double> compute_average_se_pop(int rep);
+  vector<double> compute_average_sh_pop();
+
+
+
 
 
   friend bool operator == (const dyn_variables& n1, const dyn_variables& n2){
@@ -210,6 +361,9 @@ class dyn_variables{
 
 };
 
+
+//vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T);
+CMATRIX orthogonalized_T(CMATRIX& T);
 
 
 } // libdyn

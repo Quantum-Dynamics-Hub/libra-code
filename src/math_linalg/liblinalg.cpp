@@ -14,16 +14,19 @@
     
 */
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include "liblinalg.h"
-
-
 #include <boost/python/module.hpp>
 #include <boost/python/def.hpp>
 #include <boost/python/class.hpp>
 #include <boost/python/tuple.hpp>
 #include <boost/python/extract.hpp>
+#endif 
+
+#include "liblinalg.h"
 
 
 /// liblibra namespace

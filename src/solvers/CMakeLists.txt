@@ -20,7 +20,7 @@ ADD_LIBRARY(solvers_stat STATIC ${SOLVERS_SRC})
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(solvers      linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(solvers      linalg ${ext_libs})
 TARGET_LINK_LIBRARIES(solvers_stat linalg_stat ${ext_libs})
 
                                                  

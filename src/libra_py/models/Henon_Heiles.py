@@ -30,7 +30,7 @@ class tmp:
     pass    
 
 
-def Henon_Heiles(q, params):
+def Henon_Heiles(q, params, full_id=None):
     """
 
     Implementation of the Henon-Heiles potential
@@ -74,8 +74,13 @@ def Henon_Heiles(q, params):
         d1ham_dia.append( CMATRIX(1,1) )
         dc1_dia.append( CMATRIX(1,1) )
 
-    x = q.get(0)
-    y = q.get(1)
+    indx = 0
+    if full_id !=None:
+        Id = Cpp2Py(full_id)
+        indx = Id[-1]
+
+    x = q.get(0, indx)
+    y = q.get(1, indx)
 
     x2 = x*x
     y2 = y*y

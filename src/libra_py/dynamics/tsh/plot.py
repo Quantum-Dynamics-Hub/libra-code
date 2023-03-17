@@ -129,7 +129,7 @@ def common_defaults(plot_params_):
                         "which_adi_states":[0], "which_dia_states":[0],
                         "which_energies":["kinetic", "potential", "total"],
                         "colors":davis.colors, "clrs_index":davis.clrs_index,
-                        "save_figures":1, "dpi":300, "figsize":(6.42, 2.41),
+                        "save_figures":1, "do_show":1, "dpi":300, "figsize":(6.42, 2.41),
                         "axes_fontsize":(8, 8), "axes_label_fontsize":(8,8),
                         "legend_fontsize":8, "title_fontsize":8,
                         "linewidth":2,
@@ -160,7 +160,7 @@ def add_energies(plt, hdf_file, plot_params_, property_type):
     
     Call it after adding a sub-plot
     """
-    
+
     possible_options = ["energies", "energy_fluctuations"]
     if property_type not in possible_options:
         print(F"Error in add_energies - the property_type argument {property_type} is invalid\n")
@@ -198,30 +198,40 @@ def add_energies(plt, hdf_file, plot_params_, property_type):
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Energy, a.u.', fontsize=axes_label_fontsize[1])        
         
+
+    res = 0
+
     if property_type == "energies":        
-        if "potential" in which_energies:
+        if "potential" in which_energies and "Epot_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["Epot_ave/data"][:],
                      label="Potential energy", linewidth=Lw, color = colors[ clrs_index[0] ])
-        if "kinetic" in which_energies:
+            res = 1
+        if "kinetic" in which_energies and "Ekin_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["Ekin_ave/data"][:],
                      label="Kinetic energy", linewidth=Lw, color = colors[ clrs_index[1] ])
-        if "total" in which_energies:
+            res = 1
+        if "total" in which_energies and "Etot_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["Etot_ave/data"][:], 
-                     label="Total energy", linewidth=Lw, color = colors[ clrs_index[2] ])        
-        if "extended" in which_energies:
+                     label="Total energy", linewidth=Lw, color = colors[ clrs_index[2] ])
+            res = 1
+        if "extended" in which_energies and "E_NHC/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["E_NHC/data"][:],
                      label="Extended energy", linewidth=Lw, color = colors[ clrs_index[3] ])
+            res = 1
                         
     elif property_type == "energy_fluctuations":
-        if "potential" in which_energies:
+        if "potential" in which_energies and "dEpot_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["dEpot_ave/data"][:],
                      label="Potential energy", linewidth=Lw, color = colors[ clrs_index[0] ])
-        if "kinetic" in which_energies:
+            res = 1
+        if "kinetic" in which_energies and "dEkin_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["dEkin_ave/data"][:],
                      label="Kinetic energy", linewidth=Lw, color = colors[ clrs_index[1] ])
-        if "total" in which_energies:
+            res = 1
+        if "total" in which_energies and "dEtot_ave/data" in hdf_file.keys() and "time/data" in hdf_file.keys():
             plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["dEtot_ave/data"][:],
                      label="Total energy", linewidth=Lw, color = colors[ clrs_index[2] ])
+            res = 1
         # This one is not yet present
         #if "extended" in which_energies:
         #    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["dE_NHC/data"][:],
@@ -229,6 +239,7 @@ def add_energies(plt, hdf_file, plot_params_, property_type):
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
 
+    return res
                 
 
 def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_property_type):
@@ -295,26 +306,35 @@ def add_trajectory_resolved_ham_property(plt, hdf_file, plot_params_, ham_proper
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Energy, a.u.', fontsize=axes_label_fontsize[1])   
-        
+    
+
+
+    res = 0 
     indx = -1
     for istate in range(nstates):
         if istate in which_states:
             indx = indx + 1
             for tr in range(ntraj):
                 if tr in which_trajectories:                    
-                    if no_label:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
-                                 label="",
-                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+                    if "time/data" in hdf_file.keys() and F"{ham_property_type}/data" in hdf_file.keys():
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                     hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                     label="",
+                                     linewidth=Lw, color = colors[ clrs_index[indx] ])
+                            res = 1
 
-                    else:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                                 hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
-                                 label=F"traj={tr}, state={istate}",
-                                 linewidth=Lw, color = colors[ clrs_index[indx] ])                        
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                     hdf_file[F"{ham_property_type}/data"][:, tr, istate, istate],
+                                     label=F"traj={tr}, state={istate}",
+                                     linewidth=Lw, color = colors[ clrs_index[indx] ])
+                            res = 1
+
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
+
+    return res
     
 
 def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
@@ -349,29 +369,43 @@ def add_cooordinates_vs_t(plt, hdf_file, plot_params_):
         plt.ylim( ylim[0], ylim[1])
         
     
-    ntraj = hdf_file["q/data"].shape[1]
-    ndofs = hdf_file["q/data"].shape[2]
-    
     plt.title('Time-dependent Coordinates, a.u.', fontsize=title_fontsize)
     plt.xticks(fontsize=axes_fontsize[0])
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Coordinate, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, ndof = 0, 0    
+
+    if "q/data" in hdf_file.keys():
+        ntraj = hdf_file["q/data"].shape[1]
+        ndofs = hdf_file["q/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else: 
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+    else:
+        res = 0
     
-    for tr in range(ntraj):        
-        if tr in which_trajectories:
-            for dof in range(ndofs):
-                if dof in which_dofs:
-                    if no_label:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
-                                 label="", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
-                    else: 
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
-                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
+
+    return res
+
         
 
 def add_momenta_vs_t(plt, hdf_file, plot_params_):
@@ -406,31 +440,112 @@ def add_momenta_vs_t(plt, hdf_file, plot_params_):
         plt.ylim( ylim[0], ylim[1])
         
     
-    ntraj = hdf_file["p/data"].shape[1]
-    ndofs = hdf_file["p/data"].shape[2]
-    
     plt.title('Time-dependent Momenta, a.u.', fontsize=title_fontsize)
     plt.xticks(fontsize=axes_fontsize[0])
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
-    plt.ylabel('Coordinate, a.u.', fontsize=axes_label_fontsize[1])   
-    
-    for tr in range(ntraj):        
-        if tr in which_trajectories:
-            for dof in range(ndofs):
-                if dof in which_dofs:
-                    if no_label:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
-                                 label="", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
-                    else:
-                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
-                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+    res = 0
+    ntraj, ndof = 0, 0    
+
+    if "p/data" in hdf_file.keys():    
+        ntraj = hdf_file["p/data"].shape[1]
+        ndofs = hdf_file["p/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():        
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+    else:
+        res =  0
+
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
+
+    return res        
+
+
+def add_forces_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved momenta vs. time
+    This function does not plot it though
+
+    Call it after adding a sub-plot
+    """
+
+    plot_params = common_defaults(plot_params_)
+
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]
+
+    which_trajectories = plot_params["which_trajectories"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+
+
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
         
-        
+    plt.title('Time-dependent Forces, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Force, a.u.', fontsize=axes_label_fontsize[1])
+
+
+    res = 0
+    ntraj, ndof = 0, 0
+
+    if "f/data" in hdf_file.keys():
+        ntraj = hdf_file["f/data"].shape[1]
+        ndofs = hdf_file["f/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():
+        for tr in range(ntraj):
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f/data"][:, tr, dof],
+                                     label="", linewidth=Lw,
+                                     color = colors[ clrs_index[dof] ])
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw,
+                                     color = colors[ clrs_index[dof] ])
+    else:
+        res =  0
+
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res
+
+
+
 def add_phase_space(plt, hdf_file, plot_params_):
     """
     Adds the plotting of the trajectory and dof-resolved momenta vs. coordinates (phase space)
@@ -462,33 +577,39 @@ def add_phase_space(plt, hdf_file, plot_params_):
     if ylim!=None:
         plt.ylim( ylim[0], ylim[1])
         
-    
-    ntraj = hdf_file["p/data"].shape[1]
-    ndofs = hdf_file["p/data"].shape[2]
-    
+
     plt.title('Phase Space Portrait', fontsize=title_fontsize)
     plt.xticks(fontsize=axes_fontsize[0])
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Coordinate, a.u.', fontsize=axes_label_fontsize[0])
     plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
-    
-    for tr in range(ntraj):        
-        if tr in which_trajectories:
-            for dof in range(ndofs):
-                if dof in which_dofs:
-                    if no_label:
-                        plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
-                                 label="", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
-                    else:
-                        plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
-                                 label=F"traj={tr} dof={dof}", linewidth=Lw, 
-                                 color = colors[ clrs_index[dof] ]) 
+
+    res = 0
+    ntraj, ndof = 0, 0    
+    if "q/data" in hdf_file.keys() and "p/data" in hdf_file.keys() :    
+        ntraj = hdf_file["p/data"].shape[1]
+        ndofs = hdf_file["p/data"].shape[2]
+        res = 1
+
+    if res==1:
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else:
+                            plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+        
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()
                 
-        
-        
+    return res    
+            
         
 def add_populations(plt, hdf_file, plot_params_, pop_type ):
     """
@@ -509,7 +630,7 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
     Call it after adding a sub-plot
     """
     
-    possible_options = ["D_dia_raw", "D_adi_raw", "SH_pop_raw", "D_dia", "D_adi", "SH_pop"]
+    possible_options = ["D_dia_raw", "D_adi_raw", "SH_pop_raw", "D_dia", "D_adi", "SH_pop", "se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia"]
     if pop_type not in possible_options:
         print(F"Error in add_populations - the pop_type argument {pop_type} is invalid\n")
         print(F"Must be one of the following options: {possible_options}\nExiting")
@@ -525,30 +646,59 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
     ylim = plot_params["ylim"]
     Lw = plot_params["linewidth"]
     colors = plot_params["colors"]
-    clrs_index = plot_params["clrs_index"]   
+    clrs_index = plot_params["clrs_index"] * 10  
     
     
     nstates, which_states = 0, []
+
+    if pop_type in ["D_dia"]: #, "D_dia_raw"]:  # diabatic SE properties 
+        if "D_dia/data" in hdf_file.keys():          
+            nstates = hdf_file["D_dia/data"].shape[1] 
+            which_states = plot_params["which_dia_states"]
+
+    elif pop_type in ["se_pop_dia"]:  # diabatic SE populations
+        if "se_pop_dia/data" in hdf_file.keys():          
+            nstates = hdf_file["se_pop_dia/data"].shape[1] 
+            which_states = plot_params["which_dia_states"]
+
         
-    if pop_type in ["D_dia", "D_dia_raw"]:  # diabatic SE properties
-        nstates = hdf_file["D_dia/data"].shape[1] 
-        which_states = plot_params["which_dia_states"]
+    elif pop_type in ["D_adi"]: #, "D_adi_raw"]: # adiabatic SE properties
+        if "D_adi/data" in hdf_file.keys():
+            nstates = hdf_file["D_adi/data"].shape[1]
+            which_states = plot_params["which_adi_states"]
+
+    elif pop_type in ["se_pop_adi"]:  # adiabatic SE populations
+        if "se_pop_adi/data" in hdf_file.keys():          
+            nstates = hdf_file["se_pop_adi/data"].shape[1] 
+            which_states = plot_params["which_adi_states"]
+
         
-    elif pop_type in ["D_adi", "D_adi_raw"]: # adiabatic SE properties
-        nstates = hdf_file["D_adi/data"].shape[1]
-        which_states = plot_params["which_adi_states"]
-        
-    elif pop_type in ["SH_pop", "SH_pop_raw"]: # adiabatic SH properties
-        nstates = hdf_file["SH_pop/data"].shape[1]
-        which_states = plot_params["which_adi_states"]
-        
+    elif pop_type in ["SH_pop"]: #, "SH_pop_raw"]: # adiabatic SH properties
+        if "SH_pop/data" in hdf_file.keys():
+            nstates = hdf_file["SH_pop/data"].shape[1]
+            which_states = plot_params["which_adi_states"]
+
+    elif pop_type in ["sh_pop_dia"]:  # diabatic SH populations
+        if "sh_pop_dia/data" in hdf_file.keys():          
+            nstates = hdf_file["sh_pop_dia/data"].shape[1] 
+            which_states = plot_params["which_dia_states"]
+
+    elif pop_type in ["sh_pop_adi"]:  # adiabatic SH populations
+        if "sh_pop_adi/data" in hdf_file.keys():          
+            nstates = hdf_file["sh_pop_adi/data"].shape[1] 
+            which_states = plot_params["which_adi_states"]
+
         
     titles = { "D_dia": "Diabatic SE populations",
                "D_dia_raw": "Diabatic SE populations (raw)",
+               "se_pop_dia": "Diabatic SE populations",
                "D_adi": "Adiabatic SE populations",
                "D_adi_raw": "Adiabatic SE populations (raw)",
+               "se_pop_adi": "Adiabatic SE populations",
                "SH_pop": "Adiabatic SH populations",
                "SH_pop_raw": "Adiabatic SH populations (raw)",
+               "sh_pop_dia": "Diabatic SH populations",
+               "sh_pop_adi": "Adiabatic SH populations"
              }
     
     if xlim!=None:
@@ -563,25 +713,46 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Population', fontsize=axes_label_fontsize[1])   
             
-    if pop_type in ["D_dia_raw", "D_adi_raw", "D_dia", "D_adi"]:
-        indx = -1
-        for istate in range(nstates):
-            if istate in which_states:
-                indx = indx + 1            
-                plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{pop_type}/data"][:, istate, istate], 
-                         label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
+#    if pop_type in ["D_dia_raw", "D_adi_raw", "D_dia", "D_adi"]:
+
+    res = 0
+    if pop_type in ["D_dia", "D_adi"]:
+        if F"{pop_type}/data" in hdf_file.keys():
+            res = 1
+            indx = -1
+            for istate in range(nstates):
+                if istate in which_states:
+                    indx = indx + 1            
+                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{pop_type}/data"][:, istate, istate], 
+                             label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
                 
-    elif pop_type in ["SH_pop_raw", "SH_pop"]:
-        indx = -1
-        for istate in range(nstates):
-            if istate in which_states:
-                indx = indx + 1            
-                plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{pop_type}/data"][:, istate, 0], 
-                         label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ]) 
+    elif pop_type in ["SH_pop"]:
+        if F"{pop_type}/data" in hdf_file.keys():
+            res = 1
+            indx = -1
+            for istate in range(nstates):
+                if istate in which_states:
+                    indx = indx + 1            
+                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{pop_type}/data"][:, istate, 0], 
+                             label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ]) 
+
+
+    elif pop_type in ["se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia"]:
+        if F"{pop_type}/data" in hdf_file.keys():
+            res = 1
+            indx = -1
+            for istate in range(nstates):
+                if istate in which_states:
+                    indx = indx + 1            
+                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{pop_type}/data"][:, istate], 
+                             label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ]) 
+
         
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()            
         
+    return res
+
 
 
 def add_time_overlaps_projectors(plt, hdf_file, plot_params_, prop_type):
@@ -638,22 +809,27 @@ def add_time_overlaps_projectors(plt, hdf_file, plot_params_, prop_type):
     plt.yticks(fontsize=axes_fontsize[1])                            
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Magnitude', fontsize=axes_label_fontsize[1])   
-            
+
     
+    res = 0
     indx = -1
     for istate in range(nstates):
         if istate in which_states:
             indx = indx + 1
             for tr in range(ntraj):
                 if tr in which_trajectories:
-                    plt.plot(hdf_file["time/data"][:]/units.fs2au, 
-                             hdf_file[F"{prop_type}/data"][:, tr, istate, istate], 
-                         label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
+                    if "time/data" in hdf_file.keys() and F"{prop_type}/data" in hdf_file.keys():
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, 
+                                 hdf_file[F"{prop_type}/data"][:, tr, istate, istate], 
+                                 label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ])
+                        res = 1
                     
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()   
     
+    return res
     
+
 def add_basis_transform(plt, hdf_file, plot_params_):
     """
     Adds the plotting of the adiabatic-to-diabatic transforms vs. time    
@@ -695,7 +871,7 @@ def add_basis_transform(plt, hdf_file, plot_params_):
     plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     plt.ylabel('Magnitude', fontsize=axes_label_fontsize[1])   
             
-    
+    res = 0 
     indx = -1
     for istate in range(nadi):
         if istate in which_adi_states:
@@ -708,18 +884,17 @@ def add_basis_transform(plt, hdf_file, plot_params_):
                     
                     for tr in range(ntraj):
                         if tr in which_trajectories:                                     
-                            plt.plot(hdf_file["time/data"][:]/units.fs2au,
-                                     hdf_file["basis_transform/data"][:, tr, istate2, istate], 
-                                     label=lbl, linewidth=Lw, 
-                                     color = colors[ clrs_index[indx] ])     
+                            if "time/data" in hdf_file.keys() and "basis_transform/data" in hdf_file.keys():
+                                plt.plot(hdf_file["time/data"][:]/units.fs2au,
+                                         hdf_file["basis_transform/data"][:, tr, istate2, istate], 
+                                         label=lbl, linewidth=Lw, 
+                                         color = colors[ clrs_index[indx] ])     
+                                res = 1
                             
-                            
-
-
-
     plt.legend(fontsize=legend_fontsize)
     plt.tight_layout()   
-        
+
+    return res        
         
     
 def plot_dynamics(plot_params_):
@@ -750,124 +925,152 @@ def plot_dynamics(plot_params_):
     xlim = plot_params["xlim"]
     ylim = plot_params["ylim"]
     Lw = plot_params["linewidth"]
-    
+    do_show = plot_params["do_show"]    
 
     with h5py.File(F"{prefix}/{filename}", 'r') as f:
         
         #===== Energy Components vs. Time =========
-        if output_level>=1:
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                       edgecolor='black', frameon=plot_params["frameon"])        
-            if "energies" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_energies(plt, f, plot_params, "energies")        
-            if "energy_fluctuations" in what_to_plot:
-                plt.subplot(1,2,2)
-                add_energies(plt, f, plot_params, "energy_fluctuations")
-            
-            if plot_params["save_figures"]==1:
+        if "energies" in what_to_plot:
+            plt.figure(num=1, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                   edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)                
+            res = add_energies(plt, f, plot_params, "energies")        
+            if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/average_energies-vs-t.png", dpi=plot_params["dpi"])
-            
-                   
-        #===== Trajectory-resolved adiabatic energies =========
-        if output_level>=4:
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                       edgecolor='black', frameon=plot_params["frameon"])
-            if "traj_resolved_adiabatic_ham" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
-            if "traj_resolved_diabatic_ham" in what_to_plot:
-                plt.subplot(1,2,2)
-                add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/traj-res_energies-vs-t.png", dpi=plot_params["dpi"])
 
-            
-        #===== Coordinates and phase space portraits =========            
-        if output_level>=3:
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+
+        #===== Energy Components Fluctuations vs. Time =========
+        if "energy_fluctuations" in what_to_plot:
+            plt.figure(num=2, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                   edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)
+            res = add_energies(plt, f, plot_params, "energy_fluctuations")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/average_energy_fluctuations-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Coordinates vs Time  =========            
+        if "coordinates" in what_to_plot:
+            plt.figure(num=3, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
-            if "coordinates" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_cooordinates_vs_t(plt, f, plot_params)
-            if "phase_space" in what_to_plot:
-                plt.subplot(1,2,2)        
-                add_phase_space(plt, f, plot_params)
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/q-vs-t_and_phase_space.png", dpi=plot_params["dpi"])
-                
+            plt.subplot(1,1,1)
+            res = add_cooordinates_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/q-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Momenta vs Time  =========            
+        if "momenta" in what_to_plot:
+            plt.figure(num=4, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_momenta_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/p-vs-t.png", dpi=plot_params["dpi"])
+
+        #===== Forces vs Time  =========
+        if "forces" in what_to_plot:
+            plt.figure(num=5, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_forces_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/f-vs-t.png", dpi=plot_params["dpi"])
+
+        #===== Phase space  =========            
+        if "phase_space" in what_to_plot:
+            plt.figure(num=6, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_phase_space(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/phase_space.png", dpi=plot_params["dpi"])
+
+
         #====== Populations of all kinds ================
-        if output_level>=3:
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+        if "se_pop_adi" in what_to_plot:
+            plt.figure(num=7, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])        
-            
-            if "sh_pop" in what_to_plot:
-                plt.subplot(1,3,1)            
-                add_populations(plt, f, plot_params_, "SH_pop")
-            
-            if "se_pop_adi" in what_to_plot:
-                plt.subplot(1,3,2)
-                add_populations(plt, f, plot_params_, "D_adi")
-            
-            if "se_pop_dia" in what_to_plot:
-                plt.subplot(1,3,3)
-                add_populations(plt, f, plot_params_, "D_dia")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/dynamically-consistent-populations.png", dpi=plot_params["dpi"])
-        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "se_pop_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/se_pop_adi.png", dpi=plot_params["dpi"])
 
-        if output_level>=3:        
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+        if "se_pop_dia" in what_to_plot:
+            plt.figure(num=8, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "se_pop_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/se_pop_dia.png", dpi=plot_params["dpi"])
+
+        if "sh_pop_adi" in what_to_plot:
+            plt.figure(num=9, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "sh_pop_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_pop_adi.png", dpi=plot_params["dpi"])
+
+        if "sh_pop_dia" in what_to_plot:
+            plt.figure(num=10, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "sh_pop_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_pop_dia.png", dpi=plot_params["dpi"])
+                                       
+                       
+        #===== Trajectory-resolved adiabatic energies =========
+        if "traj_resolved_adiabatic_ham" in what_to_plot:
+            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
-            
-            if "sh_pop_raw" in what_to_plot:
-                plt.subplot(1,3,1)            
-                add_populations(plt, f, plot_params_, "SH_pop_raw")
-            
-            if "se_pop_adi_raw" in what_to_plot:
-                plt.subplot(1,3,2)
-                add_populations(plt, f, plot_params_, "D_adi_raw")
-            
-            if "se_pop_dia_raw" in what_to_plot:
-                plt.subplot(1,3,3)
-                add_populations(plt, f, plot_params_, "D_dia_raw")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/raw-consistent-populations.png", dpi=plot_params["dpi"])
+            plt.subplot(1,1,1)
+            res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/hvib_adi.png", dpi=plot_params["dpi"])
+
+        if "traj_resolved_adiabatic_ham" in what_to_plot:
+            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/hvib_dia.png", dpi=plot_params["dpi"])
 
 
         #===== Time-overlaps and projectors =========
-        if output_level>=4:        
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
-                       edgecolor='black', frameon=plot_params["frameon"])  
-            
-            if "time_overlaps" in what_to_plot:
-                plt.subplot(1,2,1)
-                add_time_overlaps_projectors(plt, f, plot_params, "St")
-        
-            if "projectors" in what_to_plot:
-                plt.subplot(1,2,2)
-                add_time_overlaps_projectors(plt, f, plot_params, "projector")
-            
-            if plot_params["save_figures"]==1:
-                plt.savefig(F"{out_prefix}/St-projectors-vs-t.png", dpi=plot_params["dpi"])
-        
-        
+        if "time_overlaps" in what_to_plot:
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_time_overlaps_projectors(plt, f, plot_params, "St")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/time_overlaps.png", dpi=plot_params["dpi"])
+
+
+        if "projector" in what_to_plot:
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_time_overlaps_projectors(plt, f, plot_params, "projector")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/projectors.png", dpi=plot_params["dpi"])
+
+
         #===== Basis transforms =========
-        if output_level>=4:        
-            plt.figure(num=None, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+        if "basis_transform" in what_to_plot:
+            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])          
-            if "basis_transform" in what_to_plot:
-                plt.subplot(1,1,1)
-                add_basis_transform(plt, f, plot_params)
-                    
-            if plot_params["save_figures"]==1:
+            plt.subplot(1,1,1)
+            res = add_basis_transform(plt, f, plot_params)                   
+            if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/basist_transform-vs-t.png", dpi=plot_params["dpi"])            
-                
-        plt.show()
+
+        
+        if do_show:         
+            plt.show()
+
 
 
 def plot_dyn(plot_params):

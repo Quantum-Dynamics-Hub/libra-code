@@ -59,7 +59,9 @@
 #define BASISSET_HEADER
 
 
-
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <vector>
 #include <string.h>
 #include <time.h>
@@ -67,6 +69,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#endif
 #include "../realtype.h"
 
 

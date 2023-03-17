@@ -19,7 +19,7 @@
 
 
 #include "../../math_linalg/liblinalg.h"
-#include "../../hamiltonian/libhamiltonian.h"
+#include "../../nhamiltonian/libnhamiltonian.h"
 #include "../dyn_control_params.h"
 
 
@@ -27,7 +27,7 @@
 namespace liblibra{
 
 using namespace liblinalg;
-using namespace libhamiltonian;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 

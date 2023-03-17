@@ -490,3 +490,201 @@ def Holstein5(q, params, full_id):
     obj.dc1_dia = dc1_dia
 
     return obj
+
+
+def convert_mtx(X, nx, ny):
+    """
+    Convert a list of size `nstates x nstates` with objects of size nx x ny
+    to a 2D array of the MATRIX(nx, ny) objects
+    """
+    n_sq = len(X)
+    n = int(math.sqrt(n_sq))
+    if n*n != n_sq:
+        print("All the parameters should be input as lists on nstates x nstates objects. Exiting...\n");
+        sys.exit(0)    
+
+    x = []
+    for i in range(n):
+        xi = []
+        for j in range(n):
+            # Allocate xi
+            xi.append( MATRIX(nx, ny))
+
+            # Populate xi
+            for k1 in range(nx):
+                for k2 in range(ny):
+                    xi[j].set(k1, k2, X[i*n+j][k1*ny+k2])
+        x.append(xi)
+    return x
+    
+def polynomial(q, A, B, C, T):
+    """
+    q = MATRIX(ndof, 1)
+    A = MATRIX(ndof, ndof)
+    B = MATRIX(ndof, 1)
+    C = MATRIX(1,1)
+    T = MATRIX(ndof, 1)
+    """
+
+    dq = q - T
+    F = (0.5 * dq.T() * A * dq + B.T() * dq + C).get(0, 0)
+    dF = A * dq + B 
+
+    return F, dF
+
+
+def Holstein_gen(_q, params, full_id=None):
+    """
+    This is the generalized Holstein n-level Hamiltonian
+
+    H_nm = F(q; P_nm) * exp(-F(q; p_nm) )\
+
+    P_i = (T_i, A_i, B_i, C_i); i = (n,m)  - pre-exp polynomial parameters
+    p_i = (t_i, a_i, b_i, c_i); i = (n,m)  - exp polynomial parameters
+
+    T_i or q_i = MATRIX(ndof, 1)
+    A_i or a_i = MATRIX(ndof, ndof)
+    B_i or b_i = MATRIX(ndof, 1)
+    C_i or c_i = scalar
+
+    F(q; P_i) = 0.5 * (q-T_i)^T * A_i (q-T_i) + B_i^T * (q-T_i) + C_i
+
+    Args:
+        _q ( MATRIX(ndof, ntraj) ): coordinates of the particle for all trajectories
+        params ( dictionary ): model parameters
+
+        each of the lists below is of size  nstates x nstates, where `nstates` is the number of electronic states
+
+            * **params["A"]** ( list of 2D array of doubles of size ndof x ndof ): parameter for pre-exp polynomial [ units: Ha/Bohr^2 ]
+            * **params["B"]** ( list of 1D array of doubles of size ndof ): parameter for pre-exp polynomial [ units: Ha/Bohr]
+            * **params["C"]** ( list of doubles ): parameter for pre-exp polynomial [ Ha ]
+            * **params["T"]**( list of 1D array of doubles of size ndof): parameter for pre-exp polynomial [ units: Bohr ]
+            * **params["a"]** ( list of 2D array of doubles of size ndof x ndof ): parameter for exp polynomial [ units: Ha/Bohr^2 ]
+            * **params["b"]** ( list of 1D array of doubles of size ndof ): parameter for exp polynomial [ units: Ha/Bohr]
+            * **params["c"]** ( list of doubles ): parameter for exp polynomial [ Ha ]
+            * **params["t"]**( list of 1D array of doubles of size ndof): parameter for exp polynomial [ units: Bohr ]
+
+    Returns:
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(nstates,nstates) ): diabatic Hamiltonian
+            * obj.ovlp_dia ( CMATRIX(nstates,nstates) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of ndof CMATRIX(nstates,nstates) objects ):
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.d2ham_dia ( list of ndof x ndof CMATRIX(nstates,nstates)) objects ):
+                second derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of ndof CMATRIX(nstates,nstates) objects ): derivative coupling in the diabatic basis [ zero ]
+
+    """
+
+    critical_params = [ ]
+
+    # Here are parameters for a 2-state systems with 1 nuclear dofs:
+    # two parabolas, both depending on 1 nuclear DOF
+    # constant coupling
+    default_params = {}
+
+    k0, k1 = 0.001, 0.001  # force constants of each diabatic surface
+    V = 0.001              # diabatic coupling
+    E0, E1 = 0.0, 0.01     # diabatic shifts
+    alp0, alp1 = 0.0, 0.0
+    x0, x1, x01 = 0.0, 1.0, 0.5
+    default_params["A"] = [  [k0],   [0.0], 
+                             [0.0],  [k1]
+                          ]
+    default_params["B"] = [  [0.0],   [0.0],
+                             [0.0],   [0.0]
+                          ]
+    default_params["C"] = [  [E0],   [V],
+                             [V],    [E1]
+                          ]
+    default_params["T"] = [  [x0],   [x01],
+                             [x01],   [x1]
+                          ]
+
+    default_params["a"] = [  [2.0*alp0],   [0.0],
+                             [0.0],  [2.0*alp1]
+                          ]
+    default_params["b"] = [  [0.0],   [0.0],
+                             [0.0],   [0.0]
+                          ]
+    default_params["c"] = [  [0.0],   [0.0],
+                             [0.0],    [0.0]
+                          ]
+    default_params["t"] = [  [x0],   [x01],
+                             [x01],   [x1]
+                          ]    
+
+    # Get the parameters
+    comn.check_input(params, default_params, critical_params)
+
+    A = params["A"]; 
+    B = params["B"]
+    C = params["C"]
+    T = params["T"]
+    a = params["a"]
+    b = params["b"]
+    c = params["c"]
+    t = params["t"]
+
+    n = int(math.sqrt(len(A)))
+    ndof = len(B[0])
+
+    #============ Convert to matrices =================
+    A = convert_mtx(A, ndof, ndof)  
+    B = convert_mtx(B, ndof, 1)
+    C = convert_mtx(C, 1, 1)
+    T = convert_mtx(T, ndof, 1)
+
+    a = convert_mtx(a, ndof, ndof)
+    b = convert_mtx(b, ndof, 1)
+    c = convert_mtx(c, 1, 1)
+    t = convert_mtx(t, ndof, 1)
+
+
+    Sdia = CMATRIX(n,n); Sdia.identity()
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
+    d2ham_dia = CMATRIXList();  d2ham_dia.append( CMATRIX(n,n) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+
+
+    indx = 0
+    if full_id!=None:
+        Id = Cpp2Py(full_id)
+        indx = Id[-1]
+
+    q = _q.col(indx)
+
+
+    obj = tmp()
+    #============= Diabatic Hamiltonians ======================
+    obj.ham_dia = CMATRIX(n,n)
+    obj.d1ham_dia = CMATRIXList()
+    for i in range(n):
+        for j in range(n):
+            P1, dP1 = polynomial(q, A[i][j], B[i][j], C[i][j], T[i][j])
+            P2, dP2 = polynomial(q, a[i][j], b[i][j], c[i][j], t[i][j])
+            h_ij = P1 * math.exp(-P2)
+            obj.ham_dia.set(i,j,  h_ij * (1.0+0.0j) )
+  
+            der = dP1 * math.exp(-P2) - dP2 * h_ij; # MATRIX(ndof, 1)
+            for k in range(ndof):
+                obj.d1ham_dia.append( CMATRIX(n,n) )
+                obj.d1ham_dia[k].set(i, j,  der.get(k, 0) * (1.0+0.0j) )
+
+    #============= Diabatic overlaps ==========================
+    obj.ovlp_dia = CMATRIX(n,n); obj.ovlp_dia.identity()
+
+    #============= Diabatic derivative couplings ==============
+    obj.dc1_dia = CMATRIXList();
+    for i in range(ndof):
+        obj.dc1_dia.append( CMATRIX(n,n) )
+
+    #============== Second derivatives of diabatic Ham =========
+    obj.d2ham_dia = CMATRIXList();
+    for i in range(ndof*ndof):
+        obj.d2ham_dia.append( CMATRIX(n,n) )
+
+
+
+    return obj

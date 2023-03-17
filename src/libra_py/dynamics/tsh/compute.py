@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019-2020 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2022 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -47,379 +47,14 @@ import util.libutil as comn
 import libra_py.units as units
 import libra_py.data_outs as data_outs
 import libra_py.data_savers as data_savers
-import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 #import libra_py.dynamics as dynamics_io
 
 from . import save
 
 
-def init_nuclear_dyn_var(Q, P, M, params, rnd):
-    """
-    Args:
-        Q ( list of doubles ): the mean values of coordinates for all DOFs [ units: a.u.]
-        P ( list of doubles ): the mean values of momenta for all DOFs [ units: a.u. ]
-        M ( list of doubles ): masses of all nuclear DOFs [ units: a.u. ]
-
-        params ( dictionary ): control parameters
- 
-            * **params["init_type"]** ( int ): the type of sampling of nuclear DOFs
-     
-                - 0 : initialize ```ntraj``` identical copies of coordinates and momenta
- 
-                - 1 : keep all coordinates identical, but sample momenta from the normal 
-                    distribution with a given width in each dimension
-
-                - 2 : keep all momenta identical, but sample coordinates from the normal 
-                    distribution with a given width in each dimension
-
-                - 3 : sample both coordinates and momenta from the normal 
-                    distributions with given widths in each dimension
-
-            * **params["force_constant"]** ( list of double ): force constants involved in the Harmonic
-                oscillator model: U = (1/2) * k * x^2, and omega = sqrt( k / m )
-                These parameters define the Harmonic oscillator ground state wavefunctions from which
-                the coordinates and momenta are sampled. [ units: a.u. = Ha/Bohr^2, default: [0.001] ]
-                The length should be consistent with the length of Q, P and M arguments
-                The ground state of the corresponding HO is given by:
-                 psi_0 = (alp/pi)^(1/4)  exp(-1/2 * alp * x^2), with alp = m * omega / hbar
-                The corresponding probability density is distributed as:
-                Tully uses psi(x) ~ exp(-(x/sigma)^2) so 1/sigma^2 = alp/2 => alp = 2/sigma^2 = m sqrt (k/m) = sqrt( k * m )
-
-                To make sigma = 20 / p0 => k * m = 4 /sigma^4 = 4/ (20/p0)^4 = 4* p^4 / 20^4 =  0.000025 * p^4 
-                So: k =  0.000025 * p^4  / m
-                
-
-            * **params["ntraj"]** ( int ): the number of trajectories - the parameter defines the
-                number of columns the output matrices will have [ default: 1 ]
-
-
-
-        rnd ( Random ): random numbers generator object
-
-
-    Returns:
-        q, p, iM:  where:
-
-            * q ( MATRIX(ndof, ntraj) ) : coordinates for all trajectories
-            * p ( MATRIX(ndof, ntraj) ) : momenta for all trajectories
-            * iM ( MATRIX(ndof, 1) ) : inverse masses of all DOFs (same across the trajectories)
-
-    """
-
-
-    critical_params = [ ]
-    default_params = { "init_type":0, "force_constant":[0.001], "ntraj":1  }
-    comn.check_input(params, default_params, critical_params)
-        
-    init_type = params["init_type"]  
-    force_constant = params["force_constant"]
-    ntraj = params["ntraj"]    
-
-
-    if init_type not in [0, 1, 2, 3]:
-        print(F"WARNINIG in init_nuclear_dyn_var: \
-              the init_type = {init_type} is not known\
-              Allowed values are: [0, 1, 2, 3]" )
-
-    if len(Q)!=len(P):
-        print(F"ERROR in init_nuclear_dyn_var: \
-              the length of input Q is = {len(Q)}, \
-              the length of input P is = {len(P)}, but they should be equal to each other" )
-        sys.exit(0)
-
-    if len(Q)!=len(M):
-        print(F"ERROR in init_nuclear_dyn_var: \
-              the length of input Q is = {len(Q)}, \
-              the length of input M is = {len(M)}, but they should be equal to each other" )
-        sys.exit(0)
-
-    if len(Q)!=len(force_constant):
-        print(F"ERROR in init_nuclear_dyn_var: \
-              the length of input Q is = {len(Q)}, \
-              the length of input P is = {len(force_constant)}, but they should be equal to each other" )
-        sys.exit(0)
-
-    if ntraj < 1:
-        print(F"ERROR in init_nuclear_dyn_var: \
-              the ntraj is= {ntraj}, should be at least 1" )
-        sys.exit(0)
-
-
-
-    # At this point, it is safe to define ndof:
-    ndof = len(Q)
-    q, p, iM = MATRIX(ndof,ntraj), MATRIX(ndof,ntraj), MATRIX(ndof,1)
-    for dof in range(ndof):
-        iM.set(dof, 0, 1.0/M[dof])
-
-
-    # Mean values
-    mean_q, mean_p = MATRIX(ndof,1), MATRIX(ndof, 1)
-    for dof in range(ndof):
-        mean_q.set(dof, 0, Q[dof])
-        mean_p.set(dof, 0, P[dof])
-
-    # Deviations
-    sigma_q, sigma_p = MATRIX(ndof,1), MATRIX(ndof, 1)
-    if init_type == 0:
-        for dof in range(ndof):        
-            sigma_q.set(dof, 0, 0.0)
-            sigma_p.set(dof, 0, 0.0)
-
-    elif init_type == 1:
-        for dof in range(ndof):        
-            sigma_q.set(dof, 0, 0.0)
-            sigma_p.set(dof, 0, math.sqrt( 0.5*math.sqrt((force_constant[dof]*M[dof])) ))
-
-    elif init_type == 2:
-        for dof in range(ndof):        
-            sigma_q.set(dof, 0, math.sqrt( 0.5*math.sqrt(1.0/(force_constant[dof]*M[dof])) ))
-            sigma_p.set(dof, 0, 0.0 )
-
-    elif init_type == 3:
-        for dof in range(ndof):        
-            sigma_q.set(dof, 0, math.sqrt( 0.5*math.sqrt(1.0/(force_constant[dof]*M[dof])) ))
-            sigma_p.set(dof, 0, math.sqrt( 0.5*math.sqrt((force_constant[dof]*M[dof])) ))
-
-    # Now sample the values
-    tsh.sample(q, mean_q, sigma_q, rnd)
-    tsh.sample(p, mean_p, sigma_p, rnd)
-
-    return q, p, iM
-
-
-
-def init_electronic_dyn_var(params, rnd):
-    """
-    Args:
-
-        params ( dictionary ): control parameters
- 
-            * **params["init_type"]** ( int ): the type of sampling of electronic DOFs
-     
-                - 0 : initialize all states according to "istate" and sets all
-                    amplitudes to 1.0  [ default ]
- 
-                - 1 : initialize all states according to "istate" but sets 
-                    amplitudes to exp(-2*pi*i*rnd), where rnd is a random 
-                    number uniformly distributed on the [0, 1] interval
-
-                - 2 : initialize all states according to "istates" - the 
-                    integer indices are selected randomly according to populations provided in
-                    variable "istates", the amplitudes are set to be sqrt(istates[i]), but
-                    their phases are identical (like in the option 0)
-
-                - 3 : initialize all states according to "istates" - the 
-                    integer indices are selected randomly according to populations provided in
-                    variable "istates", the amplitudes are set to be sqrt(istates[i]), but
-                    their phases are set to exp(-2*pi*i*rnd), where rnd is a random 
-                    number uniformly distributed on the [0, 1] interval (line in option 1)
-
-            * **params["nstates"]** ( int ): the number of electronic states in the basis
-                [ default: 1 ]
-
-            * **params["istate"]** ( int ): the index of the initial electronic state, used 
-                only when **params["init_type"]** is 0 or 1, in which case it defines on 
-                which state the amplitudes will be initialized [ default: 0]
-
-            * **params["istates"]** ( list of ints ): the list of the populations on all electronic
-                states included in the basis, used only when **params["init_type"]** is 2 or 3, 
-                in which case it defines on which states the amplitudes will be initialized.
-                The length of this list should be consistent with ```nstates``` variable. And the sum
-                of all entries should be 1.0 [ default: [1.0], meaning that only the lowest state
-                is occupied ]
-
-            * **params["rep"]** ( int ): defines for which repersentation we generate the amplitudes
- 
-                - 0 : diabatic, the corresponding matrix is initialized, the adiabatic amplitudes are zeroes
-                - 1 : adiabatic, the corresponding matrix is initialized, the diabatic amplitudes are zeroes [ default ]
-
-            * **params["ntraj"]** ( int ): the number of trajectories - the parameter defines the
-                number of columns the output matrices will have [ default: 1]
-
-            * **params["is_nbra"]** (int): A flag for NBRA type calculations. If it is set to 1 then
-                                          the Hamiltonian related properties are only computed for one trajectory [ default : 0]
-
-        rnd ( Random ): random numbers generator object
-
-
-    Returns:
-        Cdia, Cadi, states:  where:
-
-            * Cdia ( CMATRIX(nstates, ntraj) ) : amplitudes on all diabatic states for all trajectories
-            * Cadi ( CMATRIX(nstates, ntraj) ) : amplitudes on all adiabatic states for all trajectories
-            * states ( list of ints ) : state indices for each trajectory
-
-    """
-
-    # Read the parameters
-    critical_params = [  ]
-    default_params = { "init_type":0, "nstates":1, "istate":0, "istates":[1.0], "rep":1,  "ntraj":1, "is_nbra":0  }
-    comn.check_input(params, default_params, critical_params)
-
-    init_type = params["init_type"]
-    nstates = params["nstates"]  
-    istate = params["istate"]          
-    istates = params["istates"]
-    rep = params["rep"]  
-    ntraj = params["ntraj"]
-    is_nbra = params["is_nbra"]
-
-    # Sanity check
-    if rep not in [0, 1]:
-        print(F"WARNINIG in init_electronic_dyn_var: \
-              the rep = {rep} is not known\
-              Allowed values are: [0, 1]" )
-
-    if init_type not in [0, 1, 2, 3]:
-        print(F"WARNINIG in init_electronic_dyn_var: \
-              the init_type = {init_type} is not known\
-              Allowed values are: [0, 1, 2, 3]" )
-
-    if ntraj < 1:
-        print(F"ERROR in init_electronic_dyn_var: \
-              the ntraj is= {ntraj}, should be at least 1" )
-        sys.exit(0)
-    
-    if init_type in [0, 1]:
-        if istate >= nstates:
-            print(F"ERROR in init_electronic_dyn_var: \
-                  the istate is= {istate}, but should be less than {nstates}" )
-            sys.exit(0)
-             
-    if init_type in [2, 3]:
-        if len(istates)!= nstates:
-            print(F"ERROR in init_electronic_dyn_var: \
-                  the istates array is of length {len(istates)}, but should \
-                  be of length {nstates}")
-            sys.exit(0)
-        
-        summ = sum(istates)
-        if math.fabs( summ - 1.0 ) > 1e-5:
-            print(F"ERROR in init_electronic_dyn_var: \
-                  the sum of the entries in the istates array is {summ}, but should be 1.0")
-            sys.exit(0)
-
-               
-                
-    # Dynamical variables
-    Cdia, Cadi = CMATRIX(nstates, ntraj), CMATRIX(nstates, ntraj)
-    states = intList() 
-
-
-    for traj in range(ntraj):
-
-        if init_type==0:
- 
-            if rep==0:
-                Cdia.set(istate, traj, 1.0+0.0j);  
-            elif rep==1:
-                Cadi.set(istate, traj, 1.0+0.0j);  
-            states.append(istate) 
-
-        elif init_type==1:
-
-            ksi = rnd.uniform(0.0, 1.0)
-            ampl = math.cos(2*math.pi*ksi) + 1.0j*math.sin(2.0*math.pi*ksi)
-
-            if rep==0:
-                Cdia.set(istate, traj, ampl);  
-            elif rep==1:
-                Cadi.set(istate, traj, ampl);  
-            states.append(istate) 
-
-
-        elif init_type==2:
-
-            for state, pop in enumerate(istates):
-                ampl = math.sqrt( pop )
-
-                if rep==0:
-                    Cdia.set(state, traj, ampl);  
-                elif rep==1:
-                    Cadi.set(state, traj, ampl);  
-
-            ksi = rnd.uniform(0.0, 1.0)
-            states.append(tsh.set_random_state(istates, ksi)) 
-
-
-        elif init_type==3:
-
-            for state, pop in enumerate(istates):
-
-                ksi = rnd.uniform(0.0, 1.0)
-                ampl = math.cos(2*math.pi*ksi) + 1.0j*math.sin(2.0*math.pi*ksi)
-                ampl = ampl * math.sqrt( pop )
-
-                if rep==0:
-                    Cdia.set(state, traj, ampl);  
-                elif rep==1:
-                    Cadi.set(state, traj, ampl);  
-
-            ksi = rnd.uniform(0.0, 1.0)
-            states.append(tsh.set_random_state(istates, ksi)) 
-
-    projections = CMATRIXList()
-    if is_nbra==1:
-        projections.append( CMATRIX(nstates, nstates) )
-        projections[0].identity()
-    else:
-        for traj in range(ntraj):
-            projections.append( CMATRIX(nstates, nstates) )
-            projections[traj].identity()
-
-
-    return Cdia, Cadi, projections, states
-
-
-
-def init_amplitudes(q, Cdia, Cadi, dyn_params, compute_model, model_params, transform_direction=0):
-    """
-    Args:
-        q ( MATRIX(ndof, ntraj) ): coordinates 
-        Cdia ( MATRIX(ndia, ntraj) ): amplitudes of diabatic states
-        Cadi ( MATRIX(nadi, ntraj) ): amplitudes of adiabatic states
-
-        dyn_params ( Python dictionary ): control of the dynamics
-        compute_model ( Python function ): the function that does the calculations
-        model_params ( Python dictionary ): parameters of the computational model
-
-        transform_direction ( int ): type of transformation
-
-            - 0: diabatic to adiabatic
-            - 1: adiabatic to diabatic
-
-
-    Returns:
-        None: but changes Cadi or Cdia, according to the transform_direction
-
-    """
-
-    # Dimensions
-    ndia = Cdia.num_of_rows
-    nadi = Cadi.num_of_rows
-    nnucl= q.num_of_rows
-    ntraj= q.num_of_cols
-
-
-    # Prepare the Hamiltonian's hierarchy
-    ham = nHamiltonian(ndia, nadi, nnucl)
-    ham.add_new_children(ndia, nadi, nnucl, ntraj)
-    ham.init_all(2,1)
-
-    # Compute the Hamiltonian transformation
-    update_Hamiltonian_q(dyn_params, q, ham, compute_model, model_params)
-
-    # Do the transformations
-    if transform_direction==0:  # dia -> adi
-        Cadi = transform_amplitudes(dyn_params, Cdia, ham)
-    elif rep_tdse==1:  # adi -> dia
-        Cdia = transform_amplitudes(dyn_params, Cadi, ham)
-
-
-
-def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, compute_model, _model_params, rnd):
+#def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, compute_model, _model_params, rnd):
+def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     """
     
     Args: 
@@ -852,14 +487,17 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     model_params = dict(_model_params)
     dyn_params = dict(_dyn_params)
 
+    nstates = model_params["nstates"]
 
     # Parameters and dimensions
     critical_params = [  ] 
     default_params = {}
     #================= Computing Hamiltonian-related properties ====================
-    default_params.update( { "rep_tdse":1, "rep_ham":0, "rep_sh":1, "rep_lz":0, "rep_force":1,
+    default_params.update( { "rep_tdse":1, "rep_ham":0, "ham_update_method":1, "ham_transform_method":1,
+                             "rep_sh":1, "rep_lz":0, "rep_force":1,
                              "force_method":1, "enforce_state_following":0, "enforced_state_index":0, 
-                             "time_overlap_method":0, "nac_update_method":1, 
+                             "time_overlap_method":0, "nac_update_method":1, "nac_algo":0,
+                             "hvib_update_method":1, "do_ssy":0, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 
@@ -877,9 +515,9 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                              "decoherence_C_param":1.0, "decoherence_eps_param":0.1, 
                              "dephasing_informed":0, "instantaneous_decoherence_variant":1, 
                              "collapse_option":0,  
-                             "decoherence_rates":MATRIX(len(_states), len(_states)),
-                             "ave_gaps":MATRIX(len(_states), len(_states)),
-                             "schwartz_decoherence_inv_alpha": MATRIX(len(_states), 1)
+                             "decoherence_rates":MATRIX(nstates, nstates),
+                             "ave_gaps":MATRIX(nstates,nstates),
+                             "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1)
                            } )
 
     #================= Entanglement of trajectories ================================
@@ -888,7 +526,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     #================= Bath, Constraints, and Dynamical controls ===================
     default_params.update( { "Temperature":300.0, "ensemble":0, "thermostat_params":{},
                              "quantum_dofs":None, "thermostat_dofs":[], "constrained_dofs":[],
-                             "dt":1.0*units.fs2au, "num_electronic_substeps":1
+                             "dt":1.0*units.fs2au, "num_electronic_substeps":1,
+                             "electronic_integrator":0
                            } )
 
     #================= Variables specific to Python version: saving ================
@@ -898,7 +537,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
                              "progress_frequency":0.1,
                              "properties_to_save":[ "timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave", 
                                    "dEkin_ave", "dEpot_ave", "dEtot_ave", "states", "SH_pop", "SH_pop_raw",
-                                   "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia", 
+                                   "se_pop_adi", "se_pop_dia", "sh_pop_adi",
+                                   "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "f", "Cadi", "Cdia", 
                                    "hvib_adi", "hvib_dia", "St", "basis_transform", "projector" ] 
                            } )
 
@@ -907,6 +547,7 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     prefix = dyn_params["prefix"] 
     prefix2 = dyn_params["prefix2"] 
     rep_tdse = dyn_params["rep_tdse"]
+    rep_ham = dyn_params["rep_ham"]
     nsteps = dyn_params["nsteps"]
     dt = dyn_params["dt"]
     phase_correction_tol = dyn_params["phase_correction_tol"]
@@ -926,21 +567,24 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
     is_nbra = dyn_params["is_nbra"]    
     icond = dyn_params["icond"]    # Setting the initial geoemtry in the dynamics    
     nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
+    tsh_method = dyn_params["tsh_method"] 
 
-
-    q = MATRIX(_q)
-    p = MATRIX(_p)
-    iM = MATRIX(_iM)
-    Cdia = CMATRIX(_Cdia)
-    Cadi = CMATRIX(_Cadi)
+    
+    #q = MATRIX(_q)
+    #p = MATRIX(_p)
+    #iM = MATRIX(_iM)
+    #Cdia = CMATRIX(_Cdia)
+    #Cadi = CMATRIX(_Cadi)
     states = intList()
-    projectors = CMATRIXList() 
+    #projectors = CMATRIXList() 
 
-    ndia = Cdia.num_of_rows
-    nadi = Cadi.num_of_rows
-    nnucl= q.num_of_rows
-    ntraj= q.num_of_cols
-    nstates = len(_states)
+    ndia = dyn_var.ndia #Cdia.num_of_rows
+    nadi = dyn_var.nadi #Cadi.num_of_rows
+    nnucl = dyn_var.ndof #q.num_of_rows
+    ntraj = dyn_var.ntraj #q.num_of_cols
+
+
+    #sys.exit(0)
 
     if(dyn_params["quantum_dofs"]==None):
         dyn_params["quantum_dofs"] = list(range(nnucl))
@@ -948,19 +592,16 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
       
     if is_nbra == 1:
         for i in range(nstates):
-            states.append(_states[i])
-        projectors.append(CMATRIX(_projectors[0]))
+            pass #states.append(_states[i])
+        #projectors.append(CMATRIX(_projectors[0]))
     else:
         for i in range(nstates):
-            states.append(_states[i])
-            projectors.append(CMATRIX(_projectors[i]))
-
-
+            pass #states.append(_states[i])
+            #projectors.append(CMATRIX(_projectors[i]))
 
 
     # Initialize savers
     _savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
-
 
     # Open and close the output files for further writing
     if _savers["txt_saver"]!=None:
@@ -970,28 +611,23 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
         _savers["txt2_saver"].save_data_txt( F"{prefix2}", properties_to_save, "w", 0)
 
 
-    # ======= Hierarchy of Hamiltonians =======
-    ham = nHamiltonian(ndia, nadi, nnucl)
-    if is_nbra == 1:
-        ham.add_new_children(ndia, nadi, nnucl, 1)
-    else:
-        ham.add_new_children(ndia, nadi, nnucl, ntraj)
-
-    ham.init_all(2,1)
-    model_params.update({"timestep":icond})
-
-    
-    update_Hamiltonian_q(dyn_params, q, projectors, ham, compute_model, model_params)
-    update_Hamiltonian_p(dyn_params, ham, p, iM)  
-
-    U = []
-    if is_nbra == 1:
-        U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
-    else:
-        for tr in range(ntraj):
-            U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
+    #sys.exit(0)
+    model_params.update({"timestep":icond})    
+    #update_Hamiltonian_q(dyn_params, dyn_var, ham, compute_model, model_params)
+    #update_Hamiltonian_p(dyn_params, dyn_var, ham)  
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 0)
+    #sys.exit(0)
+    update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
 
 
+    #sys.exit(0)
+
+    #U = []
+    #if is_nbra == 1:
+    #    U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
+    #else:
+    #    for tr in range(ntraj):
+    #        U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
 
     therm = ThermostatList();
     if ensemble==1:
@@ -1000,37 +636,35 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
-
-    dyn_var = dyn_variables(ndia, nadi, nnucl, ntraj)    
-
+    #sys.exit(0)
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
     elif decoherence_algo==3:
         dyn_var.allocate_bcsh()
 
-              
-                
+    if tsh_method==5:
+        dyn_var.allocate_dish()
+
+
+    #sys.exit(0)
+    ham_aux = nHamiltonian(ham)
+
+
+    #sys.exit(0)
+
     # Do the propagation
     for i in range(nsteps):
-    
-        #============ Compute and output properties ===========        
-        # Amplitudes, Density matrix, and Populations
-        if is_nbra != 1:
-            if rep_tdse==0:
-                # Diabatic to raw adiabatic
-                ham.ampl_dia2adi(Cdia, Cadi, 0, 1) 
-                # Raw adiabatic to dynamically-consistent adiabatic
-                Cadi = dynconsyst_to_raw(Cadi, projectors)
-    
-            elif rep_tdse==1:
-                ham.ampl_adi2dia(Cdia, Cadi, 0, 1)
 
-        dm_dia, dm_adi, dm_dia_raw, dm_adi_raw = tsh_stat.compute_dm(ham, Cdia, Cadi, projectors, rep_tdse, 1, is_nbra)        
-        pops, pops_raw = tsh_stat.compute_sh_statistics(nadi, states, projectors, is_nbra)
+        #print(F"========== step {i} ===============")
+        #========= Update variables, compute properties, and save ============    
+        #dyn_var.update_amplitudes(dyn_params, ham);
+        #dyn_var.update_density_matrix(dyn_params, ham, 1);
+         
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
 
+        """
         if is_nbra != 1:
             if force_method in [0, 1]:
                 Ekin, Epot, Etot, dEkin, dEpot, dEtot = tsh_stat.compute_etot_tsh(ham, p, Cdia, Cadi, projectors, states, iM, rep_tdse)
@@ -1042,73 +676,22 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
             Etherm = Etherm / float(ntraj)
             E_NHC = Etot + Etherm
 
-        
+        """
 
-        save.save_tsh_data_123(_savers, dyn_params, 
-                       i, dt, Ekin, Epot, Etot, dEkin, dEpot, dEtot, Etherm, E_NHC, states,
-                       pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia  )
+        save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
-        del dm_dia, dm_adi, dm_dia_raw, dm_adi_raw
-        del pops, pops_raw
-
-        if is_nbra ==1:
-            tr_range = [0]
-        else:
-            tr_range = range(ntraj)
-
-        for tr in tr_range:
-            if time_overlap_method==0:
-                x = ham.get_basis_transform(Py2Cpp_int([0, tr]) )            
-                St = U[tr].H() * x
-                U[tr] = CMATRIX(x)
-                del x
-
-            elif time_overlap_method==1:                
-                St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
-
-
-            if hdf5_output_level>=4: 
-                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
-                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-                save.save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
-                del hvib_adi, hvib_dia
-
-            if mem_output_level>=4: 
-                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
-                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-                save.save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
-                del hvib_adi, hvib_dia
-
-
-            if txt_output_level>=4: 
-                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
-                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-                save.save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr])
-                del hvib_adi, hvib_dia
-
-            if txt2_output_level>=4: 
-                hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
-                hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-                save.save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U[tr], projectors[tr], 1)
-                del hvib_adi, hvib_dia
-
-            del St
-            #if time_overlap_method==0:
-            #    del U[tr]
 
         #============ Propagate ===========        
         index = i + icond
         if nfiles > 0:
             index = index % nfiles
-
         model_params.update({"timestep":index})
-        #model_params.update({"timestep":i})        
 
 
-        if rep_tdse==0:            
-            compute_dynamics(q, p, iM, Cdia, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
-        elif rep_tdse==1:
-            compute_dynamics(q, p, iM, Cadi, projectors, states, ham, compute_model, model_params, dyn_params, rnd, therm, dyn_var)
+        compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm);
+
+        #dyn_var.update_amplitudes(dyn_params, ham);
+        #dyn_var.update_density_matrix(dyn_params, ham, 1);
 
             
         if _savers["txt_saver"]!=None:
@@ -1125,8 +708,8 @@ def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, c
 
 
 
-
-def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
+#def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
+def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_nucl, rnd):
     """
     This function initializes electronic variables and Hamiltonians for a given set of 
     nuclear variables (those are needed, not initialized here) and then runs the calculations 
@@ -1166,54 +749,98 @@ def generic_recipe(q, p, iM, _dyn_params, compute_model, _model_params, _init_el
     model_params = dict(_model_params)
     dyn_params = dict(_dyn_params)
     init_elec = dict(_init_elec)    
+    init_nucl = dict(_init_nucl)
 
     comn.check_input( model_params, {  }, [ "model0" ] )
-    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0 }, [  ] )
+    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "ntraj":1 }, [  ] )
 
-    is_nbra =  dyn_params["is_nbra"]
-
+    is_nbra =  dyn_params["isNBRA"]
     init_elec.update({"is_nbra":is_nbra})
+    comn.check_input( init_elec, {  "ndia":1, "nadi":1 }, [  ] )
 
 
     # Internal parameters
-    nnucl, ntraj = q.num_of_rows, q.num_of_cols
+    ndia = init_elec["ndia"]
+    nadi = init_elec["nadi"]
+    ndof = len(init_nucl["mass"])
+    ntraj = dyn_params["ntraj"]
 
-    # Initialize electronic variables - either diabatic or adiabatic
-    Cdia, Cadi, projectors, states = init_electronic_dyn_var(init_elec, rnd)
-    ndia, nadi = Cdia.num_of_rows, Cadi.num_of_rows
 
+    # Setup the dynamical variables object
+    dyn_var = dyn_variables(ndia, nadi, ndof, ntraj)
 
-    # In case the initial conditions rep and the propagation rep are different,
-    # compute the diabatic-to-adiabatic transformation matrices and
-    # transform the amplitudes accordingly
-    ham = nHamiltonian(ndia, nadi, nnucl)
+    #sys.exit(0)
+
+    # Initialize nuclear variables 
+    dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
+
+    #sys.exit(0)
+
+    # Initialize electronic variables
+    dyn_var.init_amplitudes(init_elec, rnd)
+    dyn_var.init_density_matrix(init_elec)
+    dyn_var.init_active_states(init_elec, rnd)
+
+    #sys.exit(0)
+
+    # Setup the hierarchy of Hamiltonians 
+    ham = nHamiltonian(ndia, nadi, ndof)
     if is_nbra == 1:
-        ham.add_new_children(ndia, nadi, nnucl, 1)
+        ham.add_new_children(ndia, nadi, ndof, 1)
     else:
-        ham.add_new_children(ndia, nadi, nnucl, ntraj)
+        ham.add_new_children(ndia, nadi, ndof, ntraj)
     ham.init_all(2,1)     
 
-    if init_elec["rep"]==0:
-        if dyn_params["rep_tdse"]==1:
-            model_params1 = dict(model_params)
-            model_params1.update({"model":model_params["model0"]})
-            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
 
-            Cadi = transform_amplitudes(0, 1, Cdia, ham) 
+    #sys.exit(0)
 
-    elif init_elec["rep"]==1:    
-        if dyn_params["rep_tdse"]==0:
-            model_params1 = dict(model_params)
-            model_params1.update({"model":model_params["model0"]})
-            update_Hamiltonian_q({"rep_tdse":1, "rep_ham":0}, q, projectors, ham, compute_model, model_params1 )
+    # Compute internals of the Hamiltonian objects
+    model_params1 = dict(model_params)
+    model_params1.update({"model":model_params["model0"], "timestep":0})
 
-            Cdia = transform_amplitudes(1, 0, Cdia, ham) 
+    # We set up this temporary dict such that we we request diabatic Ham calculations
+    # followed by the transformation to the adiabatic one - this is what we need to get
+    # the transformation matrices to convert amplitudes between the representations
+    dyn_params1 = dict(dyn_params)        
+
+    if(dyn_params["ham_update_method"]==2):        
+        pass
+        #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
+    else:
+        dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
+        #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+        update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
+
+    #sys.exit(0)
+
+    # Update internal dynamical variables using the computed properties of the Hamiltonian objects
+    # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
+    # of electronic variables - this will convert the amplitudes to the proper representation
+    dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
+    dyn_var.update_density_matrix( dyn_params, ham, 1)
 
 
-    #if _dyn_params["isNBRA"]==1:
-    #    res = run_dynamics_nbra(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, _model_params, rnd)
-    #else:
-    res = run_dynamics(q, p, iM, Cdia, Cadi, projectors, states, _dyn_params, compute_model, model_params, rnd)
+    #print("Initial adiabatic amplitudes")
+    #dyn_var.get_ampl_adi().show_matrix()
+
+    #print("Initial diabatic amplitudes")
+    #dyn_var.get_ampl_dia().show_matrix()
+
+    #print("Initial adiabatic DM")
+    #dyn_var.get_dm_adi(0).show_matrix()
+
+    #print("Initial diabatic DM")
+    #dyn_var.get_dm_dia(0).show_matrix()
+
+    #print("Active states")
+    #print(Cpp2Py(dyn_var.act_states))
+
+
+    # Finally, start the dynamics calculations
+    
+    res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)
 
     return res
 

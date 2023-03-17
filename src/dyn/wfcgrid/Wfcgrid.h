@@ -20,6 +20,8 @@
 
 #include "Grid_functions.h"
 
+#include "../../atomistic/libatomistic.h"
+
 
 /// liblibra namespace
 namespace liblibra{
@@ -27,7 +29,7 @@ namespace liblibra{
 using namespace liblinalg;
 using namespace librandom;
 using namespace libspecialfunctions;
-using namespace libhamiltonian;
+using namespace libatomistic;
 
 /// libdyn namespace
 namespace libdyn{

@@ -9,8 +9,12 @@
 *
 *********************************************************************************/
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif
 
 #include "libmeigen.h"
 

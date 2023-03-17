@@ -63,11 +63,15 @@
 /* basisset.c: provides read_basisset_file() which creates a
    basisset_struct from a data contained in a file */
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
+#endif
 
 #include "basisset.h"
 //#include "output.h"

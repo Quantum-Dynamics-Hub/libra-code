@@ -18,9 +18,9 @@
 #define LIBINT2_WRAPPERS_H
 
 
-#include "../math_linalg/liblinalg.h"
-#include "../math_specialfunctions/libspecialfunctions.h"
-
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 
 // standard C++ headers
 #include <cmath>
@@ -36,29 +36,26 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-/*
-// Pybind11 for interface with Python
-#include <pybind11.h>
-#include <pybind11/eigen.h>
-#include <numpy.h>
-#include <stl.h>
-#include <complex.h>
-#include <functional.h>
-#include <chrono.h>
-*/
+#endif 
+
 
 // Libint Gaussian integrals library
 #include <libint2.hpp>
 
+
 #if !LIBINT2_CONSTEXPR_STATICS
 #  include <libint2/statics_definition.h>
 #endif
+
 
 // OpenMP library
 #if defined(_OPENMP)
 #include <omp.h>
 #endif
 
+
+#include "../math_linalg/liblinalg.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 
 
 

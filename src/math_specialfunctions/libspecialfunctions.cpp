@@ -1,16 +1,23 @@
 /*********************************************************************************
-* Copyright (C) 2015 Alexey V. Akimov
+* Copyright (C) 2015-2022 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
+#endif
+
 #include "libspecialfunctions.h"
 
 
@@ -60,6 +67,11 @@ void export_SpecialFunctions_objects(){
 
   def("randperm", randperm);
 
+  void (*expt_sample_v1)(MATRIX& x, MATRIX& mean_x, MATRIX& sigma_x, Random& rnd) = &sample;
+  def("sample", expt_sample_v1);
+
+  def("set_random_state", set_random_state);
+
   MATRIX3x3 (*expt_exp__v1)(MATRIX3x3&, double) = &exp_;
   MATRIX (*expt_exp__v2)(MATRIX&, double) = &exp_;
   CMATRIX (*expt_exp__v3)(CMATRIX&, complex<double>) = &exp_;
@@ -106,6 +118,17 @@ void export_SpecialFunctions_objects(){
   CMATRIX (*expt_deviation_v2)(CMATRIX& X) = &deviation;
   def("deviation", expt_deviation_v1); 
   def("deviation", expt_deviation_v2); 
+
+  MATRIX (*expt_variance_v1)(MATRIX& X, int opt) = &variance;
+  MATRIX (*expt_variance_v2)(CMATRIX& X, int opt) = &variance;
+  def("variance", expt_variance_v1);
+  def("variance", expt_variance_v2);
+
+  MATRIX (*expt_std_dev_v1)(MATRIX& X, int opt) = &std_dev;
+  MATRIX (*expt_std_dev_v2)(CMATRIX& X, int opt) = &std_dev;
+  def("std_dev", expt_std_dev_v1);
+  def("std_dev", expt_std_dev_v2);
+
 
   MATRIX (*expt_covariance_v1)(MATRIX& X) = &covariance;
   MATRIX (*expt_covariance_v2)(MATRIX& X, MATRIX& Y) = &covariance;

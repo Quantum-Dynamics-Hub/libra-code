@@ -12,7 +12,12 @@
 #ifndef BASIS_SETUPS_H
 #define BASIS_SETUPS_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <sstream>
+#endif
+
 #include "../math_linalg/liblinalg.h"
 #include "../qobjects/libqobjects.h"
 #include "../basis/libbasis.h"

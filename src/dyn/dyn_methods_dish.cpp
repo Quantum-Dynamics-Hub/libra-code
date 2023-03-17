@@ -19,10 +19,13 @@
 #include "dyn_decoherence.h"
 #include "dyn_hop_acceptance.h"
 #include "dyn_hop_proposal.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
 
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libspecialfunctions;
 
 /// libdyn namespace
 namespace libdyn{
@@ -94,7 +97,7 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
 
 
 vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, vector<CMATRIX>& projectors, 
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
        nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
        vector<MATRIX>& decoherence_rates, Random& rnd){
 
@@ -165,7 +168,7 @@ vector<int> dish(dyn_control_params& prms,
               /// some other state
 
               vector<int> possible_outcomes;
-              possible_outcomes = where_can_we_hop(traj, prms, q, p, invM, Coeff, projectors, ham, act_states, rnd);
+              possible_outcomes = where_can_we_hop(traj, prms, q, p, invM, Coeff, /*projectors,*/ ham, act_states, rnd);
              
               /// Transitions to some of the states are possible: then, we'll just need to determine where
               int num_allowed = possible_outcomes.size();
@@ -221,7 +224,7 @@ vector<int> dish(dyn_control_params& prms,
               /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
               /// the variable `which_trajectories` instructs to handle only the current trajectory
               old_states = act_states;
-              new_states = accept_hops(prms, q, p, invM, Coeff, projectors, ham, proposed_states, old_states, rnd, which_trajectories);              
+              new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, old_states, rnd, which_trajectories);              
 
            
               //cout<<"proposed_state = "<<proposed_states[traj]<<"  accepted hop "<<new_states[traj]<<endl;

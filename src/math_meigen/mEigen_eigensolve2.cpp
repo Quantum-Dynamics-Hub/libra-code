@@ -8,13 +8,16 @@
 * or <http://www.gnu.org/licenses/>.
 *
 *********************************************************************************/
-
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <Eigen/LU>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 #include <Eigen/Core>
-#include "mEigen.h"
+#endif 
 
+#include "mEigen.h"
 
 /// liblibra namespace
 namespace liblibra{

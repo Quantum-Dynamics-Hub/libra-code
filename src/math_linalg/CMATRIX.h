@@ -28,7 +28,12 @@
 #ifndef CMATRIX_H
 #define CMATRIX_H
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <complex>
+#endif 
+
 #include "base_matrix.h"
 #include "MATRIX.h"
 //#include "IMATRIX.h"
@@ -97,6 +102,8 @@ public:
   void set(int indx,double value1, double value2){
     set(indx, complex<double>(value1,value2));
   }
+
+  void set(CMATRIX& value1){ set(value1); }
 
   ///< Sets the "row","col" matrix emelent of the M array to the input value (real and imaginary components) 
   void set(int row,int col,double value1,double value2){

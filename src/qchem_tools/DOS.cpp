@@ -13,9 +13,14 @@
   \brief This file implements function for computing Densities of States (atomically and orbitally-resolved)
 */
 
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
+#include <sstream>
+#endif 
 
 #include "DOS.h"
-#include <sstream>
+
 using namespace std;
 
 /// liblibra namespace

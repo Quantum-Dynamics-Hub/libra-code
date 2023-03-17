@@ -10,8 +10,13 @@
 *********************************************************************************/
 
 #define BOOST_PYTHON_MAX_ARITY 30
+
+#if defined(USING_PCH)
+#include "../pch.h"
+#else
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#endif 
 
 #include "libbasis_setups.h"
 

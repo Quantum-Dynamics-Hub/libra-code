@@ -1,8 +1,8 @@
 /*********************************************************************************
-* Copyright (C) 2015-2017 Alexey V. Akimov
+* Copyright (C) 2015-2023 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
-* as published by the Free Software Foundation, either version 2 of
+* as published by the Free Software Foundation, either version 3 of
 * the License, or (at your option) any later version.
 * See the file LICENSE in the root directory of this distribution
 * or <http://www.gnu.org/licenses/>.
@@ -14,8 +14,13 @@
     
 */
 
-#include "Electronic.h"
+#if defined(USING_PCH)
+#include "../../pch.h"
+#else
 #include <cmath>
+#endif 
+
+#include "Electronic.h"
 #include "../../math_meigen/libmeigen.h"
 #include "../../math_operators/liboperators.h"
 
@@ -24,6 +29,8 @@ namespace liblibra{
 
 
 using namespace libmeigen;
+using namespace libnhamiltonian;
+
 
 /// libdyn namespace 
 namespace libdyn{
@@ -121,221 +128,115 @@ void Electronic::collapse(int i){
 }
 
 
+void iL2_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j){
+// Action of iL2 on a pair of coefficients c_i and c_j
 
-void Electronic::propagate_electronic(double dt,Hamiltonian* ham){
-/**
-  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+  CMATRIX exp_iL2(2, 2);
+  CMATRIX C(2, 1);
+  double A = dt * Hvib.get(i,j).imag();
+  complex<double> one(1.0, 0.0);
+  double cs = cos(A);
+  double si = sin(A);
 
-  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
-  This propagator is good for general Hamiltonian - diabatic of adiabatic
-  iL = iL_qp + iL_qq + iL_pp
-  iL_qp = sum_i,j {}
+  exp_iL2.set(0, 0,  cs*one);    exp_iL2.set(0, 1,  si*one);
+  exp_iL2.set(1, 0, -si*one);    exp_iL2.set(1, 1,  cs*one);
 
-  API: The member function of the Electronic function, with the pointer to Hamiltonian object
+  C.set(0,0, Coeff.get(i,0));
+  C.set(1,0, Coeff.get(j,0));
 
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
+  C = exp_iL2 * C;
 
-*/ 
-  libdyn::libelectronic::propagate_electronic(dt,this,ham);
+  Coeff.set(i,0, C.get(0,0));
+  Coeff.set(j,0, C.get(1,0));
+
 }
 
-void Electronic::propagate_electronic(double dt,Hamiltonian& ham){
-/**
-  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+void iL3_action(double dt, CMATRIX& Coeff, CMATRIX& Hvib, int i, int j){
+// Action of iL3 on a pair of coefficients c_i and c_j
 
-  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
-  This propagator is good for general Hamiltonian - diabatic of adiabatic
-  iL = iL_qp + iL_qq + iL_pp
-  iL_qp = sum_i,j {}
+  CMATRIX exp_iL3(2, 2);
+  CMATRIX C(2, 1);
+  double B = dt * Hvib.get(i,j).real();
+  complex<double> one(1.0, 0.0);
+  complex<double> eye(0.0, 1.0);
+  double cs = cos(B);
+  double si = sin(B);
 
-  API: The member function of the Electronic function, with the reference to Hamiltonian object
+  exp_iL3.set(0, 0,  cs*one);    exp_iL3.set(0, 1, -si*eye);
+  exp_iL3.set(1, 0, -si*eye);    exp_iL3.set(1, 1,  cs*one);
 
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in] ham The reference to Hamiltonian object, that affects the dynamics
+  C.set(0,0, Coeff.get(i,0));
+  C.set(1,0, Coeff.get(j,0));
 
-*/ 
-  libdyn::libelectronic::propagate_electronic(dt,this,&ham);
+  C = exp_iL3 * C;
+
+  Coeff.set(i,0, C.get(0,0));
+  Coeff.set(j,0, C.get(1,0));
+
 }
-
-
-void propagate_electronic(double dt,Electronic* el,Hamiltonian* ham){
-/**
-  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
-
-  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
-  This propagator is good for general Hamiltonian - diabatic of adiabatic
-  iL = iL_qp + iL_qq + iL_pp
-  iL_qp = sum_i,j {}
-
-  API: A free function that takes Electronic object as the input and modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] el The pointer to the Electronic object containing the electronic DOF
-  \param[in] ham The pointer to Hamiltonian object, that affects the dynamics
-
-*/ 
-
-  int i,j;
-
-  double dt_half = 0.5*dt;
-
-  //------------- Phase evolution (adiabatic) ---------------- 
-  // exp(iL_qp * dt/2)
-  for(i=0;i<el->nstates;i++){
-    for(j=0;j<el->nstates;j++){
-
-      rotate(el->p[j],el->q[i], dt_half*ham->Hvib(i,j).real());
-
-    }// for j
-  }// for i
-
-  //------------- Population transfer (adiabatic) ----------------
-  // exp((iL_qq + iL_pp) * dt/2)
-  for(i=0;i<el->nstates;i++){
-    for(j=i+1;j<el->nstates;j++){
-
-      rotate(el->q[j],el->q[i], dt_half*ham->Hvib(i,j).imag());
-      rotate(el->p[j],el->p[i], dt_half*ham->Hvib(i,j).imag());
-
-    }// for j
-  }// for i
-
-  // exp((iL_qq + iL_pp) * dt/2)
-  for(i=el->nstates-1;i>=0;i--){
-    for(j=el->nstates-1;j>i;j--){
-
-
-      rotate(el->q[j],el->q[i], dt_half*ham->Hvib(i,j).imag());
-      rotate(el->p[j],el->p[i], dt_half*ham->Hvib(i,j).imag());
-
-    }// for j
-  }// for i
-
-
-  //------------- Phase evolution (adiabatic) ----------------
-  // exp(iL_qp * dt/2)
-  for(i=el->nstates-1;i>=0;i--){
-    for(j=el->nstates-1;j>=0;j--){
-
-      rotate(el->p[j],el->q[i], dt_half*ham->Hvib(i,j).real());
-
-    }// for j
-  }// for i
-
-
-}// propagate_electronic
-
-
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib){
-/**
-  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
-
-  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
-  This propagator is good for general Hamiltonian - diabatic of adiabatic
-  iL = iL_qp + iL_qq + iL_pp
-  iL_qp = sum_i,j {}
-
-  API: A free function that takes Electronic object as the input and modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] el The reference to the Electronic object containing the electronic DOF
-  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) 
-
-  This is the Python-friendly function
-*/ 
-
-
-  int i,j;
-
-  double dt_half = 0.5*dt;
-
-  //------------- Phase evolution (adiabatic) ---------------- 
-  // exp(iL_qp * dt/2)
-  for(i=0;i<el.nstates;i++){
-    for(j=0;j<el.nstates;j++){
-
-      rotate(el.p[j],el.q[i], dt_half*Hvib.get(i,j).real());
-
-    }// for j
-  }// for i
-
-  //------------- Population transfer (adiabatic) ----------------
-  // exp((iL_qq + iL_pp) * dt/2)
-  for(i=0;i<el.nstates;i++){
-    for(j=i+1;j<el.nstates;j++){
-
-      rotate(el.q[j],el.q[i], dt_half*Hvib.get(i,j).imag());
-      rotate(el.p[j],el.p[i], dt_half*Hvib.get(i,j).imag());
-
-    }// for j
-  }// for i
-
-  // exp((iL_qq + iL_pp) * dt/2)
-  for(i=el.nstates-1;i>=0;i--){
-    for(j=el.nstates-1;j>i;j--){
-
-
-      rotate(el.q[j],el.q[i], dt_half*Hvib.get(i,j).imag());
-      rotate(el.p[j],el.p[i], dt_half*Hvib.get(i,j).imag());
-
-    }// for j
-  }// for i
-
-
-  //------------- Phase evolution (adiabatic) ----------------
-  // exp(iL_qp * dt/2)
-  for(i=el.nstates-1;i>=0;i--){
-    for(j=el.nstates-1;j>=0;j--){
-
-      rotate(el.p[j],el.q[i], dt_half*Hvib.get(i,j).real());
-
-    }// for j
-  }// for i
-
-
-}// propagate_electronic
-
-
 
 void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
-  \brief Propagate electronic DOF using sequential rotations in the MMTS variables
+  \brief Propagate electronic DOF using sequential rotations in the amplitudes variables, not MMTS!
 
-  Methodologically: This version is based on the Hamiltonian formulation of TD-SE
-  This propagator is good for general Hamiltonian - diabatic of adiabatic
-  iL = iL_qp + iL_qq + iL_pp
-  iL_qp = sum_i,j {}
+  Solves: i * hbar * dC/dt = Hvib * C, where C = Coeff 
 
-  API: A free function that takes Electronic object as the input and modifies it
+  ** phases ** - it is norm-conserving
+  iL^(1) = \sum_i { -i/hbar * H_ii * d/dC_i} 
+ 
+   action:  C_i(t) ->  C(t+dt) = exp(- i/hbar * H_ii * dt ) * C(t)
+
+  ** nonadiabatic population transfer ** - it is norm-conserving
+  iL^2(2) = \sum_{i>i} {  Im(H_ij)/hbar * ( C_j d/dC_i - C_i d/dC_j )}  
+
+   action: 
+           (C_i(t) )        (C_i(t+dt))        (   cos(A)   sin(A) )  ( C_i(t) )
+           (       )   ->   (         )    =   (                   )  (        )
+           (C_j(t) )        (C_j(t+dt))        (  -sin(A)   cos(A) )  ( C_j(t) )
+  
+  A = Im(H_ij)/hbar
+
+  ** diabatic population transfer ** - it is norm-conserving
+  iL^2(3) = \sum_{i>i} {  Re(H_ij)/hbar * ( C_j d/dC_i + C_i d/dC_j )}
+
+   action:
+           (C_i(t) )        (C_i(t+dt))        (   cos(B)   -i*sin(B) )  ( C_i(t) )
+           (       )   ->   (         )    =   (                      )  (        )
+           (C_j(t) )        (C_j(t+dt))        (  -i*sin(B)   cos(B)  )  ( C_j(t) )
+         
+  B = Re(H_ij)/hbar
 
   \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] Coeff(nst, nst) The reference to the Electronic object containing the electronic DOF
-  \param[in] Hvib The reference to the vibronic Hamiltonian matrix
+  \param[in,out] Coeff(nst, 1) the adiabatic amplitudes
+  \param[in] Hvib(nst, nst) the vibronic Hamiltonian, must be Hermitian
+
+  This version can have non-zero real components of the off-diagonal elements of Hvib
+  as long as Hvib is kept Hermitian
 
   This is the Python-friendly function
-*/ 
+*/
 
 
   int i,j;
-  double qi,pi, qj, pj;
+  double ci, cj;
 
   double dt_half = 0.5*dt;
+  complex<double> tau(0.0, -0.5*dt);  // this is actually -i*dt/2
 
   if(Coeff.n_cols!=1){
-    cout<<"ERROR in propagate_electronic_rot: The number of columns in the input amplitudes vector\
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns in the input amplitudes vector\
           should be 1, but "<<Coeff.n_cols<<" is given \n";
     exit(0);
   }
   if(Hvib.n_cols!=Hvib.n_rows){
-    cout<<"ERROR in propagate_electronic_rot: The number of columns and rows of the input Hamiltonian\
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns and rows of the input Hamiltonian\
           should be equal to each other, but the numbers are: \n";
     cout<<"num_of_rows = "<<Hvib.n_rows<<"\n";
     cout<<"num_of_cols = "<<Hvib.n_cols<<"\n";
     exit(0);
   }
   if(Hvib.n_cols!=Coeff.n_rows){
-    cout<<"ERROR in propagate_electronic_rot: The number of columns of the input Hamiltonian\
+    cout<<"ERROR in propagate_electronic_rot_new: The number of columns of the input Hamiltonian\
           should be equal to the number of rows of the amplitudes vector, but what is given: \n";
     cout<<"Coeff.num_of_rows = "<<Coeff.n_rows<<"\n";
     cout<<"Hvib.num_of_cols = "<<Hvib.n_cols<<"\n";
@@ -345,76 +246,56 @@ void propagate_electronic_rot(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
 
   int nstates = Coeff.n_rows;
 
-  //------------- Phase evolution (adiabatic) ---------------- 
-  // exp(iL_qp * dt/2)
+  //------------- Phase evolution according iL^(1) ----------------
+  // exp(iL^(1) * dt/2)
   for(i=0;i<nstates;i++){
-    for(j=0;j<nstates;j++){
-
-      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
-      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
-
-      rotate(pj, qi, dt_half*Hvib.get(i,j).real());
-
-      Coeff.set(i,0, complex<double>(qi, pi));
-      Coeff.set(j,0, complex<double>(qj, pj));
-
-    }// for j
+      Coeff.set(i, 0,  exp(tau*Hvib.get(i,i)) * Coeff.get(i, 0) ); 
   }// for i
 
-  //------------- Population transfer (adiabatic) ----------------
-  // exp((iL_qq + iL_pp) * dt/2)
+
+  //------------- Diabatic population transfer, according to iL^(3) ----------------
+  // exp(iL^(3) * dt/2), forward e.g. iL_01 * iL_02 * iL_12
   for(i=0;i<nstates;i++){
-    for(j=i+1;j<nstates;j++){
-
-      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
-      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
-
-      rotate(qj, qi, dt_half*Hvib.get(i,j).imag());
-      rotate(pj, pi, dt_half*Hvib.get(i,j).imag());
-
-      Coeff.set(i,0, complex<double>(qi, pi));
-      Coeff.set(j,0, complex<double>(qj, pj));
-
-
+    for(j=0;j<i;j++){
+      iL3_action(dt_half, Coeff, Hvib, i, j);
     }// for j
   }// for i
 
-  // exp((iL_qq + iL_pp) * dt/2)
+
+  //------------- Non-adiabatic population transfer, according to iL^(2) ----------------
+  // exp(iL^(2) * dt/2), forward e.g. iL_01 * iL_02 * iL_12
+  for(i=0;i<nstates;i++){
+    for(j=0;j<i;j++){
+      iL2_action(dt_half, Coeff, Hvib, i, j);
+    }// for j
+  }// for i
+
+  // exp(iL^(2) * dt/2), backward e.g. iL_12 * iL_02 * iL_01
   for(i=nstates-1;i>=0;i--){
-    for(j=nstates-1;j>i;j--){
-
-      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
-      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
-
-      rotate(qj, qi, dt_half*Hvib.get(i,j).imag());
-      rotate(pj, pi, dt_half*Hvib.get(i,j).imag());
-
-      Coeff.set(i,0, complex<double>(qi, pi));
-      Coeff.set(j,0, complex<double>(qj, pj));
-
+    for(j=i-1;j>=0;j--){
+      iL2_action(dt_half, Coeff, Hvib, i, j);
     }// for j
   }// for i
 
 
-  //------------- Phase evolution (adiabatic) ----------------
-  // exp(iL_qp * dt/2)
+  //------------- Diabatic population transfer, according to iL^(3) ----------------
+  // exp(iL^(3) * dt/2), backward e.g. iL_01 * iL_02 * iL_12
   for(i=nstates-1;i>=0;i--){
-    for(j=nstates-1;j>=0;j--){
-
-      qi = Coeff.get(i,0).real();  pi = Coeff.get(i,0).imag();
-      qj = Coeff.get(j,0).real();  pj = Coeff.get(j,0).imag();
-
-      rotate(pj, qi, dt_half*Hvib.get(i,j).real());
-
-      Coeff.set(i,0, complex<double>(qi, pi));
-      Coeff.set(j,0, complex<double>(qj, pj));
-
+    for(j=i-1;j>=0;j--){
+      iL3_action(dt_half, Coeff, Hvib, i, j);
     }// for j
   }// for i
+
+
+  //------------- Phase evolution according iL^(1) ----------------
+  // exp(iL^(1) * dt/2)
+  for(i=0;i<nstates;i++){
+      Coeff.set(i, 0,  exp(tau*Hvib.get(i,i)) * Coeff.get(i, 0) );
+  }// for i
+
 
 
 }// propagate_electronic_rot
-
 
 
 
@@ -436,70 +317,35 @@ void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
   This is the Python-friendly function
 */ 
 
-
   int i,j;
  
   // Let us first diagonalize the overlap matrix S
   int sz = Hvib.n_cols;  
 
   // Transform the Hamiltonian accordingly:
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0); // eigenvectors
-  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);   
-
+  CMATRIX I(sz, sz);  I.load_identity();
+  CMATRIX C(sz, sz);  // eigenvectors
+  CMATRIX Heig(sz, sz);  // eigenvalues
+  CMATRIX expH(sz, sz);  
 
   // Compute the exponential  exp(-i*Hvib*dt)  
-  libmeigen::solve_eigen(Hvib, *I, *Heig, *C, 0);  // Hvib_eff * C = I * C * Heig  ==>  Hvib = C * Heig * C.H()
-
+  libmeigen::solve_eigen(Hvib, I, Heig, C, 0);  // Hvib_eff * C = I * C * Heig  ==>  Hvib = C * Heig * C.H()
 
   // Diagonal form expH
   complex<double> one(0.0, 1.0);
   for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
-    expH->set(i,i,val);
+    complex<double> val = std::exp(-one*Heig.get(i,i)*dt );
+    expH.set(i,i,val);
   }
 
   // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
+  expH = C * expH * C.H();
 
   // Propagation
-  Coeff = *expH * Coeff;
-
+  Coeff = expH * Coeff;
   
-  // Clean temporary memory
-  delete expH;  delete Heig;  delete C;  delete I;
 
-
-
-}// propagate_electronic
-
-void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
-
-  int i,j;
-  // Faster and more robust solver:
-  int ntraj = Coeff.n_cols;
-  int nel = Coeff.n_rows;  
-  Electronic el(nel);
-
-  for(j=0; j<ntraj; j++){
-
-    for(i=0; i<nel; i++){ 
-      el.q[i] = Coeff.get(i,j).real(); 
-      el.p[i] = Coeff.get(i,j).imag();       
-    }
-    propagate_electronic(dt, el, Hvib);
-
-    for(i=0; i<nel; i++){   
-      Coeff.set(i,j, complex<double>(el.q[i], el.p[i]));    
-    }
-
-  }
-
-  // Older Default 
-  //propagate_electronic_eig(dt, Coeff, Hvib);
-}
-
+}// propagate_electronic_eig
 
 
 void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib){
@@ -536,275 +382,39 @@ void propagate_electronic_nonHermitian(double dt, CMATRIX& Coeff, CMATRIX& Hvib)
   int sz = Hvib.n_cols;  
 
   // Transform the Hamiltonian accordingly:
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
-  CMATRIX* R; R = new CMATRIX(sz, sz);  *R = complex<double>(0.0, 0.0); // right eigenvectors:  A * R = R * D
-  CMATRIX* L; L = new CMATRIX(sz, sz);  *L = complex<double>(0.0, 0.0); // left eigenvectors:   L * A  = D * L <=> A.H() * L.H() = L.H() * D
-  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
-  CMATRIX* HvibH; HvibH = new CMATRIX(sz,sz); *HvibH = Hvib.H();
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);   
-
+  CMATRIX I(sz, sz);  I.load_identity();
+  CMATRIX R(sz, sz); // right eigenvectors:  A * R = R * D
+  CMATRIX L(sz, sz); // left eigenvectors:   L * A  = D * L <=> A.H() * L.H() = L.H() * D
+  CMATRIX Heig(sz, sz); // eigenvalues - same for Hvib and HvibH, but the eigenvectors are different
+  CMATRIX HvibH(sz,sz); HvibH = Hvib.H(); 
+  CMATRIX expH(sz, sz);  
 
   // Solve the right eigenvalue problem
-  libmeigen::solve_eigen(Hvib, *I, *Heig, *R, 0);  // Hvib * R = R * Heig  
+  libmeigen::solve_eigen(Hvib, I, Heig, R, 0);  // Hvib * R = R * Heig  
 
   // Solve the left eigenvalue problem
-  libmeigen::solve_eigen(*HvibH, *I, *Heig, *L, 0);  // Hvib.H() * L.H() = L.H() * Heig  
-  *L = (*L).H();
+  libmeigen::solve_eigen(HvibH, I, Heig, L, 0);  // Hvib.H() * L.H() = L.H() * Heig  
+  L = L.H();
 
 
   // Diagonal form expH
   complex<double> one(0.0, 1.0);
   for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
-    expH->set(i,i,val);
+    complex<double> val = std::exp(-one*Heig.get(i,i)*dt );
+    expH.set(i,i,val);
   }
 
   // Transform back to the original basis:
-  *expH = (*R) * (*expH) * (*L);
+  expH = R * expH * L;
 
   // Propagation
-  Coeff = (*expH) * Coeff;
+  Coeff = expH * Coeff;
 
-  
-  // Clean temporary memory
-  delete expH;  delete Heig; delete HvibH; delete R; delete L;  delete I;
 
+}// propagate_electronic_nonHermitian
 
 
-}// propagate_electronic
-
-
-
-
-
-
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, MATRIX& S){
-/**
-  \brief Propagate electronic DOF in the MMTS variables
-
-  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
-  matrix exponentiation. This solver is good only for time-independent S matrix
-
-  API: A free function that takes Electronic object as the input and modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] el The reference to the Electronic object containing the electronic DOF
-  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-  \param[in] S The reference to the overlap matrix (assumed to be a real-valued matrix, MATRIX)
-
-  This integrator is fully unitary (the norm is conserved exactly)
-  This is the Python-friendly function
-*/ 
-
-  int i,j;
-
-  // Let us first diagonalize the overlap matrix S
-  int sz = S.n_cols;
-  
-  MATRIX* I; I = new MATRIX(sz, sz);  I->Init_Unit_Matrix(1.0);
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
-  // Transformation to adiabatic basis
-  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
-
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-
-
-  // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
-
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
-  }
-
-  // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
-
-
-
-  // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
-  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el.q[i], el.p[i]);  }
-
-
-  // Transform Hvib and coefficients
-  *Hvib_eff = (*S_i_half) * (Hvib) * (*S_i_half);
-  *coeff = (*S_half) * (*coeff); // * (*S_half);      // now these are effective coefficients
-  
-  // Set up the object
-  Electronic el_eff; el_eff = el;
-  for(i=0; i<sz; i++){  el_eff.q[i] = coeff->get(i,0).real(); el_eff.p[i] = coeff->get(i,0).imag(); }
-
-
-  // Now do the standard propagation
-  propagate_electronic(dt, el_eff, *Hvib_eff);
-
-
-  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el_eff.q[i], el_eff.p[i]);  }
-
-
-  // Transform the coefficients back to the original representation:
-  *coeff = (*S_i_half) * (*coeff); // * (*S_i_half);      // now these are effective coefficients
-  
-
-  // Update "normal" electronic variables
-  for(i=0; i<sz; i++){  el.q[i] = coeff->get(i,0).real(); el.p[i] = coeff->get(i,0).imag(); }  
-
-
-  // Clean temporary memory
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
-
-
-
-}// propagate_electronic
-
-
-void Electronic::propagate_electronic(double dt,Hamiltonian& ham, CMATRIX& S){
-/**
-  \brief Propagate electronic DOF 
-
-  Same as 
-  void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S)
-
-*/ 
-  CMATRIX* Hvib; Hvib = new CMATRIX(nstates, nstates);
-
-  for(int i=0;i<nstates;i++){
-    for(int j=0;j<nstates;j++){
-      Hvib->set(i,j, ham.Hvib(i,j) );
-    }
-  }
-  
-  libdyn::libelectronic::propagate_electronic(dt, *this, *Hvib, S);
-
-  delete Hvib;
-
-}
-
-
-void propagate_electronic(double dt,Electronic& el, CMATRIX& Hvib, CMATRIX& S){
-/**
-  \brief Propagate electronic DOF in the MMTS variables
-
-  Methodologically: solve i*hbar*S*dc/dt = Hvib*c directly, using Lowdin-type transformation and 
-  matrix exponentiation. This solver is good only for time-independent S matrix
-
-  API: A free function that takes Electronic object as the input and modifies it
-
-  \param[in] dt The integration time step (also the duration of propagation)
-  \param[in,out] el The reference to the Electronic object containing the electronic DOF
-  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
-  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued matrix, CMATRIX)
-
-  This integrator is fully unitary (the norm is conserved exactly)
-  This is the Python-friendly function
-*/ 
-
-  int i,j;
- 
-  // Let us first diagonalize the overlap matrix S
-  int sz = S.n_cols;  
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
-
-  // Transformation to adiabatic basis
-  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
-
-  // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
-
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
-  }
-
-
-  // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
-
-  // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
-  for(i=0;i<sz;i++){  coeff->M[i] = complex<double>(el.q[i], el.p[i]);  }
-
-
-  // Transform Hvib and coefficients
-  *Hvib_eff = (*S_i_half) * (Hvib) * (*S_i_half);
-  *coeff = (*S_half) * (*coeff);                 // now these are effective coefficients
-
-  
-  // Set up the object
-  Electronic el_eff; el_eff = el;
-  for(i=0; i<sz; i++){  el_eff.q[i] = coeff->get(i,0).real(); el_eff.p[i] = coeff->get(i,0).imag(); }
-
-
-  // Compute the exponential  exp(-i*Hvib*dt)  
-  libmeigen::solve_eigen(*Hvib_eff, *I, *Seig, *C, 0);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
-
-
-  // Diagonal form expH
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);    // 
-  complex<double> one(0.0, 1.0);
-  for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Seig->get(i,i)*dt );
-    expH->set(i,i,val);
-  }
-
-
-  // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
-
-
-  // Propagation
-   *coeff = *expH * *coeff;
-
-
-  // Transform the coefficients back to the original representation:
-  *coeff = (*S_i_half) * (*coeff); // * (*S_i_half);      // now these are effective coefficients
-
-  
-  // Update "normal" electronic variables
-  for(i=0; i<sz; i++){  el.q[i] = coeff->get(i,0).real(); el.p[i] = coeff->get(i,0).imag(); }  
-
-
-  // Clean temporary memory
-  delete expH;
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
-
-
-
-}// propagate_electronic
-
-
-
-
-void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
+void propagate_electronic_eig(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
 /**
   Solves the generalized time-dependent Schrodinger equation:
 
@@ -831,334 +441,166 @@ void propagate_electronic(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
  
   // Let us first diagonalize the overlap matrix S
   int sz = S.n_cols;  
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity(); //->Init_Unit_Matrix(complex<double>(1.0,0.0));
-  CMATRIX* C; C = new CMATRIX(sz, sz);  *C = complex<double>(0.0, 0.0);
-  CMATRIX* Seig; Seig = new CMATRIX(sz, sz);  *Seig = complex<double>(0.0,0.0);
-
+  CMATRIX I(sz, sz);  I.load_identity();
+  CMATRIX C(sz, sz);    // S eigenvectors
+  CMATRIX Seig(sz, sz); // S eigenvalues
 
   // Transformation to adiabatic basis
-  libmeigen::solve_eigen(S, *I, *Seig, *C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
-
+  libmeigen::solve_eigen(S, I, Seig, C, 0);  // S * C = I * C * Seig  ==>  S = C * Seig * C.H()
 
   // Diagonal form of S^{-1/2} and S^{1/2} matrices
-  CMATRIX* S_i_half; S_i_half = new CMATRIX(sz, sz);  *S_i_half = complex<double>(0.0,0.0);  // S^{-1/2}
-  CMATRIX* S_half;   S_half = new CMATRIX(sz, sz);    *S_half = complex<double>(0.0,0.0);    // S^{1/2}
-  for(i=0;i<sz;i++){
-    complex<double> val = std::sqrt(Seig->get(i,i));
+  CMATRIX S_i_half(sz, sz);  // S^{-1/2}
+  CMATRIX S_half(sz, sz);    // S^{1/2}
 
-    S_i_half->M[i*sz+i] = 1.0/val;
-    S_half->M[i*sz+i] = val;
+  for(i=0;i<sz;i++){
+    complex<double> val = std::sqrt(Seig.get(i,i));
+    S_i_half.set(i,i, 1.0/val);
+    S_half.set(i,i, val);
   }
 
-
   // Convert to original basis
-  *S_i_half = (*C) * (*S_i_half) * ((*C).H());
-  *S_half = (*C) * (*S_half) * ((*C).H());
-
+  S_i_half = C * S_i_half * C.H();
+  S_half = C * S_half * C.H();
 
   // Transform the Hamiltonian accordingly:
-  CMATRIX* Hvib_eff;  Hvib_eff = new CMATRIX(sz,sz);
-  CMATRIX* coeff;     coeff = new CMATRIX(sz,1);
+  CMATRIX Hvib_eff(sz,sz);
+  CMATRIX coeff(sz,1);
 
-  *Hvib_eff = (*S_i_half) * Hvib * (*S_i_half);  // Hermitian part
-  *coeff = (*S_half) * Coeff;                    // now these are the effective coefficients
+  Hvib_eff = S_i_half * Hvib * S_i_half;  // Hermitian part
+  coeff = S_half * Coeff;                 // now these are the effective coefficients
 
   
-  // Compute the exponential  exp(-i*Hvib*dt)  
-  libmeigen::solve_eigen(*Hvib_eff, *I, *Seig, *C, 0);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
-
+  // Compute the exponential  exp(-i*Hvib*dt)
+  // here we use Seig to also store the eigenvalues of Hvib_eff  
+  libmeigen::solve_eigen(Hvib_eff, I, Seig, C, 0);  // Hvib_eff * C = I * C * Seig  ==>  Hvib = C * Seig * C.H()
 
   // Diagonal form expH
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);    // 
+  CMATRIX expH(sz, sz);  // 
   complex<double> one(0.0, 1.0);
   for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Seig->get(i,i)*dt );
-    expH->set(i,i,val);
+    complex<double> val = std::exp(-one*Seig.get(i,i)*dt );
+    expH.set(i,i,val);
   }
 
   // Transform back to the original basis:
-  *expH = (*C) * (*expH) * ((*C).H());
+  expH = C * expH * C.H();
 
   // Propagation
-   *coeff = *expH * *coeff;
+  coeff = expH * coeff;
 
   // Transform the coefficients back to the original representation:
-  *coeff = (*S_i_half) * (*coeff); // * (*S_i_half);      // convert the effective coefficients back to original representation
+  coeff = S_i_half * coeff;  // convert the effective coefficients back to original representation
 
-  for(i=0;i<Coeff.n_elts;i++){  Coeff.M[i] = coeff->M[i]; } // so we don't allocate new memory for Coeff!!!
-
-  
-  // Clean temporary memory
-  delete expH;
-  delete coeff;
-  delete Hvib_eff;
-  delete S_i_half;
-  delete S_half;
-  delete Seig;
-  delete C;
-  delete I;
-
-
-
-}// propagate_electronic
-
-
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep){
-
- if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
-    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
-
-    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-  }
-
-}
-
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian& ham, int rep){
-
-  if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham.ndia, ham.ndia);  Hvib = ham.get_hvib_dia();
-    CMATRIX Sdia(ham.ndia, ham.ndia);  Sdia = ham.get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham.nadi, ham.nadi);  Hvib = ham.get_hvib_adi(); 
-
-    Hvib = projector.H() * Hvib * projector;
-
-    //propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-    propagate_electronic(dt, C, Hvib);  // in this case C - adiabatic coeffs
-  }
-
-}
-
-
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian* ham, int rep){
-
-  if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
-    CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
-    propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-
-  }
-
-}
-
-void propagate_electronic(double dt, CMATRIX& C, CMATRIX& projector, nHamiltonian* ham, int rep){
-
-  if(rep==0){  // diabatic
-
-    CMATRIX Hvib(ham->ndia, ham->ndia);  Hvib = ham->get_hvib_dia();
-    CMATRIX Sdia(ham->ndia, ham->ndia);  Sdia = ham->get_ovlp_dia();
-
-    propagate_electronic(dt, C, Hvib, Sdia); // in this case C - diabatic coeffs
-
-  }
-
-  else if(rep==1){  // adiabatic
-
-    CMATRIX Hvib(ham->nadi, ham->nadi);  Hvib = ham->get_hvib_adi(); 
-
-//    cout<<"Before propagate: "<<(C.H() * C).tr()<<endl;
-//    cout<<"Hvib = "; Hvib.show_matrix();
-
-
-    Hvib = projector.H() * Hvib * projector;
-
-//    cout<<"Hvib(transformed) = "; Hvib.show_matrix();
-//    cout<<"Projector = "; projector.show_matrix();
-//    cout<<"C(before) = "; C.show_matrix();
-
-   // propagate_electronic_rot(dt, C, Hvib);  // in this case C - adiabatic coeffs
-    propagate_electronic_eig(dt, C, Hvib);  // in this case C - adiabatic coeffs
-
-//    cout<<"After propagate: "<<(C.H() * C).tr()<<endl;
-//    cout<<"C(after) = "; C.show_matrix();
-  }
-
-}
-
-
-
-
-void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep){
-
-  if(C.n_cols!=ham.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
-
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, ham[traj], rep);
-
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
-
-  }
-
-}
-
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep, int isNBRA){
-
-  if(isNBRA!=1){
-  if(C.n_cols!=ham.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, vector<nHamiltonian*>& ham, int rep): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<ham.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-  }
-
-  if(isNBRA==1){
-  int i,j;
-  CMATRIX Hvib(ham[0]->nadi, ham[0]->nadi);  Hvib = ham[0]->get_hvib_adi();
-  int sz = Hvib.n_cols;
-  CMATRIX* I; I = new CMATRIX(sz, sz);  I->load_identity();
-  CMATRIX* C1; C1 = new CMATRIX(sz, sz);  *C1 = complex<double>(0.0, 0.0); // eigenvectors
-  CMATRIX* Heig; Heig = new CMATRIX(sz, sz);  *Heig = complex<double>(0.0,0.0); // eigenvalues
-  CMATRIX* expH;   expH = new CMATRIX(sz, sz);    *expH = complex<double>(0.0,0.0);
+  for(i=0;i<Coeff.n_elts;i++){  Coeff.set(i, 0, coeff.get(i, 0)); } // so we don't allocate new memory for Coeff!!!
  
-  libmeigen::solve_eigen(Hvib, *I, *Heig, *C1, 0);  // Hvib_eff * C1 = I * C1 * Heig  ==>  ham[0] = C1 * Heig * C.H()
+}// propagate_electronic_eig
 
-  complex<double> one(0.0, 1.0);
+
+
+void propagate_electronic_qtag(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& S){
+/**
+  Solves the generalized time-dependent Schrodinger equation:
+
+  i*hbar*S*dc/dt = Hvib*c 
+ 
+  using the approach described in the QTAG paper:
+
+
+  U = Z exp(-i/hbar *E *dt) * Z^+  * S
+
+  This is a potentially more robust integrator that the other one, where we compute S^+/-{1/2}
+
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
+
+*/ 
+
+
+  int i;
+ 
+  // Let us first diagonalize the overlap matrix Hvib
+  int sz = Hvib.n_cols;  
+  CMATRIX Z(sz, sz);
+  CMATRIX E(sz, sz);
+
+  // Transformation to adiabatic basis
+  libmeigen::solve_eigen(Hvib, S, E, Z, 0);  // Hvib * Z = S * Z * E
+
+
+  // Diagonal form expH
+  CMATRIX expE(sz, sz); 
   for(i=0;i<sz;i++){
-    complex<double> val = std::exp(-one*Heig->get(i,i)*dt );
-    expH->set(i,i,val);
+    double argg = -E.get(i,i).real()*dt;
+    double _cs = cos(argg);
+    double _si = sin(argg);
+    expE.set(i,i, complex<double>(_cs, _si)  );
   }
 
-  *expH = (*C1) * (*expH) * ((*C1).H());
-  // Instead of the for loop
-  C = *expH * C;
 
-  delete expH;
-  delete I;
-  delete C1;
-  delete Heig;
-
-  }
-  else {
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
-
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, projector[traj], ham[traj], rep);
-
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
-
-  }
- }//isNBRA
-}
+  // This is a supposedly more efficient form of Coeff = (Z * expE * Z.H() * S) * Coeff
+  Coeff = S * Coeff;
+  Coeff = Z.H() * Coeff;
+  Coeff = expE * Coeff;
+  Coeff = Z * Coeff;
 
 
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, vector<nHamiltonian*>& ham, int rep){
+}// propagate_electronic_qtag
 
-  int is_nbra = 0;
-  propagate_electronic(dt, C, projector, ham, rep);
+void propagate_electronic_qtag2(double dt, CMATRIX& Coeff, CMATRIX& Hvib, CMATRIX& Hvib_old, CMATRIX& S, CMATRIX& S_old){
+/**
+  Solves the generalized time-dependent Schrodinger equation:
 
-}
+  i*hbar*S*dc/dt = Hvib*c
+
+  using the approach described in the QTAG paper:
 
 
-void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level){
+  U = Z(t+dt) * exp(-i/hbar *E(t+dt) *dt) * Z(t)^+  * S(t)
 
-  vector<nHamiltonian*> branches; 
-  branches = ham.get_branches(level);
+  This is a potentially more robust integrator that the other one, where we compute S^+/-{1/2}
 
-  if(C.n_cols!=branches.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<branches.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
+  \param[in] dt The integration time step (also the duration of propagation)
+  \param[in,out] Coeff The reference to the CMATRIX object containing the electronic DOF (coefficient)
+  \param[in] ham The reference to the vibronic Hamiltonian matrix (not the Hamiltonian object!) - the complex-valued matrix, CMATRIX
+             it is also assumed to Hermitian - pay attention to how it is constructed!
+  \param[in] S The reference to the overlap matrix (assumed to be a complex-valued time-dependent matrix, CMATRIX)
 
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
+*/
 
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, branches[traj], rep);
 
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
+  int i;
 
+  // Let us first diagonalize the overlap matrix Hvib
+  int sz = Hvib.n_cols;
+  CMATRIX Z(sz, sz);
+  CMATRIX Z_old(sz, sz);
+  CMATRIX E(sz, sz);
+  CMATRIX E_old(sz, sz);
+
+  // Transformation to adiabatic basis
+  libmeigen::solve_eigen(Hvib, S, E, Z, 0);  // Hvib(t+dt) * Z(t+dt) = S(t+dt) * Z(t+dt) * E(t+dt)
+  libmeigen::solve_eigen(Hvib_old, S_old, E_old, Z_old, 0);  // Hvib(t) * Z(t) = S(t) * Z(t) * E(t)
+
+  // Diagonal form expH
+  CMATRIX expE(sz, sz);
+  for(i=0;i<sz;i++){
+    double argg = - 0.5*(E.get(i,i) + E_old.get(i,i)).real()*dt;
+    double _cs = cos(argg);
+    double _si = sin(argg);
+    expE.set(i,i, complex<double>(_cs, _si)  );
   }
 
-}
 
-
-void propagate_electronic(double dt, CMATRIX& C, vector<CMATRIX>& projector, nHamiltonian& ham, int rep, int level){
-
-  vector<nHamiltonian*> branches; 
-  branches = ham.get_branches(level);
-
-  if(C.n_cols!=branches.size()){
-    cout<<"ERROR in void propagate_electronic(double dt, CMATRIX& C, nHamiltonian& ham, int rep, int level): \n";
-    cout<<"C.n_cols = "<<C.n_cols<<" is not equal to ham.size() = "<<branches.size()<<"\n";
-    cout<<"Exiting...\n";
-    exit(0);
-  }
-
-  int nst = C.n_rows;
-  int ntraj = C.n_cols;
-  
-  CMATRIX ctmp(nst, 1);
-
-  for(int traj=0; traj<ntraj; traj++){
-    ctmp = C.col(traj);
-    propagate_electronic(dt, ctmp, projector[traj], branches[traj], rep);
-
-    // Insert the propagated result back
-    for(int st=0; st<nst; st++){  C.set(st, traj, ctmp.get(st, 0));  }
-
-  }
+  // This is a supposedly more efficient form of Coeff = (Z(t+dt) * expE(t+dt/2) * Z(t).H() * S(t)) * Coeff
+  Coeff = S_old * Coeff;
+  Coeff = Z_old.H() * Coeff;
+  Coeff = expE * Coeff;
+  Coeff = Z * Coeff;
 
 }
-
-
-
-
-
-
-
-
-
-
 
 
 void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
@@ -1198,17 +640,106 @@ void grid_propagator(double dt, CMATRIX& Hvib, CMATRIX& S, CMATRIX& U){
   // Propagator
   U = S_i_half * expH * S_half;
 
+}// grid_propagator
+
+
+CMATRIX vectorize_density_matrix(CMATRIX* rho){
+
+  if(rho->n_cols != rho->n_rows){
+    cout<<"Error in vectorize_density_matrix: rho matrix should be a square matrix\n";
+    cout<<"Current dimensions: "<<rho->n_cols<<" "<<rho->n_rows<<endl;
+    cout<<"Exiting now...\n"; 
+    exit(0);
+  }
+
+  int nst = rho->n_cols; 
+  int sz = nst * nst;
+
+  CMATRIX res(sz, 1);
+
+  int cnt = 0;
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+      res.set(cnt, 0,  rho->get(i, j) );
+      cnt++; 
+    }
+  }
+
+  return res;
+}
+
+CMATRIX vectorize_density_matrix(CMATRIX& rho){
+  return vectorize_density_matrix(&rho);
+}
+
+CMATRIX unvectorize_density_matrix(CMATRIX& rho_vec){
+
+  int sz = rho_vec.n_rows; 
+  double n_fl = sqrt(sz);
+  int n = int(n_fl);
+  if( n*n != sz ){  
   
-  // Clean temporary memory
-  //delete expH;
-  //delete Hvib_eff;
-  //delete S_i_half;
-  //delete S_half;
+    cout<<"Error in unvectorize_density_matrix: The number of elements in the input vector should be a full square of an integer\n";
+    cout<<"The current size is "<<sz<<endl;
+    cout<<"Exiting...\n";
+    exit(0);
+  }
+  
+  CMATRIX res(n, n);
 
+  int cnt = 0;
+  for(int i=0; i<n; i++){
+    for(int j=0; j<n; j++){
+      res.set(i, j, rho_vec.get(cnt, 0));
+      cnt++; 
+    }
+  }
+  
+  return res;
 
+}
 
-}// propagate_electronic
+CMATRIX make_Liouvillian(CMATRIX& ham){
 
+  if(ham.n_cols != ham.n_rows){
+    cout<<"Error in make_Liouvillian: Hamiltonian matrix should be a square matrix\n";
+    cout<<"Current dimensions: "<<ham.n_cols<<" "<<ham.n_rows<<endl;
+    cout<<"Exiting now...\n";
+    exit(0);
+  }
+
+  int nst = ham.n_cols;
+  int sz = nst * nst;
+
+  complex<double> Lijab; 
+  CMATRIX L(sz, sz);
+  int ij, ab;
+
+  ij = 0;
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+      
+      ab = 0;
+      for(int a=0; a<nst; a++){
+        for(int b=0; b<nst; b++){
+         
+          Lijab = 0.0; 
+          if(j==b){  Lijab += ham.get(i, a); }
+          if(i==a){  Lijab -= std::conj(ham.get(j, b)); }
+
+          L.set(ij, ab,  Lijab );
+          ab++;
+
+        }// for b
+      }// for a
+
+      ij++;
+
+    }// for j
+  }// for i
+
+  return L;
+}
 
 
 }// namespace libelectronic
