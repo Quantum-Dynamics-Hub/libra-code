@@ -174,8 +174,8 @@ class dyn_control_params{
     How do get the time-overlaps in the dynamics.
 
     Options:
-      - 0: based on the wavefunctions (the Hamiltonian shall have the basis_transform variables updated)  [ default ]
-      - 1: based on external calculations (the Hamiltonian shall have the time_overlap_adi member updated) - use for NBRA
+      - 0: don't compute it (perhaps because it was already pre-computed or read)
+      - 1: explicitly compute it from the wavefunctions (the Hamiltonian shall have the basis_transform variables updated)  [ default ]
   */
   int time_overlap_method;
 
