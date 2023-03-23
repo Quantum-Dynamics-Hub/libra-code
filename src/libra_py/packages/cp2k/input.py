@@ -7,12 +7,7 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-
-import math
-import copy
-import time
 import sys
-
 if sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
