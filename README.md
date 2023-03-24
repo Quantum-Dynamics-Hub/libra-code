@@ -40,14 +40,16 @@ for all users with the intent:
 
 
 
-## Installation (as of after 5/14/2021)
+## Installation (as of after 3/23/2023)
 
-### 1. Install miniconda (for Python 3.8) and activate Conda
+### 1. Install miniconda (for Python 3.9) and activate Conda
+
+#### 1.1 Download and install
 
     mkdir Conda
     cd Conda/
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh . 
-    sh ./Miniconda3-latest-Linux-x86_64.sh -b -u -p <install_dir>
+    wget https://repo.anaconda.com/miniconda/Miniconda3-py39_4.12.0-Linux-x86_64.sh .
+    sh ./Miniconda3-py39_4.12.0-Linux-x86_64.sh -b -u -p <install_dir>
 
   Here, 
 
@@ -56,148 +58,132 @@ for all users with the intent:
   * the `-p` option followed by the installation directory path (will be created), tells
      the installed where to install the package.
 
-  To activate the installed base environment of Conda do:
+  Test it is working by doing:
+
+    which conda
+
+
+#### 1.2 Update the conda
+
+  Actually, let's not do this:
+
+    conda update -n base -c defaults conda
+
+
+#### 1.3 Activate the environment
+
+  Add the following line to you `.bashrc` or `.bash_profile` scripts:
 
     eval "$(<path to bin/conda> shell.bash hook)"
 
   For instance, 
 
-    eval "$(/projects/academic/cyberwksp21/Software/Conda/Miniconda3/bin/conda shell.bash hook)"
+    eval "$(/projects/academic/cyberwksp21/SOFTWARE/Conda/bin/conda shell.bash hook)"
+
+  Restart your terminal or reload the `.bashrc` script:
+
+    source ~/.bashrc
 
 
-  You will need to run this script every time you want to use a particular Conda and the 
-  corresponding environments, unless you include this command in your .bashrc or .bash_profile
+  When you do this, your command line should show up the (base) in front, indicating that
+  the base environment is ready
 
   Test it is working by doing:
 
     which conda
 
 
-### 2. Download Libra 
 
-    mkdir libra
-    cd libra
-    git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git .
+### 2. Create the environment equipped with all Libra needs 
 
-   and switch to the correct branch or tag - usually, it would be `devel` branch
+#### 2.1 Create the `libra` environment 
 
-    git checkout devel
+  In fact, you can call it whatever you like:
 
+    conda create -n libra python=3.7
 
-### 3. Create the environment equipped with all Libra needs 
-
-#### 3.1. Simple way:
-
-Just execute the following script located in the root of Libra distribution:
-
-    sh ./libra_env_build.sh
-
-This script will create the environment called `libra` and will install all the
-needed stuff in it. You just need to activate it:
+#### 2.2 Activate this environment
 
     conda activate libra
 
-#### 3.2. Detailed instructions on what the script about does:
+This is very important step - when activated, all the installs will go into that folder. 
 
-It first creates and activates the `libra` environment:
+**In case you mess up with an environment**, you can remove it with:
 
-    conda create -n libra
+    conda remove --name libra --all
 
-Update conda install if needed (e.g. if the output suggests it)
 
-    conda activate libra
+#### 2.3 Now, equip your environment with the required packages
 
-Thne, it installs all the dependencies and tools.
-
-Do this one by one, and in this order (should not matter too much, but who knows it)
+Do this **one by one, and in this order**, (should not matter too much, but who knows...)
 
     > To automate the below procedures, you can use `-y` option to accept prompts (sometimes this will override)
     > previous packages/conflicts, so be careful
     > 
     > You can also use `-q` to get rid of all the messages to the output, although i'd keep it to keep track of what's going on
 
-Basic stuff
 
-    conda install conda-build
-    conda install gcc_linux-64=9.3.0
-    conda install gxx_linux-64
-    conda install make
-    conda install boost
-    conda install cmake
-    conda install git
-    conda install -c anaconda h5py
-    conda install -c conda-forge/label/gcc7 eigen 
-    conda install -c psi4/label/dev libint2 
-    conda install -c anaconda gmp
-    conda install -c conda-forge/label/gcc7 mpfr 
+First let's install the most general packages:
 
-More, but still needed because some Python modules require those.
-We need to downgrade Python version here to 3.6 to enable Psi4 installation
-
-    conda install python=3.6
-    conda install -c psi4 psi4
-    conda install -c conda-forge matplotlib
-    conda install -c rmg py3dmol
-    conda install -c anaconda numpy
-    conda install -c anaconda scipy
-    conda install -c conda-forge llvm-openmp
-    
-You can install Jupyter notebook using the following command. This will be useful and you can set up and access the Jupyter notebook 
-remotely from a cluster and load the tutorials
-
-    conda install -c anaconda jupyter
-    
-
-Used in some of the tutorials
-
-    conda install -c conda-forge/label/gcc7 imageio
+    conda install -y -c conda-forge numpy scipy matplotlib imageio jupyter_core
+    conda install -y ipykernel
+    conda install -y -c rgm py3dmol
 
 
-### 4. Adapt the CMakeLists.txt file according to your system
+Next, all what we actually need:
 
-   Because we had to downgrade Python to 3.6, we need to edit the CMakeLists.txt such that 
-   cmake is looking for the correct Python version
+    conda install -y conda-build make
+    conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 cmake=3.24.2 boost=1.80.0 python-devtools llvm-openmp
+    conda install -y -c conda-forge/label/gcc7 eigen mpfr
+    conda install -y -c psi4/label/dev libint2=2.7.1
+    conda install -y -c anaconda h5py gmp
 
-    FIND_PACKAGE(PythonLibs 3.6 REQUIRED)
+ 
+    >
+    >  YES - IT GOT SMALLER AND MORE COMPACT !
+    >
 
-   and also reflect it in the component of the Boost.Python to be found:
 
-    FIND_PACKAGE(Boost COMPONENTS python36 regex)
+### 3. Download and build Libra
 
-   Same for Boost (see the error messages for what version of Boost the cmake can find). In my current
-   case, it suggest the version 1.73.0, so be it:
+#### 3.1 Get it from the GitHub and choose the right branch
 
-    FIND_PACKAGE(Boost 1.73.0 REQUIRED)
+  Clone the repo from the GitHub
 
-### 5. Create the build directory and make the Makefiles
+    git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git libra
 
-   Then in the libra directory, create the build directory:
+  and switch to the correct branch or tag - usually, it would be `devel` branch
 
     cd libra
+    git checkout devel
+
+#### 3.2 Create the build directory and make the Makefiles
+
+   Then in the `libra` directory, create the build directory:
+
     mkdir _build
     cd _build
     cmake ../
 
-### 6. Compile the package
+#### 3.3 Compile the package
     
     make -j4
 
-### 7. Setup environmental variables
+
+### 4. Make it ready to use
 
    Add the following exports to your `.bash_profile` file
 
     export PYTHONPATH=<path to the ppackage>/libra/_build/src:$PYTHONPATH
-    export LD_LIBRARY_PATH=<path to the ppackage>/libra/_build/src:$LD_LIBRARY_PATH
 
-### 8. Restart the terminal or source the bash profile and activate libra conda environment
+
+   Restart the terminal or source the bash profile and activate libra conda environment
 
     source .bash_profile 
     conda activate libra
     
    And you should be ready to use Libra.
 
-
-* [Old instructions](https://quantum-dynamics-hub.github.io/libra/installation.html)
 
 
 
