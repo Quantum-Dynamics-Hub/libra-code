@@ -16,9 +16,9 @@ def get_kind(elt):
   res = {}
 
   if elt=="H":
-      res = {"element": "H", "basis_set":"ORB DZVP-MOLOPT-GTH", "potential":"GTH-PBE-q4" }
+      res = {"element": "H", "basis_set":"ORB DZVP-MOLOPT-GTH", "potential":"GTH-PBE-q4", "fit_basis_set":"cFIT3" }
   elif elt=="Ti":
-      res = {"element": "Ti", "basis_set":"ORB DZVP-MOLOPT-SR-GTH", "potential":"GTH-PBE-q12" }
+      res = {"element": "Ti", "basis_set":"ORB DZVP-MOLOPT-SR-GTH", "potential":"GTH-PBE-q12", "fit_basis_set":"cFIT10" }
   return res
 
 
@@ -96,11 +96,12 @@ def generate(_params):
     
     xc_input = ""
     xtb_input = ""
-    if method in ["PBE", "BEEF"]:
+    if method in ["PBE", "BEEF", "B3LYP", "PBE0", "TPSS"]:
         xc_input = F"""
     &XC
       &XC_FUNCTIONAL {method}
-    &END XC_FUNCTIONAL
+      &END XC_FUNCTIONAL
+    &END XC
         """
     elif method in ["HSE06"]:
         xc_input = F"""
@@ -131,7 +132,7 @@ def generate(_params):
       &END HF
     &END XC
         """
-    elif method in ["B3LYP", "CAM-B3LYP"]:
+    elif method in ["CAM-B3LYP"]:
         func = "XC_HYB_GGA_XC_B3LYP"
         if method == "CAM-B3LYP":
             func = "XC_HYB_GGA_XC_CAM_B3LYP"
@@ -168,7 +169,7 @@ def generate(_params):
 
     #>>> ============ AUX ===================
     aux_input = ""
-    if method in ["HSE06", "B3LYP", "CAM-B3LYP"]:
+    if method in ["HSE06", "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
         aux_input=F"""
     &AUXILIARY_DENSITY_MATRIX_METHOD
       ! recommended, i.e. use a smaller basis for HFX
@@ -195,23 +196,23 @@ def generate(_params):
         egap = params["ot.energygap"]
 
         solver_input = F"""
-        &OT
-          PRECONDITIONER {precond}
-          MINIMIZER {minimizer}
-          ENERGY_GAP {egap}
-          LINESEARCH {lsearch}
-        &END OT
+      &OT
+        PRECONDITIONER {precond}
+        MINIMIZER {minimizer}
+        ENERGY_GAP {egap}
+        LINESEARCH {lsearch}
+      &END OT
         """
     elif solver=="DIAG":
         precond = params["diag.preconditioner"]
         egap = params["diag.energygap"]
         solver_input = F"""
-        &DIAGONALIZATION
-          &DAVIDSON
-            PRECONDITIONER {precond}
-            ENERGY_GAP {egap}
-          &END
-        &END DIAGONALIZATION
+      &DIAGONALIZATION
+        &DAVIDSON
+          PRECONDITIONER {precond}
+          ENERGY_GAP {egap}
+        &END
+      &END DIAGONALIZATION
         """
 
     #<<<<< ============ SOLVER END ==========
@@ -220,8 +221,8 @@ def generate(_params):
     added_mos_input = ""
     if solver=="DIAG":
         added_mos_input = F"""
-        ADDED_MOS {added_mos}
-        """    
+      ADDED_MOS {added_mos}
+      """    
 
     smearing = params["smearing"]
     smearing_input = ""
@@ -229,23 +230,23 @@ def generate(_params):
         sm_meth = params["smearing.method"]        
         sm_temp = params["smearing.electronic_temperature"]
         smearing_input = F"""
-        &SMEAR
-          METHOD {sm_meth}
-          ELECTRONIC_TEMPERATURE {sm_temp}
-        &END
-        """
+      &SMEAR
+        METHOD {sm_meth}
+        ELECTRONIC_TEMPERATURE {sm_temp}
+      &END
+      """
 
     max_scf = params["max_scf"]    
 
     scf_input = F"""
-      &SCF
-        MAX_SCF {max_scf}
-        SCF_GUESS RESTART
-        EPS_SCF 1.e-6        
-        {solver_input}
-        {added_mos_input}
-        {smearing_input}
-      &END SCF
+    &SCF
+      MAX_SCF {max_scf}
+      SCF_GUESS RESTART
+      EPS_SCF 1.e-6        
+      {solver_input}
+      {added_mos_input}
+      {smearing_input}
+    &END SCF
     """
     #<<<< ============ SCF END ==================
 
@@ -253,15 +254,18 @@ def generate(_params):
     &QS
       METHOD {qs_method}
       {xtb_input}
-
-      &POISSON
-        POISSON_SOLVER PERIODIC
-        PERIODIC XYZ      
-      &END POISSON  
-      {scf_input}
     &END QS
     """
     #<<<============ QS END ====================
+
+    #>>>============ POISSON ===================
+    poisson_input = F"""
+    &POISSON
+      POISSON_SOLVER PERIODIC
+      PERIODIC XYZ
+    &END POISSON
+    """
+    #<<<============ POISSON END ===============
 
     #>>> ============ EXCITED_STATES ===========
     istate = params["istate"]
@@ -291,6 +295,9 @@ def generate(_params):
     """   
     #<<<============ PRINT END =================
 
+    charge = params["charge"]
+    multiplicity = params["multiplicity"]
+    uks = params["uks"]
 
     dft_input = F"""
   &DFT
@@ -300,9 +307,15 @@ def generate(_params):
     BASIS_SET_FILE_NAME GTH_BASIS_SETS
     POTENTIAL_FILE_NAME GTH_POTENTIALS
 
+    CHARGE {charge}
+    MULTIPLICITY {multiplicity}
+    UKS {uks}
+
     {xc_input}
     {aux_input}
+    {scf_input}
     {qs_input}
+    {poisson_input}
     {excited_states_input}
     {print_input}
   &END DFT
@@ -374,6 +387,7 @@ def generate(_params):
     for ikind in kinds:
         elt = ikind["element"]
         basis = ikind["basis_set"]
+        fit_basis = ikind["fit_basis_set"]
         pot = ikind["potential"]
         dft_plus_u_input = ""
         if "dft_plus_u" in ikind.keys() and method is not "xTB":
@@ -389,7 +403,7 @@ def generate(_params):
     &KIND {elt}
       ELEMENT {elt}
       BASIS_SET {basis}
-      BASIS_SET AUX_FIT cFIT6  ! this value is taken from the Mohammad's example for Pb
+      BASIS_SET AUX_FIT {fit_basis} 
       POTENTIAL {pot}
       {dft_plus_u_input}
     &END
@@ -405,15 +419,9 @@ def generate(_params):
     #<<============ SUBSYS END =================
 
     #<============= FORCE_EVAL END ================
-    charge = params["charge"]
-    multiplicity = params["multiplicity"]
-    uks = params["uks"]
 
     force_eval_input = F"""
 &FORCE_EVAL
-  CHARGE {charge}
-  MULTIPLICITY {multiplicity}
-  UKS {uks}
   {dft_input}
   {properties_input}
   {subsys_input}
