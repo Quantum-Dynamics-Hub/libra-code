@@ -833,7 +833,7 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     #Run the dynamics...
     for step in range(nsteps):
         # Built-in function for propagation in the non-othogonal basis
-        propagate_electronic(0.5*dt, C, hmat, ovlp)
+        propagate_electronic_qtag(0.5*dt, C, hmat, ovlp)
 
 
         #Compute the new coefficient vector c_new...
@@ -852,7 +852,7 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
                                      _compute_model, _model_params, dyn_params, ovlp, hmat)
     
         # Built-in function for propagation in the non-othogonal basis
-        propagate_electronic(0.5*dt, C, hmat, ovlp)
+        propagate_electronic_qtag(0.5*dt, C, hmat, ovlp)
 
 
         #Output the energy and populations to the notebook for the user to see...
