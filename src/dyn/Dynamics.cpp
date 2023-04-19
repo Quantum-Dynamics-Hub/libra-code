@@ -1163,7 +1163,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     FullPivLU_inverse(P, T_new);
     T_new = orthogonalized_T( T_new );
     
-
+    if(prms.assume_always_consistent){ T_new.identity(); }
+     
 
   if(rep==0){  // diabatic
     CMATRIX Hvib(ham->ndia, ham->ndia);

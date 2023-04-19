@@ -117,7 +117,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("constrained_dofs", &dyn_control_params::constrained_dofs)
       .def_readwrite("dt", &dyn_control_params::dt)
       .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
-
+      .def_readwrite("electronic_integrator", &dyn_control_params::electronic_integrator)
+      .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)

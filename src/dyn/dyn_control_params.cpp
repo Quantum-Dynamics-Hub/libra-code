@@ -100,6 +100,7 @@ dyn_control_params::dyn_control_params(){
   dt = 41.0;
   num_electronic_substeps = 1;
   electronic_integrator = 0;
+  assume_always_consistent = 0;
 }
 
 
@@ -169,6 +170,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   dt = x.dt;
   num_electronic_substeps = x.num_electronic_substeps;
   electronic_integrator = x.electronic_integrator;
+  assume_always_consistent = x. assume_always_consistent;
 
   decoherence_rates = new MATRIX(x.decoherence_rates->n_rows, x.decoherence_rates->n_cols);  
   *decoherence_rates = *x.decoherence_rates;
@@ -353,6 +355,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
     else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
     else if(key=="electronic_integrator"){ electronic_integrator = bp::extract<int>(params.values()[i]); }
+    else if(key=="assume_always_consistent"){  assume_always_consistent = bp::extract<int>(params.values()[i]); }
 
   }// for i
 

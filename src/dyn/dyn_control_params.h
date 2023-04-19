@@ -617,7 +617,7 @@ class dyn_control_params{
   /**
     the method for electronic TD-SE integration:
 
-    tdse_rep = 0 (diabatic): 1** - with NBRA
+    rep_tdse = 0 (diabatic): 1** - with NBRA
 
         -1              - No propagation
 
@@ -626,7 +626,7 @@ class dyn_control_params{
          2              - based on modified QTAG propagator (Z at two times)
          3              - non-Hermitian integrator with 2-point Hvib_dia
     
-    tdse_rep = 1 (adiabatic):  1** - with NBRA
+    rep_tdse = 1 (adiabatic):  1** - with NBRA
 
         -1              -  No propagation
 
@@ -646,11 +646,18 @@ class dyn_control_params{
         15              -  same as 5, but with rotations
 
 
-
   */
   int electronic_integrator;
 
-
+   
+  /**
+    If set to True (1), we will force the reprojection matrix T_new to be the identity matrix. This effectively
+    removes basis-reprojection (local diabatization) approach and turns on the "naive" approach where
+    no trivial crossings exist.
+    Default: No (0) - we do want to use the LD approaches by default.
+    If Yes (1), one may need to turn on additional state tracking and phase correction methods
+  */
+  int assume_always_consistent;
 
 
 
