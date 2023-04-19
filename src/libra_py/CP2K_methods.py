@@ -1496,19 +1496,20 @@ def run_cp2k_xtb(params):
 
         params (dictionary): A dictionary containing the following parameters
 
-                             cp2k_ot_input_template (string): The CP2K OT input template file name.
+          * **cp2k_ot_input_template** (string): The CP2K OT input template file name.
+ 
+          * **cp2k_diag_input_template** (string): The CP2K diagonalization input template file name.
 
-                             cp2k_diag_input_template (string): The CP2K diagonalization input template file name.
+          * **trajectory_xyz_filename** (string): The trajectory xyz file name.
 
-                             trajectory_xyz_filename (string): The trajectory xyz file name.
+          * **step** (integer): The time step.
 
-                             step (integer): The time step.
+          * **cp2k_exe** (string): The full path to CP2K executable.
 
-                             cp2k_exe (string): The full path to CP2K executable.
-
-                             nprocs (integer): Number of processors.
+          * **nprocs** (integer): Number of processors.
 
     """
+
     print('**************** Running CP2K ****************')
     ot_input_template = params['cp2k_ot_input_template']
     diag_input_template = params['cp2k_diag_input_template']
@@ -1517,12 +1518,14 @@ def run_cp2k_xtb(params):
     cp2k_exe = params['cp2k_exe']
     mpi_executable = params['mpi_executable']
     nprocs = params['nprocs']
+
     ##### Run OT
     print('Step', step,'Computing the OT method wfn file...')
     cp2k_xtb_ot_inp(ot_input_template, trajectory_xyz_filename, step)
     t1 = time.time()
     os.system('%s -n %d %s -i xtb_ot_step_%d.inp -o OUT-ot_%d.log'%(mpi_executable, nprocs, cp2k_exe, step, step))
     print('Done with OT wfn. Elapsed time:',time.time()-t1)
+
     ##### Run diagonalization
     t1 = time.time()
     print('Computing the wfn file using diagonalization method...')
@@ -1551,24 +1554,32 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
         run_slurm (bool): The flag for running the computations either as bash or submitting through sbatch.
 
         submission_exe (string): The submission executable. For slurm envs, it is 'sbatch' and for pbs envs, it is 'qsub'.
+
+    Return:
+        None: but performs the action
     """
+
     file = open(run_python_file,'r')
     lines = file.readlines()
     file.close()
+
     nsteps_job = int((fstep-istep)/njobs)
     for njob in range(njobs):
         istep_job = njob*nsteps_job+istep
         fstep_job = (njob+1)*nsteps_job+istep+1
         if njob==(njobs-1):
             fstep_job = fstep
+
         print('Submitting job',njob+1)
         print('Job',njob,'istep',istep_job,'fstep',fstep_job,'nsteps',fstep_job-istep_job)
+
         if os.path.exists('job%d'%(njob+1)):
             os.system('rm -rf job%d'%(njob+1))
         os.system('mkdir job%d'%(njob+1))
         os.chdir('job%d'%(njob+1))
         os.system('cp ../%s %s'%(submit_template, submit_template))
         file = open('run.py','w')
+
         for i in range(len(lines)):
             if 'istep' in lines[i]:
                 file.write("params['istep'] = %d\n"%istep_job)
@@ -1588,7 +1599,7 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
 
 
 
-def cp2k_find_excitation_energies(file):
+def cp2k_find_excitation_energies(filename):
     """
     This function finds and extracts excitation energies and oscillator strengths 
     from the .log files of the TD-DFPT calculations in CP2k
@@ -1604,7 +1615,7 @@ def cp2k_find_excitation_energies(file):
            
     """
     
-    f = open(file, "r")
+    f = open(filename, "r")
     A = f.readlines()
     f.close()
     
