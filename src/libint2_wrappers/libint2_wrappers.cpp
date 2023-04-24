@@ -366,13 +366,13 @@ MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::
 #if defined(_OPENMP)
       omp_set_num_threads(nthreads);
 #endif
-      std::cout << "Will scale over " << nthreads
-#if defined(_OPENMP)
-                << " OpenMP"
-#else
-                << " C++11"
-#endif
-                << " threads" << std::endl;
+//     ;; //std::cout << "Will scale over " << nthreads
+//#if defined(_OPENMP)
+//     ;;//          << " OpenMP"
+//#else
+//     ;;//          << " C++11"
+//#endif
+//     ;;//          << " threads" << std::endl;
     // Initialize Libint    
     libint2::initialize();
 	// Compute the AO overlap matrix
