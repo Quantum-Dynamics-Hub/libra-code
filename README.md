@@ -127,7 +127,7 @@ First let's install the most general packages:
 
     conda install -y -c conda-forge numpy scipy matplotlib imageio jupyter_core
     conda install -y ipykernel
-    conda install -y -c rgm py3dmol
+    conda install -y -c rmg py3dmol
 
 
 Next, all what we actually need:
