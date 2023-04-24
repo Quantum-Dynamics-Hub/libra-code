@@ -660,6 +660,9 @@ def Holstein_gen(_q, params, full_id=None):
     #============= Diabatic Hamiltonians ======================
     obj.ham_dia = CMATRIX(n,n)
     obj.d1ham_dia = CMATRIXList()
+    for i in range(ndof):
+        obj.d1ham_dia.append( CMATRIX(n,n) )
+
     for i in range(n):
         for j in range(n):
             P1, dP1 = polynomial(q, A[i][j], B[i][j], C[i][j], T[i][j])
@@ -669,7 +672,6 @@ def Holstein_gen(_q, params, full_id=None):
   
             der = dP1 * math.exp(-P2) - dP2 * h_ij; # MATRIX(ndof, 1)
             for k in range(ndof):
-                obj.d1ham_dia.append( CMATRIX(n,n) )
                 obj.d1ham_dia[k].set(i, j,  der.get(k, 0) * (1.0+0.0j) )
 
     #============= Diabatic overlaps ==========================
