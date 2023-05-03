@@ -1782,17 +1782,24 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // MFSD
   else if(prms.decoherence_algo==4){
     if(prms.rep_tdse==1){
-      *dyn_var.ampl_adi = mfsd(*dyn_var.p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+      p = *dyn_var.p;
+      *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+      *dyn_var.p = p;
+
+      // Recompute NAC, Hvib, etc. in response to change of p
+      update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
     }
-    else{ cout<<"ERROR: MSDF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
+    else{ cout<<"ERROR: MFSD requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 
 
+  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1);
 
   //========= Use the resulting amplitudes to do the hopping =======
   //dyn_var.update_amplitudes(prms, ham);
   //dyn_var.update_density_matrix(prms, ham, 1);
+
 
 
   //************************************ TSH options ****************************************

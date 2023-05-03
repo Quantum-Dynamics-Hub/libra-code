@@ -213,6 +213,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
 /**
   \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
 
+  \params[in] option [0 or 1] - option 0 keeps all the terms in the Ehrenfest force expression, including NAC
+  option 1 removes all the derivative NACs - this is to enforce the local diabatization approximation, to be
+  consistent with it
+
   Returns:
   MATRIX(ndof, 1) - Ehrenfest forces in adiabatic representation, for single trajectory
 
@@ -257,11 +261,11 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
 
-    if(option==1){
+    if(option==0){ // Original formulation with NACs - for non-LD integrators
       tmp = dc1_adi[n]->H() * (*ham_adi) + (*ham_adi) * (dc1_adi[n]->H());
       res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] - tmp ) * ampl_adi ).M[0];
     }
-    else if(option==1){
+    else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
       res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] ) * ampl_adi ).M[0];
     }
 
@@ -293,6 +297,10 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int optio
 
   b) lvl = 1 ampl_adi is a nadi x ntraj matrix (ntraj trajectories) and 
   each trajectory is meant to be handled by a separate sub-Hamiltonian 
+
+  \params[in] option [0 or 1] - option 0 keeps all the terms in the Ehrenfest force expression, including NAC
+  option 1 removes all the derivative NACs - this is to enforce the local diabatization approximation, to be
+  consistent with it
 
   Returns:
   MATRIX(ndof, ntraj) - Ehrenfest forces in adiabatic representation, for multiple trajectories

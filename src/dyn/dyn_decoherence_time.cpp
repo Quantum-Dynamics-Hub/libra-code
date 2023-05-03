@@ -299,8 +299,6 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamilt
   int nstates = ham.nadi; 
   int ntraj = ham.children.size();
 
-  dyn_control_params prms_mf(prms);  prms_mf.force_method = 2;  prms_mf.rep_force = 1;   /// MF force
-  dyn_control_params prms_st(prms);  prms_st.force_method = 1;  prms_st.rep_force = 1;   /// adiabatic force
 
   MATRIX F_mf(ndof, ntraj);
   MATRIX F_st(ndof, ntraj);
@@ -312,6 +310,13 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamilt
   /// AVA - commented for now, 12/7/2022
   ///F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
 
+  int option = 0; // default value for NAC-based integrators
+  if(prms.electronic_integrator==0 ||  prms.electronic_integrator==1 ||
+     prms.electronic_integrator==2 ||  prms.electronic_integrator==10 ||
+     prms.electronic_integrator==11 || prms.electronic_integrator==12 
+    ){ option = 1; }
+
+  F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1, option).real();
 
   for(int i=0;i<nstates; i++){
     vector<int> act_states(ntraj, i);
@@ -357,7 +362,7 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& i
   int nstates = ham.nadi; 
   int ntraj = ham.children.size();
 
-  dyn_control_params prms_st(prms);  prms_st.force_method = 1;  prms_st.rep_force = 1; /// adiabatic, state-resolved force
+//  dyn_control_params prms_st(prms);  prms_st.force_method = 1;  prms_st.rep_force = 1; /// adiabatic, state-resolved force
 
 
   // Precompute state-resolved forces

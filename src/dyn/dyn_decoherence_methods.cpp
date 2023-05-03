@@ -726,28 +726,42 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
         int indx_i = hop(hopping_prob, rnd.uniform(0.0, 1.0) );
         int decohered_state = proposed_states[indx_i];
 
+        // So, now we collapse the MF wfc to a pure state `decohered_state`
         vector<int> _id(2, 0);  _id[1] = itraj;
         double E_old = ham.Ehrenfest_energy_adi(Coeff, _id).real();
         double E_new = ham.get_ham_adi(_id).get(decohered_state, decohered_state).real();
 
+        //cout<<"Decohered state = "<<decohered_state<<" E_old = "<<E_old<<"  E_new = "<<E_new<<endl;
+
+        // Compute the MF NAC direction
         MATRIX nac_eff(ndof, 1);
         MATRIX p_i(ndof, 1);
 
         for(i=0; i<nadi; i++){
-
           complex<double> c_i = C.get(i, itraj); 
   
           // Probability of decoherence on state i
           double P_i = (std::conj(c_i) * c_i).real();
 
-          p_i = p.col(itraj); /// momentum
+  
+          
+          //p_i = p.col(itraj); /// momentum
           for(idof=0; idof<ndof; idof++){
-            nac_eff = nac_eff + P_i * ham.get_dc1_adi(idof, _id).real();
+            if(i!=decohered_state){
+              nac_eff.add(idof, 0, P_i * ham.get_dc1_adi(idof, _id).get(i, decohered_state).real() );
+            }
           }// idof
+          
 
         }// i
+
+        p_i = p.col(itraj);
         
         if(  can_rescale_along_vector(E_old, E_new, p_i, invM, nac_eff) ){
+
+//          cout<<"Decohered state = "<<decohered_state<<" E_old = "<<E_old<<"  E_new = "<<E_new<<endl;
+//          cout<<"momentum = \n"; p_i.show_matrix();
+//          cout<<"  nac_eff = \n"; nac_eff.show_matrix();
 
           // Adjust velocities 
           int do_reverse = 0;
@@ -755,12 +769,15 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
           for(idof=0; idof<ndof; idof++){ p.set(idof, itraj, p_i.get(idof, 0)); }
 
+//          cout<<"new momentum = \n";
+//          p.show_matrix();
+
           // And collapse the coherent superposition on the decohered state 
           collapse(C, itraj, decohered_state, 0);
 
         }// can rescale
 
-      }// possible collapse
+      }// possible collapse: summ_prob > 0.0
         
     }// for itraj
 

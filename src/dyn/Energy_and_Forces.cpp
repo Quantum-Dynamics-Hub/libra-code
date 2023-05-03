@@ -298,8 +298,14 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 
     // Adiabatic 
     else if(prms.rep_force==1){
-      int option = 0;
-      if(prms.electronic_integrator==0){ option = 1; } 
+      int option = 0; // default value for NAC-based integrators
+
+      if(prms.electronic_integrator==0 || 
+         prms.electronic_integrator==1 ||
+         prms.electronic_integrator==2 ||
+         prms.electronic_integrator==10 ||
+         prms.electronic_integrator==11 ||
+         prms.electronic_integrator==12 ){ option = 1; } 
 
       *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1, option).real(); 
 
