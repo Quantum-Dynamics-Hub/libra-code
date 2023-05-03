@@ -13,30 +13,101 @@ if sys.platform=="linux" or sys.platform=="linux2":
 import util.libutil as comn
 
 def get_kind(elt):
-  res = {}
+    """
+    Args:
+        * elt (string): chemical symbol of the atom 
 
-  if elt=="H":
-      res = {"element": "H", "basis_set":"ORB DZVP-MOLOPT-GTH", "potential":"GTH-PBE-q4", "fit_basis_set":"cFIT3" }
-  elif elt=="Ti":
-      res = {"element": "Ti", "basis_set":"ORB DZVP-MOLOPT-SR-GTH", "potential":"GTH-PBE-q12", "fit_basis_set":"cFIT10" }
-  return res
+    Returns: 
+      dict: the dictionary containing the definition of the key parameters for a given atom type. Namely, the following
+         entries are possible:
+
+         * "element" (string): the chemical symbol of the atom of a given type [ e.g. "H"]
+         * "basis_set" (string): the type of the basis and the name of the file containing that basis [ e.g. "ORB DZVP-MOLOPT-GTH" ]
+         * "potential" (string): the name of the file containing the pseudopotentials [e.g. "GTH-PBE-q4"]
+         * "fit_basis_set" (string): the name of the basis set for fitting [e.g. "cFIT3"]
+         * "dft_plus_u" (list): if present, DFT+U calculations for this atom kind is requested. The list contains two elements:
+           [int, float] - the int is the angular momentum of the orbitals for which the correction is applied, the float is the magnitude of on-site
+           correction in atomic units (Ha)
+
+    """
+    res = {}
+
+    if elt=="H":
+        res = {"element": "H", "basis_set":"ORB DZVP-MOLOPT-GTH", "potential":"GTH-PBE-q4", "fit_basis_set":"cFIT3" }
+    elif elt=="Ti":
+        res = {"element": "Ti", "basis_set":"ORB DZVP-MOLOPT-SR-GTH", "potential":"GTH-PBE-q12", "fit_basis_set":"cFIT10" }
+    return res
 
 
 def generate(_params):
     """
-    method : PBE, BEEF, xTB
+    Args: 
+        _params ( dict ): dictionary of the parameters controlling the calculations
 
-    solver:  OT, DIAG
-
-    ot.preconditioner: FULL_ALL, FULL_SINGLE_INVERSE
-    ot.minimizer: "CG", "DIIS"
-    ot.linesearch: 2PNT, 3PNT
-    ot.energygap: 0.001
-
-    diag.preconditioner: FULL_ALL
-    diag.energygap: 0.001
-
-    tddft_kernel: FULL (no xTB), STDA (xTB and DFT)
+        * **_params["input_filename"]** ( string ) : the name of the input file generated [ default: "md.inp"]
+        * **_params["project"]** (string): the project name to be defined in the input file, this variable will
+            be used to define the output filenames [ defaults: "Ti17" - this is just for historical reasons]
+        * **_params["run_type"]** (string): the run type to be done, see the CP2K manual for the possible options.
+            Here, we mainly will use "ENERGY" (for single-point calculations; default) or "MD" (for molecular dynamics)
+        * **_params["print_level"]** (string): how much of output to produce by CP2K; see the CP2K manual for the possible options
+            [default: "LOW"]. Possible: "MEDIUM", "HIGH"
+        * **_params["charge"]** (int): the charge of the system [ default: 0]
+        * **_params["multiplicity"]** (int): spin multiplicity of the system: 1 - singlet, 2 - doublet, 3 - triplet, and so on 
+            [default: 0]
+        * **_params["uks"]** (string): whether to spin-unrestricted calculations (if ".TRUE.") or spin-restrictedo one (if ".FALSE.")
+            [default: ".FALSE."]
+        * **_params["method"]** (string): the type functional to use. This option affects certain options. Currently possible:
+            - "PBE" (for PBE functional)
+            - "BEEF" (for BEEF functional)
+            - "B3LYP"
+            - "PBE0"
+            - "HSE06"
+            - "TPSS"
+            - "CAM-B3LYP"
+            - "xTB" (for xTB)
+        * **_params["max_scf"]** (int): the maximal number of SCF iterations [ default: 100 ]
+        * **_params["solver"]** (string): the type of the solver for the SCF procedure. Available options:
+            - "OT" (orbital transformation) - can not be use with extra MOs or smearing, only for the ground state calculations
+            - "DIAG" (Davidson diagonalization) - the option for excited state calcualations (TD-DFT or sTDA), or for calculations with
+              smearing [ default ]
+        * **_params["ot.preconditioner"]** (string): the preconditioner for OT calculations, only used if `solver == OT`. 
+              Available options: "FULL_ALL" [ default ], "FULL_SINGLE_INVERSE"
+        * **_params["ot.minimizer"]** (string): the minimization algorithm for OT calculations, only used if `solver == OT`.
+              Available options: "CG" (conjugate gradient), "DIIS" (direct inversion of iterative subspace, default)
+        * **_params["ot.linesearch"]** (string): the algorithm for the minimization on an interval in the OT calculations. 
+              Only used if `solver == OT`. Available options: "2PNT" [default], "3PNT"
+        * **_params["ot.energygap"]** (float): the assumed energy gap for the OT preconditioner in Ha [default: 0.001 Ha] Only used
+              if `solver == OT`
+        * **_params["diag.preconditioner"]** (string): preconditioner for DIAG SCF solver. Only used inf `solver == DIAG`
+              See the CP2K manual for available options. [default: "FULL_ALL"] 
+        * **_params["diag.energygap"]** (float): assumed energy gap for the DIAG preconditioner in Ha. Only used if `solver == DIAG`
+             [default: 0.001 Ha]
+        * **_params["added_mos"]** (int): how many extra MOs (unoccupied) to include in calculations [ default: 20]. Requires 
+             `solver == DIAG`, can not be used with "OT" solver.
+        * **_params["smearing"]** (Boolean): a flag that enables (if True) fractional occupations of orbitals [default: False]. Requires 
+             `solver == DIAG` and `added_mo` to be sufficiently large number to accommodate the populations (need more of the added MOs for
+             smaller band gap systems and for larger `smearing_electronic_temperature` parameter). Can not be used with the "OT" solver.
+        * **_params["smearing.method"]** (string): the type of smearing to use. See the CP2K manual for options. [defualt: "FERMI_DIRAC"]
+        * **_params["smearing.electronic_temperature"]** (float): electronic temperature parameter used in Fermi-Dirac distribution [ default: 300 K]
+        * **_params["istate"]** (int): index of the state for which to conduct the calculations [default : 0 - ground state] . For instance, if forces
+             are requested in calculations, the forces (and total energy) printed out would refer to this particular state. For any value larger 
+             than 0, this keyword turns on the TD-DFT or sTDA calculations. 
+        * **_params["nstates"]** (int): how many excited states to include in excited-states calculations with sTDA or TD-DFT [default: 2]
+        * **_params["tddft_kernel"]** (string): how to compute the excited states. Only relevant if `istate` > 0. Options include:
+            - "FULL" (with DFT methods only, not with xTB) [ default ]
+            - "STDA" (with either xTB or DFT)
+        * **_params["cell.A"]** (list of 3 floats): the A vector defining the simulation cell
+        * **_params["cell.B"]** (list of 3 floats): the B vector defining the simulation cell
+        * **_params["cell.C"]** (list of 3 floats): the C vector defining the simulation cell
+        * **_params["cell.periodic"]** (string): what kind of periodicity we have. Options: "X", "Y", "Z", "XY", "XZ", "YZ" and "XYZ" [ default : "XYZ"]
+        * **_params["xyz_file"]** (string): the name of the xyz file containing the geometry of the system [ default: "inp.xyz"]
+        * **_params["kinds"]** (list of dictionaries): definitions of the bases and auxiliary bases for atoms all types
+             Each `kind` entry is a dictionary containing the following entries:
+             - "element" (string): the chemical symbol of the atom of a given type [ e.g. "H"]
+             - "basis_set" (string): the type of the basis and the name of the file containing that basis [ e.g. "ORB DZVP-MOLOPT-GTH" ] 
+             - "potential" (string): the name of the file containing the pseudopotentials [e.g. "GTH-PBE-q4"]
+             - "fit_basis_set" (string): the name of the basis set for fitting [e.g. "cFIT3"]
+             Use the `get_kind` function to facilitate with the construction of such dictionaries 
     """
 
     h_kind = get_kind("H")
@@ -50,7 +121,7 @@ def generate(_params):
                        "charge":0, "multiplicity":1, "uks":".FALSE.",
 
                        "method":"PBE", "max_scf":100,
-                       "solver":"diag",
+                       "solver":"DIAG",
                        "ot.preconditioner":"FULL_SINGLE_INVERSE", "ot.minimizer":"DIIS", "ot.linesearch":"2PNT", "ot.energygap":0.001,
                        "diag.preconditioner":"FULL_ALL", "diag.energygap":0.001,
                        "added_mos":20, "smearing":False,
