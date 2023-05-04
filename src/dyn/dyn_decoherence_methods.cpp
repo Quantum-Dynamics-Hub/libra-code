@@ -682,6 +682,9 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
     int ndof = ham.nnucl;
 
     CMATRIX C(Coeff);
+    //CMATRIX Ctmp(Coeff);
+    CMATRIX coeff(nadi, 1);
+    CMATRIX coeff_tmp(nadi, 1);
     
     for(int itraj=0; itraj<ntraj; itraj++){    
 
@@ -690,6 +693,11 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
       vector<int> proposed_states;
       vector<double> hopping_prob;
       double summ_prob = 0.0;
+
+      coeff = C.col(itraj);
+      coeff_tmp = CMATRIX(coeff);
+
+      //cout<<"*** trajectory "<<itraj<<" ****\n";
  
       for(i=0; i<nadi; i++){
            
@@ -716,11 +724,8 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
       // There is a decoherence for at least 1 state
       if(summ_prob>0.0){ 
-
         // Renormalize relative probabilities of the collapse on any of non-unique states
-        for(i=0; i<proposed_states.size(); i++){
-           hopping_prob[i] /= summ_prob;
-        }
+        for(i=0; i<proposed_states.size(); i++){ hopping_prob[i] /= summ_prob;  }
 
         // Select one of the possible states
         int indx_i = hop(hopping_prob, rnd.uniform(0.0, 1.0) );
@@ -728,8 +733,11 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
         // So, now we collapse the MF wfc to a pure state `decohered_state`
         vector<int> _id(2, 0);  _id[1] = itraj;
-        double E_old = ham.Ehrenfest_energy_adi(Coeff, _id).real();
-        double E_new = ham.get_ham_adi(_id).get(decohered_state, decohered_state).real();
+        double E_old = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+        collapse(coeff_tmp, 0, decohered_state, 0);        
+        double E_new = ham.Ehrenfest_energy_adi(coeff_tmp, _id).real();
+        //double E_new = ham.get_ham_adi(_id).get(decohered_state, decohered_state).real();
 
         //cout<<"Decohered state = "<<decohered_state<<" E_old = "<<E_old<<"  E_new = "<<E_new<<endl;
 
@@ -738,29 +746,28 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
         MATRIX p_i(ndof, 1);
 
         for(i=0; i<nadi; i++){
-          complex<double> c_i = C.get(i, itraj); 
-  
-          // Probability of decoherence on state i
-          double P_i = (std::conj(c_i) * c_i).real();
+          complex<double> c_i = C.get(i, itraj);   
 
-  
+          // Weighting factor for NACs
+          double P_i = (std::conj(c_i) * c_i).real();
           
           //p_i = p.col(itraj); /// momentum
           for(idof=0; idof<ndof; idof++){
             if(i!=decohered_state){
               nac_eff.add(idof, 0, P_i * ham.get_dc1_adi(idof, _id).get(i, decohered_state).real() );
             }
-          }// idof
-          
-
+          }// idof        
         }// i
 
         p_i = p.col(itraj);
-        
-        if(  can_rescale_along_vector(E_old, E_new, p_i, invM, nac_eff) ){
 
-//          cout<<"Decohered state = "<<decohered_state<<" E_old = "<<E_old<<"  E_new = "<<E_new<<endl;
-//          cout<<"momentum = \n"; p_i.show_matrix();
+        double nac_mag = (nac_eff.T() * nac_eff).get(0,0);
+        
+        if(  can_rescale_along_vector(E_old, E_new, p_i, invM, nac_eff) && nac_mag > 0.0 ){
+
+          //cout<<"Decohered state = "<<decohered_state<<" E_old = "<<E_old<<"  E_new = "<<E_new<<endl;
+          //cout<<"Ampl = \n"; C.show_matrix();
+          //cout<<"momentum = \n"; p_i.show_matrix();
 //          cout<<"  nac_eff = \n"; nac_eff.show_matrix();
 
           // Adjust velocities 
@@ -769,12 +776,13 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
           for(idof=0; idof<ndof; idof++){ p.set(idof, itraj, p_i.get(idof, 0)); }
 
-//          cout<<"new momentum = \n";
-//          p.show_matrix();
+          //cout<<"new momentum = \n";
+          //p.show_matrix();
 
           // And collapse the coherent superposition on the decohered state 
           collapse(C, itraj, decohered_state, 0);
 
+          //cout<<"Ampl (after) = \n"; C.show_matrix();
         }// can rescale
 
       }// possible collapse: summ_prob > 0.0

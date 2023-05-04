@@ -168,6 +168,9 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 
   int itraj;
   int ntraj = dyn_vars.ntraj;
+  int nadi = dyn_vars.nadi;
+  int ndia = dyn_vars.ndia;
+
   vector<int> id(2,0);
 
   vector<double> res(ntraj, 0.0);
@@ -215,17 +218,21 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
   else if(prms.force_method==2){  // Ehrenfest forces
 
     // Diabatic 
-    if(prms.rep_force==0){  
+    if(prms.rep_force==0){ 
+      CMATRIX coeff(ndia, 1);
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
-        res[itraj] = ham.Ehrenfest_energy_dia(*dyn_vars.ampl_dia, id).real();
+        coeff = dyn_vars.ampl_dia->col(itraj);
+        res[itraj] = ham.Ehrenfest_energy_dia(coeff, id).real();
       }
     }
     // Adiabatic 
     else if(prms.rep_force==1){  
+      CMATRIX coeff(nadi, 1);
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
-        res[itraj] = ham.Ehrenfest_energy_adi(*dyn_vars.ampl_adi, id).real();
+        coeff = dyn_vars.ampl_adi->col(itraj);
+        res[itraj] = ham.Ehrenfest_energy_adi(coeff, id).real();
       }
     }
   

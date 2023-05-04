@@ -1783,8 +1783,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else if(prms.decoherence_algo==4){
     if(prms.rep_tdse==1){
       p = *dyn_var.p;
+      //cout<<"p before mfsd\n"; dyn_var.p->show_matrix();
       *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
       *dyn_var.p = p;
+      //cout<<"p after mfsd\n"; dyn_var.p->show_matrix();
+       
 
       // Recompute NAC, Hvib, etc. in response to change of p
       update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
