@@ -142,7 +142,56 @@ def init_wfc(params, _potential, model_params ):
 
 
 
-def run_dynamics(wfc, params, model_params, savers):
+def run_dynamics(wfc, _params, model_params, savers):
+    """
+    Args:
+        wfc ( Wfcgrid2 object ): object that stores the wavefunction and all related properties
+        params ( dict ): parameters controlling the execution of the dynamics
+            Can contain:
+
+            * **params["nsteps"]** ( int ): the number of integration steps to compute [ default: 200 ]
+
+            * **params["dt"]** ( float ): integration time steps [ a.u. of time; default: 10.0 ]
+ 
+            * **params["progress_frequency"]** ( float ): the fraction of the total trajectory length 
+               at which the progress status is printed out - just to monitor how the calculation is going [ default: 0.1 ]
+
+            * **params["masses"]** (list of floats): the length of this list is equal to the number of nuclear DOFs 
+               the list contains the masses of all DOFs [ units: atomic units; default: [2000.0] ]
+
+            * **params["integrator"]** (string): the name of the integrator to use. Options:
+
+                - "SOFT": Split-Operator Fourier Transform method of Kosloff and Kosloff [ default ]
+                - "direct_dia": numeric, finite difference in diabatic representation 
+                - "direct_adi": numeric, finite difference in adiabatic representation
+                - "Colbert_Miller_dia": Colbert-Miller representation of kinetic energy, finite difference in diabatic representation
+                - "Colbert_Miller_adi": Colbert-Miller representation of kinetic energy, finite difference in adiabatic representation
+                - "Colbert_Miller_SOFT": Colbert-Miller representation of kinetic energy, using SOFT approach although the kinetic energy is 
+                  computed in real space
+
+            * **params["wfc_prefix"]** (string): the name of the folder to which we want save the wavefunction snapshots [ default: "wfc"]
+ 
+            * **params["snap_freq"]** (int): the number of steps between each printout of the wfc snapshot [ default: 1 ]
+
+            * **params["wfcr_params"]** ( list of 3 ints): each int is 0 or 1; 1 - meaning to print the corresponding property and 0 - not
+                the flags are as follows: first - real part of the wfc, second - imaginary part of wfc, third - density of wfc. Indexing 
+                starts at zero. This is all for the real-space wavefunction. [ default: [0] ]
+
+            * **params["wfcr_rep"]** (int): representation for which the real-space wfc is printed out, 0 - diabatic, 1 - adiabatic [ default: 0 ]
+
+            * **params["wfcr_states"]** (list of ints): indices of the states for which to print the corresponding real-space wavefunctions
+
+            * **params["wfck_params"]** ( list of 3 ints): each int is 0 or 1; 1 - meaning to print the corresponding property and 0 - not
+                the flags are as follows: first - real part of the wfc, second - imaginary part of wfc, third - density of wfc. Indexing
+                starts at zero. This is all for the reciprocal-space wavefunction. [ default: [0] ]
+
+            * **params["wfck_rep"]** (int): representation for which the reciprocal-space wfc is printed out, 0 - diabatic, 1 - adiabatic [ default: 0 ]
+
+            * **params["wfck_states"]** (list of ints): indices of the states for which to print the corresponding reciprocal-space wavefunctions
+
+    """
+
+    params = dict(_params)
     
     integrators_map = {"SOFT": 0,
                        "direct_dia": 1,
@@ -151,15 +200,36 @@ def run_dynamics(wfc, params, model_params, savers):
                        "Colbert_Miller_adi":4,
                        "Colbert_Miller_SOFT":5
                       }
+
+
+    critical_params = []
+    default_params = { "nsteps":200, "dt":10.0, "progress_frequency":0.1, "masses":[2000.0], "integrator":"SOFT", 
+                       "wfc_prefix":"wfc", "snap_freq":1, "wfcr_params":[1, 1, 1], "wfcr_rep":0, "wfcr_states":[0],
+                       "wfck_params":[1, 1, 1], "wfck_rep":0, "wfck_states":[0]
+                      }
+    comn.check_input(params, default_params, critical_params)
+
+
+
     integrator_id = integrators_map[ params["integrator"] ]
         
     nsteps = params["nsteps"]      
     print_freq = int(params["progress_frequency"]*nsteps)    
     dt = params["dt"]    
     masses = Py2Cpp_double(params["masses"])    
-    
-            
-    
+    ndof = len(masses)
+    wfc_prefix = params["wfc_prefix"]    
+    snap_freq = params["snap_freq"]
+
+    wfcr_params = params["wfcr_params"]
+    wfcr_rep = params["wfcr_rep"]            
+    wfcr_states = Py2Cpp_int(params["wfcr_states"])
+
+    wfck_params = params["wfck_params"]
+    wfck_rep = params["wfck_rep"]
+    wfck_states = Py2Cpp_int(params["wfck_states"])
+
+
     #================ Special setups ===================
     expT, expV = None, None
     if integrator_id == 5:
@@ -175,6 +245,8 @@ def run_dynamics(wfc, params, model_params, savers):
             exp_matrix(expv, wfc.Hdia[ipt], -dt*0.5j, 0);        
             expV.append(CMATRIX(expv))
         
+    if not os.path.exists(wfc_prefix):
+        os.system(F"mkdir {wfc_prefix}")
         
     #=============== Propagation ==========================
         
@@ -240,6 +312,27 @@ def run_dynamics(wfc, params, model_params, savers):
         wfc.update_reciprocal(0)  # update reci of diabatic function
         wfc.update_reciprocal(1)  # update reci of adiabatic function
         
+
+
+        #============ Printing wfc into files ==================
+        # Print out the wavefunctions and probability densities
+        if step%snap_freq==0:
+            snap = int(step/snap_freq)
+            if ndof==1:
+                a, b, c = wfcr_params[0], wfcr_params[1], wfcr_params[2]
+                wfc.print_wfc_1D(F"{wfc_prefix}/wfcr_snap_{snap}", wfcr_rep, wfcr_states, a,b,c)        
+
+                a, b, c = wfck_params[0], wfck_params[1], wfck_params[2]
+                wfc.print_reci_wfc_1D(F"{wfc_prefix}/wfck_snap_{snap}", wfck_rep, wfck_states, a,b,c)   
+
+            elif ndof==2:
+                for st in wfcr_states:
+                    a, b, c, st = wfcr_params[0], wfcr_params[1], wfcr_params[2], wfcr_states[0]
+                    wfc.print_wfc_2D(F"{wfc_prefix}/wfcr_snap_{snap}_state_{st}", wfcr_rep, st, a,b,c)
+
+                for st in wfck_states:
+                    a, b, c, st = wfck_params[0], wfck_params[1], wfck_params[2], wfck_states[0]
+                    wfc.print_reci_wfc_2D(F"{wfc_prefix}/wfck_snap_{snap}_state_{st}", wfck_rep, st, a,b,c)           
 
 
 def run_relaxation(_params, _potential, model_params):

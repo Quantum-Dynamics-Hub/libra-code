@@ -380,10 +380,37 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         plot_params ( dictionary ): the parameters of plotting
             
             The dictionary can contain the following parameters:
-            ** plot_params["colors"]** ( dictionary ) : defines the list of color definition (similar to the one found below)
-            ** plot_params["clrs_index"]** ( list of strings ): the mapping of a color definition to its "name" (similar to the one found below)
-            ** plot_params["xlim"]** ( list of 2 doubles ): the minimal and maximal values of the x axis in the plotted frame
-            ** plot_params["ylim"]** ( list of 2 doubles ): the minimal and maximal values of the y axis in the plotted frame        
+            * **plot_params["colors"]** ( dictionary ) : defines the list of color definition (similar to the one found below)
+            * **plot_params["clrs_index"]** ( list of strings ): the mapping of a color definition to its "name" (similar to the one found below)
+            * **plot_params["xlim"]** ( list of 2 doubles ): the minimal and maximal values of the x axis in the plotted frame [ default: [-7.5, 15.0]]
+            * **plot_params["ylim"]** ( list of 2 doubles ): the minimal and maximal values of the y axis in the plotted frame,
+               for diabatic and adiabatic energies [default: [ -0.005, 0.025] ]
+            * **plot_params["ylim2"]** ( list of 2 doubles ): the minimal and maximal values of the y axis in the plotted frame,
+               for NACs [default: [-0.01, 0.01]]
+            * **plot_params["do_show"]** (0 or 1) : 
+               - 0: - don't show the plot in the display (e.g. when there is no tunneling or proper terminal)
+               - 1: - do show it. Be careful - sometimes showing is not recommended because you'll get a bunch of windows which 
+                 you'll need to close before the code would proceed to other parts. Turn it on if you use Jupyter notebooks. [ default: 1]
+            * **plot_params["save_figures"]** (0 or 1): 0 - don't save the figures into separate files, 1 - do save them (e.g. when you can't or don't want
+               to visualize them in terminal). The figures will be saved into a directory defined by the `prefix` variable. [default: 1]
+            * **plot_params["prefix"]** (string): the name of the folder to which the figures will be saved (only if save_figures is set to 1). If the
+               folder doesn't exist, it will be created [default: "out"]
+            * **plot_params["dpi"]** (int): the quality of the figures to be saved [default: 300]
+            * **plot_params["nac_idof"]** (int): when plotting derivative NACs, this variable defines the index of the nuclear DOF that defines such 
+               a NAC, e.g. <\psi_i | d/dR_{nac_idof}| \psi_j > [default: 0]
+            * **plot_params["plotting_option"]** (0 or 1): how to plot the results:
+               - 0 : Plot diabatic and adiabatic surfaces separately, plot projections too [ default ]
+               - 1 : Plot diabatic and adiabatic surfaces in one picture, using dashed lines for diabatic. Plot NACs in a separate panel
+            * **plot_params["figsize"]** (list of ints) : define the size of the figure [ default: [36, 18]]
+            * **plot_params["titlesize"]** (int): size of the title [default: 38]
+            * **plot_params["labelsize"]** (int): size of the label [default: 38]
+            * **plot_params["fontsize"]** (int): size of the fonts [default: 36]
+            * **plot_params["xticksize"]** (int): size of the x-ticks [default: 28]
+            * **plot_params["yticksize"]** (int): size of the y-ticks [default: 28]
+            * **plot_params[""show_nac_abs]** (int): when plotting derivative NACs, this will also add plotting of the modulus of NACs:
+               - 0 : do not show [default]
+               - 1 : do show it
+        
         _ndof ( int ): the dimensionality of the PES [ default: 1 ]
         _active_dof ( int ): the index of the DOF used to construct the PES [ default: 0 ]
         _all_coodinates ( list of doubles ): values of all coordinates, the one at the position of `_active_dof` will be disregarded, while all
@@ -547,6 +574,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.legend()    
 
             if save_figures:
+                if not os.path.exists(F"{prefix}"):
+                    os.system(F"mkdir {prefix}")
                 plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
             
                   
@@ -570,6 +599,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                 plt.legend()               
 
             if save_figures:
+                if not os.path.exists(F"{prefix}"):
+                    os.system(F"mkdir {prefix}")
                 plt.savefig(F"{prefix}/projections_set_{iset}.png", dpi=dpi_value)            
     
             if do_show:
@@ -614,6 +645,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 
 
             if save_figures:
+                if not os.path.exists(F"{prefix}"):
+                    os.system(F"mkdir {prefix}")
                 plt.savefig(F"{prefix}/Ham_dia_E_adi_NAC_set_{iset}.png", dpi=dpi_value)
 
             if do_show:
