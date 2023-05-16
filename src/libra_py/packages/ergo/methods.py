@@ -30,8 +30,8 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import util.libutil as comn
-from . import units
-from . import data_read
+from libra_py import units
+from libra_py import data_read
 
 
 def find_last_file(prefix, suffix):

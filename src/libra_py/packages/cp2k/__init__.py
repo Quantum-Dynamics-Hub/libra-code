@@ -7,6 +7,7 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["input"
+__all__ = ["input",
+           "methods"
           ]
 

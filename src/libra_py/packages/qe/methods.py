@@ -1,9 +1,9 @@
 #*********************************************************************************
-#* Copyright (C) 2018-2019 Brendan A. Smith, Alexey V. Akimov
+#* Copyright (C) 2018-2023 Brendan A. Smith, Alexey V. Akimov
 #* Copyright (C) 2016-2017 Alexey V. Akimov
 #*
 #* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
+#* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version.
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>.
@@ -50,9 +50,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import util.libutil as comn
-from . import QE_utils
-from . import units
-from . import regexlib as rgl
+import libra_py.packages.qe.utils as QE_utils
+import libra_py.units as units
+import libra_py.regexlib as rgl
 
 def cryst2cart(a1,a2,a3,r):
     """Crystal to Cartesian coordinate conversion 

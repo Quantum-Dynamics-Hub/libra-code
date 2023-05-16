@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2019-2020  Alexey V. Akimov, Brendan Smith
+#* Copyright (C) 2019-2023  Alexey V. Akimov, Brendan Smith
 #*
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 3 of
@@ -23,6 +23,7 @@ import os
 import sys
 import math
 import re
+import numpy as np
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -30,15 +31,13 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn
 
-from . import units
-from . import scan
-from . import regexlib as rgl
+from libra_py import units
+from libra_py import scan
+from libra_py import regexlib as rgl
 
-from libra_py import CP2K_methods
-import numpy as np
-
-
-
+import libra_py.cp2k.methods as CP2K_methods  # in principle, we want to get rid of this cross-package dependency
+                                              # but let's keep it this way for now
+#import numpy as np
 
 def get_energy_forces(filename, nat):
     """Get forces from the input file 

@@ -1,5 +1,5 @@
 #*********************************************************************************
-#* Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
+#* Copyright (C) 2020-2023 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
 #* This file is distributed under the terms of the GNU General Public License
 #* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version.
@@ -21,7 +21,7 @@
 import os
 import sys
 import numpy as np
-from libra_py import CP2K_methods
+import libra_py.packages.cp2k.methods as CP2K_methods
 import util.libutil as comn
 
 
