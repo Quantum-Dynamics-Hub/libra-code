@@ -716,10 +716,6 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     on multiple trajectories
 
     Args:
-        q ( MATRIX(ndof, ntraj) ): the coordinates for all DOFs for all trajectories [ units: a.u.]
-        p ( MATRIX(ndof, ntraj) ): the momenta for all DOFs for all trajectories [ units: a.u. ]
-        iM ( MATRIX(ndof, 1) ): masses of all nuclear DOFs - same for all trajectories [ units: a.u. ]
-
         _dyn_params ( dictionary ): control parameters for running the dynamics
             see the documentation of the :func:`libra_py.dynamics.run_dynamics` function
 
@@ -737,7 +733,22 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
         _init_elec ( dictionary ): control parameters for initialization of electronic variables
             see the documentation of the :func:`libra_py.dynamics.init_electronic_dyn_var` function
 
-        rnd ( Random ): random numbers generator object
+        _init_nucl (dict): controls how to sample nuclear DOFs from what the user provides. Can contain:
+          * **_init_nucl["init_type"]** (int) : the type of the sampling:
+            - 0 : Coords and momenta are set exactly to the given value
+            - 1 : Coords are set, momenta are sampled
+            - 2 : Coords are sampled, momenta are set
+            - 3 : Both coords and momenta are samples [ default ]
+          * **_init_nucl["ndof"]** (int) : the number of nuclear DOFs [default: 1]
+          * **_init_nucl["q"]** ( list of `ndof` doubles ): average coordinate of all trajectories, for each nuclear DOF, 
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["p"]** ( list of `ndof` doubles ): average momentum of all trajectories, for each nuclear DOF,
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["mass"]** (list of `ndof` doubles): the mass for each nuclear DOF, in a.u. of mass [ default: [2000.0] ]
+          * **_init_nucl["force_constant"]** (list of `ndof` doubles) : the force constant of the harmonic oscillator in each 
+                  nuclear DOF, determins the width of the coordinate and momentum samplings [ default: [0.001] ]
+ 
+        rnd ( Random ): random numbers generator object - controls the initialization of nuclear DOFs
 
     Returns:
         tuple : tuple returned by the :func:`libra_py.dynamics.run_dynamics` function
@@ -753,6 +764,8 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
     comn.check_input( model_params, {  }, [ "model0" ] )
     comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "ntraj":1 }, [  ] )
+    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.01] }, [] )
+
 
     is_nbra =  dyn_params["isNBRA"]
     init_elec.update({"is_nbra":is_nbra})

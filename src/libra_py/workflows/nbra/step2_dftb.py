@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2019-2020 Brendan Smith and Alexey V. Akimov
+# * Copyright (C) 2019-2023 Brendan Smith and Alexey V. Akimov
 # * Copyright (C) 2019 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
@@ -28,7 +28,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from libra_py import DFTB_methods
+import libra_py.packages.dftbplus.methods as DFTB_methods
 from libra_py import units
 from libra_py import data_io
 import util.libutil as comn
@@ -323,8 +323,15 @@ def do_ovlp(snap, params):
     act_sp2 = list(range(norbs,2*norbs))
     S = CMATRIX(norbs, norbs)
     pop_submatrix(Sbig[0], S, act_sp1, act_sp2)
-    
-    return S
+
+    S00 = CMATRIX(norbs, norbs)
+    pop_submatrix(Sbig[0], S00, act_sp1, act_sp1)
+
+    S11 = CMATRIX(norbs, norbs)
+    pop_submatrix(Sbig[0], S11, act_sp2, act_sp2)
+     
+
+    return S, S00, S11
     
     
 
@@ -379,7 +386,7 @@ def run_step2(params):
     
     for i in range(isnap+1, fsnap-1):
         E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
-        S = do_ovlp(i, params)
+        S, S00, S11 = do_ovlp(i-1, params)
 
         #S.real().show_matrix("res/AOS_%i_re" % (i) )
 
@@ -387,7 +394,7 @@ def run_step2(params):
         Hvib = 0.5*(E_prev + E_curr) - (0.5j/dt) * ( TDM - TDM.H() )
 
         # Overlaps
-        s = 0.5 * (U_prev.H() * Sao_prev[0] * U_prev  +  U_curr.H() * Sao_curr[0] * U_curr)
+        s = 0.5 * (U_prev.H() * S00 * U_prev  +  U_curr.H() * S11 * U_curr)
         s.real().show_matrix("%s/S_%i_re" % (out_dir, i-1) )
         s.imag().show_matrix("%s/S_%i_im" % (out_dir, i-1) )
 

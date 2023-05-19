@@ -35,8 +35,8 @@ from libra_py import units
 from libra_py import scan
 from libra_py import regexlib as rgl
 
-import libra_py.cp2k.methods as CP2K_methods  # in principle, we want to get rid of this cross-package dependency
-                                              # but let's keep it this way for now
+import libra_py.packages.cp2k.methods as CP2K_methods  # in principle, we want to get rid of this cross-package dependency
+                                                       # but let's keep it this way for now
 #import numpy as np
 
 def get_energy_forces(filename, nat):
@@ -523,10 +523,11 @@ def run_dftb_adi(q, params_, full_id):
     obj.ham_adi = CMATRIX(nstates, nstates)    
     obj.nac_adi = CMATRIX(nstates, nstates)    
     obj.hvib_adi = CMATRIX(nstates, nstates)            
-    obj.basis_transform = CMATRIX(nstates, nstates)            
-    obj.d1ham_adi = CMATRIXList();            
-    obj.dc1_adi = CMATRIXList();            
-    for idof in range(ndof):        
+    obj.basis_transform = CMATRIX(nstates, nstates) 
+    obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    obj.d1ham_adi = CMATRIXList();
+    obj.dc1_adi = CMATRIXList();          
+    for idof in range(ndof):
         obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
         obj.dc1_adi.append( CMATRIX(nstates, nstates) )
   
@@ -566,6 +567,7 @@ def run_dftb_adi(q, params_, full_id):
         obj.ham_adi.set(istate, istate, E * (1.0+0.0j) )
         obj.hvib_adi.set(istate, istate, E * (1.0+0.0j) )        
         obj.basis_transform.set(istate, istate, 1.0+0.0j )        
+        obj.time_overlap_adi.set(istate, istate, 1.0+0.0j )
         for idof in range(ndof):        
             obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )                
     
@@ -638,25 +640,32 @@ def dftb_distribute( istep, fstep, nsteps_this_job, trajectory_xyz_file, dftb_in
 
 
 
-def get_dftb_ks_energies( params ):
+def get_dftb_ks_energies( _params ):
     """
     This function reads the band.out file generated from a dftb+ computations. The band.out file
     stores the ks energies and their occupation. 
 
     Args:
+        params (dict): parameters controlling this calculation. Can contain:
+
+        * **_params["logfile_name"]** (string): the file containing the output of the MD simulations [ default: "band.out"]
+        * **_params["min_band"]** (int): index of the minimal orbital/band to include in the analysis, starting from 1 [ default: 1 ]
+        * **_params["max_band"]** (int): index of the maximal orbital/band to include in the analysis, starting from 1 [ default: 2 ]
+        * **_params["time"]** (int): Time step at which the properties will be read, for molecular dynamics it will read the energies
+                 of time step 'time', but for static calculations the time is set to 0 [ default: 0]
 
     Returns:
 
         E (1D numpy array): The vector consisting of the KS energies from min_band to max_band.
         
-        total_energy (float): The total energy obtained from the log file.
-
     """ 
 
+    params = dict(_params)
+
     # Critical parameters
-    critical_params = [ "logfile_name", "min_band", "max_band" ]
+    critical_params = [ ]
     # Default parameters
-    default_params = { "time":0, "spin": 1}
+    default_params = { "logfile_name":"band.out", "min_band":1, "max_band":2, "time":0 }
     # Check input
     comn.check_input(params, default_params, critical_params)
 
@@ -671,7 +680,6 @@ def get_dftb_ks_energies( params ):
     # The maximum state number
     max_band = params["max_band"] # ks_orbital_indicies[-1]
 
-    spin = params["spin"]
 
     # First openning the file and reading its lines
     f = open( dftb_outfile_name, 'r' )
@@ -682,13 +690,11 @@ def get_dftb_ks_energies( params ):
     occ_energies   = []
     # The lines containing the energies of the unoccupied states
     unocc_energies = []
-    # Set the total energy to zero
-    total_energy = 0.0
 
     # For the dftb output file band.out, start from line 1
     for i in range(1,len(lines)):
 
-        if i >= min_band and i < max_band+1:
+        if i >= min_band and i <= max_band:
    
             b = lines[i].strip().split()
             if float(b[2]) > 0.0:
@@ -699,11 +705,13 @@ def get_dftb_ks_energies( params ):
     # Turn them into numpy arrays
     occ_energies   = np.array(occ_energies)
     unocc_energies = np.array(unocc_energies)
+
     # Concatenate the occupied and unoccpied energies so we can choose from min_band to max_band
     ks_energies = np.concatenate( (occ_energies, unocc_energies) )
-    print("ks_energies", ks_energies)
 
-    return ks_energies, total_energy       
+    #print("ks_energies", ks_energies)
+
+    return ks_energies
 
 
 
