@@ -620,6 +620,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     update_Hamiltonian_variables( dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
 
 
+
     #sys.exit(0)
 
     #U = []
@@ -686,7 +687,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         if nfiles > 0:
             index = index % nfiles
         model_params.update({"timestep":index})
-
 
         compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm);
 
@@ -821,7 +821,6 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
     dyn_var.update_density_matrix( dyn_params, ham, 1)
 
-
     #print("Initial adiabatic amplitudes")
     #dyn_var.get_ampl_adi().show_matrix()
 
@@ -839,9 +838,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
 
     # Finally, start the dynamics calculations
-    
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)
-
     return res
 
 

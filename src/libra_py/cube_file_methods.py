@@ -31,7 +31,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 
 import util.libutil as comn
-from libra_py import CP2K_methods
+import libra_py.packages.cp2k.methods as CP2K_methods
 
 def read_cube(filename: str):
     """

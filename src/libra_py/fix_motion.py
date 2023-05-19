@@ -29,7 +29,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from . import units
 from . import build
-from . import QE_methods
+import libra_py.packages.qe.methods as QE_methods
 from . import normal_modes
 from . import LoadPT
 from . import LoadMolecule

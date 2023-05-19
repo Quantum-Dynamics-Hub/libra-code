@@ -26,7 +26,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 from libra_py import *
-
+import libra_py.packages.qe.methods as QE_methods
 #>>>>>>>>>>>>>>>> UNCOMMENT THE SECTION BELOW, if THERE IS A PROBLEM WITH PATH
 #cwd = "/projects/academic/alexeyak/ekadashi/libracode-dev/libracode-code/_build"
 #print "Current working directory", cwd

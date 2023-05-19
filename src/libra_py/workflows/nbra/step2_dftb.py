@@ -28,7 +28,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from libra_py import DFTB_methods
+import libra_py.packages.dftbplus.methods as DFTB_methods
 from libra_py import units
 from libra_py import data_io
 import util.libutil as comn

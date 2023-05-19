@@ -17,9 +17,9 @@ import multiprocessing as mp
 import matplotlib.pyplot as plt
 
 import util.libutil as comn
-from libra_py import CP2K_methods
-from libra_py import Gaussian_methods
-from libra_py import DFTB_methods
+import libra_py.packages.cp2k.methods as CP2K_methods
+import libra_py.packages.gaussian.methods as Gaussian_methods
+import libra_py.packages.dftbplus.methods as DFTB_methods
 from libra_py.workflows.nbra import step2_many_body
 
 
