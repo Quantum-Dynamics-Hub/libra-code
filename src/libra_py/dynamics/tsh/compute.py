@@ -569,7 +569,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
     tsh_method = dyn_params["tsh_method"] 
 
-    
     #q = MATRIX(_q)
     #p = MATRIX(_p)
     #iM = MATRIX(_iM)
