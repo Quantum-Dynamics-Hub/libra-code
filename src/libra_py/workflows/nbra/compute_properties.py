@@ -15,7 +15,7 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import QE_utils
+import libra_py.packages.qe.utils as QE_utils
 
 
 def compute_properties_onekpt(params, es_curr, es_next, curr_index):

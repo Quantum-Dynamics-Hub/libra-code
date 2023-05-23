@@ -64,7 +64,7 @@ import util.libutil as comn
 
 import libra_py.data_read as data_read
 from . import decoherence_times as dectim
-import libra_py.tsh as tsh
+#import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
 import libra_py.dynamics.tsh.compute as tsh_dynamics
@@ -483,7 +483,7 @@ def printout(t, res, outfile):
 
 
 
-
+# This function is deprecated and does not work in the current version of Libra, 5/18/2023
 def run(H_vib, params):
     """
     

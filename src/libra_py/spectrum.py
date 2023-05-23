@@ -26,7 +26,8 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from . import units, data_conv, pdos, CP2K_methods
+from . import units, data_conv, pdos
+import libra_py.packages.cp2k.methods as CP2K_methods
 import util.libutil as comn
 import numpy as np
 

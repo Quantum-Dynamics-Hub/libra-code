@@ -29,9 +29,9 @@ if sys.platform=="cygwin":
     from cyglibra_core import *
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
-from libra_py import QE_methods
-from libra_py import QE_utils
-from libra_py import CP2K_methods
+import libra_py.packages.qe.methods as QE_methods
+import libra_py.packages.qe.utils as QE_utils
+import libra_py.packages.cp2k.methods as CP2K_methods
 from libra_py import cube_file_methods
 from libra_py import molden_methods
 from libra_py import data_conv

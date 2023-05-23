@@ -35,8 +35,7 @@ from libra_py import units
 from libra_py import scan
 from libra_py import regexlib as rgl
 
-import libra_py.packages.cp2k.methods as CP2K_methods  # in principle, we want to get rid of this cross-package dependency
-                                                       # but let's keep it this way for now
+import libra_py.packages.cp2k.methods as CP2K_methods
 #import numpy as np
 
 def get_energy_forces(filename, nat):

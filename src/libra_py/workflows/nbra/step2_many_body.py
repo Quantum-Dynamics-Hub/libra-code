@@ -36,9 +36,9 @@ from liblibra_core import *
 
 from libra_py import data_conv
 from libra_py import cube_file_methods
-from libra_py import CP2K_methods
-from libra_py import Gaussian_methods
-from libra_py import DFTB_methods
+import libra_py.packages.cp2k.methods as CP2K_methods
+import libra_py.packages.gaussian.methods as Gaussian_methods
+import libra_py.packages.dftbplus.methods as DFTB_methods
 from libra_py.workflows.nbra import mapping
 from libra_py.workflows.nbra import step3
 from libra_py import units

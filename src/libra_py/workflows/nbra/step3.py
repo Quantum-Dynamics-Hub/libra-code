@@ -45,8 +45,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 
 from . import mapping, step2_many_body, step3_many_body
 import util.libutil as comn
-import libra_py.CP2K_methods as CP2K_methods
-import libra_py.tsh as tsh
+import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.units as units
 import libra_py.data_read as data_read
 import libra_py.data_conv as data_conv
@@ -1910,7 +1909,7 @@ def run_step3_ks_nacs_libint(params):
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
-                      'apply_phase_correction': True, 'apply_orthonormalization': True, 
+                      'apply_phase_correction': False, 'apply_orthonormalization': False, 
                       'do_state_reordering': 0, 'state_reordering_alpha': 0, 'es_software': 'cp2k',
                       'nac_algo':0
                      }
@@ -1962,7 +1961,7 @@ def run_step3_ks_nacs_libint(params):
         var_pool = []
         for step in range(start_time,finish_time):
             var_pool.append((step, params))
-
+    
         with mp.Pool(nprocs) as pool:
             # Reading and orthonormalizing the KS overlaps
             pool.starmap(orthonormalize_ks_overlaps, var_pool)
@@ -2157,8 +2156,8 @@ def run_step3_sd_nacs_libint(params):
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
-                      'sorting_type': 'energy', 'apply_phase_correction': True,
-                      'apply_orthonormalization': True, 'do_state_reordering': 0,
+                      'sorting_type': 'energy', 'apply_phase_correction': False,
+                      'apply_orthonormalization': False, 'do_state_reordering': 0,
                       'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
                       'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles', 'nac_algo': 0
@@ -2386,6 +2385,15 @@ def run_step3_sd_nacs_libint(params):
 
     if params['is_many_body']:
         St_cis = []
+
+        for step in range(start_time, finish_time-1):
+            # Adding 0.0 to the total energy
+            E_ci_step = np.concatenate( (np.array([0.0]), np.array(ci_energies[step-start_time])) )
+            if step>start_time:
+                E_midpoint = np.diag(0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha)
+                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step-1}_re.npz',sp.csc_matrix(E_midpoint))
+            E_ci_step_plus = E_ci_step
+
         if params['do_state_reordering']==2 or params['do_state_reordering']==1:
             # Since we have performed state-reordering we need to 
             # convert to scipy npz format now
@@ -2409,10 +2417,10 @@ def run_step3_sd_nacs_libint(params):
                 E_ci_step = np.concatenate( (np.array([0.0]), np.array(ci_energies[step-start_time])) )
                 E_cis_cmatrix.append(data_conv.nparray2CMATRIX(np.diag(E_ci_step)))
                 St_cis_cmatrix.append(data_conv.nparray2CMATRIX( np.array(St_cis[c].todense().real )))
-                if step>start_time:
-                    E_midpoint = np.diag(0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha)
-                    sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step-1}_re.npz',sp.csc_matrix(E_midpoint))
-                E_ci_step_plus = E_ci_step
+                #if step>start_time:
+                #    E_midpoint = np.diag(0.5*(E_ci_step+E_ci_step_plus)*units.ev2Ha)
+                #    sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_ci_{step-1}_re.npz',sp.csc_matrix(E_midpoint))
+                #E_ci_step_plus = E_ci_step
                 c += 1
 
             #if params['do_state_reordering']==2 or params['do_state_reordering']==1:
