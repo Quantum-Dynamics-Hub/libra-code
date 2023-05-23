@@ -26,7 +26,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
 import util.libutil as comn
-from libra_py import ERGO_methods
+import libra_py.packages.ergo.methods as ERGO_methods
 from libra_py import units
 
 

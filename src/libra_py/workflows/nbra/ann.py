@@ -47,7 +47,7 @@ import util.libutil as comn
 import libra_py.data_read as data_read
 import libra_py.data_conv as data_conv
 from . import decoherence_times as dectim
-import libra_py.tsh as tsh
+#import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
 import libra_py.units as units
 import libra_py.dynamics.tsh.compute as tsh_dynamics

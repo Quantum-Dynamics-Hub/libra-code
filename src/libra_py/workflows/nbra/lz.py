@@ -30,7 +30,7 @@ import util.libutil as comn
 
 import libra_py.units as units
 import libra_py.probabilities as prob
-import libra_py.tsh as tsh
+#import libra_py.tsh as tsh
 from . import decoherence_times
 from . import step4
 
