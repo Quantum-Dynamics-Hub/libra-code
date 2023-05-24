@@ -32,7 +32,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 #from libra_py import *
 
 
-def sd2indx(inp,nbasis, do_sort=False):
+def sd2indx(inp,nbasis=0, do_sort=False, user_notation=0): 
     """
 
     This function maps a list of integers defining the 
@@ -50,12 +50,16 @@ def sd2indx(inp,nbasis, do_sort=False):
             orbital (whether it is an alpha-spatial or beta-spatial component) ```n```
 
         nbasis ( int ): the total number of orbitals orbitals (both alpha- and beta-
-            spatial components ) in the selected active space [currently not really used!]
+            spatial components ) in the selected active space [currently not really used!] 
 
         do_sort ( Boolean ): the flag to tell whether the indices should be sorted in 
             a particular order:
                 - True - for new scheme (needed for the SAC) [default]
                 - use with False for Pyxaid mapping!
+
+        user_notation (int): 
+            - 0 : short-hand - in this case, the mapping goes into [0, N) range [default - because it has been used for a while]
+            - 1 : extended - in this case, the mapping goes into [0, 2*N) range
 
 
     Returns: 
@@ -88,17 +92,21 @@ def sd2indx(inp,nbasis, do_sort=False):
 
     sz = len(inp)
 
-    spat = [0] * sz
+    spat = [] # [0] * sz
 
     for i in range(0,sz):
 
         # alpha
         if inp[i] > 0: 
-            spat[i] = inp[i] - 1
+            spat.append( inp[i] - 1 )
 
         # beta
         else:
-            spat[i] = (abs(inp[i])) - 1  #+ nbasis/2 - 1
+            res = (abs(inp[i])) - 1
+            #spat.append ( (abs(inp[i])) - 1  )  #+ nbasis/2 - 1
+            if user_notation==1:
+                res = res + int(nbasis/2)
+            spat.append(res)
 
 
     # Rearrange in ascending order: this is needed for 
@@ -111,6 +119,52 @@ def sd2indx(inp,nbasis, do_sort=False):
         out = sorted(spat)   
 
     return out
+
+
+def map_gen_matrix(SD1, SD2, X):
+    """
+    Args:
+        SD1 ( lists of ints ): first SD, such that:
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        SD2 ( lists of ints ): second SD, such that:
+            SeeAlso: ```inp``` in the ```sd2indx(inp,nbasis)``` function
+
+        X ( CMATRIX(nmo, nmo)) : the amatrix in a single-particple picture
+
+    Returns:
+        complex: mapped SD-basis property for the two determinants SD1 and SD2
+
+    """
+
+    nbasis = X.num_of_rows
+    # Converting the SDs provided by the user into the internal format to be read by Libra
+    sd1 = sd2indx(SD1,nbasis)
+    sd2 = sd2indx(SD2,nbasis)
+
+    res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
+
+    x = 0.0+0.0j
+    # The SDs are coupled
+    if res[0]==1:
+        x = X.get( res[1], res[2])
+
+
+    sd1 = sorted(SD1)
+    sd2 = sorted(SD2)
+    res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
+
+    spin_ovlp = 1.0
+    # Found 1 different entry
+    if res[0]==0:
+        spin_ovlp = 0.0
+    elif res[0]==1:
+        if res[1] * res[2] > 0.0:
+            spin_ovlp = 1.0
+        else:
+            spin_ovlp = 0.0
+
+    return x * spin_ovlp
 
 
 
@@ -204,9 +258,17 @@ def orbs2spinorbs(s):
     return S
 
 
+def num_of_perms(x):
+    n = len(x)-1 # number of adjacent pairs of numbers
+    cnt = 0
+    for i in range(n):
+        if x[i]>x[i+1]:
+            cnt += 1
+    return cnt
 
 
-def ovlp_arb(SD1, SD2, S, use_minimal=False):
+
+def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
     Args:
@@ -230,24 +292,20 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False):
 
     nbasis = S.num_of_rows
     # Converting the SDs provided by the user into the internal format to be read by Libra
-    sd1_tmp = sd2indx(SD1,nbasis)
-    sd2_tmp = sd2indx(SD2,nbasis)
+    sd1_tmp = sd2indx(SD1,nbasis, False, user_notation)
+    sd2_tmp = sd2indx(SD2,nbasis, False, user_notation)
 
     # Now, we will either keep the full SDs (this may cause artifacts when computing overlaps)
     # Or will use a smaller subset of these. 
     sd1, sd2 = [], []
 
     if use_minimal == True:
-        #print("sd1_tmp = ", sd1_tmp)
-        #print("sd2_tmp = ", sd2_tmp)
         for i in range( len(sd1_tmp) ):
             if sd1_tmp[i] not in sd2_tmp:
                sd1.append( sd1_tmp[i] ) 
         for i in range( len(sd1_tmp) ):
             if sd2_tmp[i] not in sd1_tmp:
                sd2.append( sd2_tmp[i] ) 
-        #print("sd1 = ", sd1)
-        #print("sd2 = ",   sd2)
         # if both sd1 and sd2 are empty set them with sd1_tmp and sd2_tmp
         if len(sd1) == 0 and len(sd2) == 0:
             sd1 = sd1_tmp
@@ -256,6 +314,8 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False):
     else:
         sd1 = sd1_tmp
         sd2 = sd2_tmp
+
+    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
 
     s = CMATRIX(len(sd1),len(sd2))
     # Forming the overlap of the SDs
@@ -271,7 +331,7 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False):
     # Checking if the matrix is square
     #print("\nChecking if s is a square matrix ...")
     if s.num_of_rows != s.num_of_cols:
-        print("\nWARNING: the matarix of Kohn-Sham orbitial overlaps is not a square matrix") 
+        print("\nWARNING: the matrix of Kohn-Sham orbitial overlaps is not a square matrix") 
         print("\nExiting now ..")
         print("sd1 = ", sd1)
         print("sd2 = ", sd2)
@@ -279,12 +339,12 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False):
         print("s.num_of_cols = ", s.num_of_cols)
         sys.exit(0)
 
-    return det(s)
+    return det(s) * phase
 
 
 
 
-def ovlp_arb_mo(SD1, SD2, S):
+def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
     This function relies on the methodology described in the Pyxaid paper 
@@ -309,10 +369,12 @@ def ovlp_arb_mo(SD1, SD2, S):
 
     nbasis = S.num_of_rows
     # Converting the SDs provided by the user into the internal format to be read by Libra
-    sd1 = sd2indx(SD1,nbasis)
-    sd2 = sd2indx(SD2,nbasis)
+    sd1 = sd2indx(SD1,nbasis, False, user_notation)
+    sd2 = sd2indx(SD2,nbasis, False, user_notation)
 
     res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
+
+    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
 
     s = 0.0
     # The SDs are coupled
@@ -331,11 +393,11 @@ def ovlp_arb_mo(SD1, SD2, S):
         s = det(x)
         
         #s = 1.0+0.0j 
-    return s
+    return s * phase
 
 
 
-def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False):
+def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False, user_notation=0):
     """Compute a matrix of overlaps in the SD basis 
 
     Args:
@@ -379,9 +441,9 @@ def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False):
         for m in range(0,M):
             val = 0.0
             if use_mo_approach==True:
-                val = ovlp_arb_mo(SD1[n], SD2[m], S)
+                val = ovlp_arb_mo(SD1[n], SD2[m], S, user_notation)
             else: 
-                val = ovlp_arb(SD1[n], SD2[m], S, use_minimal)
+                val = ovlp_arb(SD1[n], SD2[m], S, use_minimal, user_notation)
 
             res.set(n,m, val)
 
