@@ -92,10 +92,8 @@ def sd2indx(inp,nbasis=0, do_sort=False, user_notation=0):
 
     sz = len(inp)
 
-    spat = [] # [0] * sz
-
+    spat = []
     for i in range(0,sz):
-
         # alpha
         if inp[i] > 0: 
             spat.append( inp[i] - 1 )
@@ -108,7 +106,6 @@ def sd2indx(inp,nbasis=0, do_sort=False, user_notation=0):
                 res = res + int(nbasis/2)
             spat.append(res)
 
-
     # Rearrange in ascending order: this is needed for 
     # a consistency of the final results among different orbitals
     # Warning! But the reordering messes up the mapping procedure, so it 
@@ -119,6 +116,46 @@ def sd2indx(inp,nbasis=0, do_sort=False, user_notation=0):
         out = sorted(spat)   
 
     return out
+
+
+def reduce_determinants(_sd1, _sd2):
+    """
+    This function removes common parts of the two determinants
+    
+    Args:
+        sd1, sd2 (lists of ints): determinants in the user representation
+        
+    Examples:
+        >>  reduce_determinants( [1, -1], [2, -2])
+        >>  ([1, -1], [2, -2])
+
+        >>  reduce_determinants( [3,-3, 1, -1], [3, -3, 2, -2])
+        >>  ([1, -1], [2, -2])
+
+        >>  reduce_determinants( [1, -1, 2, -2, 3, -3], [1, -1, 2, -2, 3, -4])
+        >>  ([-3], [-4])
+
+
+    Returns:
+        tuple of 2 lists: the reduced determinants
+    
+    """
+    
+    sd1, sd2 = [], []
+    sz1 = len(_sd1)
+    sz2 = len(_sd2)
+    
+    for i in range( sz1 ):
+        if _sd1[i] not in _sd2:
+            sd1.append( _sd1[i] )
+                
+    for i in range( sz2 ):
+        if _sd2[i] not in _sd1:
+            sd2.append( _sd2[i] )
+            
+    return sd1, sd2
+
+
 
 
 def map_gen_matrix(SD1, SD2, X):
@@ -139,8 +176,8 @@ def map_gen_matrix(SD1, SD2, X):
 
     nbasis = X.num_of_rows
     # Converting the SDs provided by the user into the internal format to be read by Libra
-    sd1 = sd2indx(SD1,nbasis)
-    sd2 = sd2indx(SD2,nbasis)
+    sd1 = sd2indx(SD1,nbasis, False, 0)
+    sd2 = sd2indx(SD2,nbasis, False, 0)
 
     res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
 
@@ -291,56 +328,54 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     """
 
     nbasis = S.num_of_rows
-    # Converting the SDs provided by the user into the internal format to be read by Libra
-    sd1_tmp = sd2indx(SD1,nbasis, False, user_notation)
-    sd2_tmp = sd2indx(SD2,nbasis, False, user_notation)
-
-    # Now, we will either keep the full SDs (this may cause artifacts when computing overlaps)
-    # Or will use a smaller subset of these. 
-    sd1, sd2 = [], []
 
     if use_minimal == True:
-        for i in range( len(sd1_tmp) ):
-            if sd1_tmp[i] not in sd2_tmp:
-               sd1.append( sd1_tmp[i] ) 
-        for i in range( len(sd1_tmp) ):
-            if sd2_tmp[i] not in sd1_tmp:
-               sd2.append( sd2_tmp[i] ) 
-        # if both sd1 and sd2 are empty set them with sd1_tmp and sd2_tmp
-        if len(sd1) == 0 and len(sd2) == 0:
-            sd1 = sd1_tmp
-            sd2 = sd2_tmp
+        SD1, SD2 = reduce_determinants(SD1, SD2)
 
-    else:
-        sd1 = sd1_tmp
-        sd2 = sd2_tmp
+    # Converting the SDs provided by the user into the internal format to be read by Libra
+    sd1 = sd2indx(SD1,nbasis, False, user_notation)
+    sd2 = sd2indx(SD2,nbasis, False, user_notation)
 
+    # Compute the phase using the original determinants in the internal notation
     phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
 
-    s = CMATRIX(len(sd1),len(sd2))
-    # Forming the overlap of the SDs
-    for i in range(0,len(sd1)):
-        for j in range(0,len(sd2)):
-            # The overlap is non-zero only if the orbitals
-            # are occupied with the same-spin electrons. 
-            if (SD1[i] * SD2[j]) > 0:          
-                s.set(i,j,S.get(sd1[i],sd2[j]))
-            else:
-                s.set(i,j,0.0,0.0)
+    # Now reduce the determinants for faster calculations
+    if use_minimal == True:
+        SD1, SD2 = reduce_determinants(SD1, SD2)  
 
-    # Checking if the matrix is square
-    #print("\nChecking if s is a square matrix ...")
-    if s.num_of_rows != s.num_of_cols:
-        print("\nWARNING: the matrix of Kohn-Sham orbitial overlaps is not a square matrix") 
-        print("\nExiting now ..")
-        print("sd1 = ", sd1)
-        print("sd2 = ", sd2)
-        print("s.num_of_rows = ", s.num_of_rows)
-        print("s.num_of_cols = ", s.num_of_cols)
-        sys.exit(0)
+        # Convert the SDs to the internal notation again, but this time we'd be using the reduced ones
+        sd1 = sd2indx(SD1,nbasis, False, user_notation)
+        sd2 = sd2indx(SD2,nbasis, False, user_notation)
 
-    return det(s) * phase
 
+    res = 0.0+0j
+    if len(sd1)>0 and len(sd2)>0:
+      if len(sd1)==len(sd2):
+    
+          # Now apply the determinant formula
+          s = CMATRIX(len(sd1),len(sd2))
+          # Forming the overlap of the SDs
+          for i in range(0,len(sd1)):
+              for j in range(0,len(sd2)):
+                  # The overlap is non-zero only if the orbitals
+                  # are occupied with the same-spin electrons. 
+                  if (SD1[i] * SD2[j]) > 0:          
+                      s.set(i,j,S.get(sd1[i],sd2[j]))
+                  else:
+                      s.set(i,j,0.0,0.0)
+
+          res = det(s) * phase
+      else:
+          # Checking if the matrix is square
+          print("\nWARNING: the matrix of Kohn-Sham orbitial overlaps is not a square matrix") 
+          print("\nExiting now ..")
+          print("sd1 = ", sd1)
+          print("sd2 = ", sd2)
+          print("len(sd1) = ", len(sd1))
+          print("len(sd2) = ", len(sd2))
+          sys.exit(0)
+
+    return res
 
 
 
@@ -380,6 +415,8 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
     # The SDs are coupled
     if res[0]==1:
         s = S.get( res[1], res[2])  
+
+
     # For similar SDs
     if sd1==sd2:
         #         TEST on June 16, 2022 - AVA
