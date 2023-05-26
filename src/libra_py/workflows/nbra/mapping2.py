@@ -231,13 +231,13 @@ def ovlp_mat_arb(SD1, SD2, S, reduce_det=False):
     N_orb_max = S.num_of_cols
 
     for i in range(N):
-        if max(sd2indx(SD1[i])) > N_orb_max or min(sd2indx(SD1[i]) )<0:
+        if max(sd2indx(SD1[i])[0] ) > N_orb_max or min( sd2indx(SD1[i])[0] )<0:
             print(F"Error: Configurations {SD1[i]} is not consistent with the 1-electron matrix of dimensions {N_orb_max} x {N_orbs_max}\n")
             print("Exiting...\n")
             sys.exit(0)
 
     for i in range(M):
-        if max(sd2indx(SD2[i])) > N_orb_max or min(sd2indx(SD2[i]) ) <0:
+        if max( sd2indx(SD2[i])[0] ) > N_orb_max or min(sd2indx(SD2[i])[0] ) <0:
             print(F"Error: Configurations {SD2[i]} is not consistent with the 1-electron matrix of dimensions {N_orb_max} x {N_orbs_max}\n")
             print("Exiting...\n")
             sys.exit(0)
