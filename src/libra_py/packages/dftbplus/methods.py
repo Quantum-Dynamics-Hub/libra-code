@@ -97,7 +97,7 @@ def get_energy_forces(filename, nat):
 
 
 
-def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
+def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.5):
     """Get the matrices printed out by the DFTB+
 
     Args: 
@@ -110,6 +110,26 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
         act_sp2 ( list of ints or None): the cols active space to extract from the original files
             Indices here start from 0. If set to None - the number of AOs will be
             determined automatically from the file. [default: None]
+        correction (int): 0 - don't do a correction, 1 - do it; this correction is useful for 
+            reading the time-overlap files from the super-molecule calculations. Because of the how
+            integrals are evaluated in DFTB+, sometimes the overlaps for the same orbitals on the same 
+            position would not be the same as expected from the corresponding calculations using 
+            orbitals of only one atom. As a result, NaNs or incorrect values are observed in the off-diagonal
+            blocks. When the correction is turned on, we'll first check for NaNs in the off-diagonal blocks. If 
+            NaNs are observed, the value is temporarily set to 1000. Then, the magnitudes of the elements in the 
+            off-diagonal blocks are compared to the the corresponding elements of the diagonal blocks. If the 
+            aboslute value of the difference is larger than the `tol` value, the elements in the off-diagonal 
+            blocks are reset to the values of either 0 or the corresponding value of the in-diagonal blocs. The
+            latter is the case for the diagonal elements of the blocks, and zero is for the off-diagonal elements 
+            of the block. [default: 0]
+        tol (float ): the threshold for fixing the elements of the off-diagonal blocks. The off-diagonal block elements
+            are only reset to the corresponding values of the on-diagonal blocks (or to zeros) if they exceed them by this
+            amount. The larger values of this parameter will favor keeping the off-diagonal block matrix elements to 
+            what they are in the direct calculations, which may be problematic for very close distances (e.g. identical geometries).
+            On the contrary, the smaller values of this parameter will favor replacing the off-diagonal block matrix elements
+            with the corresponding on-diagonal block matrix elements or zeroes. This may artificially decrease the NACs and may
+            slow down the nonadiabatic transitions. E.g. in the extreme case of `tol = 0.0`, all NACs would be zero, so there will 
+            be no dynamics. [ default: 0.5 ]
     
     Returns: 
         list of CMATRIX(N, M): X: where N = len(act_sp1) and M = len(act_sp2) 
@@ -147,6 +167,7 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
            
     # Output variables    
     X = []
+    norbs2 = int(norbs/2)
     
     # For each k-point
     for ikpt in range(0,nkpts):
@@ -162,18 +183,51 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None):
             tmp = B[i].split()
             line = ""            
             for j in range(0,norbs): 
+
                 z = 0.0
-                if tmp[j]=="NaN":
-                    z = 0.0
+                if tmp[j]=="NaN" or tmp[j]=="NAN":
+                    z = 1000.0
+                    #z = float(tmp[int(j%norbs2)]) #-1000.0
                 else:
                     try:
                         z = float(tmp[j])
                     except ValueError:
-                        z = 0.0
+                        z = 1000.0   
+                        #z = float(tmp[int(j%norbs2)]) #-1000.0
                         pass
                     except TypeError:
-                        z = 0.0
-                        pass                    
+                        z = 1000.0
+                        #z = float(tmp[int(j%norbs2)]) #-1000.0
+                        pass                   
+
+                if correction == 1: # if we want to enforce correction of the matrix elements in blocks 01 and 10
+                #           norbs2    norbs
+                #       ______________
+                #       |__00__|__01__|    norbs2
+                #       |__10__|__11__|    norbs
+                #  
+
+                    if i<norbs2 and j>=norbs2:  # block 01
+                        z_diag = float(tmp[j-norbs2])
+                        if abs( z - z_diag )>tol:
+                            if j-norbs2==i:
+                                z = z_diag
+                            else:
+                                z = 0.0
+                        else:
+                            pass  # keep z to what it is 
+
+                    if i>=norbs2 and j<norbs2:  # block 10
+                        z_diag = float(tmp[j+norbs2])
+
+                        if abs( z - z_diag )>tol:
+                            if i-norbs2==j:
+                                z = z_diag
+                            else:
+                                z = 0.0
+                        else:
+                            pass
+                
                 line = line + "%10.8f  " % (z)
             line = line + "\n"
 

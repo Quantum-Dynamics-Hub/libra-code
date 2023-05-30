@@ -282,8 +282,17 @@ def do_ovlp(snap, params):
         
                 - It should use the geometry file defined by params["ovlp_gen_file"]. 
                 - It should have the section: "WriteHS = Yes" to initialize the writing of the H and S matrices
-        
+
                 [default: "dftb_in_overlaps.hsd"]
+
+            * **params["tol"]** (float ): the threshold for fixing the elements of the off-diagonal blocks. The off-diagonal block elements
+                are only reset to the corresponding values of the on-diagonal blocks (or to zeros) if they exceed them by this
+                amount. The larger values of this parameter will favor keeping the off-diagonal block matrix elements to
+                what they are in the direct calculations, which may be problematic for very close distances (e.g. identical geometries).
+                On the contrary, the smaller values of this parameter will favor replacing the off-diagonal block matrix elements
+                with the corresponding on-diagonal block matrix elements or zeroes. This may artificially decrease the NACs and may
+                slow down the nonadiabatic transitions. E.g. in the extreme case of `tol = 0.0`, all NACs would be zero, so there will
+                be no dynamics. [ default: 0.5 ]
 
 
     Returns:
@@ -295,7 +304,7 @@ def do_ovlp(snap, params):
     critical_params = [ ] 
     default_params = { "EXE":"dftb+",
                        "md_file":"md.xyz", "ovlp_gen_file":"x2.gen", "syst_spec":"C" ,
-                       "ovlp_in_file":"dftb_in_overlaps.hsd"
+                       "ovlp_in_file":"dftb_in_overlaps.hsd", "tol":0.5
                      }
     comn.check_input(params, default_params, critical_params)
     
@@ -305,6 +314,7 @@ def do_ovlp(snap, params):
     ovlp_gen_file = params["ovlp_gen_file"]
     syst_spec = params["syst_spec"]
     ovlp_in_file = params["ovlp_in_file"]
+    tol = params["tol"]
 
         
     # Make an input file for the overlap calculations 
@@ -316,7 +326,7 @@ def do_ovlp(snap, params):
     os.system( "%s" % EXE )
 
     # Get the Hamiltonian    
-    Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat")
+    Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat", None, None, 1, tol)
     norbs = int(Sbig[0].num_of_cols/2)
     
     act_sp1 = list(range(0,norbs))
