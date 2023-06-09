@@ -645,6 +645,16 @@ class dyn_control_params{
         14              -  same as 4, but with rotations
         15              -  same as 5, but with rotations
 
+    rep_tdse = 2 ( diabatic, density matrix formalism): 1** - with NBRA
+
+         0              -  mid-point Hvib with the second-point correction of Hvib
+
+    rep_tdse = 3 ( adiabatic, density matrix formalism): 1** - with NBRA
+
+         0              -  mid-point Hvib with the second-point correction of Hvib
+         1              -  Zhu Liouvillian
+
+        10              -  same as 0, but with rotations
 
   */
   int electronic_integrator;
