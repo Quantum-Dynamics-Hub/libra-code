@@ -58,12 +58,15 @@ def generate(_params):
             [default: ".FALSE."]
         * **_params["method"]** (string): the type functional to use. This option affects certain options. Currently possible:
             - "PBE" (for PBE functional)
-            - "BEEF" (for BEEF functional)
+            - "BEEF" (for BEEF functional), "BEEFWDV"
+            - "BP"
+            - "LD"
             - "B3LYP"
             - "PBE0"
             - "HSE06"
             - "TPSS"
             - "CAM-B3LYP"
+            - "HSE06", "HSE12"
             - "xTB" (for xTB)
         * **_params["max_scf"]** (int): the maximal number of SCF iterations [ default: 100 ]
         * **_params["solver"]** (string): the type of the solver for the SCF procedure. Available options:
@@ -71,17 +74,17 @@ def generate(_params):
             - "DIAG" (Davidson diagonalization) - the option for excited state calcualations (TD-DFT or sTDA), or for calculations with
               smearing [ default ]
         * **_params["ot.preconditioner"]** (string): the preconditioner for OT calculations, only used if `solver == OT`. 
-              Available options: "FULL_ALL" [ default ], "FULL_SINGLE_INVERSE"
+              Available options: "FULL_ALL", "FULL_SINGLE_INVERSE" [ default ]
         * **_params["ot.minimizer"]** (string): the minimization algorithm for OT calculations, only used if `solver == OT`.
               Available options: "CG" (conjugate gradient), "DIIS" (direct inversion of iterative subspace, default)
         * **_params["ot.linesearch"]** (string): the algorithm for the minimization on an interval in the OT calculations. 
               Only used if `solver == OT`. Available options: "2PNT" [default], "3PNT"
-        * **_params["ot.energygap"]** (float): the assumed energy gap for the OT preconditioner in Ha [default: 0.001 Ha] Only used
+        * **_params["ot.energygap"]** (float): the assumed energy gap for the OT preconditioner in Ha [default: 0.01 Ha] Only used
               if `solver == OT`
         * **_params["diag.preconditioner"]** (string): preconditioner for DIAG SCF solver. Only used inf `solver == DIAG`
               See the CP2K manual for available options. [default: "FULL_ALL"] 
         * **_params["diag.energygap"]** (float): assumed energy gap for the DIAG preconditioner in Ha. Only used if `solver == DIAG`
-             [default: 0.001 Ha]
+             [default: 0.01 Ha]
         * **_params["added_mos"]** (int): how many extra MOs (unoccupied) to include in calculations [ default: 20]. Requires 
              `solver == DIAG`, can not be used with "OT" solver.
         * **_params["smearing"]** (Boolean): a flag that enables (if True) fractional occupations of orbitals [default: False]. Requires 
@@ -122,8 +125,8 @@ def generate(_params):
 
                        "method":"PBE", "max_scf":100,
                        "solver":"DIAG",
-                       "ot.preconditioner":"FULL_SINGLE_INVERSE", "ot.minimizer":"DIIS", "ot.linesearch":"2PNT", "ot.energygap":0.001,
-                       "diag.preconditioner":"FULL_ALL", "diag.energygap":0.001,
+                       "ot.preconditioner":"FULL_SINGLE_INVERSE", "ot.minimizer":"DIIS", "ot.linesearch":"2PNT", "ot.energygap":0.01,
+                       "diag.preconditioner":"FULL_SINGLE_INVERSE", "diag.energygap":0.01,
                        "added_mos":20, "smearing":False,
                        "smearing.method":"FERMI_DIRAC", "smearing.electronic_temperature":300.0,
 
@@ -167,52 +170,30 @@ def generate(_params):
     
     xc_input = ""
     xtb_input = ""
-    if method in ["PBE", "BEEF", "B3LYP", "PBE0", "TPSS"]:
+
+    # Shortcut methods
+    if method in ["PBE", "BEEF", "BEEFWDV", "BP", "LD", "B3LYP", "PBE0", "TPSS"]:
         xc_input = F"""
     &XC
       &XC_FUNCTIONAL {method}
       &END XC_FUNCTIONAL
     &END XC
         """
-    elif method in ["HSE06"]:
-        xc_input = F"""
-    &XC
-      &XC_FUNCTIONAL
-        &XWPBE
-          SCALE_X -0.25
-          SCALE_X0 1.0 
-          OMEGA 0.11
-        &END XWPBE
-        &PBE
-          SCALE_X 0.0
-          SCALE_C 1.0
-        &END PBE
-      &END XC_FUNCTIONAL
-      &HF
-        &SCREENING
-          EPS_SCHWARZ 1.0E-6
-          EPS_SCHWARZ_FORCES 1.0E-5
-          SCREEN_ON_INITIAL_P FALSE
-        &END SCREENING
-        &INTERACTION_POTENTIAL
-          CUTOFF_RADIUS 10
-          POTENTIAL_TYPE SHORTRANGE
-          OMEGA 0.11
-        &END INTERACTION_POTENTIAL
-        FRACTION 0.25
-      &END HF
-    &END XC
-        """
-    elif method in ["CAM-B3LYP"]:
-        func = "XC_HYB_GGA_XC_B3LYP"
+
+    # More advanced onese
+    elif method in ["CAM-B3LYP", "HSE06", "HSE12"]:
+        func = "HYB_GGA_XC_CAM_B3LYP"
         if method == "CAM-B3LYP":
-            func = "XC_HYB_GGA_XC_CAM_B3LYP"
+            func = "HYB_GGA_XC_CAM_B3LYP"
+        elif method == "HSE06":
+            func = "HYB_GGA_XC_HSE06"
+        elif method == "HSE12":
+            func = "HYB_GGA_XC_HSE12"
         xc_input = F"""
     &XC
       &XC_FUNCTIONAL
-        &LIBXC
-          FUNCTIONAL {func}
-        &END LIBXC
+        &{func}
+        &END {func}
       &END XC_FUNCTIONAL
       &HF
         &SCREENING
@@ -222,7 +203,8 @@ def generate(_params):
       &END HF
     &END XC
         """
- 
+
+    # xTB 
     elif method in ["xTB"]:
         qs_method = "xTB"
         xtb_input = """
@@ -236,21 +218,33 @@ def generate(_params):
         &END PARAMETER
       &END xTB
         """
+
+    # Explicit names of the functionals
+    else:
+        xc_input = F"""
+    &XC
+      &XC_FUNCTIONAL
+        &{method}
+        &END {method}
+      &END XC_FUNCTIONAL
+    &END XC
+        """     
+
     #>>> ============ XC END=================
 
     #>>> ============ AUX ===================
     aux_input = ""
-    if method in ["HSE06", "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
-        aux_input=F"""
-    &AUXILIARY_DENSITY_MATRIX_METHOD
-      ! recommended, i.e. use a smaller basis for HFX
-      ! each kind will need an AUX_FIT_BASIS_SET.
-      METHOD BASIS_PROJECTION
-      ! recommended, this method is stable and allows for MD. 
-      ! can be expensive for large systems
-      ADMM_PURIFICATION_METHOD MO_DIAG
-    &END
-        """
+#    if method in ["HSE06", "HSE12" "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
+#        aux_input=F"""
+#!    &AUXILIARY_DENSITY_MATRIX_METHOD
+#!      ! recommended, i.e. use a smaller basis for HFX
+#!      ! each kind will need an AUX_FIT_BASIS_SET.
+#!      METHOD BASIS_PROJECTION
+#!      ! recommended, this method is stable and allows for MD. 
+#!      ! can be expensive for large systems
+#!      ADMM_PURIFICATION_METHOD MO_DIAG
+#!    &END
+#        """
 
     #>>> ============ AUX END ===============
 
