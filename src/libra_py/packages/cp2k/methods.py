@@ -22,7 +22,11 @@ import sys
 import math
 import re
 import numpy as np
+import scipy.sparse as sp
 import time
+import glob 
+from libra_py.workflows.nbra import step2_many_body
+
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -30,7 +34,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn   
 
-from libra_py import data_outs
+from libra_py import data_outs, data_stat
 from libra_py import units
 
 
@@ -1633,4 +1637,235 @@ def cp2k_find_excitation_energies(filename):
                 F.append(f)
                                 
     return E, F
+
+
+
+def gaussian_function(a, mu, sigma, num_points, x_min, x_max):
+    """
+    This function computes the value of a Gaussian function for a set of points.
+    Args:
+        a (float): The prefactor
+        mu (float): The average value, \mu
+        sigma (float): The standard deviation, \sigma
+        num_points (integer): The number of points in the grid 
+        x_min (float): The minimum value of x in the grid
+        x_max (float): The maximum value of x in the grid
+    Returns:
+        x (nparray): The grid
+        gaussian_fun (nparray): The computed values of Gaussian function in the grid points, x.
+    """
+    pre_fact = (a/sigma)/(np.sqrt(2*np.pi))
+    x = np.linspace(x_min, x_max, num_points)
+    x_input = np.array((-1/2)/(np.square(sigma))*np.square(x-mu))
+    gaussian_fun = pre_fact*np.exp(x_input)
+    
+    return x, gaussian_fun
+    
+def gaussian_function_vector(a_vec, mu_vec, sigma, num_points, x_min, x_max):
+    """
+    This function computes the Gaussian function for a set of grid sets using `gaussian_function` and sums them together.
+    Args:
+        a_vec (list): A list containing the values of prefactors
+        mu_vec (list): A list containing the values of averages
+        sigma (float): The standard deviation 
+        num_points (integer): The number of points in the grid 
+        x_min (float): The minimum value of x in the grid
+        x_max (float): The maximum value of x in the grid
+    Returns:
+        x (nparray): The grid
+        sum_vec (nparray): The summed values of the Gaussian functions for grids.
+    """
+    for i in range(len(a_vec)):
+        if i==0:
+            sum_vec = np.zeros(num_points)
+        x, conv_vec = gaussian_function(a_vec[i], mu_vec[i], sigma, num_points, x_min, x_max)
+        sum_vec += conv_vec
+    return x, sum_vec
+
+
+def pdos(params):
+    """
+    This function computes the weighted pdos for a set of CP2K pdos files.
+    Args:
+        params (dict):
+            * path_to_all_pdos (str): The full path to the pdos files produced by CP2K
+            * atoms (list): This list contains the atom types number and names in a separate list.
+                            CP2K produces the pdos files in *k{i}*.pdos files where `i` is the atom type number.
+                            e.g.: [ [1,2] , ['Ti', 'O'] ]
+            * orbitals (list): A list containing the atomic angular momentum.
+            * orbital_cols (list): The columns for specific angular momentum as in `orbitals` 
+                            e.g. For orbitals of ['s', 'p',        'd',         'f']
+                                 [                [3], range(4,7), range(7,12), range(12,19)  ]
+            * npoints (integer): The number of grid points for convolution with Gaussian functions.
+            * sigma (float): The standard deviation value
+            * shift (float): The amount of shifting the grid from the minimum and maximum energy values.
+    Returns:
+        ave_energy_grid (nparray): The average energy grid for all pdos files
+        homo_energy (float): The value of HOMO energy in eV
+        ave_pdos_convolved_all (li st): The list containing all the values 
+        labels (lis t): A list containing the labels of the orbital resolved pdos
+                       `ave_pdos_convolved_all` is sorted based on the labels in this list
+        ave_pdos_convolved_total (nparray): The total density of states
+    """
+    # Critical parameters
+    critical_params = [ "path_to_all_pdos", "atoms"]
+    # Default parameters
+    default_params = { "orbitals_cols": [[3], range(4,7), range(7,12), range(12,19)], "orbitals": ['s', 'p', 'd', 'f'], "sigma": 0.05, "shift": 2.0, "npoints": 2000} 
+    # Check input
+    comn.check_input(params, default_params, critical_params) 
+
+    path_to_all_pdos = params['path_to_all_pdos']
+    atoms = params['atoms']
+    orbitals_cols = params['orbitals_cols']
+    orbitals = params['orbitals']
+    npoints = params['npoints']
+    sigma = params['sigma']
+    shift = params['shift']
+
+    labels = []
+    ave_pdos_convolved_all = []
+
+    for c1,i in enumerate(atoms[0]):
+        # Finding all the pdos files
+        pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
+        pdos_ave = np.zeros(np.loadtxt(pdos_files[0]).shape)
+        cnt = len(pdos_files)
+        for c2, pdos_file in enumerate(pdos_files):
+            pdos_mat = np.loadtxt(pdos_file)
+            if c2==0:
+                pdos_ave = np.zeros(pdos_mat.shape)
+            pdos_ave += pdos_mat
+        pdos_ave /= cnt
+        pdos_ave[:,1] *= units.au2ev
+        e_min = np.min(pdos_ave[:,1])-shift
+        e_max = np.max(pdos_ave[:,1])+shift
+        homo_level = np.max(np.where(pdos_ave[:,2]==2.0))
+        homo_energy = pdos_ave[:,1][homo_level]
+        for c3, orbital_cols in enumerate(orbitals_cols):
+            try:
+                sum_pdos_ave = np.sum(pdos_ave[:,orbital_cols],axis=1)
+                ave_energy_grid, ave_pdos_convolved = gaussian_function_vector(sum_pdos_ave, pdos_ave[:,1], sigma,
+                                                                                   npoints, e_min, e_max)
+                ave_pdos_convolved_all.append(ave_pdos_convolved)
+                pdos_label = atoms[1][c1]+F', {orbitals[c3]}'
+                labels.append(pdos_label)
+            except:
+                pass
+
+    ave_pdos_convolved_all = np.array(ave_pdos_convolved_all) 
+    ave_pdos_convolved_total = np.sum(ave_pdos_convolved_all, axis=0)
+
+    return ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels, ave_pdos_convolved_total
+
+
+def exc_analysis(params):
+    """
+    This function computes the average configuration interaction coefficients for excited states (originally written by Brendan Smith).
+    Args:
+        params (dict): 
+            * path_to_logfiles (string): The full path to all logfiles
+            * number_of_states (integer): The number of excited states appeared in the excitation analysis of CP2K outputs
+            * tolerance (float): the tolerance value for CI coefficients
+            * nsds (integer): The number of SDs to be considered for plotting
+            * isUKS (integer): A flag for considering restricted or unrestricted spin calculations:
+                               - 0 : No UKS
+                               - 1 : With UKS
+    Returns:
+        coeffs_avg (list): The average CI coefficients
+        coeffs_error (list): The error bars for average CI coefficients
+    """
+    # Critical parameters
+    critical_params = [ "path_to_logfiles", "number_of_states"]
+    # Default parameters
+    default_params = { "isUKS":0, "tolerance": 0.01, "nsds": 2}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+
+    path_to_logfiles = params['path_to_logfiles']
+    nsds = params['nsds']
+    nstates = params['number_of_states']
+    
+    logfiles = glob.glob(F"{path_to_logfiles}/*.log")
+    params.update({'logfile_name': ''})
+
+    ci_coeffs = []
+    for logfile in logfiles:
+        params.update({"logfile_name": logfile})
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = read_cp2k_tddfpt_log_file( params ) 
+        ci_coefficients_raw_norm = step2_many_body.normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+        for j in range(len(ci_coefficients_raw_norm)):
+            for k in range(len(ci_coefficients_raw_norm[j])):
+                ci_coefficients_raw_norm[j][k] = ci_coefficients_raw_norm[j][k]**2
+        ci_coeffs.append(ci_coefficients_raw_norm)
+    
+    
+    nsteps = len(ci_coeffs)
+    
+    coeffs = []
+    coeffs_avg   = []
+    coeffs_error = []
+    
+    
+    for state in range(nstates):
+        coeffs.append( [] )
+        coeffs_avg.append( [] )
+        coeffs_error.append( [] )
+    
+        for sd in range( nsds ):
+    
+            coeffs[state].append( [] )
+            coeffs_avg[state].append( [] )
+            coeffs_error[state].append( [] )
+    
+            for step in range( nsteps ):
+                if len( ci_coeffs[step][state] ) < nsds and sd > len( ci_coeffs[step][state] )-1:
+                    coeffs[state][sd].append( 0.0 )
+                else:
+                    coeffs[state][sd].append( ci_coeffs[step][state][sd] )
+         
+            mb_coeff_avg, mb_coeff_std = data_stat.scalar_stat( coeffs[state][sd] )
+            coeffs_avg[state][sd].append( mb_coeff_avg )
+            coeffs_error[state][sd].append( 1.96 * mb_coeff_std / np.sqrt(nsteps) )
+      
+
+    return coeffs_avg, coeffs_error
+
+
+def extract_energies_sparse(params):
+    """
+    This function extract the energies vs time data from scipy.sparse files
+    Args:
+        params (dict):
+            * path_to_energy_files (string): The full path to sparse energy files 
+            * dt (float): The time step
+            * prefix (string): The prefix of the files
+            * suffix (string): The suffix of the files
+            * istep (integer): The initial step
+            * fstep (integer): The final step
+    Returns:
+        md_time (nparray): Contains the md time and can be used for plotting
+        energies (nparray): The energies of each state
+    """
+    critical_params = [ "path_to_energy_files"]
+    # Default parameters
+    default_params = { "dt":1.0, "prefix": "Hvib_sd_", "suffix": "_re", "istep": 0, "fstep": 5}
+    # Check input
+    comn.check_input(params, default_params, critical_params)
+
+    path_to_energy_files = params['path_to_energy_files']
+    dt = params['dt']
+    prefix = params['prefix']
+    suffix = params['suffix']
+    istep = params['istep']
+    fstep = params['fstep']
+    
+    energies = []
+    for step in range(istep,fstep):
+        file = F'{path_to_energy_files}/{prefix}{step}{suffix}.npz'
+        energies.append(np.diag(sp.load_npz(file).todense().real))
+    energies = np.array(energies)
+    md_time = np.arange(0,energies.shape[0]*dt,dt)
+    
+    return md_time, energies
+
 
