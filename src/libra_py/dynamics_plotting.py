@@ -245,6 +245,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     scan_path = []
     
     tid = Py2Cpp_int([0, 0])
+
+    dyn_var = dyn_variables(ndia, nadi, ndof, 1)
     
     for step in range(nsteps):
         q = None
@@ -257,8 +259,16 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
         model_params["timestep"] = step
             
-        update_Hamiltonian_q( {"rep_tdse":rep_tdse, "rep_ham":rep_ham}, 
-                              q, projectors, ham, comp_model, model_params)
+        # Old way:
+        # update_Hamiltonian_q( {"rep_tdse":rep_tdse, "rep_ham":rep_ham}, 
+        #                      q, projectors, ham, comp_model, model_params)
+
+        # New way
+        dyn_var.set_q(q)
+        update_Hamiltonian_variables( { "time_overlap_method":1, "ham_update_method":2, 
+                                        "ham_transform_method":0, "nac_update_method":0,
+                                        "hvib_update_method":0, "rep_tdse":rep_tdse, "rep_ham":rep_ham}, 
+                                         dyn_var, ham, ham, comp_model, model_params, 0 ) 
         
         #if rep_tdse==0: 
             
@@ -296,7 +306,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     plt.rc('figure.subplot', right=0.95)
     plt.rc('figure.subplot', bottom=0.13)
     plt.rc('figure.subplot', top=0.88)
-        
+
+
             
     #======== Now lets plot what we have computed ===========
     plt.figure(1, figsize=(36, 18)) # dpi=300, frameon=False)

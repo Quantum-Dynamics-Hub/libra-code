@@ -197,6 +197,9 @@ void export_dyn_variables_objects(){
       .def("allocate_bcsh", &dyn_variables::allocate_bcsh)
       .def("allocate_dish", &dyn_variables::allocate_dish)
 
+      .def("set_q", &dyn_variables::set_q)
+      .def("set_p", &dyn_variables::set_p)
+      .def("set_f", &dyn_variables::set_f)
       .def("get_ampl_adi", &dyn_variables::get_ampl_adi)
       .def("get_ampl_dia", &dyn_variables::get_ampl_dia)
       .def("get_dm_adi", &dyn_variables::get_dm_adi)

@@ -299,6 +299,10 @@ class dyn_variables{
   void set_parameters(bp::dict params);
 
 
+  void set_q(MATRIX& _q){ *q = _q; }
+  void set_p(MATRIX& _p){ *p = _p; }
+  void set_f(MATRIX& _f){ *f = _f; }
+
   CMATRIX get_ampl_adi(){ return *ampl_adi; }
   CMATRIX get_ampl_dia(){ return *ampl_dia; }
   CMATRIX get_dm_adi(int i){  return *dm_adi[i]; }

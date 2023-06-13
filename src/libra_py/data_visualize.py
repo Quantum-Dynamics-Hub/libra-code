@@ -131,7 +131,7 @@ def plot_map(ax, x_grid, y_grid, z_values, colormap="plasma", resolution=30j, sa
 
 def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest', fig_width=6.42, fig_height=2.14, num_subplots=1, \
                       titles=[""], title_size=10, xticks_size=8, yticks_size=8, colorbar_label='fs',
-                      savefig=0, figure_names=['plotted_map_nparray.png'] ):
+                      savefig=0, showfig=1, figure_names=['plotted_map_nparray.png'] ):
 
     """
     This is a function to plot a heat map using a 2d numpy array
@@ -144,26 +144,32 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         
         colormap ( string ): The type of coloring scheme, 
 
-            Options include: "plasma" (default), "Blues", "viridis", "binary", "hot", etc.
+            Options include: "plasma", "Blues", "viridis", "binary", "hot" [default] , etc.
         
         interpolation_scheme ( string ): Describes how to terpolate the presented data. 
-                                         Nearest for no interpolation
+                                         Nearest for no interpolation [ defaut: "nearest" ]
         
-        fig_width ( float ): width of the final figure. May contain multiple subplots 
+        fig_width ( float ): width of the final figure. May contain multiple subplots [ default: 6.42 ]
         
-        fig_height ( float ): height of the final figure. May contain multiple subplots         
+        fig_height ( float ): height of the final figure. May contain multiple subplots [ default: 2.14 ]
 
-        num_subplots ( int ): number of subplots to have in the total figure        
+        num_subplots ( int ): number of subplots to have in the total figure [ default: 1 ]
 
-        titles ( list of strings ): the title for each subplot     
+        titles ( list of strings ): the title for each subplot [ default: [""] ]
 
-        title_size ( int ): fontsize of the title
+        title_size ( int ): fontsize of the title [ default: 10 ]
         
-        xticks_size ( int ): fontsize of the title
+        xticks_size ( int ): fontsize of the title [ default: 8 ]
         
-        yticks_size ( int ): fontsize of the title
+        yticks_size ( int ): fontsize of the title [ default: 8 ]
         
-        colorbar_label ( string ): Name of the label of the colorbar
+        colorbar_label ( string ): Name of the label of the colorbar [ default: "fs" ]
+
+        savefig ( int ): flag telling whether to save figure or not; 0 - no, 1 - yes [ default: 0 ]
+
+        showfig ( int ): flat telling whether to show figure or not; 0 - no, 1 - yes [ default: 1 ]
+
+        figure_names ( list of strings ): names of the files for all subplots [ default: "plotted_map_nparray.png" ] 
 
     Returns:
 
@@ -195,7 +201,8 @@ def plot_map_nparray( plt, data, colormap='hot', interpolation_scheme='nearest',
         if savefig == 1:
             plt.savefig(figure_names[sub_plot])
 
-
+        if showfig == 1:
+            plt.show()
 
 
 def plot_nparrays( plt, xdata, ydata, fig_width=6.42, fig_height=2.14, num_subplots=1, colors=["black"], \
