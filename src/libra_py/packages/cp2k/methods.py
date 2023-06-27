@@ -757,16 +757,11 @@ def read_homo_index(filename: str):
 
         homo_index (integer): The HOMO index (the number of occupied orbitals).
     """
-    file = open(filename,'r')
-    lines = file.readlines()
-    file.close()
+    with open(filename, 'r') as f:
+        for line in f:
+            if 'occupied' in line.lower() and 'number' in line.lower():
+                return int(line.split()[-1])
 
-    for i in range(len(lines)):
-        if 'occupied' in lines[i].lower():
-            if 'number' in lines[i].lower():
-                homo_index = int(lines[i].split()[-1])
-
-    return homo_index
 
 
 def read_molog_file(filename: str):
