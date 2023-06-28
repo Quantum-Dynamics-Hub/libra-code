@@ -682,7 +682,8 @@ def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
 
         data_dim (integer): The data dimension of the 'raw' overlap matrices
 
-        ks_homo_index (integer): The KS HOMO index (which starts from 1) of the 'raw' matrices.
+        ks_homo_index (list/int): The KS HOMO indexes (which starts from 1) of the 'raw' matrices.
+        If it's a list, it should be in the format [homo_alpha, homo_beta]
 
     Returns:
 
@@ -691,14 +692,20 @@ def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
         new_ks_homo_index (integer): The new KS HOMO index (starts from 1)
     """
     num_states = int(data_dim/2)
-    if (ks_homo_index+num_unocc)>num_states or (num_occ+num_unocc)>num_states:
+    if type(ks_homo_index) == list:
+        homo_alpha, homo_beta = ks_homo_index
+    elif type(ks_homo_index) == int:
+        homo_alpha, homo_beta = ks_homo_index, ks_homo_index
+    if (homo_alpha + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
         print('Error: The number of states should not exceed the data dimension. Exiting now!')
         sys.exit(0)
-    occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
-    unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
-    occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
-    unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
+    # Alpha channel
+    occ_indicies_alp = range(homo_alpha - num_occ, homo_alpha)
+    unocc_indices_alp = range(homo_alpha, homo_alpha + num_unocc)
     new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+    # Beta channel
+    occ_indicies_bet = range(homo_beta - num_occ + num_states, homo_beta + num_states)
+    unocc_indices_bet = range(homo_beta + num_states, homo_beta + num_unocc + num_states)
     new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
     new_ks_homo_index = num_occ
     return new_active_space, new_ks_homo_index
@@ -1864,6 +1871,7 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
     return E_this_sd_sparse, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
+
 def run_step3_ks_nacs_libint(params):
     """
     This function runs the step3 for computing NACs for Kohn-Sham states. 
@@ -2096,8 +2104,6 @@ def orthonormalize_ks_overlaps(step, params):
     print('Done with step', step,'. Elapsed time:', time.time()-t2)
 
 
-
-
 def run_step3_sd_nacs_libint(params):
     """
     This function runs the step3 for computing NACs between SDs. 
@@ -2162,35 +2168,42 @@ def run_step3_sd_nacs_libint(params):
                       'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles', 'nac_algo': 0
                      }
+
+    # Check input, set output dirs
     comn.check_input(params, default_params, critical_params)
+    res_dir_1 = params['path_to_npz_files']
+    res_dir_2 = params['path_to_save_sd_Hvibs']
+
+    # CP2K parsing
     if params['es_software'].lower()=='cp2k':
         sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
-        params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
-    params['npz_file_ks_homo_index'] = params['homo_index']-params['lowest_orbital']+1
-    sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
-    params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
+        sample_npz_file = glob.glob(params['path_to_npz_files'] + '/*.npz')[0]
+        params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
+        if params['isUKS']:
+            params['homo_alpha_index'], params['homo_beta_index'] = CP2K_methods.read_homo_index(sample_logfile)
+            params['npz_file_ks_homo_alpha_index'] = params['homo_alpha_index'] - params['lowest_orbital'] + 1
+            params['npz_file_ks_homo_beta_index'] = params['homo_beta_index'] - params['lowest_orbital'] + 1
+        else: # nonUKS
+            params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
+            params['npz_file_ks_homo_index'] = params['homo_index'] - params['lowest_orbital'] + 1
+    
+    # Setting function vars
     data_dim = params['data_dim']
     start_time = params['start_time']
     finish_time = params['finish_time']
     dt = params['time_step'] * units.fs2au
-    res_dir_1 = params['path_to_npz_files']
-    res_dir_2 = params['path_to_save_sd_Hvibs']
     nac_algo = params['nac_algo']
+    nprocs = params['nprocs']
+
     try:
         os.system(F'mkdir {res_dir_2}')
     except:
         print(F'The directory {res_dir_2} already exists.')
 
-    
-    nprocs = params['nprocs']
-    #ks_homo_index = params['ks_homo_index']
-    #"orbital_indices":list( range(160,220) ), "homo_index":196,
     if params['is_many_body']:
         params['isnap'] = params['start_time']
         params['fsnap'] = params['finish_time']
 
-        #params['orbital_indices']
-        #ks_orbital_indicies = params['orbital_indices']
         # The KS HOMO index specified by the user
         ks_homo_index = params['homo_index']
 
@@ -2234,7 +2247,10 @@ def run_step3_sd_nacs_libint(params):
         num_unocc = max_band-ks_homo_index+1
 
         # The new KS active space and HOMO index
-        ks_active_space, ks_homo_index_1 = make_active_space(num_occ, num_unocc, params['data_dim'], params['npz_file_ks_homo_index'])
+        ks_active_space, ks_homo_index_1 = make_active_space(num_occ, 
+                                                             num_unocc, 
+                                                             params['data_dim'], 
+                                                             params['npz_file_ks_homo_index'])
         params['active_space'] = ks_active_space
 
         # The KS orbital indices
@@ -2255,8 +2271,17 @@ def run_step3_sd_nacs_libint(params):
         ks_orbital_indicies = range(min_band, max_band+1)
 
         # Create the new active space and generate the KS HOMO index in that active space
-        ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], params['num_unocc_states'], 
-                                                                     params['data_dim'], params['npz_file_ks_homo_index'])
+        if params['isUKS']:
+            alpha, beta = params['npz_file_ks_homo_alpha_index'], params['npz_file_ks_homo_beta_index']
+            ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], 
+                                                               params['num_unocc_states'], 
+                                                               params['data_dim'], 
+                                                               [alpha,beta])
+        else:
+            ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], 
+                                                               params['num_unocc_states'], 
+                                                               params['data_dim'], 
+                                                               [params['npz_file_ks_homo_index'], params['npz_file_ks_homo_index']])
         params['ks_homo_index'] = ks_homo_index
         params['active_space'] = ks_active_space
 
@@ -2271,11 +2296,10 @@ def run_step3_sd_nacs_libint(params):
                 if sd_tmp not in sd_unique_basis:
                     sd_unique_basis.append(sd_tmp)
 
-                # If unrestricted spin calculations is requested the 
+                # If unrestricted spin calculations is requested
                 # add the beta spin excitations as well
                 if params['isUKS']==1:
                     sd_tmp = [[occ_state, unocc_state], 'bet']
-                    #sd_tmp = [[state, ks_homo_index], 'bet']
                 if sd_tmp not in sd_unique_basis:
                     sd_unique_basis.append(sd_tmp)
 

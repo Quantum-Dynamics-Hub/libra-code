@@ -755,12 +755,20 @@ def read_homo_index(filename: str):
 
     Returns:
 
-        homo_index (integer): The HOMO index (the number of occupied orbitals).
+        homos (list): The HOMO indexes (the number of occupied orbitals) in the form of [alpha_homo, beta_homo]
+        or
+        homo (int) The HOMO index (in the case of spin-restricted calculations)
     """
+    homos = []
     with open(filename, 'r') as f:
         for line in f:
             if 'occupied' in line.lower() and 'number' in line.lower():
-                return int(line.split()[-1])
+                homos.append(int(line.split()[-1]))
+            if len(homos) >= 2:
+                break
+    if len(homos) == 1:
+        return homos[0]
+    return homos
 
 
 
