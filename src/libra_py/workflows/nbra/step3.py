@@ -668,7 +668,10 @@ def apply_orthonormalization_scipy(S_1, S_2, St):
 
 
 
-def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
+def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index, 
+                      isUKS=0, 
+                      num_occ_alpha=0, num_unocc_alpha=0, 
+                      num_occ_beta=0, num_unocc_beta=0):
     """
     This function makes an active space based on the number of occupied and 
     unoccupied orbitals and the initial KS HOMO index. **Note that the ks_homo_index
@@ -685,30 +688,56 @@ def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
         ks_homo_index (list/int): The KS HOMO indexes (which starts from 1) of the 'raw' matrices.
         If it's a list, it should be in the format [homo_alpha, homo_beta]
 
+        isUKS : request unrestricted spin calculation. If specified, instead of new_ks_homo_index
+        returns (new_ks_homo_alpha_index, new_ks_homo_beta_index). Default is 0.
+
     Returns:
 
         new_active_space (list): The new active space
 
         new_ks_homo_index (integer): The new KS HOMO index (starts from 1)
+
+        or
+
+        (new_ks_homo_alpha_index, new_ks_homo_beta_index): The new KS HOMOs for alpha and beta channels
+
     """
     num_states = int(data_dim/2)
+    if (isUKS and num_occ_alpha == 0) and (isUKS and num_occ_beta == 0):
+        raise('Please specify num_occ_alpha and num_occ_beta')
     if type(ks_homo_index) == list:
         homo_alpha, homo_beta = ks_homo_index
     elif type(ks_homo_index) == int:
         homo_alpha, homo_beta = ks_homo_index, ks_homo_index
-    if (homo_alpha + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
-        print('Error: The number of states should not exceed the data dimension. Exiting now!')
-        sys.exit(0)
-    # Alpha channel
-    occ_indicies_alp = range(homo_alpha - num_occ, homo_alpha)
-    unocc_indices_alp = range(homo_alpha, homo_alpha + num_unocc)
-    new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
-    # Beta channel
-    occ_indicies_bet = range(homo_beta - num_occ + num_states, homo_beta + num_states)
-    unocc_indices_bet = range(homo_beta + num_states, homo_beta + num_unocc + num_states)
-    new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
-    new_ks_homo_index = num_occ
-    return new_active_space, new_ks_homo_index
+    if not isUKS:
+        if (ks_homo_index+num_unocc)>num_states or (num_occ+num_unocc)>num_states:
+            print('Error: The number of states should not exceed the data dimension. Exiting now!')
+            sys.exit(0)
+        occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
+        unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
+        occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
+        unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
+        new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+        new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+        new_ks_homo_index = num_occ
+        return new_active_space, new_ks_homo_index
+    elif isUKS:
+        if (homo_alpha + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
+            print('Error: The number of states should not exceed the data dimension. Exiting now!')
+            sys.exit(0)
+        if not num_occ_alpha + num_unocc_alpha == num_occ_beta + num_unocc_beta:
+            raise('Number of orbitals in both channels should be the same!')
+        # Alpha channel
+        occ_indicies_alp = range(homo_alpha - num_occ_alpha, homo_alpha)
+        unocc_indices_alp = range(homo_alpha, homo_alpha + num_unocc_alpha)
+        new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+        # Beta channel
+        occ_indicies_bet = range(homo_beta - num_occ_beta + num_states, homo_beta + num_states)
+        unocc_indices_bet = range(homo_beta + num_states, homo_beta + num_unocc_beta + num_states)
+        new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+        new_ks_homo_alpha_index = num_occ_alpha 
+        new_ks_homo_beta_index = num_occ_beta
+        return new_active_space, new_ks_homo_alpha_index, new_ks_homo_beta_index
 
 
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
@@ -2180,7 +2209,7 @@ def run_step3_sd_nacs_libint(params):
         sample_npz_file = glob.glob(params['path_to_npz_files'] + '/*.npz')[0]
         params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
         if params['isUKS']:
-            params['homo_alpha_index'], params['homo_beta_index'] = CP2K_methods.read_homo_index(sample_logfile)
+            params['homo_alpha_index'], params['homo_beta_index'] = CP2K_methods.read_homo_index(sample_logfile, isUKS=True)
             params['npz_file_ks_homo_alpha_index'] = params['homo_alpha_index'] - params['lowest_orbital'] + 1
             params['npz_file_ks_homo_beta_index'] = params['homo_beta_index'] - params['lowest_orbital'] + 1
         else: # nonUKS
@@ -2243,8 +2272,8 @@ def run_step3_sd_nacs_libint(params):
         max_band = max(sd_tstates)
 
         # number of occupied and unoccupied KS states
-        num_occ = ks_homo_index-min_band+1
-        num_unocc = max_band-ks_homo_index+1
+        num_occ = ks_homo_index - min_band+1
+        num_unocc = max_band-ks_homo_index + 1
 
         # The new KS active space and HOMO index
         ks_active_space, ks_homo_index_1 = make_active_space(num_occ, 
@@ -2273,40 +2302,57 @@ def run_step3_sd_nacs_libint(params):
         # Create the new active space and generate the KS HOMO index in that active space
         if params['isUKS']:
             alpha, beta = params['npz_file_ks_homo_alpha_index'], params['npz_file_ks_homo_beta_index']
-            ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], 
-                                                               params['num_unocc_states'], 
-                                                               params['data_dim'], 
-                                                               [alpha,beta])
+            ks_active_space, ks_homo_index_alpha, ks_homo_index_beta = make_active_space(params['num_occ_states'], 
+                                                                       params['num_unocc_states'], 
+                                                                       params['data_dim'], 
+                                                                       [alpha,beta], 
+                                                                       isUKS=1, 
+                                                                       num_occ_alpha=params['num_occ_alpha'],
+                                                                       num_occ_beta=params['num_occ_beta'],
+                                                                       num_unocc_alpha=params['num_unocc_alpha'],
+                                                                       num_unocc_beta=params['num_unocc_beta'])
+            ks_homo_index = ks_homo_index_alpha
         else:
             ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], 
                                                                params['num_unocc_states'], 
                                                                params['data_dim'], 
                                                                [params['npz_file_ks_homo_index'], params['npz_file_ks_homo_index']])
-        params['ks_homo_index'] = ks_homo_index
+            params['ks_homo_index'] = ks_homo_index
         params['active_space'] = ks_active_space
 
         # Now, start buidling the unique SDs for both spin channels
-        min_band = ks_homo_index+1
-        max_band = ks_homo_index+params['num_unocc_states']
-        for occ_state in range(ks_homo_index-params['num_occ_states']+1, ks_homo_index+1):
-            for unocc_state in range(ks_homo_index+1,max_band+1):
+        if not params['isUKS']:
+            min_band = ks_homo_index + 1
+            max_band = ks_homo_index+params['num_unocc_states']
+            for occ_state in range(ks_homo_index-params['num_occ_states'] + 1, ks_homo_index + 1):
+                for unocc_state in range(ks_homo_index + 1,max_band + 1):
+                    # Keep only alpha channel, since beta is the same
+                    sd_tmp = [[occ_state, unocc_state], 'alp']
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
 
-                # Alpha spin excitations
-                sd_tmp = [[occ_state, unocc_state], 'alp']
-                if sd_tmp not in sd_unique_basis:
-                    sd_unique_basis.append(sd_tmp)
-
-                # If unrestricted spin calculations is requested
-                # add the beta spin excitations as well
-                if params['isUKS']==1:
+        elif params['isUKS']:
+            # Alpha channel
+            min_band_alpha = ks_homo_index_alpha + 1
+            max_band_alpha = ks_homo_index_alpha + params['num_unocc_alpha']
+            for occ_state in range(ks_homo_index_alpha - params['num_occ_alpha'] + 1, ks_homo_index_alpha + 1):
+                for unocc_state in range(min_band_alpha,max_band_alpha + 1):
+                    sd_tmp = [[occ_state, unocc_state], 'alp']
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
+            # Beta channel
+            min_band_beta = ks_homo_index_beta + 1
+            max_band_beta = ks_homo_index_beta+params['num_unocc_beta']
+            for occ_state in range(ks_homo_index_beta-params['num_occ_beta'] + 1, ks_homo_index_beta + 1):
+                for unocc_state in range(min_band_beta,max_band_beta + 1):
                     sd_tmp = [[occ_state, unocc_state], 'bet']
-                if sd_tmp not in sd_unique_basis:
-                    sd_unique_basis.append(sd_tmp)
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
 
         # I will keep this part for now as previously used and only commented the hole-only part
         ## Add hole-only SDs
-        min_band = ks_homo_index-params['num_occ_states']+1
-        max_band = ks_homo_index+1
+        #min_band = ks_homo_index-params['num_occ_states']+1
+        #max_band = ks_homo_index+1
         #for state in range(min_band, max_band):
         #    sd_tmp = [[state, ks_homo_index+1], 'alp']
         #    if sd_tmp not in sd_unique_basis:
@@ -2320,8 +2366,14 @@ def run_step3_sd_nacs_libint(params):
     params['sd_unique_basis'] = sd_unique_basis
 
     # Reindex the SD basis
-    sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
-                                                                 sd_unique_basis, sd_format=2 )
+    if params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index_alpha, ks_orbital_indicies,
+                                                                      sd_unique_basis, sd_format=1,
+                                                                      ks_beta_homo_index=ks_homo_index_beta,
+                                                                      n_orb_alpha=params['num_occ_alpha']+params['num_unocc_alpha'])
+    elif not params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
+                                                                      sd_unique_basis, sd_format=2 )
     # Some printings
     print('sd_unique_basis is:', sd_unique_basis)
     print('sd_states_reindexed is:', sd_states_reindexed)

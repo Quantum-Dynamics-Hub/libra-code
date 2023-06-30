@@ -746,12 +746,14 @@ def read_energies_from_cp2k_md_log_file( params ):
     return KS_energies, total_energy
 
 
-def read_homo_index(filename: str):
+def read_homo_index(filename: str, isUKS: bool = False):
     """
     This function extract the HOMO index from CP2K log file. This index starts from 1.
     Args:
 
         filename (string): The full path to the log file.
+
+        isUKS (bool): Return 2 indexes for alpha and beta.
 
     Returns:
 
@@ -766,9 +768,9 @@ def read_homo_index(filename: str):
                 homos.append(int(line.split()[-1]))
             if len(homos) >= 2:
                 break
-    if len(homos) == 1:
-        return homos[0]
-    return homos
+    if isUKS:
+        return homos
+    return homos[0]
 
 
 
