@@ -2331,7 +2331,6 @@ def run_step3_sd_nacs_libint(params):
                                                                params['num_unocc_states'], 
                                                                params['data_dim'], 
                                                                params['npz_file_ks_homo_index'])
-            #params['ks_homo_index'] = ks_homo_index
         params['active_space'] = ks_active_space
 
         # Now, start buidling the unique SDs for both spin channels
