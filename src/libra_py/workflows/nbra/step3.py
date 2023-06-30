@@ -668,7 +668,13 @@ def apply_orthonormalization_scipy(S_1, S_2, St):
 
 
 
-def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
+def make_active_space(num_occ, 
+                      num_unocc, 
+                      data_dim, 
+                      ks_homo_index, 
+                      isUKS=0, 
+                      num_occ_alpha=0, num_unocc_alpha=0, 
+                      num_occ_beta=0, num_unocc_beta=0):
     """
     This function makes an active space based on the number of occupied and 
     unoccupied orbitals and the initial KS HOMO index. **Note that the ks_homo_index
@@ -682,26 +688,62 @@ def make_active_space(num_occ, num_unocc, data_dim, ks_homo_index):
 
         data_dim (integer): The data dimension of the 'raw' overlap matrices
 
-        ks_homo_index (integer): The KS HOMO index (which starts from 1) of the 'raw' matrices.
+        ks_homo_index (list/int): The KS HOMO indexes (which starts from 1) of the 'raw' matrices.
+        If it's a list, it should be in the format [homo_alpha, homo_beta]
+
+        isUKS : request unrestricted spin calculation. If specified, instead of new_ks_homo_index
+        returns (new_ks_homo_alpha_index, new_ks_homo_beta_index). Default is 0.
+
+        num_occ_alpha/beta: Number of occupied orbitals from HOMO (alpha/beta channel). (isUKS=True)
+
+        num_unocc_alpha/beta: Number of unoccupied orbitals from LUMO (alpha/beta channel). (isUKS=True)
 
     Returns:
 
         new_active_space (list): The new active space
 
         new_ks_homo_index (integer): The new KS HOMO index (starts from 1)
+
+        or
+
+        (new_ks_homo_alpha_index, new_ks_homo_beta_index): The new KS HOMOs for alpha and beta channels
+
     """
     num_states = int(data_dim/2)
-    if (ks_homo_index+num_unocc)>num_states or (num_occ+num_unocc)>num_states:
-        print('Error: The number of states should not exceed the data dimension. Exiting now!')
-        sys.exit(0)
-    occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
-    unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
-    occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
-    unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
-    new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
-    new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
-    new_ks_homo_index = num_occ
-    return new_active_space, new_ks_homo_index
+    # Check the input
+    if (isUKS and num_occ_alpha == 0) and (isUKS and num_occ_beta == 0):
+        raise Exception('Please specify num_occ_alpha and num_occ_beta')
+    if type(ks_homo_index) == list: # isUKS = True
+        homo_alpha, homo_beta = ks_homo_index
+    elif type(ks_homo_index) == int: # isUKS = False
+        homo_alpha, homo_beta = ks_homo_index, ks_homo_index
+    if not isUKS:
+        if (ks_homo_index + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
+            raise Exception('Error: The number of states should not exceed the data dimension. Exiting now!')
+        occ_indicies_alp = range(ks_homo_index-num_occ, ks_homo_index)
+        unocc_indices_alp = range(ks_homo_index, ks_homo_index+num_unocc)
+        occ_indicies_bet = range(ks_homo_index-num_occ+num_states, ks_homo_index+num_states)
+        unocc_indices_bet = range(ks_homo_index+num_states, ks_homo_index+num_unocc+num_states)
+        new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+        new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+        new_ks_homo_index = num_occ
+        return new_active_space, new_ks_homo_index
+    elif isUKS:
+        if (homo_alpha + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
+            raise Exception('Error: The number of states should not exceed the data dimension. Exiting now!')
+        if not num_occ_alpha + num_unocc_alpha == num_occ_beta + num_unocc_beta:
+            raise Exception('Number of orbitals in both channels should be the same!')
+        # Alpha channel
+        occ_indicies_alp = range(homo_alpha - num_occ_alpha, homo_alpha)
+        unocc_indices_alp = range(homo_alpha, homo_alpha + num_unocc_alpha)
+        new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+        # Beta channel
+        occ_indicies_bet = range(homo_beta - num_occ_beta + num_states, homo_beta + num_states)
+        unocc_indices_bet = range(homo_beta + num_states, homo_beta + num_unocc_beta + num_states)
+        new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
+        new_ks_homo_alpha_index = num_occ_alpha 
+        new_ks_homo_beta_index = num_occ_beta
+        return new_active_space, new_ks_homo_alpha_index, new_ks_homo_beta_index
 
 
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
@@ -1864,6 +1906,7 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
     return E_this_sd_sparse, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
 
+
 def run_step3_ks_nacs_libint(params):
     """
     This function runs the step3 for computing NACs for Kohn-Sham states. 
@@ -2096,8 +2139,6 @@ def orthonormalize_ks_overlaps(step, params):
     print('Done with step', step,'. Elapsed time:', time.time()-t2)
 
 
-
-
 def run_step3_sd_nacs_libint(params):
     """
     This function runs the step3 for computing NACs between SDs. 
@@ -2134,8 +2175,10 @@ def run_step3_sd_nacs_libint(params):
             * **params['tolerance']** (float): a value to select SDs that the square value of their CI is more than tolerance
             * **params['number_of_states']** (integer): the number of TD-DFT excited states to be considered
             * **params['homo_index']** (integer): the HOMO index specified by user (starts from 1)
-            * **params['num_occ_states']** (integer): the number of occupied states to be considered for single-particle basis.
-            * **params['num_unocc_states']** (integer): the number of unoccupied states to be considered for single-particle basis.
+            * **params['num_occ_states']** (integer): the number of occupied states to be considered for single-particle basis. (isUKS=False)
+            * **params['num_unocc_states']** (integer): the number of unoccupied states to be considered for single-particle basis. (isUKS=False)
+            * **params['num_occ_alpha']** (integer): the number of occupied states to be considered for single-particle basis. (isUKS=True)
+            * **params['num_unocc_beta']** (integer): the number of unoccupied states to be considered for single-particle basis. (isUKS=True)
             * **params['verbosity']** (integer): a value for printing the TD-DFT data
             * **params['do_state_reordering']** (integer): the value for performing the state-reordering
                 the vlaues it takes are:
@@ -2151,6 +2194,7 @@ def run_step3_sd_nacs_libint(params):
 
         None    
     """
+
     critical_params = ['lowest_orbital','highest_orbital']
     default_params = {'nprocs':2, 'path_to_npz_files': os.getcwd()+'/res',
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
@@ -2159,38 +2203,50 @@ def run_step3_sd_nacs_libint(params):
                       'sorting_type': 'energy', 'apply_phase_correction': False,
                       'apply_orthonormalization': False, 'do_state_reordering': 0,
                       'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
+                      'num_occ_alpha': 1, 'num_unocc_alpha': 1,
+                      'num_occ_beta': 1, 'num_unocc_beta': 1,
                       'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles', 'nac_algo': 0
                      }
+
+    if params['is_many_body'] and params['isUKS']:
+        raise Exception('Unrestricted-spin calculations are not supported for many-body basis yet!') #TODO
+
+    # Check input, set output dirs
     comn.check_input(params, default_params, critical_params)
+    res_dir_1 = params['path_to_npz_files']
+    res_dir_2 = params['path_to_save_sd_Hvibs']
+
+    # CP2K parsing
     if params['es_software'].lower()=='cp2k':
         sample_logfile = glob.glob(params['logfile_directory']+'/*.log')[0]
-        params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
-    params['npz_file_ks_homo_index'] = params['homo_index']-params['lowest_orbital']+1
-    sample_npz_file = glob.glob(params['path_to_npz_files']+'/*.npz')[0]
-    params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
+        sample_npz_file = glob.glob(params['path_to_npz_files'] + '/*.npz')[0]
+        params['data_dim'] = int(sp.load_npz(sample_npz_file).shape[0])
+        if params['isUKS']:
+            params['homo_alpha_index'], params['homo_beta_index'] = CP2K_methods.read_homo_index(sample_logfile, isUKS=True)
+            params['npz_file_ks_homo_alpha_index'] = params['homo_alpha_index'] - params['lowest_orbital'] + 1
+            params['npz_file_ks_homo_beta_index'] = params['homo_beta_index'] - params['lowest_orbital'] + 1
+        else: # nonUKS
+            params['homo_index'] = CP2K_methods.read_homo_index(sample_logfile)
+            params['npz_file_ks_homo_index'] = params['homo_index'] - params['lowest_orbital'] + 1
+    
+    # Setting function vars
     data_dim = params['data_dim']
     start_time = params['start_time']
     finish_time = params['finish_time']
     dt = params['time_step'] * units.fs2au
-    res_dir_1 = params['path_to_npz_files']
-    res_dir_2 = params['path_to_save_sd_Hvibs']
     nac_algo = params['nac_algo']
+    nprocs = params['nprocs']
+
     try:
         os.system(F'mkdir {res_dir_2}')
     except:
         print(F'The directory {res_dir_2} already exists.')
 
-    
-    nprocs = params['nprocs']
-    #ks_homo_index = params['ks_homo_index']
-    #"orbital_indices":list( range(160,220) ), "homo_index":196,
     if params['is_many_body']:
         params['isnap'] = params['start_time']
         params['fsnap'] = params['finish_time']
 
-        #params['orbital_indices']
-        #ks_orbital_indicies = params['orbital_indices']
         # The KS HOMO index specified by the user
         ks_homo_index = params['homo_index']
 
@@ -2230,11 +2286,14 @@ def run_step3_sd_nacs_libint(params):
         max_band = max(sd_tstates)
 
         # number of occupied and unoccupied KS states
-        num_occ = ks_homo_index-min_band+1
-        num_unocc = max_band-ks_homo_index+1
+        num_occ = ks_homo_index - min_band+1
+        num_unocc = max_band-ks_homo_index + 1
 
         # The new KS active space and HOMO index
-        ks_active_space, ks_homo_index_1 = make_active_space(num_occ, num_unocc, params['data_dim'], params['npz_file_ks_homo_index'])
+        ks_active_space, ks_homo_index_1 = make_active_space(num_occ, 
+                                                             num_unocc, 
+                                                             params['data_dim'], 
+                                                             params['npz_file_ks_homo_index'])
         params['active_space'] = ks_active_space
 
         # The KS orbital indices
@@ -2255,34 +2314,58 @@ def run_step3_sd_nacs_libint(params):
         ks_orbital_indicies = range(min_band, max_band+1)
 
         # Create the new active space and generate the KS HOMO index in that active space
-        ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], params['num_unocc_states'], 
-                                                                     params['data_dim'], params['npz_file_ks_homo_index'])
-        params['ks_homo_index'] = ks_homo_index
+        if params['isUKS']:
+            alpha, beta = params['npz_file_ks_homo_alpha_index'], params['npz_file_ks_homo_beta_index']
+            ks_active_space, ks_homo_index_alpha, ks_homo_index_beta = make_active_space(params['num_occ_states'], 
+                                                                       params['num_unocc_states'], 
+                                                                       params['data_dim'], 
+                                                                       [alpha,beta], 
+                                                                       isUKS=1, 
+                                                                       num_occ_alpha=params['num_occ_alpha'],
+                                                                       num_occ_beta=params['num_occ_beta'],
+                                                                       num_unocc_alpha=params['num_unocc_alpha'],
+                                                                       num_unocc_beta=params['num_unocc_beta'])
+            ks_homo_index = ks_homo_index_alpha
+        else:
+            ks_active_space, ks_homo_index = make_active_space(params['num_occ_states'], 
+                                                               params['num_unocc_states'], 
+                                                               params['data_dim'], 
+                                                               params['npz_file_ks_homo_index'])
         params['active_space'] = ks_active_space
 
         # Now, start buidling the unique SDs for both spin channels
-        min_band = ks_homo_index+1
-        max_band = ks_homo_index+params['num_unocc_states']
-        for occ_state in range(ks_homo_index-params['num_occ_states']+1, ks_homo_index+1):
-            for unocc_state in range(ks_homo_index+1,max_band+1):
+        if not params['isUKS']:
+            min_band = ks_homo_index + 1
+            max_band = ks_homo_index+params['num_unocc_states']
+            for occ_state in range(ks_homo_index-params['num_occ_states'] + 1, ks_homo_index + 1):
+                for unocc_state in range(ks_homo_index + 1,max_band + 1):
+                    # Keep only alpha channel, since beta is the same
+                    sd_tmp = [[occ_state, unocc_state], 'alp']
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
 
-                # Alpha spin excitations
-                sd_tmp = [[occ_state, unocc_state], 'alp']
-                if sd_tmp not in sd_unique_basis:
-                    sd_unique_basis.append(sd_tmp)
-
-                # If unrestricted spin calculations is requested the 
-                # add the beta spin excitations as well
-                if params['isUKS']==1:
+        elif params['isUKS']:
+            # Alpha channel
+            min_band_alpha = ks_homo_index_alpha + 1
+            max_band_alpha = ks_homo_index_alpha + params['num_unocc_alpha']
+            for occ_state in range(ks_homo_index_alpha - params['num_occ_alpha'] + 1, ks_homo_index_alpha + 1):
+                for unocc_state in range(min_band_alpha,max_band_alpha + 1):
+                    sd_tmp = [[occ_state, unocc_state], 'alp']
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
+            # Beta channel
+            min_band_beta = ks_homo_index_beta + 1
+            max_band_beta = ks_homo_index_beta+params['num_unocc_beta']
+            for occ_state in range(ks_homo_index_beta-params['num_occ_beta'] + 1, ks_homo_index_beta + 1):
+                for unocc_state in range(min_band_beta,max_band_beta + 1):
                     sd_tmp = [[occ_state, unocc_state], 'bet']
-                    #sd_tmp = [[state, ks_homo_index], 'bet']
-                if sd_tmp not in sd_unique_basis:
-                    sd_unique_basis.append(sd_tmp)
+                    if sd_tmp not in sd_unique_basis:
+                        sd_unique_basis.append(sd_tmp)
 
         # I will keep this part for now as previously used and only commented the hole-only part
         ## Add hole-only SDs
-        min_band = ks_homo_index-params['num_occ_states']+1
-        max_band = ks_homo_index+1
+        #min_band = ks_homo_index-params['num_occ_states']+1
+        #max_band = ks_homo_index+1
         #for state in range(min_band, max_band):
         #    sd_tmp = [[state, ks_homo_index+1], 'alp']
         #    if sd_tmp not in sd_unique_basis:
@@ -2296,8 +2379,13 @@ def run_step3_sd_nacs_libint(params):
     params['sd_unique_basis'] = sd_unique_basis
 
     # Reindex the SD basis
-    sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
-                                                                 sd_unique_basis, sd_format=2 )
+    if params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index_alpha, ks_orbital_indicies,
+                                                                      sd_unique_basis, sd_format=1,
+                                                                      ks_beta_homo_index=ks_homo_index_beta)
+    elif not params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
+                                                                      sd_unique_basis, sd_format=2 )
     # Some printings
     print('sd_unique_basis is:', sd_unique_basis)
     print('sd_states_reindexed is:', sd_states_reindexed)

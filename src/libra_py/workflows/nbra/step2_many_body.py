@@ -392,7 +392,7 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 
 
-def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2 ):
+def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2, ks_beta_homo_index=0):
     """
     ks_orbital_homo_index: Index of the homo ks orbital, from 1
     ks_orbital_indicies: Range of the considered ks orbtials. Ex) [8,9,10,11], where 9 is homo orbtial index (from 1)
@@ -429,15 +429,21 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     # reindex ks orbs according to the matrix size
     n_alp_ks_orbs = len(ks_orbital_indicies)
     alp_homo_matrix_index = 0
-    for i in range( n_alp_ks_orbs ):
+    for i in range(n_alp_ks_orbs):
         if ks_orbital_indicies[i] == ks_orbital_homo_index:
             alp_homo_matrix_index = i
+    if sd_format == 1: # isUKS=True
+        n_beta_ks_orbs = len(ks_orbital_indicies)
+        beta_homo_matrix_index = 0
+        for i in range(n_beta_ks_orbs):
+            if ks_orbital_indicies[i] == ks_beta_homo_index:
+                beta_homo_matrix_index = i
 
     #print("alp_homo_matrix_index",alp_homo_matrix_index)
 
     ks_orbs_new_index = []
     for i in range( n_alp_ks_orbs ):
-        ks_orbs_new_index.append( i+1 )
+        ks_orbs_new_index.append(i + 1)
 
     # Form excited state SDs
     excitations = []
@@ -452,8 +458,8 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
                 initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
                 final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
             elif sd_basis_states[j][1] == "bet":
-                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
-                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_orbital_homo_index + alp_homo_matrix_index + n_alp_ks_orbs + 1
+                initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_beta_homo_index + beta_homo_matrix_index  + 1
+                final_ks_orb   = int( sd_basis_states[j][0][1] ) - ks_beta_homo_index + beta_homo_matrix_index  + 1
 
         elif sd_format == 2:  
             initial_ks_orb = int( sd_basis_states[j][0][0] ) - ks_orbital_homo_index + alp_homo_matrix_index + 1
@@ -471,11 +477,15 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     # Form ground-state SD first
     sd_basis = [ [] ]
     if sd_format == 1:
-        for i in range( 1, 2*len( ks_orbital_indicies ) ):
+        for i in range( 1, len( ks_orbital_indicies ) ):
             if i < alp_homo_matrix_index + 2:
-                sd_basis[0].append( i )
-            if i > n_alp_ks_orbs and i < n_alp_ks_orbs + alp_homo_matrix_index + 2:
-                sd_basis[0].append( -i )
+                sd_basis[0].append(  i )
+            if i < beta_homo_matrix_index + 2:
+                sd_basis[0].append(  -i )
+        #for i in range( 1, num_occ_alpha ):
+        #    sd_basis[0].append( i )
+        #for i in range( 1, num_occ_beta ):
+        #    sd_basis[0].append( -i )
 
     elif sd_format == 2:
         for i in range( 1, len( ks_orbital_indicies ) ):
@@ -493,7 +503,6 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
             else:
                 sd_excitation.append(sd_state)
         sd_basis.append( sd_excitation )
-    #print ( sd_basis )
     
     return sd_basis
 

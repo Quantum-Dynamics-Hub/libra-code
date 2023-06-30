@@ -746,27 +746,32 @@ def read_energies_from_cp2k_md_log_file( params ):
     return KS_energies, total_energy
 
 
-def read_homo_index(filename: str):
+def read_homo_index(filename: str, isUKS: bool = False):
     """
     This function extract the HOMO index from CP2K log file. This index starts from 1.
     Args:
 
         filename (string): The full path to the log file.
 
+        isUKS (bool): Return 2 indexes for alpha and beta.
+
     Returns:
 
-        homo_index (integer): The HOMO index (the number of occupied orbitals).
+        homos (list): The HOMO indexes (the number of occupied orbitals) in the form of [alpha_homo, beta_homo]
+        or
+        homo (int) The HOMO index (in the case of spin-restricted calculations)
     """
-    file = open(filename,'r')
-    lines = file.readlines()
-    file.close()
+    homos = []
+    with open(filename, 'r') as f:
+        for line in f:
+            if 'occupied' in line.lower() and 'number' in line.lower():
+                homos.append(int(line.split()[-1]))
+            if len(homos) >= 2:
+                break
+    if isUKS:
+        return homos
+    return homos[0]
 
-    for i in range(len(lines)):
-        if 'occupied' in lines[i].lower():
-            if 'number' in lines[i].lower():
-                homo_index = int(lines[i].split()[-1])
-
-    return homo_index
 
 
 def read_molog_file(filename: str):

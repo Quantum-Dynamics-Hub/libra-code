@@ -465,6 +465,8 @@ def run_cp2k_libint_step2(params):
             molden_filename = F'Diag_{step}-libra-1_0.molden'
         else:
             CP2K_methods.CP2K_input_static( params['cp2k_diag_input_template'], 'Diag_libra', params['trajectory_xyz_filename'], step )
+            if params["restart_file"]:
+                os.system(f'cp {params["restart_file"]} ./Diag_libra-{step}-RESTART.wfn')
             os.system(F'{mpi_executable} -n {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
             molden_filename = F'Diag_libra-{step}-1_0.molden'
         print('Done with step', step,'Elapsed time:',time.time()-t1)
