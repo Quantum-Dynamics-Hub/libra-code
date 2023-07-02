@@ -23,7 +23,7 @@ import numpy as np
 from liblibra_core import *
 import util.libutil as comn
 
-def initialize(_params):
+def gbfs(_params):
     """Places the basis functions on all surfaces according to the `init_placement' parameter and
        initializes their qpas MATRIX objects.
 
@@ -311,6 +311,62 @@ def gaussian(_params):
             surf_ids.append(n)
 
     return ntraj, qvals, pvals, avals, svals, surf_ids
+
+
+def wfc_centers(_params):
+    """Returns the position, momentum, width and phase parameters of the 
+    initial multidimensional Gaussian wavepacket
+
+    Args:
+        _params (dict): Dictionary containing simulation parameters.
+
+          * **_params[`wfc_q0`]** (list of floats) : list of coordinates (length *ndof*) for the initial
+              wavefunction position [ default: [0.0] ]
+
+          * **_params[`wfc_p0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction momenta [ default: [0.0] ]
+
+          * **_params[`wfc_a0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction widths [ default: [1.0] ]
+
+          * **_params[`wfc_s0`]** (list of floats) : list of values (length *ndof*) for the initial
+              wavefunction phase [ default: [0.0] ]
+
+    Returns:
+        tuple: (Q0, P0, A0, S0): where:
+
+        Q0 (MATRIX(ndof, ntraj) ): coordinates of the initial wavepacket
+        P0 (MATRIX(ndof, ntraj) ): momenta of the initial wavepacket
+        A0 (MATRIX(ndof, ntraj) ): widths of the initial wavepacket
+        S0 (MATRIX(ndof, ntraj) ): total phases of the initial wavepacket
+    """
+
+    params = dict(_params)
+
+    critical_params = []
+    default_params = { "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0]     }
+    comn.check_input(params, default_params, critical_params)
+
+    ndof = len(params["wfc_q0"])
+
+    wfc_q0 = params["wfc_q0"]
+    wfc_p0 = params["wfc_p0"]
+    wfc_a0 = params["wfc_a0"]
+    wfc_s0 = params["wfc_s0"]
+    
+    Q0 = MATRIX(ndof,1);
+    P0 = MATRIX(ndof,1);
+    A0 = MATRIX(ndof,1);
+    S0 = MATRIX(ndof,1);
+
+    for i in range(ndof):
+      Q0.set(i, 0, params["wfc_q0"][i])
+      P0.set(i, 0, params["wfc_p0"][i])
+      A0.set(i, 0, params["wfc_a0"][i])
+      S0.set(i, 0, params["wfc_s0"][i])
+
+    return Q0, P0, A0, S0
+
 
 
 def coeffs(aQ, aP, aA, aS, astate, bQ, bP, bA, bS, bstate):

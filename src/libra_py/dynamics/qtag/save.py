@@ -171,6 +171,9 @@ def save_qtag_hdf5_3D(saver,step,qvals,pvals,avals,svals,txt_type=0):
     #Trajectory positions
     saver.save_matrix(t, "q", qvals.T())
 
+    #print("In save_qtag_hdf5_3D")
+    #print(type(qvals), qvals.num_of_cols, qvals.num_of_rows )
+
     #Trajectory momenta
     saver.save_matrix(t, "p", pvals.T())
 

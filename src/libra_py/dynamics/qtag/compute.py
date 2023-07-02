@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2022 Matthew Dutra and Alexey V. Akimov                                                   
+#* Copyright (C) 2022-2023 Matthew Dutra and Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -437,7 +437,7 @@ def propagate_basis(_q, _p, _alp, _s, _states, coeff, dyn_params, surf_pops):
             push_submatrix(a_new, a_new_on_surf, x_dofs, traj_on_surf)
             push_submatrix(s_new, s_new_on_surf, x_dofs, traj_on_surf)
 
-             # Save it for later - for the "dependent" trajectories
+            # Save it for later - for the "dependent" trajectories
             if nindex == 0:
                 q_new_on_surf_ref = MATRIX(q_new_on_surf)
                 p_new_on_surf_ref = MATRIX(p_new_on_surf)
@@ -535,61 +535,70 @@ def qtag_energy(coeff, H):
 
     return e
 
-def wf_calc_nD(dyn_params, plt_params, prefix):
+
+def wf_calc_nD(_params):
     """Computes the wavefunction on an nD-dimensional grid, as specified by the parameters obtained
     from the dyn_params and plt_params dictionaries.
 
     Args:
-        dyn_params (dict): Dictionary containing simulation parameters.
+        _params (dict): Dictionary containing control parameters.
 
-          * **dyn_params[`nsteps`]** (int) : the number of simulation steps
+          * **_params[`states`]** (list of ints) : list of all states in data
 
-          * **dyn_params[`states`]** (int) : the list of states
-
-          * **dyn_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
+          * **_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
               placed on each surface. For Gaussian, the list has only one element, specifying the
               number of basis functions per surface. Note that the total number of basis functions
               will then be *nstates*-by-*prod(grid_dims)*
 
-          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
-          
-        plt_params (dict): Dictionary containing plotting parameters.
-        
-          * **plt_params[`xmin`]** (list of floats) : list of minima in the independent coordinate space
+          * **_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+                  
+          * **_params[`xmin`]** (list of floats) : list of minima in the independent coordinate space
               at which the wavefunction should be calculated
               
-          * **plt_params[`xmax`]** (list of floats) : list of maxima in the independent coordinate space
+          * **_params[`xmax`]** (list of floats) : list of maxima in the independent coordinate space
               at which the wavefunction should be calculated
               
-          * **plt_params[`npoints`]** (list of ints) : the number of points used to compute the wavefunction
+          * **_params[`npoints`]** (list of ints) : the number of points used to compute the wavefunction
               along each coordinate (i.e. the calculation grid)
               
-          * **plt_params[`snaps`]** (list of ints) : the snapshots at which to calculate the wavefunction
+          * **_params[`snaps`]** (list of ints) : the snapshots at which to calculate the wavefunction
 
         prefix (str): The name of the directory containing the q, p, a, and s trajectory data.
     """
 
+
+    params = dict(_params)
+
+    critical_params = [ "grid_dims" ]
+    default_params = { "states":[0], "ndof":1, "xmin":[-4.0], "xmax":[4.0],
+                       "npoints":[100], "snaps":[0], "prefix":"out"
+                     }
+    comn.check_input(params, default_params, critical_params)
+
+
     #Collect simulation parameters from dyn_params dict...
-    nsteps = dyn_params["nsteps"]
-    states = dyn_params["states"]
-    grid_dims = dyn_params["grid_dims"]
-    ndof = dyn_params["ndof"]
+    #nsteps = params["nsteps"]
+    states = params["states"]
+    grid_dims = params["grid_dims"]
+    ndof = params["ndof"]
+    prefix = params["prefix"]
 
     nstates = len(states)
-    xmin = plt_params["xmin"]
-    xmax = plt_params["xmax"]
-    npoints = plt_params["npoints"]
+    xmin = params["xmin"]
+    xmax = params["xmax"]
+    npoints = params["npoints"]
 
     #This is standard Libra convention for wf files...
     data_type1="wfcr"; data_type2="dens"; data_type3="rep_0"
 
     #Determine ntraj from dyn_params grid_dims variable...
-    ntraj = 1
+    ntraj = 1   # this is the number of trajectories per surface
     for i in range(len(grid_dims)):
         ntraj *= grid_dims[i]
+        #print(F"i = {i},  grid_dims[{i}] = {grid_dims[i]}, ntraj = {ntraj}")
 
     #Define which timesteps to calculate the wf for...
-    lines = plt_params['snaps']
+    snaps = params['snaps']
 
     #Open directory with coeffs, q, p, a, s data...
     qfile = open(prefix+"/q.txt")
@@ -604,11 +613,15 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
     #Create the mesh to calculate the wf on...
     grid_bounds = np.mgrid[tuple(slice(xmin[dof],xmax[dof],complex(0,npoints[dof])) for dof in range(ndof))]
 
+    # How many grid points in total. npoints[0], npoints[1], ... are the numbers of the points
+    # along dimensions 0, 1, etc.
     elems = 1
     for i in npoints:
         elems *= i
 
     b = grid_bounds.flatten()
+
+    # Coordinates of all the grid points
     wfpts = []
     for i in range(elems):
         index = i
@@ -620,42 +633,54 @@ def wf_calc_nD(dyn_params, plt_params, prefix):
         wfpts.append(coords)
 
     #Read the trajectory data and compute the wf on the mesh...
-    iline=0
-    for line in range(nsteps):
-        qdata = qfile.readline().strip().split()
-        pdata = pfile.readline().strip().split()
-        adata = afile.readline().strip().split()
-        coeffs = cfile.readline().strip().split()
+    Qdata = qfile.readlines()
+    Pdata = pfile.readlines()
+    Adata = afile.readlines()
+    Coeff = cfile.readlines()
 
-        if iline in lines:
-            outfile = open(prefix+"/wfc/"+data_type1+"_snap_"+str(line)+"_"+data_type2+"_"+data_type3,"w")
+    for isnap in snaps:
+        qdata = Qdata[isnap].strip().split()
+        pdata = Pdata[isnap].strip().split()
+        adata = Adata[isnap].strip().split()
+        coeffs = Coeff[isnap].strip().split()
 
-            for pt in wfpts:
-                for nn in pt:
-                    outfile.write(str(nn)+" ")
-                idata = 0
-                for state in range(nstates):
-                    wf = 0+0j
-                    for j in range(ntraj):
-                        coeff = complex(float(coeffs[2*(j+state*ntraj)]),
-                                        float(coeffs[2*(j+state*ntraj)+1]))
+        #print(len(coeffs), F"nstates = {nstates}, ntraj = {ntraj}  isnap = {isnap}")
+        outfile = open(F"{prefix}/wfc/{data_type1}_snap_{isnap}_{data_type2}_{data_type3}","w")
 
-                        gaus = 1.0+0.0j
-                        for dof in range(ndof):
-                            qj = float(qdata[idata])
-                            pj = float(pdata[idata])
-                            aj = float(adata[idata])
-                            idata +=1
+        for pt in wfpts:
+            for nn in pt:
+                outfile.write(str(nn)+" ")
 
-                            val = pt[dof]
-                            gaus*=(aj/np.pi)**0.25*np.exp(-aj/2.0* \
-                                (val-qj)**2+1j*(pj*(val-qj)))
+            idata = 0
+            for state in range(nstates):
+                wf = 0+0j
+                for j in range(ntraj):
+                    re_indx = 2 * ntraj * state + 2 * j + 0
+                    im_indx = 2 * ntraj * state + 2 * j + 1
 
-                        wf+=coeff*gaus
-                    outfile.write(str(abs(wf)**2)+" ")
-                    #outfile.write(str(np.imag(wf))+" ")
-                outfile.write("\n")
-        iline+=1
+                    #print(F" state = {state}, traj = {j}, re_indx = {re_indx}, im_indx = {im_indx}")
+
+                    re = float(coeffs[re_indx])
+                    im = float(coeffs[im_indx])
+
+                    coeff = complex(re, im)
+             
+                    #coeff = complex(float(coeffs[2*(state*ntraj+j) ]), float(coeffs[2*(state*ntraj+j)+1])) 
+
+                    gaus = 1.0+0.0j
+                    for dof in range(ndof):
+                        qj = float(qdata[idata])
+                        pj = float(pdata[idata])
+                        aj = float(adata[idata])
+                        idata +=1
+
+                        q = pt[dof]
+                        gaus*=(aj/np.pi)**0.25 * np.exp(-0.5*aj*(q-qj)**2 + 1j*pj*(q-qj)  )
+
+                    wf += coeff*gaus
+                outfile.write(str(abs(wf)**2)+" ")
+            outfile.write("\n")
+
 
 def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model, _model_params):
     """
@@ -797,16 +822,6 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     progress_frequency = dyn_params["progress_frequency"]
     prefix = dyn_params["prefix"]
 
-    #if active_state not in states:
-    #    sys.exit("ERROR: Initial state ('active_state') must be in state list ('states') in dyn_params!")
-    
-    #Initialize the basis parameters {q,p,a,s}...
-    #ntraj, Q, P, A, S, active_states = qtag_init.initialize(dyn_params)    
-    #print("Initialized "+str(ntraj)+" trajectories across "+str(nstates)+" states")
-
-    #Create initial projection vector b...
-    #bt, c0 = qtag_init.coeffs(dyn_params, qpas, active_state)
-
     #Initialize savers...
     properties_to_save = dyn_params['properties_to_save']
     _savers = save.init_qtag_savers(dyn_params, _model_params, nsteps, ntraj, ndof, nstates)
@@ -834,10 +849,6 @@ def run_qtag(_q, _p, _alp, _s, _states, _coeff, _iM, _dyn_params, _compute_model
     for step in range(nsteps):
         # Built-in function for propagation in the non-othogonal basis
         propagate_electronic_qtag(0.5*dt, C, hmat, ovlp)
-
-
-        #Compute the new coefficient vector c_new...
-        #ct_new = qtag_calc.basis_diag(ntraj, dt, hmat, ovlp, bt)
         
         #Calculate the total energy and surface populations...
         etot = qtag_energy(C, hmat)

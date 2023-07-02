@@ -20,36 +20,65 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
+from liblibra_core import *
+import util.libutil as comn
+
 from libra_py import data_read
 
-def plot_wf_1D(plt_params, data, *ref_data):
-    """
-        plt_params (dict): Dictionary containing plot control parameters.
 
-          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+def plot_wf_1D(_plt_params, data):
+    """Plots the 1D wavefunction
 
-          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+    Args:
+        _plt_params (dict): Dictionary containing plot control parameters.
 
-          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+          * **_plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted 
+              [default : [0] ] 
+
+          * **_plt_params[`xmin`]** ( list: [float] ) : the domain minimum for the plot [ default: [-4.0] ]
+ 
+          * **_plt_params[`xmax`]** ( list: [float] ) : the domain maximum for the plot [ default: [4.0] ]
+ 
+          * **_plt_params[`snaps`]** (list of ints) : for which timesteps to plot the wavefunction [ default: [0] ]
+
+          * **_plt_params[`size`]** ( list: [int, int] ): size of the plot [ default: [16,16] ]
+
+          * **_plt_params[`xlabel`]** ( string ): x label of the plot [ default: "Position (a.u.)"]
+
+          * **_plt_params[`ylabel`]** ( string ): y label of the plot [ default: "Density"]
+
+          * **_plt_params[`1Dcolors`]** ( list of strings ): color names for each surface, should be of the same shape as
+            `which_states` [ default: ["Black"] ]
+
+          * **_plt_params[`legend_loc`]** ( [float, float]): position of the legend [ default: [0.6, 0.8] ]
+
+          * **_plt_params[`legend_size`]** ( int ) : font size of the legend [ default: 12 ] 
 
         data (list of lists) : the data to be plotted, extracted from plots.wf_plot()
     """
 
-    fig = plt.figure(figsize=plt_params['size'])
-    nsnaps = len(data)
-    states = sorted(plt_params['states'])
-    which_states = plt_params['which_states']
+    plt_params = dict(_plt_params)
+    critical_params = []
+    default_params = {'which_states':[0], 'xmin':[-4.0],'xmax':[4.0],  'snaps':[0],
+                      'size':[16, 16], 'xlabel':'Position (a.u.)', 'ylabel':'Density',
+                      '1Dcolors':['Black'],'legend_loc':[0.6,0.8], 'legend_size':12
+                     }
+    comn.check_input(plt_params, default_params, critical_params)
+
+    fig = plt.figure(figsize=(plt_params['size'][0], plt_params['size'][1]))
+    snaps = plt_params["snaps"]
+    nsnaps = len(snaps)
     colors = plt_params['1Dcolors']
     m = int(np.ceil(nsnaps/3.0))
     ndof = 1
 
-    xlimits = [plt_params['xmin'][0],plt_params['xmax'][0]]
-
+    which_states = plt_params['which_states']
     labels = []
     for state in which_states:
-        labels.append("State "+str(state))
+        labels.append(F"State {state}")
 
-    for i in range(nsnaps):
+
+    for i in range(len(snaps)):
         ax = fig.add_subplot(m,3,i+1)
         for j in range(len(which_states)):
             x, y = data[i][0], data[i][j+ndof]
@@ -58,93 +87,154 @@ def plot_wf_1D(plt_params, data, *ref_data):
             ax.set_xlabel(plt_params['xlabel'])
             ax.set_ylabel(plt_params['ylabel'])
 
-            ax.axes.set_xlim(xlimits[0],xlimits[1])
-            ax.legend(loc = plt_params['legend_loc'], prop={'size' : plt_params['legend_size']})
-
-#            if ref_data:
-#                ax1.plot(ref_data[0], ref_data[1+j], 'o', color=colors[j],markersize=2)
-#            ax1.plot(data[0], data[1+j],label=F"{labels[j]}")
+            ax.axes.set_xlim(plt_params['xmin'][0], plt_params['xmax'][0] )
+            ax.legend(loc = (plt_params['legend_loc'][0],plt_params['legend_loc'][1]), prop={'size' : plt_params['legend_size']})
 
     plt.tight_layout()
 
-#    plt.subplots()
 
-def plot_wf_2D(plt_params, data, *ref_data):
-    """
-        plt_params (dict): Dictionary containing plot control parameters.
+def plot_wf_2D(_plt_params, data):
+    """Plots the 2D wavefunction
 
-          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+    Args:
+        _plt_params (dict): Dictionary containing plot control parameters.
 
-          * **plt_params[`npoints`]** (list of ints) : the grid used to compute the wavefunction in compute.wf_calc_nD()
+          * **_plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+              [default : [0] ]
 
-          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+          * **_plt_params[`xmin`]** ( list: [float, float] ) : the domain minimum for the plot [ default: [-4.0, -4.0] ]
 
-          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+          * **_plt_params[`xmax`]** ( list: [float, float] ) : the domain maximum for the plot [ default: [4.0, 4.0] ]
+
+          * **_plt_params[`snaps`]** (list of ints) : for which timesteps to plot the wavefunction [ default: [0] ]
+
+          * **_plt_params[`size`]** ( list: [int, int] ): size of the plot [ default: [16,16] ]
+
+          * **_plt_params[`xlabel`]** ( string ): x label of the plot [ default: "X Coordinate (a.u.)"]
+
+          * **_plt_params[`ylabel`]** ( string ): y label of the plot [ default: "Y Coordinate (a.u.)"]
+
+          * **_plt_params[`zlabel`]** ( string ): z label of the plot [ default: "Density"]
+
+          * **_plt_params[`2Dcolors`]** ( list of strings ): color names for each surface, should be of the same shape as
+            `which_states` [ default: ["Reds"] ]
+
+          * **_plt_params[`legend_loc`]** ( [float, float]): position of the legend [ default: [0.6, 0.8] ]
+
+          * **_plt_params[`legend_size`]** ( int ) : font size of the legend [ default: 12 ]
 
         data (list of lists) : the data to be plotted, extracted from plots.wf_plot()
+
     """
 
+    plt_params = dict(_plt_params)
+    critical_params = []
+    default_params = {'which_states':[0], 'xmin':[-4.0, -4.0],'xmax':[4.0, 4.0],  'snaps':[0],
+                      'xlabel':'X Coordinate (a.u.)', 'ylabel':'Y Coordinate (a.u.)', 'zlabel':'Density',
+                      '2Dcolors':['Reds'],'legend_loc':[0.6,0.8], 'legend_size':12
+                     }
+    comn.check_input(plt_params, default_params, critical_params)
+
+
     fig = plt.figure(figsize=plt_params['size'])
-    nsnaps = len(data)
-    npoints = plt_params['npoints']
-    states = sorted(plt_params['states'])
+    snaps = plt_params["snaps"]
+    nsnaps = len(snaps) # used to be len(data)
+#    npoints = plt_params['npoints']
+#    states = sorted(plt_params['states'])
     which_states = plt_params['which_states']
     colors = plt_params['2Dcolors']
     m = int(np.ceil(nsnaps/3.0))
     ndof = 2
 
-    xlimits = [plt_params['xmin'][0],plt_params['xmax'][0]]
-    ylimits = [plt_params['xmin'][1],plt_params['xmax'][1]]
-
-    for i in range(nsnaps):
+    for i in range(len(snaps)):
         for j in range(len(which_states)):
             x, y, z = data[i][0], data[i][1], data[i][j+ndof]
             ax = fig.add_subplot(m, 3, i+1, projection = '3d')
-            ax.contour3D(x, y, z, npoints[0], cmap=colors[j])
+            ax.contour3D(x, y, z, 33, cmap=colors[j])  # used to be npoints[0] instead of 33
 
             ax.set_xlabel(plt_params['xlabel'])
             ax.set_ylabel(plt_params['ylabel'])
             ax.set_zlabel(plt_params['zlabel'])
 
-            ax.axes.set_xlim3d(xlimits[0],xlimits[1])
-            ax.axes.set_ylim3d(ylimits[0],ylimits[1])
+            ax.axes.set_xlim3d(plt_params['xmin'][0],plt_params['xmax'][0])
+            ax.axes.set_ylim3d(plt_params['xmin'][1],plt_params['xmax'][1])
 
-def wf_plot(dyn_params, plt_params):
-    """
+
+
+def wf_plot(_plt_params):
+    """Plots 1D or 2D wavefunctions
 
     Args:
-        dyn_params (dict): Dictionary containing simulation parameters.
+        _plt_params (dict): Dictionary containing plot control parameters.
 
-          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
+          * **_plt_params[`ndof`]** (int) : the number of nuclear degrees of freedom in data [ default : 1 ]
 
-          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+          * **_plt_params[`states`]** (list of ints) : the states present in the output data [ default: [0] ]
 
-        plt_params (dict): Dictionary containing plot control parameters.
+          * **_plt_params[`prefix`]** (string) : the name of the subdirectory where QTAG output is stored [ default: "out" ]
 
-          * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
+          * **_plt_params[`npoints`]** ( list of ints) : how many points to use in the plotting [ default: [100] for 1D, and [25, 25] for 2D ]
 
-          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+    Also see: see docs for `plot_wf_1D` or `plot_wf_2D` for the following parameters:
 
-          * **plt_params[`snaps`]** (list of ints) : the list of snapshots used in compute.wf_calc_nD()
+          * **_plt_params[`which_states`]**
 
-          * **plt_params[`npoints`]** (list of ints) : the grid used to compute the wavefunction in compute.wf_calc_nD()
+          * **_plt_params[`xmin`]**
+
+          * **_plt_params[`xmax`]**
+
+          * **_plt_params[`snaps`]**
+
+          * **_plt_params[`size`]**
+
+          * **_plt_params[`xlabel`]**
+
+          * **_plt_params[`ylabel`]**
+
+          * **_plt_params[`zlabel`]**
+
+          * **_plt_params[`1Dcolors`]**
+
+          * **_plt_params[`2Dcolors`]**
+
+          * **_plt_params[`legend_loc`]**
+
+          * **_plt_params[`legend_size`]**
+
+        data (list of lists) : the data to be plotted, extracted from plots.wf_plot()
+
     """
 
-    ndof = dyn_params['ndof']
+    plt_params = dict(_plt_params)
+    critical_params = []
+    default_params = {'states':[0], "which_states":[0],
+                      "ndof":1, "prefix":"out", "snaps":[0],
+                     }
+    comn.check_input(plt_params, default_params, critical_params)
+
+    npts_1D = [100]
+    npts_2D = [25,25]
+    ndof = plt_params['ndof']
+    if ndof==1:
+      default_params.update({"npoints": npts_1D })
+    elif ndof==2:
+      default_params.update({"npoints": npts_2D })
+    comn.check_input(plt_params, default_params, critical_params)
+
 
     prefix = plt_params['prefix']
-    states = sorted(dyn_params['states'])
+    states = sorted(plt_params['states'])
     which_states = sorted(plt_params['which_states'])
     snaps = plt_params['snaps']
     npoints = plt_params['npoints']
 
     which_cols = [dof for dof in range(ndof)]
     for state in which_states:
-        which_cols.append(ndof+states.index(state))
+        which_cols.append(ndof + states.index(state))
 
     filenames = []
     for snap in snaps:
-        filenames.append(f"{prefix}/wfc/wfcr_snap_"+str(snap)+"_dens_rep_0")
+        filenames.append(F"{prefix}/wfc/wfcr_snap_{snap}_dens_rep_0")
 
     data = []
     for i in range(len(filenames)):
@@ -162,30 +252,47 @@ def wf_plot(dyn_params, plt_params):
     else:
         print("Plotting for ndof > 2 not yet supported!")
 
-def energy_and_pops(dyn_params, plt_params):
+
+
+def energy_and_pops(_plt_params):
     """
 
     Args:
-        dyn_params (dict): Dictionary containing simulation parameters.
+        _plt_params (dict): Dictionary containing simulation parameters.
 
-          * **dyn_params[`nsteps`]** (int) : the number of simulation steps
+          * **_plt_params[`nsteps`]** (int) : the number of simulation steps [ default: 1 ]
 
-          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
+          * **_plt_params[`states`]** (list of ints) : the states present in the output data [ default: [0] ]
 
-          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+          * **_plt_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
 
-        plt_params (dict): Dictionary containing plot control parameters.
+          * **_plt_params[`prefix`]** (string) : the name of the subdirectory where QTAG output is stored
 
-          * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
+          * **_plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot [ default : [0.0] ]
 
-          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+          * **_plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot [ default: [1.0] ]
 
-          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+          * **_plt_params[`1Dcolors`]** ( list of strings ): color names for each surface, should be of the same shape as
+            `which_states` [ default: ["Black"] ]
+
+          * **_plt_params[`legend_loc`]** ( [float, float]): position of the legend [ default: [0.6, 0.8] ]
+
+          * **_plt_params[`legend_size`]** ( int ) : font size of the legend [ default: 12 ]
+
     """
+
+    plt_params = dict(_plt_params)
+    critical_params = []
+    default_params = {"nsteps":1, 'states':[0], "ndof":1, 
+                      "prefix":"out", "xmin":[0.0], "xmax":[1.0], "1Dcolors":["Black"],
+                      "legend_loc":[0.6, 0.8], "legend_size":12
+                     }
+    comn.check_input(plt_params, default_params, critical_params)
+
 
     prefix = plt_params['prefix']
     colors = plt_params['1Dcolors']
-    states = sorted(dyn_params['states'])
+    states = sorted(plt_params['states'])
     nstates = len(states)
 
     tfile = f"{prefix}/time.txt"
@@ -239,36 +346,55 @@ def energy_and_pops(dyn_params, plt_params):
 
 
 
-def trajectories(dyn_params, plt_params):
+def trajectories(_plt_params):
     """
 
     Args:
-        dyn_params (dict): Dictionary containing simulation parameters.
+        _plt_params (dict): Dictionary containing simulation parameters.
 
-          * **dyn_params[`grid_dims`]** (list of ints) : the *grid_dims* list used to specify the initial basis passed to initialize.py
+          * **_plt_params["data_type"]** (int): 0 - coordinates, 1 - momenta, 2 - width parameters [default: 0]
 
-          * **dyn_params[`states`]** (list of ints) : the states present in the output data [ default: 2 ]
+          * **_plt_params[`grid_dims`]** (list of ints) : the *grid_dims* list used to specify the initial basis passed to initialize.py
 
-          * **dyn_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
+          * **_plt_params[`states`]** (list of ints) : the states present in the output data [ default: [0] ]
 
-        plt_params (dict): Dictionary containing plot control parameters.
+          * **_plt_params[`ndof`]** (int) : the number of degrees of freedom [ default: 1 ]
 
-          * **plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
+          * **_plt_params[`prefix`]** (str) : the name of the subdirectory where QTAG output is stored
 
-          * **plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
+          * **_plt_params[`which_states`]** (list of ints) : the list containing surfaces for which data is to be plotted
 
-          * **plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+          * **_plt_params["which_traj"]** (list of ints or string) : the list of trajectories to print
 
-          * **plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+          * **_plt_params[`xmin`]** (list of floats) : the list of domain minima for the plot
+
+          * **_plt_params[`xmax`]** (list of floats) : the list of domain maxima for the plot
+
+          * **_plt_params[`active_dof`]** (int) : index of the active DOF to plot. [defualt : 0 ]
+
+             The format of the q, p, etc. files is: 
+             q0 (t,    traj=0, state=0) q1(t,    traj=0, state=0) ... q0(t,    traj=ntraj-1, state0) .. then state 1  state 2 ,etc
+             q0 (t+dt, traj=0, state=0) q1(t+dt, traj=0, state=0) ... q0(t+dt, traj=ntraj-1, state0) .. then state 1  state 2 ,etc
 
     """
 
+    plt_params = dict(_plt_params)
+    critical_params = [ "grid_dims" ]
+    default_params = { "data_type":0,
+                       'states':[0], "ndof":1, "which_states":[0],"active_dof":0,
+                       "prefix":"out", "xmin":[0.0], "xmax":[1.0], "1Dcolors":["Black"],
+                       "legend_loc":[0.6, 0.8], "legend_size":12
+                     }
+    comn.check_input(plt_params, default_params, critical_params)
+
+    data_type = plt_params["data_type"]
     prefix = plt_params['prefix']
     colors = plt_params['1Dcolors']
-    states = sorted(dyn_params['states'])
+    states = sorted(plt_params['states'])
     which_states = plt_params['which_states']
     nstates = len(states)
-    ndof = dyn_params['ndof']
+    ndof = plt_params['ndof']
+    active_dof = plt_params["active_dof"]
 
     which_states = plt_params['which_states']
     if type(which_states) == str:
@@ -278,24 +404,33 @@ def trajectories(dyn_params, plt_params):
     else:
         sys.exit('Error in which_states parameter in plt_params dict! Type should be list or "all"')
     if which_states == 'all':
-        which_states = [state for state in range(nstates)]
+        which_states = list(range(nstates))
 
     ntraj = 1
     for n in range(ndof):
-        ntraj *= dyn_params["grid_dims"][n]
+        ntraj *= plt_params["grid_dims"][n]
 
     tfile = f"{prefix}/time.txt"
-    qfile = f"{prefix}/q.txt"
+
+    qfile = ""
+    if data_type==0:
+        qfile = F"{prefix}/q.txt"
+    elif data_type==1:
+        qfile = F"{prefix}/p.txt"
+    elif data_type==2:
+        qfile = F"{prefix}/a.txt"
+
 
     tdata = data_read.get_data_from_file2(tfile, [0])
-    qdata = data_read.get_data_from_file2(qfile, [traj for traj in range(ntraj*nstates)])
+    qdata = data_read.get_data_from_file2(qfile, list(range(ntraj*nstates*ndof)) )
 
     nsteps = len(tdata[0])
-    qnew = np.zeros((nstates,ntraj,nsteps),dtype=float)
+    qnew = np.zeros((nstates,ntraj, ndof, nsteps),dtype=float)
 
     for state in range(nstates):
         for traj in range(ntraj):
-            qnew[state][traj] = qdata[traj+ntraj*state]
+            for idof in range(ndof):
+                qnew[state][traj][idof] = qdata[ idof + ndof*(traj+ntraj*state)]
 
     which_traj = plt_params['which_traj']
     if type(which_traj) == str:
@@ -305,20 +440,23 @@ def trajectories(dyn_params, plt_params):
     else:
         sys.exit('Error in which_traj parameter in plt_params dict! Type should be list or "all"')
     if which_traj == 'all':
-        which_traj = [traj for traj in range(ntraj)]
+        which_traj = list( range(ntraj) )
+
 
     labels = []
     for state in which_states:
         labels.append("State "+str(state))
+
 
     fig = plt.figure(figsize=plt_params['size'])
     xlimits = [plt_params['xmin'][0],plt_params['xmax'][0]]
     ylimits = [plt_params['xmin'][1],plt_params['xmax'][1]]
     m = int(np.ceil(len(which_states)/3.0))    
     for state in which_states:
+
         ax = fig.add_subplot(m,3,state+1)
         for traj in which_traj:
-            x, y = tdata[0], qnew[state][traj]
+            x, y = tdata[0], qnew[state][traj][active_dof]
 
             ax.plot(x, y, color=colors[state])
 
@@ -330,3 +468,5 @@ def trajectories(dyn_params, plt_params):
         ax.text(6,6.5,labels[state],fontsize=12)
 
     plt.tight_layout()
+
+
