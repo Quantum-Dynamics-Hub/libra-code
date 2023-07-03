@@ -305,7 +305,9 @@ class dyn_control_params{
       - 2: Markov-State Surface Hopping (MSSH)
       - 3: Landau-Zener (LZ) options
       - 4: Zhu-Nakamura (ZN) options
-      - 5: DISH (to be implemented)
+      - 5: DISH
+      - 6: MASH
+      - 7: FSSH2
   */
   int tsh_method;
 

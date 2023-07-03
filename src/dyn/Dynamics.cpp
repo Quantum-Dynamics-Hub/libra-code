@@ -1158,17 +1158,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH, LZ, ZN, DISH
+  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2
   else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 
-       || prms.tsh_method == 4 || prms.tsh_method ==5 ){
+       || prms.tsh_method == 4 || prms.tsh_method == 5 || prms.tsh_method == 6 || prms.tsh_method == 7){
 
 
     vector<int> old_states(dyn_var.act_states); 
 
     //========================== Hop proposal and acceptance ================================
 
-    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4)
-    if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  || prms.tsh_method == 4){
+    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7)
+    if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  
+    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 ){
 
       /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
       /// of that trajectory

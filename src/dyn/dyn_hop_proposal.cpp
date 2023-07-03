@@ -578,7 +578,7 @@ vector<double> hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& den
 
 
 //MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia){
-vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+vector<double> hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
 /**
   \brief This function computes the surface hopping probabilities according to Landau-Zener formula.
 
@@ -731,7 +731,7 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian*
 
 
 //MATRIX compute_hopping_probabilities_lz(nHamiltonian& ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia){
-vector<double> compute_hopping_probabilities_lz(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+vector<double> hopping_probabilities_lz(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
 /**
   \brief This function computes the surface hopping probabilities according to Landau-Zener formula.
 
@@ -752,11 +752,11 @@ vector<double> compute_hopping_probabilities_lz(nHamiltonian& ham, nHamiltonian&
 
 */
 
-  return compute_hopping_probabilities_lz(&ham, &ham_prev, act_state_indx, rep, p, invM);
+  return hopping_probabilities_lz(&ham, &ham_prev, act_state_indx, rep, p, invM);
 
 }
 
-vector<double> compute_hopping_probabilities_zn(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+vector<double> hopping_probabilities_zn(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
 /**
   \brief This function computes the surface hopping probabilities according to Zhu-Nakamura generalized to multiple dimensons 
   according to formula of Yu et al. See my Chapter, Eqs. 3.89 - 3.91
@@ -858,11 +858,33 @@ vector<double> compute_hopping_probabilities_zn(nHamiltonian* ham, nHamiltonian*
 
 }
 
-vector<double> compute_hopping_probabilities_zn(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
+vector<double> hopping_probabilities_zn(nHamiltonian& ham, nHamiltonian& ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
 
-  return compute_hopping_probabilities_zn(&ham, &ham_prev, act_state_indx, rep, p, invM);
+  return hopping_probabilities_zn(&ham, &ham_prev, act_state_indx, rep, p, invM);
 
 }
+
+
+
+
+vector<double> hopping_probabilities_mash(dyn_control_params& prms, CMATRIX& denmat){
+
+  int nstates = denmat.n_rows;
+  vector<double> g(nstates, 0.0);
+
+  // In MASH, we set the hopping probability to 1.0 for the state with maximal density
+  int max_dens_indx = 0;
+  double max_dens = denmat.get(0,0).real();
+  for(int i=1; i<nstates; i++){
+    double dens = denmat.get(i,i).real();
+    if(dens > max_dens){  max_dens_indx = i; max_dens = dens; }
+  }
+
+  g[max_dens_indx] = 1.0;
+  
+  return g;
+}
+
 
 
 /*
@@ -877,6 +899,8 @@ vector<MATRIX> hop_proposal_probabilities(dyn_control_params& prms,
   This function computes the hop probabilities for each trajectory to hop from any state to all states
 
   C - are assumed to be dynamically-consistent
+
+  TO BE DEPRECATED
 
 */
 
@@ -968,8 +992,10 @@ vector< vector<double> > hop_proposal_probabilities(dyn_control_params& prms, dy
 nHamiltonian& ham, nHamiltonian& ham_prev){
 //vector<MATRIX>& prev_ham_dia){
 /**
-  This function computes the hop probabilities for each trajectory to hop from any state to all states
 
+  This function computes the hop probabilities for each trajectory to hop from the current state to all states
+
+  Returns: array of the ntraj x nstates shape
 */
 
   int ndof = dyn_var.ndof;
@@ -1035,20 +1061,34 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
     else if(prms.tsh_method == 3){ // LZ
 
       pop_submatrix(*dyn_var.p, p_traj, nucl_stenc_x, nucl_stenc_y);
-      g[traj] = compute_hopping_probabilities_lz(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj], 
+      g[traj] = hopping_probabilities_lz(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj], 
                 prms.rep_lz, p_traj, *dyn_var.iM);
 
     }
     else if(prms.tsh_method == 4){ // ZN
 
       pop_submatrix(*dyn_var.p, p_traj, nucl_stenc_x, nucl_stenc_y);
-      g[traj] = compute_hopping_probabilities_zn(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj],
+      g[traj] = hopping_probabilities_zn(ham.children[traj], ham_prev.children[traj], dyn_var.act_states[traj],
                 prms.rep_lz, p_traj, *dyn_var.iM);
 
     }
+ 
+    else if(prms.tsh_method == 5){ // DISH, but handled differently
+    }
+
+    else if(prms.tsh_method == 6){ // MASH 
+
+      g[traj] = hopping_probabilities_mash(prms, dm);
+
+    }
+
+    else if(prms.tsh_method == 7){ // FSSH2
+
+    }
+
 
     else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, or 4. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, or 7. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }
