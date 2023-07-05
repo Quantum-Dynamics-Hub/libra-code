@@ -639,11 +639,13 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     #sys.exit(0)
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
-    elif decoherence_algo==3:
+    elif decoherence_algo==3: # BCSH
         dyn_var.allocate_bcsh()
-
-    if tsh_method==5:
+    if tsh_method==5: # DISH
         dyn_var.allocate_dish()
+    if tsh_method==7: #  FSSH2
+        dyn_var.allocate_fssh2()
+        dyn_var.save_curr_dm_into_prev()
 
 
     #sys.exit(0)

@@ -461,6 +461,74 @@ vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& den
 
 
 
+vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx){
+/**
+  \brief This function computes the surface hopping probabilities according to Leonardo Araujo's hopping probability 
+  reformulation of FSSH recipe - this one does not need nonadiabatic couplings!
+
+  See more details in: TBD
+
+  \param[in] key parameters needed for this type of calculations
+    - dt - integration timestep [a.u.]
+    - Temperature - temperature [ K ]
+    - use_boltz_factor - whether to scale the computed probabilities by a Boltzmann factor
+  \param[in] denmat - [nstates x nstates] - current density matrix
+  \param[in] denmat_old - [nstates x nstates] - previous density matrix
+  \param[in] act_state_indx - index of the initial state
+
+  Returns: A nstates-vector of hopping probabilities to all states from the current active state
+
+*/
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+  double dt = prms.dt;
+  double T = prms.Temperature;
+  int use_boltz_factor = prms.use_boltz_factor;
+
+  int nstates = denmat.n_rows;
+  vector<double> g(nstates, 0.0);
+
+
+  // Now calculate the hopping probabilities
+  i = act_state_indx;
+
+  sum = 0.0;
+  double a_ii_old = denmat_old.get(i,i).real();
+
+  for(j=0;j<nstates;j++){
+
+    if(i!=j){
+      double a_jj_old = denmat_old.get(j,j).real();
+      double a_jj     = denmat.get(j,j).real();
+
+      if(a_ii_old < 1e-8){ g_ij = 0.0; }  // avoid division by zero
+      else{
+        g_ij = (a_jj - a_jj_old)/a_ii_old;  // This is a general case 
+
+        if(g_ij<0.0){  g_ij = 0.0; }
+      }// else
+
+      g[j] = g_ij;
+      sum += g_ij;
+    }
+    else{ g[j] = 0.0; }
+
+  }// for j
+
+  g[i] = 1.0 - sum;
+
+  return g;
+
+}// fssh2
+
+
+
+
+
+
 MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
    \brief Compute the MSSH surface hopping probabilities scaled by Boltzmann factor
@@ -1077,13 +1145,15 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
     }
 
     else if(prms.tsh_method == 6){ // MASH 
-
       g[traj] = hopping_probabilities_mash(prms, dm);
-
     }
 
     else if(prms.tsh_method == 7){ // FSSH2
 
+      CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
+      if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
+
+      g[traj] = hopping_probabilities_fssh2(prms, dm, dm_prev, dyn_var.act_states[traj]);
     }
 
 

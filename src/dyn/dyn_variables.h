@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021-2022 Alexey V. Akimov
+* Copyright (C) 2021-2023 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -278,10 +278,33 @@ class dyn_variables{
   */
   MATRIX* coherence_time;
 
+  ///================= For FSSH2 ===================
+  /**
+    Status of the FSSH2 vars
 
-//  MATRIX coherence_time(nst, ntraj);     // for DISH
-//  MATRIX coherence_interval(nst, ntraj); // for DISH
-//  vector<int> project_out_states(ntraj);  // for DISH
+    0 - not allocated;
+    1 - allocated
+  */
+  int fssh2_vars_status;
+
+  /**
+    Electronic density matrix in diabatic representation, at previos timestep
+
+    Options:
+     vector<ntraj, CMATRIX(ndia, ndia)>
+  */
+  vector<CMATRIX*> dm_dia_prev;
+
+
+  /**
+    Electronic density matrix in adiabatic representation, at previous timestep
+
+    Options:
+     vector<ntraj, CMATRIX(nadi, nadi)>
+  */
+  vector<CMATRIX*> dm_adi_prev;
+
+
 
 
   ///====================== In dyn_variables.cpp =====================
@@ -291,6 +314,7 @@ class dyn_variables{
   void allocate_afssh();
   void allocate_bcsh();
   void allocate_dish();
+  void allocate_fssh2();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
@@ -307,6 +331,8 @@ class dyn_variables{
   CMATRIX get_ampl_dia(){ return *ampl_dia; }
   CMATRIX get_dm_adi(int i){  return *dm_adi[i]; }
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
+  CMATRIX get_dm_adi(int i, int prev_steps);
+  CMATRIX get_dm_dia(int i, int prev_steps);
   MATRIX get_imass(){ return *iM; }
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
@@ -345,13 +371,11 @@ class dyn_variables{
 
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
-
-
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop();
 
-
+  void save_curr_dm_into_prev();
 
 
 
