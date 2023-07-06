@@ -396,6 +396,10 @@ void export_dyn_decoherence_objects(){
   double mass, int act_state, double dt, int nsteps) = &integrate_afssh_moments;
   def("integrate_afssh_moments", expt_integrate_afssh_moments_v1);
 
+  ///================== In dyn_methods_qtsh.cpp ===========================
+  MATRIX (*expt_compute_dkinemat_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
+  def("compute_dkinemat", expt_compute_dkinemat_v1);
 
 
 }
