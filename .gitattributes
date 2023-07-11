@@ -1,0 +1,15 @@
+# set attributes for some types of text files for easier development on UNIX systems
+
+*.py		text working-tree-encoding=UTF-8 eol=LF
+*.cpp		text working-tree-encoding=UTF-8 eol=LF
+*.h		text working-tree-encoding=UTF-8 eol=LF
+*.txt		text working-tree-encoding=UTF-8 eol=LF
+*.cmake		text working-tree-encoding=UTF-8 eol=LF
+*.md		text working-tree-encoding=UTF-8 eol=LF
+*.rst		text working-tree-encoding=UTF-8 eol=LF
+*.yml		text working-tree-encoding=UTF-8 eol=LF
+*.sh		text working-tree-encoding=UTF-8 eol=LF
+
+# some files should be never changed
+*.docx		binary
+*.pdf		binary
