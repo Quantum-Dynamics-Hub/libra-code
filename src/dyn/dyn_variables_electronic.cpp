@@ -305,6 +305,8 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
                     variable "istates", the amplitudes are set to be sqrt(istates[i]), but
                     their phases are set to exp(-2*pi*i*rnd), where rnd is a random 
                     number uniformly distributed on the [0, 1] interval (line in option 1)
+                
+                - 4 : initialize all states according to MASH criteria 
 
             * **params["nstates"]** ( int ): the number of electronic states in the basis
                 [ default: 1 ]
@@ -390,9 +392,9 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
            the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
   }
 
-  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3)){
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4)){
     cout<<"WARNINIG in init_amplitudes:\
-           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3]\n";
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4]\n";
   }
   
   if(init_type==0 || init_type==1){
@@ -423,6 +425,8 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
       exit(0);
     }
   }
+  
+  //TODO - Sanity checks for init_type==4 (MASH)
 
   //# Dynamical variables
   for(traj=0; traj<ntraj; traj++){
@@ -485,7 +489,47 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
           else if(rep==1){ ampl_adi->set(i, traj, ampl);  }
       }
 
-    }// init_type==2
+    }// init_type==3
+
+    else if(init_type==4){
+      if(verbosity > 0){
+        cout<<"======= Initialization type is "<<init_type<<" ========\n";
+        cout<<"setting representation "<<rep<<" coefficients C_i for all i to complex numbers according to MASH protocol\n";
+      }
+      int nstates = istates.size();
+      vector<double> tmp_amps(nstates);
+      bool proceed = true;
+      
+      while(proceed){
+        double total = 0.0;
+        for(i=0;i<(nstates-1);i++){
+          tmp_amps[i] = rnd.uniform(0.0,1.0);
+          total = total + tmp_amps[i];
+        }
+        tmp_amps[nstates-1] = 1 - total;
+      
+
+        for(i=0;i<nstates;i++){
+          if(tmp_amps[istate]<=tmp_amps[i] & i!=istate || tmp_amps[i]<0.0){
+            proceed = true;
+            break;
+          }
+          else{ proceed = false; }
+        }
+      }
+      for(i=0;i<nstates;i++){      
+        ksi = rnd.uniform(0.0, 1.0);
+        complex<double> ampl(cos(2.0*M_PI*ksi), sin(2.0*M_PI*ksi) );
+        ampl = ampl * sqrt( tmp_amps[i] );
+        cout<<"amplitude "<<i<<" is "<<tmp_amps[i]<<endl;
+        cout<<"resulting value: "<<ampl<<endl;
+        ampl_adi->set(i, traj, ampl); 
+      }   
+ 
+    } //init_type==4
+
+
+        
   }// for traj
 
   if(verbosity > 1){
@@ -652,9 +696,9 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
            the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
   }
 
-  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3)){
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4 || init_type==5)){
     cout<<"WARNINIG in init_active_states:\
-           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3]\n";
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4, 5]\n";
   }
   
   if(init_type==0 || init_type==1){

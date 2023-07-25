@@ -126,10 +126,10 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
 
 
 
-  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3) ){
+  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
     cout<<"WARNINIG in init_nuclear_dyn_var: \
            the init_type = "<<init_type<<" is not known\
-           Allowed values are: [0, 1, 2, 3]\n";
+           Allowed values are: [0, 1, 2, 3, 4]\n";
   }
 
   if(_Q.size() != _P.size()){
@@ -171,7 +171,7 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
 
   // Deviations
   MATRIX sigma_q(ndof, 1);
-  MATRIX sigma_p(ndof, 1);
+  MATRIX sigma_p(ndof, 1); 
 
   if(init_type==0){
     for(idof=0; idof<ndof; idof++){
@@ -197,6 +197,19 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
       sigma_p.set(idof, 0, sqrt( 0.5*sqrt((force_constant[idof]*_M[idof])) ));
     }
   }
+  else if(init_type==4){
+    for(idof=0; idof<ndof; idof++){
+      sigma_q.set(idof, 0, 1.0);
+      sigma_p.set(idof, 0, 0.5);
+    }
+  }//MASH low energy initial
+  
+  else if(init_type==5){
+    for(idof=0; idof<ndof; idof++){
+      sigma_q.set(idof, 0, 2.2361);
+      sigma_p.set(idof, 0, 0.2236);
+    }
+  }//MASH high energy initial
 
 
   // Now sample the values
