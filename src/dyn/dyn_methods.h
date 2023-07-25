@@ -20,12 +20,15 @@
 // External dependencies
 #include "../math_linalg/liblinalg.h"
 #include "../io/libio.h"
+#include "dyn_variables.h"
+#include "../nhamiltonian/libnhamiltonian.h"
 
 
 /// liblibra namespace
 namespace liblibra{
 
 using namespace libio;
+using namespace libnhamiltonian;
 namespace bp = boost::python;
 
 /// libdyn namespace
@@ -38,13 +41,6 @@ namespace libdyn{
 vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, int decoherence_event_option, Random& rnd);
 vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval, Random& rnd);
 
-/*
-vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
-       nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
-       vector<MATRIX>& decoherence_rates, Random& rnd);
-*/
-
 vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 
   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd);
 
@@ -52,13 +48,9 @@ void dish_project_out_collapse(vector<int>& old_states, vector<int>& proposed_st
   CMATRIX& Coeff, MATRIX& coherence_time, int collapse_option);
 
 
-/*
-int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
-int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,
-          int use_boltz_flag, double Ekin, double T, double ksi1, double ksi2);
-int dish(Electronic& el, Nuclear& mol, Hamiltonian& ham, 
-          MATRIX& t_m, const MATRIX& tau_m, int use_boltz_flag, double T, double ksi1, double ksi2);
-*/
+//================= In dyn_methods_qtsh.cpp =======================================
+
+MATRIX compute_dkinemat(dyn_variables& dyn_var, nHamiltonian& ham);
 
 
 

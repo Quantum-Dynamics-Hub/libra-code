@@ -67,14 +67,11 @@ void dyn_variables::allocate_nuclear_vars(){
 
 
 dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
-
 /**
 
   This function initializes the default values of control parameters
 
 */
-
-  //cout<<"dyn_variables constructor!!!\n";  
 
   ///================= Dimension numbers =============
   ndia = _ndia;
@@ -98,6 +95,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
 
   ///================= DISH ====================
   dish_vars_status = 0;
+
+  ///================= FSSH2 ===================
+  fssh2_vars_status = 0;
   
 }
 
@@ -149,6 +149,22 @@ void dyn_variables::allocate_dish(){
   }
 
 }// allocate_dish
+
+
+void dyn_variables::allocate_fssh2(){
+
+  if(fssh2_vars_status==0){
+
+    dm_dia_prev = vector<CMATRIX*>(ntraj);
+    dm_adi_prev = vector<CMATRIX*>(ntraj);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      dm_dia_prev[itraj] = new CMATRIX(ndia, ndia);
+      dm_adi_prev[itraj] = new CMATRIX(nadi, nadi);
+    }
+    fssh2_vars_status = 1;
+  }
+}
 
 
 
@@ -220,6 +236,17 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *coherence_time = *x.coherence_time;
 
   }// if DISH vars
+
+  // FSSH2 vars - only if initialized
+  if(x.fssh2_vars_status==1){
+    allocate_fssh2();
+ 
+    // Copy content
+    for(itraj=0; itraj<ntraj; itraj++){
+      *dm_dia_prev[itraj] = *x.dm_dia_prev[itraj];
+      *dm_adi_prev[itraj] = *x.dm_adi_prev[itraj];
+    }    
+  }// if FSSH2 vars
   
 }// dyn_variables cctor
 
@@ -286,8 +313,33 @@ dyn_variables::~dyn_variables(){
     dish_vars_status = 0;
   }
 
+  if(fssh2_vars_status==1){
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      delete dm_dia_prev[itraj];
+      delete dm_adi_prev[itraj];
+    }
+    dm_dia_prev.clear();
+    dm_adi_prev.clear();
+
+    fssh2_vars_status = 0;
+  }
+
 }
 
+
+
+CMATRIX dyn_variables::get_dm_adi(int i, int prev_steps){
+  if(prev_steps==0){ return *dm_adi[i]; }
+  else if(prev_steps==1){ return *dm_adi_prev[i]; }
+  else{ ;; }
+}
+
+CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
+  if(prev_steps==0){ return *dm_dia[i]; }
+  else if(prev_steps==1){ return *dm_dia_prev[i]; }
+  else{ ;; }
+}
 
 
 void dyn_variables::set_parameters(bp::dict params){

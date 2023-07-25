@@ -140,6 +140,13 @@ void export_dyn_variables_objects(){
   def("orthogonalized_T", expt_orthogonalized_T_v1);
 
 
+  CMATRIX (dyn_variables::*expt_get_dm_adi_v1)(int i, int prev_steps) = &dyn_variables::get_dm_adi;
+  CMATRIX (dyn_variables::*expt_get_dm_adi_v2)(int i) = &dyn_variables::get_dm_adi;
+
+  CMATRIX (dyn_variables::*expt_get_dm_dia_v1)(int i, int prev_steps) = &dyn_variables::get_dm_dia;
+  CMATRIX (dyn_variables::*expt_get_dm_dia_v2)(int i) = &dyn_variables::get_dm_dia;
+
+
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
 
@@ -187,6 +194,8 @@ void export_dyn_variables_objects(){
       .def_readwrite("nuclear_vars_status", &dyn_variables::nuclear_vars_status)
       .def_readwrite("afssh_vars_status", &dyn_variables::afssh_vars_status)
       .def_readwrite("bcsh_vars_status", &dyn_variables::bcsh_vars_status)
+      .def_readwrite("dish_vars_status", &dyn_variables::dish_vars_status)
+      .def_readwrite("fssh2_vars_status", &dyn_variables::fssh2_vars_status)
 
 
       .def("set_parameters", expt_set_parameters_v1)
@@ -202,8 +211,10 @@ void export_dyn_variables_objects(){
       .def("set_f", &dyn_variables::set_f)
       .def("get_ampl_adi", &dyn_variables::get_ampl_adi)
       .def("get_ampl_dia", &dyn_variables::get_ampl_dia)
-      .def("get_dm_adi", &dyn_variables::get_dm_adi)
-      .def("get_dm_dia", &dyn_variables::get_dm_dia)
+      .def("get_dm_adi", expt_get_dm_adi_v1)
+      .def("get_dm_adi", expt_get_dm_adi_v2)
+      .def("get_dm_dia", expt_get_dm_dia_v1)
+      .def("get_dm_dia", expt_get_dm_dia_v2)
       .def("get_imass", &dyn_variables::get_imass)
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
@@ -239,6 +250,7 @@ void export_dyn_variables_objects(){
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
 
+      .def("save_curr_dm_into_prev", &dyn_variables::save_curr_dm_into_prev)
 
   ;
 }
@@ -384,6 +396,10 @@ void export_dyn_decoherence_objects(){
   double mass, int act_state, double dt, int nsteps) = &integrate_afssh_moments;
   def("integrate_afssh_moments", expt_integrate_afssh_moments_v1);
 
+  ///================== In dyn_methods_qtsh.cpp ===========================
+  MATRIX (*expt_compute_dkinemat_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
+  def("compute_dkinemat", expt_compute_dkinemat_v1);
 
 
 }
@@ -486,6 +502,11 @@ void export_dyn_hop_proposal_objects(){
   vector<double> (*expt_hopping_probabilities_gfsh_v2)
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_gfsh;
   def("hopping_probabilities_gfsh", expt_hopping_probabilities_gfsh_v2);
+
+
+  vector<double> (*expt_hopping_probabilities_fssh2_v1)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_fssh2;
+  def("hopping_probabilities_fssh2", expt_hopping_probabilities_fssh2_v1);
 
 
   MATRIX (*expt_hopping_probabilities_mssh_v1)

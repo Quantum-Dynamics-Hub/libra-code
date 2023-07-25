@@ -1237,6 +1237,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_amplitudes(prms, ham);
 
+
+  // Saves the current density matrix into the previous - needed for FSSH2
+  dyn_var.save_curr_dm_into_prev();
+
 }
 
 

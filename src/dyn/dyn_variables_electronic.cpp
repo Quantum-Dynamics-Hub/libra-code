@@ -891,6 +891,17 @@ vector<double> dyn_variables::compute_average_sh_pop(){
 }
 
 
+void dyn_variables::save_curr_dm_into_prev(){
+
+  if(fssh2_vars_status==1){
+    for(int i=0; i<ntraj; i++){
+      *dm_dia_prev[i] = *dm_dia[i];
+      *dm_adi_prev[i] = *dm_adi[i];
+    }
+  }
+
+}
+
 
 }// namespace libdyn
 }// liblibra
