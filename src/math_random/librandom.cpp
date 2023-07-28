@@ -59,6 +59,7 @@ void export_Random_objects(){
       .def("poiss2",&Random::poiss2)
       .def("p_poiss",&Random::p_poiss)
 
+      .def("voron",&Random::voron)
 
   // Poisson distribution
 //  int poiss(double lambda,double t);
