@@ -390,31 +390,51 @@ double Random::p_poiss(int k,double lambda){
 //============================================================
 //    Even Samples from Voronoi Tessellation-like regions
 vector<double> Random::voron(int nstates, int active_state){
+
+//  cout<<"In voron with nstates = "<<nstates<<" and active_state = "<<active_state<<endl;
   vector<double> cuts(nstates-1, 0.0);
   vector<double> samples(nstates, 0.0);
   
+//  cout<<"Cuts: ";
   for(int i=0;i<(nstates-1);i++){
     cuts[i] = Random::uniform(0.0, 1.0);
+//    cout<<cuts[i]<<" ";
   }
+//  cout<<"\n";
+
   sort(cuts.begin(),cuts.end());
+
+//  cout<<"sorted cuts: ";
+//  for(int i=0;i<(nstates-1);i++){
+//    cout<<cuts[i]<<" ";
+//  }
+//  cout<<endl;
   
-  samples[0] = cuts[0];
-  for(int i=1;i<(nstates-1);i++){
-    samples[i] = cuts[i] - cuts[i-1];
+  for(int i=0;i<(nstates-1);i++){
+    if (i==0){ samples[i] = cuts[i]; }
+    else{      samples[i] = cuts[i] - cuts[i-1]; }
   }
   samples[nstates-1] = 1.0 - cuts[nstates-2];
+
+//  cout<<"samples: ";
+//  for(int i=0;i<nstates;i++){
+//    cout<<samples[i]<<" ";
+//  } cout<<"\n";
   
+
   int maxi = 0;
   double maxv = samples[0];
-  for(int i=1;i<(nstates-1);i++){
+  for(int i=0;i<nstates;i++){
     if(samples[i] > maxv){
       maxi = i;
       maxv = samples[i];
     }
   }
+
   double tmp = samples[active_state];
   samples[active_state] = samples[maxi];
   samples[maxi] = tmp;
+
 
   return samples;
 }
