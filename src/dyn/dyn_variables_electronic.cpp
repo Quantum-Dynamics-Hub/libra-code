@@ -308,6 +308,7 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
 
                 - 4 : initialize all states according to Voronoi-style sampling 
                     Designed for MASH dynamics
+                    Uses "istate" instead of the "istates", similar to the types 0 and 1
 
             * **params["nstates"]** ( int ): the number of electronic states in the basis
                 [ default: 1 ]
@@ -675,12 +676,12 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
            the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
   }
 
-  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3)){
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
     cout<<"WARNINIG in init_active_states:\
-           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3]\n";
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4]\n";
   }
   
-  if(init_type==0 || init_type==1){
+  if(init_type==0 || init_type==1 || init_type==4){
     if(istate>=ndia && rep==0){
       cout<<"ERROR in init_active_states: the istate is= "<<istate<<", but should be less than "<<ndia<<"\n";
       exit(0);
@@ -718,7 +719,7 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   //# Dynamical variables
   for(traj=0; traj<ntraj; traj++){
 
-    if(init_type==0 || init_type==1){ 
+    if(init_type==0 || init_type==1 || init_type==4){ 
       act_states.push_back(istate);
     }
     else if(init_type==2 || init_type==3){
