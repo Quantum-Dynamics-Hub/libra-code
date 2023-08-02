@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2015-2020 Alexey V. Akimov
+* Copyright (C) 2015-2023 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -62,6 +62,10 @@ complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double
 
   G_a(r; R_a, P_a, alp_a, gamma_a) = (2*alp_a/pi)^(Ndof/4) * exp(-alp_a*(r-R_a)^2 + i*(P_a/hbar)*(r-R_a) + i*gamma_a/hbar)
 
+  The normalization factor is derived from the condition:
+
+  <G_a|G_a> = 1
+
   Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
 
   \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
@@ -85,6 +89,160 @@ complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double
 
 }
 
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp){
+/**
+  This function computes the value of the Gaussian at a given point r. hbar = 1
+
+  G_a(r; R, P, alp) = \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/4) } * exp(-alp*(r-R)^2 + i*P*(r-R) ) 
+
+  The normalization factor is derived from the condition:
+
+  <G_a | G_a > = 1
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
+  to be Ndof x 1 vectors
+  \param[in] P Multidimensional vector containing the components of momentum of the multidimensional Gaussians. Assumed
+  to be Ndof x 1 vectors
+  \param[in] alp The Gaussian width factor. Assumed to be Ndof x 1 vector
+
+  The function returns the value of the Gaussian function - a complex number
+*/
+
+  int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
+  double re, im, nrm;
+  nrm = 1.0;
+  MATRIX dR(Ndof, 1);  dR = r - R;
+
+  im = (P.T() * dR).get(0,0);
+
+  for(int i=0; i<Ndof; i++){
+    re += -alp.get(i,0) * dR.get(i,0) * dR.get(i, 0);
+    nrm *= (2.0*alp.get(i,0)/M_PI); // normalization factor
+  }
+
+  return pow(nrm, 0.25) * exp(re) * complex<double>(cos(im), sin(im));
+
+}
+
+
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& alp){
+/**
+  This function computes the value of the Gaussian at a given point r. hbar = 1
+
+  G_a(r; R, alp) = \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/2) } * exp(-2*alp*(r-R)^2 )
+
+  WARNING!!! : The normalization factor is derived from the condition:
+
+  \int { G_a  dr } = 1
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
+  to be Ndof x 1 vectors
+  \param[in] alp The Gaussian width factor. Assumed to be Ndof x 1 vector
+
+  The function returns the value of the Gaussian function - a complex number
+*/
+
+//  int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
+  int Ndof = R.n_rows;
+
+  double re, nrm;
+  nrm = 1.0;
+  MATRIX dR(Ndof, 1);  dR = r - R;
+
+  for(int i=0; i<Ndof; i++){
+    re += -2.0 * alp.get(i,0) * dR.get(i,0) * dR.get(i, 0);
+    nrm *= (2.0*alp.get(i,0)/M_PI); // normalization factor
+  }
+
+  return pow(nrm, 0.5) * exp(re) * complex<double>(1.0, 0.0);
+
+}
+
+
+CMATRIX gwp_deriv(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp){
+/**
+  This function computes the derivative of the Gaussian at a given point r. hbar = 1
+
+  d/dr [G_a(r; R, P, alp)] = d/dr { \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/4) } * exp(-alp*(r-R)^2 + i*P*(r-R) ) } = 
+
+  = \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/4) } * (-2 * alp * (r-R) + i * P ) * exp(-alp*(r-R)^2 + i*P*(r-R) ) =
+
+  = (-2 * alp * (r-R) + i*P) * G_a;
+
+  The normalization factor is derived from the condition:
+
+  <G_a|G_a> = 1
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
+  to be Ndof x 1 vectors
+  \param[in] P Multidimensional vector containing the components of momentum of the multidimensional Gaussians. Assumed
+  to be Ndof x 1 vectors
+  \param[in] alp The Gaussian width factor. Assumed to be Ndof x 1 vector
+
+  The function returns the value of the Gaussian function - a complex number
+*/
+
+  int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
+
+  MATRIX dR(Ndof, 1);  dR = r - R;
+  CMATRIX deriv(Ndof, 1);
+
+  complex<double> g = gwp_value(r, R, P, alp);
+
+  for(int i=0; i<Ndof; i++){    
+    deriv.set(i, 0,  complex<double>( -2.0 * alp.get(i, 0) * dR.get(i,0),  P.get(i, 0) ) );
+  }
+  deriv *= g;
+
+  return deriv;
+
+}
+
+
+CMATRIX gwp_deriv(MATRIX& r, MATRIX& R, MATRIX& alp){
+/**
+  This function computes the derivative of the Gaussian at a given point r. hbar = 1
+
+  d/dr [G_a(r; R, P, alp)] = d/dr { \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/2) } * exp(-2 * alp*(r-R)^2 ) } =
+
+  = \prod_{i}^{Ndof} { (2*alp_i/pi)^(1/2) } * (-4 * alp * (r-R) ) * exp(-2*alp*(r-R)^2 ) =
+
+  = (-4 * alp * (r-R) ) * G_a;
+
+  WARNING!!! : The normalization factor is derived from the condition:
+
+  \int { G_a dR } = 1
+
+  Look derivations at: https://github.com/alexvakimov/Derivatory/blob/master/Gaussian_wavepackets.pdf
+
+  \param[in] R Multidimensional vector containing the components of position of the multidimensional Gaussians in all dimensions. Assumed
+  to be Ndof x 1 vectors
+  \param[in] alp The Gaussian width factor. Assumed to be Ndof x 1 vector
+
+  The function returns the derivatives of the Gaussian function wrt coordinates - a complex number
+*/
+
+  int Ndof = R.n_rows; //check_dimensions("libgwp::gwp_overlap", r, P, R, P);
+
+  MATRIX dR(Ndof, 1);  dR = r - R;
+  CMATRIX deriv(Ndof, 1);
+
+  complex<double> g = gwp_value(r, R, alp);
+
+  for(int i=0; i<Ndof; i++){
+    deriv.set(i, 0,  complex<double>( -4.0 * alp.get(i, 0) * dR.get(i,0),  0.0 ) );
+  }
+  deriv *= g;
+
+  return deriv;
+
+}
 
 double gwp_product_decomposition(double q1, double p1, double gamma1, double alp1,
                                  double q2, double p2, double gamma2, double alp2,

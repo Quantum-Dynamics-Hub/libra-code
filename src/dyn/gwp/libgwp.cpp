@@ -44,8 +44,19 @@ void export_gwp_objects(){
 */
 
   complex<double> (*expt_gwp_value_v1)(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar) = &gwp_value;
+  complex<double> (*expt_gwp_value_v2)(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp) = &gwp_value;
+  complex<double> (*expt_gwp_value_v3)(MATRIX& r, MATRIX& R, MATRIX& alp) = &gwp_value;
 
-  def("gwp_value",  expt_gwp_value_v1);
+  def("gwp_value", expt_gwp_value_v1);
+  def("gwp_value", expt_gwp_value_v2);
+  def("gwp_value", expt_gwp_value_v3);
+
+
+  CMATRIX (*expt_gwp_deriv_v1)(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp) = &gwp_deriv;
+  CMATRIX (*expt_gwp_deriv_v2)(MATRIX& r, MATRIX& R, MATRIX& alp) = &gwp_deriv;
+
+  def("gwp_deriv", expt_gwp_deriv_v1);
+  def("gwp_deriv", expt_gwp_deriv_v2);
 
 
   double (*expt_gwp_product_decomposition_v1)

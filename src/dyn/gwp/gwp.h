@@ -37,6 +37,11 @@ namespace libgwp{
 int check_dimensions(std::string function_name, MATRIX& R1, MATRIX& P1, MATRIX& R2, MATRIX& P2);
 
 complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, double gamma,  double alp, double hbar);
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp);
+complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& alp);
+
+CMATRIX gwp_deriv(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp);
+CMATRIX gwp_deriv(MATRIX& r, MATRIX& R, MATRIX& alp);
 
 
 double gwp_product_decomposition(double q1, double p1, double gamma1, double alp1,
