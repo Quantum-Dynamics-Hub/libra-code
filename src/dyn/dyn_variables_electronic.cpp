@@ -306,6 +306,9 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
                     their phases are set to exp(-2*pi*i*rnd), where rnd is a random 
                     number uniformly distributed on the [0, 1] interval (line in option 1)
 
+                - 4 : initialize all states according to Voronoi-style sampling 
+                    Designed for MASH dynamics
+
             * **params["nstates"]** ( int ): the number of electronic states in the basis
                 [ default: 1 ]
 
@@ -390,9 +393,9 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
            the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
   }
 
-  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3)){
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4)){
     cout<<"WARNINIG in init_amplitudes:\
-           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3]\n";
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4]\n";
   }
   
   if(init_type==0 || init_type==1){
@@ -485,7 +488,27 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
           else if(rep==1){ ampl_adi->set(i, traj, ampl);  }
       }
 
-    }// init_type==2
+    }// init_type==3
+
+    else if(init_type==4){
+      if(verbosity > 0){
+        cout<<"======= Initialization type is "<<init_type<<" ========\n";
+        cout<<"setting representation "<<rep<<" coefficients C_i for all i to complex numbers such that populations are sampled evenly \n";
+      }
+
+      istates = rnd.voron(istates.size(), istate);
+      for(i=0; i<istates.size(); i++){
+        cout<<"Voron_mag["<<i<<"]= "<<istates[i]<<endl;
+        ksi = rnd.uniform(0.0, 1.0);
+        complex<double> ampl(cos(2.0*M_PI*ksi), sin(2.0*M_PI*ksi) );
+        ampl = ampl * sqrt( istates[i] );
+        cout<<"Voron_amp["<<i<<"]= "<<ampl<<endl;
+
+        if(rep==0){ ampl_dia->set(i, traj, ampl );  }
+        else if(rep==1){ ampl_adi->set(i, traj, ampl);  }
+      }
+    }
+
   }// for traj
 
   if(verbosity > 1){

@@ -75,6 +75,8 @@ class Random{
   int poiss2(double lambda);
   double p_poiss(int k,double lambda); // how the distribution should look like
 
+  // Even sampling of n-dimensional Voronoi tessellation-like regions
+  vector<double> voron(int nstates, int active_state);
 }; // class Random
 
 

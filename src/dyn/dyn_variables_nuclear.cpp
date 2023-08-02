@@ -54,7 +54,10 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
                     distribution with a given width in each dimension
 
                 - 3 : sample both coordinates and momenta from the normal 
-                    distributions with given widths in each dimension
+                    distributions with widths defined by force constants in each dimension
+                
+                - 4 : sample both coordinates and momenta from the normal
+                    distributions with directly defined standard deviations
 
             * **params["force_constant"]** ( list of double ): force constants involved in the Harmonic
                 oscillator model: U = (1/2) * k * x^2, and omega = sqrt( k / m )
@@ -68,7 +71,14 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
 
                 To make sigma = 20 / p0 => k * m = 4 /sigma^4 = 4/ (20/p0)^4 = 4* p^4 / 20^4 =  0.000025 * p^4 
                 So: k =  0.000025 * p^4  / m
-                
+
+            * **params["q_width"]** ( list of double ): standard deviations for positions taken 
+                directly for each degree of freedom. Use only with initialization type 4.
+                The length should be consistent with the length of Q, P and M arguments
+            
+            * **params["p_width"]** ( list of double ): standard deviations for momenta taken 
+                directly for each degree of freedom. Use only with initialization type 4.
+                The length should be consistent with the length of Q, P and M arguments
 
             * **params["ntraj"]** ( int ): the number of trajectories - the parameter defines the
                 number of columns the output matrices will have [ default: 1 ]
@@ -99,6 +109,8 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
   default_params["p"] = vector<double>(ndof, 0.0);
   default_params["mass"] = vector<double>(ndof, 1.0);
   default_params["force_constant"] = vector<double>(ndof, 0.001);
+  default_params["q_width"] = vector<double>(ndof, 1.0);
+  default_params["p_width"] = vector<double>(ndof, 1.0);
 
   check_input(params, default_params, critical_params);
 
@@ -108,6 +120,8 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
   vector<double> _P;
   vector<double> _M;
   vector<double> force_constant;
+  vector<double> q_width;
+  vector<double> p_width;
 
   int idof;
 
@@ -121,15 +135,17 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     else if(key=="p") {  _P = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
     else if(key=="mass") {  _M = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
     else if(key=="force_constant") {  force_constant = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+    else if(key=="q_width") { q_width = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i])  ); }
+    else if(key=="p_width") { p_width = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i])  ); }
   }
 
 
 
 
-  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3) ){
+  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
     cout<<"WARNINIG in init_nuclear_dyn_var: \
            the init_type = "<<init_type<<" is not known\
-           Allowed values are: [0, 1, 2, 3]\n";
+           Allowed values are: [0, 1, 2, 3, 4]\n";
   }
 
   if(_Q.size() != _P.size()){
@@ -153,6 +169,19 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     exit(0);
   }
 
+  if(_Q.size() != q_width.size()){
+    cout<<"ERROR in init_nuclear_dyn_var: \
+           the length of input Q is = "<<_Q.size()<<", \
+           the length of input q_width is = "<<q_width.size()<<", but they should be equal to each other\n";
+    exit(0);
+  }
+
+  if(_Q.size() != p_width.size()){
+    cout<<"ERROR in init_nuclear_dyn_var: \
+           the length of input Q is = "<<_Q.size()<<", \
+           the length of input p_width is = "<<p_width.size()<<", but they should be equal to each other\n";
+    exit(0);
+  }
 
   /// At this point, it is safe to define ndof:
   for(idof=0; idof<ndof; idof++){
@@ -195,6 +224,12 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     for(idof=0; idof<ndof; idof++){
       sigma_q.set(idof, 0, sqrt( 0.5*sqrt(1.0/(force_constant[idof]*_M[idof])) ));
       sigma_p.set(idof, 0, sqrt( 0.5*sqrt((force_constant[idof]*_M[idof])) ));
+    }
+  }
+  else if(init_type==4){
+    for(idof=0; idof<ndof; idof++){
+      sigma_q.set(idof, 0, q_width[idof]);
+      sigma_p.set(idof, 0, p_width[idof]);
     }
   }
 

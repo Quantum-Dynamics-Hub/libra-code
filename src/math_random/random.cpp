@@ -387,6 +387,38 @@ double Random::p_poiss(int k,double lambda){
   return res;  
 }
 
+//============================================================
+//    Even Samples from Voronoi Tessellation-like regions
+vector<double> Random::voron(int nstates, int active_state){
+  vector<double> cuts(nstates-1, 0.0);
+  vector<double> samples(nstates, 0.0);
+  
+  for(int i=0;i<(nstates-1);i++){
+    cuts[i] = Random::uniform(0.0, 1.0);
+  }
+  sort(cuts.begin(),cuts.end());
+  
+  samples[0] = cuts[0];
+  for(int i=1;i<(nstates-1);i++){
+    samples[i] = cuts[i] - cuts[i-1];
+  }
+  samples[nstates-1] = 1.0 - cuts[nstates-2];
+  
+  int maxi = 0;
+  double maxv = samples[0];
+  for(int i=1;i<(nstates-1);i++){
+    if(samples[i] > maxv){
+      maxi = i;
+      maxv = samples[i];
+    }
+  }
+  double tmp = samples[active_state];
+  samples[active_state] = samples[maxi];
+  samples[maxi] = tmp;
+
+  return samples;
+}
+
 
 }// namespace librandom
 }// namespace liblibra

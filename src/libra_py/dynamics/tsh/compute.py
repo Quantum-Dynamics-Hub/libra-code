@@ -765,7 +765,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
     comn.check_input( model_params, {  }, [ "model0" ] )
     comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "ntraj":1 }, [  ] )
-    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.01] }, [] )
+    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.01], "q_width":[1.0], "p_width":[1.0] }, [] )
 
 
     is_nbra =  dyn_params["isNBRA"]
