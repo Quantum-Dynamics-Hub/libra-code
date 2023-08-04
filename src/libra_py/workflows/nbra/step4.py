@@ -112,13 +112,15 @@ def get_Hvib(params):
     """
 
     critical_params = ["nstates", "nfiles", "Hvib_re_prefix", "Hvib_im_prefix"]
-    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im", "active_space":range(params["nstates"])}
+    default_params = { "Hvib_re_suffix":"_re", "Hvib_im_suffix":"_im", "active_space":list(range(params["nstates"])), 
+                       "init_time":0
+                     }
     comn.check_input(params, default_params, critical_params)
 
     nstates = params["nstates"]  # the number of states in the input files
 
     # init_time
-    init_time = params["init_times"][0]
+    init_time = params["init_time"] #[0]
 
     Hvib = []
     # The previous was based on nfiles now it is based on the initial time and starts from init_time

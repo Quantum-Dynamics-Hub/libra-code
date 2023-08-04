@@ -197,7 +197,9 @@ def Belyaev_Lebedev(Hvib, params):
                             bf = 1.0
                             if E_new > E_old:
                                 # Notice how we use gap_min rather than E_new - E_old in this case
-                                bf = tsh.boltz_factor(gap_min, 0.0, T, boltz_opt)
+                                #bf = tsh.boltz_factor(gap_min, 0.0, T, boltz_opt)
+
+                                bf = boltz_factor(gap_min, 0.0, T, boltz_opt)
 
                             if bf>1.0:
                                 print("Error: Boltzmann scaling factor can not be larger 1.0 = ",bf)
@@ -346,14 +348,6 @@ def run(H_vib, params):
         * **params["ntraj"]** ( int ) : how many stochastic trajectories to use in the ensemble [ defult: 1]
         * **params["nsteps"]** ( int ) : how nuclear steps in the trajectory to be computed [ defult: 1]
         * **params["istate"]** ( int ) : index of the starting state (within those used in the active_space) [ default: 0]
-        * **params["Boltz_opt"]** ( int ) : option to control the acceptance of the proposed hops 
-            Options:
-
-            - 0 - all proposed hops are accepted - no rejection based on energies
-            - 1 - proposed hops are accepted with exp(-E/kT) probability - the old (hence the default approach) [ default ]
-            - 2 - proposed hops are accepted with the probability derived from Maxwell-Boltzmann distribution - more rigorous
-            - 3 - generalization of "1", but actually it should be changed in case there are many degenerate levels
-
         * **params["Boltz_opt_BL"]** ( int ) : what type of hop acceptance scheme to incorporate into the BL probabilities 
             Options:
 
@@ -366,8 +360,6 @@ def run(H_vib, params):
         * **params["do_output"]** ( Boolean ) : whether to print out the results into a file [ default: True ]
         * **params["outfile"]** ( string ) : the name of the file, where all the results will be printed out [ default: "_out.txt" ]
         * **params["do_return"]** ( Boolean ) : whether to construct the big matrix with all the result [ default: True ]
-        * **params["evolve_Markov"]** ( Boolean ) : whether to propagate the "SE" populations via Markov chain [ default: True ]
-        * **params["evolve_TSH"]** ( Boolean ) : whether to propagate the "SH" populations via TSH with many trajectories [ default: True ]
         * **params["extend_md"]** ( Boolean ) : whether or not to extend md time by resampling the NBRA hopping probabilities
         * **params["extend_md_time"]** ( int ) : length of the new dynamics trajectory, in units dt
         * **params["detect_SD_difference"]** ( Boolean ) : see if SD states differ by more than 1 electron, if so probability to zero [ default: False ]
@@ -377,12 +369,12 @@ def run(H_vib, params):
 
     critical_params = [  ]
     default_params = { "dt":41.0, "ntraj":1, "nsteps":1, "istate":0, 
-                       "Boltz_opt":1, "Boltz_opt_BL":1, "T":300.0,
+                       "Boltz_opt_BL":1, 
                        "do_output":True, "outfile":"_out.txt", "do_return":True,
-                       "evolve_Markov":True, "evolve_TSH":True, 
                        "extend_md":False, "extend_md_time":1,
                        "detect_SD_differences":False,
-                       "return_probabilities":False }
+                       "return_probabilities":False,
+                       "init_times":[0] }
 
     comn.check_input(params, default_params, critical_params)
     
@@ -395,10 +387,6 @@ def run(H_vib, params):
     do_output = params["do_output"]
     do_return = params["do_return"]
     ntraj = params["ntraj"]
-    boltz_opt = params["Boltz_opt"]
-    T = params["T"]
-    evolve_Markov = params["evolve_Markov"]
-    evolve_TSH = params["evolve_TSH"]
     detect_SD_difference = params["detect_SD_differences"]
     return_probabilities = params["return_probabilities"]
     extend_md = params["extend_md"]
@@ -494,29 +482,8 @@ def run(H_vib, params):
                     # Evolve the Markov process.
                     # The convention is:
                     # P(i,j) - the probability to go from j to i
-                    if evolve_Markov==True:
-                        Pop[Tr] = CMATRIX(P[idata][it+i]) * Pop[Tr]
-
-                    if evolve_TSH==True:        
-
-                        # Surface hopping 
-                        ksi  = rnd.uniform(0.0, 1.0)
+                    Pop[Tr] = CMATRIX(P[idata][it+i]) * Pop[Tr]                        
                         
-                        # Proposed hop:
-                        st_new = tsh.hop_py(istate[Tr], P[idata][it+i].T(), ksi)  
-                        
-                        # Accept the proposed hop with the Boltzmann probability
-                        E_new = H_vib[idata][it+i].get(st_new,st_new).real
-                        E_old = H_vib[idata][it+i].get(istate[Tr], istate[Tr]).real
-                        de = E_new - E_old
-                        
-                        if de>0.0:
-                            bf = tsh.boltz_factor(E_new, E_old, T, boltz_opt)
-                            ksi  = rnd.uniform(0.0, 1.0)
-                            if ksi < bf:
-                                istate[Tr] = st_new                  
-                        else:
-                            istate[Tr] = st_new
 
     if return_probabilities == True:
         return res, P
