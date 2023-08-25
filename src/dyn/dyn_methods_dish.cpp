@@ -79,7 +79,8 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
 
       /// Select only one of the basis states that will be experience the decoherence event.
       vector<int> selection(1,0);
-      randperm(which_decohere.size(), 1, selection);
+      //randperm(which_decohere.size(), 1, selection);
+      randperm(1, which_decohere.size(), selection);
       res[traj] = selection[0];
     }
 
@@ -119,6 +120,9 @@ vector<int> dish(dyn_control_params& prms,
     /// Update coherence intervals 
     MATRIX coherence_interval(nst, ntraj); 
     coherence_interval = coherence_intervals(Coeff, decoherence_rates);
+
+    //cout<<"coherence_interval =\n";
+    //coherence_interval.show_matrix();
  
     /// Determine which states may experience decoherence event
     /// If the decohered_states[traj] == -1, this means no basis states on the trajectory traj
@@ -126,6 +130,9 @@ vector<int> dish(dyn_control_params& prms,
     /// such state for each trajectory
     vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, prms.dish_decoherence_event_option, rnd) );
 
+    //cout<<"coherence_time = \n"; coherence_time.show_matrix();
+    //cout<<"Decohered states \n";
+    //for(int a=0; a<decohered_states.size(); a++){ cout<<" "<<decohered_states[a]; } cout<<endl;
     //cout<<"======= In dish... ==========\n";
 
     for(traj=0; traj < ntraj; traj++){
@@ -195,7 +202,7 @@ vector<int> dish(dyn_control_params& prms,
                 double ksi2 = rnd.uniform(0.0, 1.0);
                 int selected_state_index = hop(0, hop_probabilities, ksi2);
 
-                cout<<"  selected_state_index = "<<selected_state_index<<"  value = "<<possible_outcomes[selected_state_index]<<endl;
+                //cout<<"  selected_state_index = "<<selected_state_index<<"  value = "<<possible_outcomes[selected_state_index]<<endl;
 
                 /// We hop to this state
                 final_states[traj] = possible_outcomes[selected_state_index];
@@ -248,7 +255,6 @@ vector<int> dish(dyn_control_params& prms,
             }
 
         }/// decohered state is the inactive state
-
 
       }// istate > -1
     

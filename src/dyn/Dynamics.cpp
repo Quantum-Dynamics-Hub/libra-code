@@ -1208,10 +1208,16 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
       /// Advance coherence times
       dyn_var.coherence_time->add(-1, -1, prms.dt);
+      MATRIX coherence_time(*dyn_var.coherence_time);
 
       /// New version, as of 8/3/2020
-      act_states = dish(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, dyn_var.act_states, *dyn_var.coherence_time, 
+      //cout<<"Entering DISH ============\n";
+      //dyn_var.coherence_time->show_matrix();
+      act_states = dish(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, dyn_var.act_states, coherence_time, 
                         decoherence_rates, rnd);
+ 
+
+      *dyn_var.coherence_time = coherence_time;
 
     }// DISH
 

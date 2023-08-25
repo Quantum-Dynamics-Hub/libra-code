@@ -405,7 +405,7 @@ class dyn_control_params{
            the statistics of wait times between the Poisson-distributed events (decoherence)
            This is what the original DISH meant to do [ default ]
 
-    Note: only matters if tsh_method == 3
+    Note: only matters if tsh_method == 5
   **/
   int dish_decoherence_event_option;
 
