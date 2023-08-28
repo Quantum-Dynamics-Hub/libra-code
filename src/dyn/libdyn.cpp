@@ -205,6 +205,7 @@ void export_dyn_variables_objects(){
       .def("allocate_afssh", &dyn_variables::allocate_afssh)
       .def("allocate_bcsh", &dyn_variables::allocate_bcsh)
       .def("allocate_dish", &dyn_variables::allocate_dish)
+      .def("allocate_fssh2", &dyn_variables::allocate_fssh2)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
