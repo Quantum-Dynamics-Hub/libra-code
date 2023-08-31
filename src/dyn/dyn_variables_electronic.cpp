@@ -308,7 +308,7 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
 
                 - 4 : initialize all states according to Voronoi-style sampling 
                     Designed for MASH dynamics
-                    Uses "istate" instead of the "istates", similar to the types 0 and 1
+                    Uses "istates" instead of the "istate", similar to the types 2 and 3
 
             * **params["nstates"]** ( int ): the number of electronic states in the basis
                 [ default: 1 ]
