@@ -278,6 +278,7 @@ class dyn_variables{
   */
   MATRIX* coherence_time;
 
+
   ///================= For FSSH2 ===================
   /**
     Status of the FSSH2 vars
@@ -295,7 +296,6 @@ class dyn_variables{
   */
   vector<CMATRIX*> dm_dia_prev;
 
-
   /**
     Electronic density matrix in adiabatic representation, at previous timestep
 
@@ -305,6 +305,54 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
+  ///================= For SHXF ===================
+  /**
+    Status of the SHXF vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int shxf_vars_status;
+
+  /**
+    Nuclear coordinates of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> q_aux;
+
+  /**
+    Nuclear momenta of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> p_aux;
+  
+  /**
+    Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> nab_phase;
+
+  /**
+    Quantum momenta
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* p_quant;
+  
+  /**
+    Exact vector potential
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* VP;
 
 
   ///====================== In dyn_variables.cpp =====================
@@ -315,6 +363,7 @@ class dyn_variables{
   void allocate_bcsh();
   void allocate_dish();
   void allocate_fssh2();
+  void allocate_shxf();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
