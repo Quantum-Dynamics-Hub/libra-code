@@ -517,7 +517,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "collapse_option":0,  
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
-                             "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1)
+                             "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
+                             "wp_width":0.1, "coherence_threshold":0.01
                            } )
 
     #================= Entanglement of trajectories ================================
@@ -641,6 +642,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_afssh()
     elif decoherence_algo==3: # BCSH
         dyn_var.allocate_bcsh()
+    elif decoherence_algo==5: # SHXF
+        dyn_var.allocate_shxf()
     if tsh_method==5: # DISH
         dyn_var.allocate_dish()
     if tsh_method==7: #  FSSH2
@@ -679,7 +682,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             E_NHC = Etot + Etherm
 
         """
-
         save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
 

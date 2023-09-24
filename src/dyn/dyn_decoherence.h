@@ -70,6 +70,9 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA);
 CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
 
+// For SHXF
+void shxf(dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA);
+void shxf(vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states);
 
 ///================  In dyn_decoherence_time.cpp  ===================================
 

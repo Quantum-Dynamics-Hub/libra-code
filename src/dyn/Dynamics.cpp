@@ -909,7 +909,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   prms.set_parameters(dyn_params);
 
 
-//  cout<<"Here\n"; exit(0);
+  //cout<<"Here\n"; exit(0);
 
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
@@ -1143,6 +1143,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }
     else{ cout<<"ERROR: MFSD requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
+  // SHXF
+  else if(prms.decoherence_algo==5){
+    if(prms.rep_tdse==1){
+      shxf(dyn_var, prms.wp_width, prms.coherence_threshold, prms.isNBRA);
+    }
+    else{ cout<<"ERROR: SHXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
+  }
 
 
   dyn_var.update_amplitudes(prms, ham);
@@ -1198,6 +1205,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         /// Temporarily commented AVA 11/7/2022
         ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
       }// AFSSH
+      else if(prms.decoherence_algo==5){
+        shxf(dyn_var.is_cohered, dyn_var.is_first, act_states, old_states);
+      } // SHXF
 
     }
     // DISH

@@ -802,8 +802,67 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
+void shxf(dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA){
+    /**
+    \brief The generic framework of the SHXF (Surface hopping based on eXact Factorization) method of
+    Ha, J.-K.; Lee, I. S.; Min, S. K. J. Phys. Chem. Lett. 2018, 9, 1097)
 
+    */
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
 
+  double upper_lim = 1.0 - threshold;
+  double lower_lim = threshold;
+
+  for(int traj=0; traj<ntraj; traj++){
+
+    // Destroy auxiliary trajectories if the electronic state is decohered
+    vector<int>& is_cohered = dyn_var.is_cohered[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+    CMATRIX& dm = *dyn_var.dm_adi[traj];
+
+    for(int i=0; i<nadi; i++){
+      double a_ii = dm.get(i,i).real();
+      if(is_cohered[i]==1){
+        if(a_ii>upper_lim){
+          dyn_var.nab_phase[i]->set(-1, -1, 0.0);
+          collapse(*dyn_var.ampl_adi, traj, i, 0);
+          is_cohered.assign(nadi, 0);
+          is_first.assign(nadi, 0);
+          break;
+        }
+      }
+    } //i
+
+    // Check the coherence between adiabatic states
+    for(int i=0; i<nadi; i++){
+      double a_ii = dm.get(i,i).real(); 
+      if(a_ii<=lower_lim || a_ii>upper_lim){is_cohered[i]=0;}
+      else{
+        is_cohered[i]==1 ? is_first[i]=0:is_first[i]=1;
+        is_cohered[i]=1;
+      } //else
+    } //i
+
+  } // traj
+
+  // Propagate auxiliary trajectories
+}
+
+void shxf(vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states){
+  int traj;
+  int ntraj = is_cohered.size();
+  int nadi = is_cohered[0].size();
+
+for(traj = 0; traj < ntraj; traj++){
+    // When a hop occurs, destroy auxiliary trajectories 
+    if(accepted_states[traj] != initial_states[traj]){
+      is_cohered[traj].assign(nadi, 0);
+      is_first[traj].assign(nadi, 0);
+    }
+  }// traj
+}
 
 }// namespace libdyn
 }// liblibra

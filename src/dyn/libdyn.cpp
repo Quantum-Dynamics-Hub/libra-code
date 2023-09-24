@@ -101,6 +101,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("collapse_option", &dyn_control_params::collapse_option)
       .def_readwrite("decoherence_rates", &dyn_control_params::decoherence_rates)
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
+      .def_readwrite("wp_width", &dyn_control_params::wp_width)
+      .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -196,6 +198,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("bcsh_vars_status", &dyn_variables::bcsh_vars_status)
       .def_readwrite("dish_vars_status", &dyn_variables::dish_vars_status)
       .def_readwrite("fssh2_vars_status", &dyn_variables::fssh2_vars_status)
+      .def_readwrite("shxf_vars_status", &dyn_variables::shxf_vars_status)
 
 
       .def("set_parameters", expt_set_parameters_v1)
@@ -206,6 +209,7 @@ void export_dyn_variables_objects(){
       .def("allocate_bcsh", &dyn_variables::allocate_bcsh)
       .def("allocate_dish", &dyn_variables::allocate_dish)
       .def("allocate_fssh2", &dyn_variables::allocate_fssh2)
+      .def("allocate_shxf", &dyn_variables::allocate_shxf)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -321,6 +325,13 @@ void export_dyn_decoherence_objects(){
    nHamiltonian& ham, Random& rnd) = &mfsd;
   def("mfsd", expt_mfsd_v2);
 
+  void (*expt_shxf_v1)
+  (dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA) = &shxf;
+  def("shxf", expt_shxf_v1);
+  
+  void (*expt_shxf_v2)
+  (vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
+  def("shxf", expt_shxf_v2);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
 

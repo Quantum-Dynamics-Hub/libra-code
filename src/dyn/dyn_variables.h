@@ -315,6 +315,22 @@ class dyn_variables{
   int shxf_vars_status;
 
   /**
+    Whether an adiabatic state interacts with the others
+
+    Options:
+     vector< vector<int> > is_cohered(ntraj, nadi)
+  */
+  vector<vector<int>> is_cohered;
+  
+  /**
+    Whether the decoherence is turned on first time
+
+    Options:
+     vector< vector<int> > is_first(ntraj, nadi)
+  */
+  vector<vector<int>> is_first;
+
+  /**
     Nuclear coordinates of state-wise auxiliary trajectories
 
     Options:

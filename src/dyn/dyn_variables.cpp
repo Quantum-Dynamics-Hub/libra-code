@@ -172,6 +172,14 @@ void dyn_variables::allocate_fssh2(){
 void dyn_variables::allocate_shxf(){
 
   if(shxf_vars_status==0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      is_cohered.push_back(vector<int>());
+      is_first.push_back(vector<int>());
+      for(int i=0; i<nadi; i++){
+        is_cohered[itraj].push_back(0);
+        is_first[itraj].push_back(0);
+      } // i
+    } // itraj
 
     q_aux = vector<MATRIX*>(nadi); 
     p_aux = vector<MATRIX*>(nadi);
@@ -276,12 +284,11 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_shxf();
     
     // Copy content
-    for(idof=0; idof<ndof; idof++){
-      for(itraj=0; itraj<ntraj; itraj++){
-        *q_aux[idof][itraj] = *x.q_aux[idof][itraj];
-        *p_aux[idof][itraj] = *x.p_aux[idof][itraj];
-        *nab_phase[idof][itraj] = *x.nab_phase[idof][itraj];
-
+    for(int i=0; i<nadi; i++){
+        *q_aux[i] = *x.q_aux[i];
+        *p_aux[i] = *x.p_aux[i];
+        *nab_phase[i] = *x.nab_phase[i];
+    }
     *p_quant = *x.p_quant;
     *VP = *x.VP;
 

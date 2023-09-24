@@ -488,6 +488,19 @@ class dyn_control_params{
 
 
   /**
+  The width of frozen Gaussian for the decoherence from SHXF
+  [ default : 0.1 ]
+  */
+  double wp_width;
+
+
+  /**
+  The criterion whether the electronic state is in a coherence
+  [ default : 0.01 ]
+  */
+  double coherence_threshold;
+
+  /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
   we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
   If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
