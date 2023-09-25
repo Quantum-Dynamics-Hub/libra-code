@@ -345,6 +345,14 @@ class dyn_variables{
      vector<nadi, MATRIX(ndof, ntraj)> 
   */
   vector<MATRIX*> p_aux;
+
+  /**
+    Auxiliary momenta of previous step
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> p_aux_old;
   
   /**
     Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories

@@ -183,11 +183,13 @@ void dyn_variables::allocate_shxf(){
 
     q_aux = vector<MATRIX*>(nadi); 
     p_aux = vector<MATRIX*>(nadi);
+    p_aux_old = vector<MATRIX*>(nadi);
     nab_phase = vector<MATRIX*>(nadi);
 
     for(int i=0; i<nadi; i++){
       q_aux[i] = new MATRIX(ndof, ntraj);
       p_aux[i] = new MATRIX(ndof, ntraj);
+      p_aux_old[i] = new MATRIX(ndof, ntraj);
       nab_phase[i] = new MATRIX(ndof, ntraj);
     }
 
@@ -287,6 +289,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     for(int i=0; i<nadi; i++){
         *q_aux[i] = *x.q_aux[i];
         *p_aux[i] = *x.p_aux[i];
+        *p_aux_old[i] = *x.p_aux_old[i];
         *nab_phase[i] = *x.nab_phase[i];
     }
     *p_quant = *x.p_quant;
@@ -376,12 +379,14 @@ dyn_variables::~dyn_variables(){
 
         delete q_aux[i];
         delete p_aux[i];
+        delete p_aux_old[i];
         delete nab_phase[i];
 
     }
 
     q_aux.clear();
     p_aux.clear();
+    p_aux_old.clear();
     nab_phase.clear();
 
     delete p_quant;

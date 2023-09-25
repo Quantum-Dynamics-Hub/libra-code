@@ -326,7 +326,7 @@ void export_dyn_decoherence_objects(){
   def("mfsd", expt_mfsd_v2);
 
   void (*expt_shxf_v1)
-  (dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA) = &shxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA) = &shxf;
   def("shxf", expt_shxf_v1);
   
   void (*expt_shxf_v2)

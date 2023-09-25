@@ -802,10 +802,10 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
-void shxf(dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA){
+void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
     /**
     \brief The generic framework of the SHXF (Surface hopping based on eXact Factorization) method of
-    Ha, J.-K.; Lee, I. S.; Min, S. K. J. Phys. Chem. Lett. 2018, 9, 1097)
+    Ha, J.-K.; Lee, I. S.; Min, S. K. J. Phys. Chem. Lett. 2018, 9, 1097
 
     */
   int ntraj = dyn_var.ntraj;
@@ -822,18 +822,24 @@ void shxf(dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA)
     vector<int>& is_first = dyn_var.is_first[traj];
     CMATRIX& dm = *dyn_var.dm_adi[traj];
 
+    int is_decohered = 0;
+
     for(int i=0; i<nadi; i++){
       double a_ii = dm.get(i,i).real();
       if(is_cohered[i]==1){
         if(a_ii>upper_lim){
-          dyn_var.nab_phase[i]->set(-1, -1, 0.0);
+          is_decohered = 1;
           collapse(*dyn_var.ampl_adi, traj, i, 0);
-          is_cohered.assign(nadi, 0);
-          is_first.assign(nadi, 0);
           break;
         }
       }
     } //i
+
+    if(is_decohered==1){
+       for(int i=0; i<nadi; i++){dyn_var.nab_phase[i]->set(-1, traj, 0.0);}
+       is_cohered.assign(nadi, 0);
+       is_first.assign(nadi, 0);
+    }
 
     // Check the coherence between adiabatic states
     for(int i=0; i<nadi; i++){
@@ -844,10 +850,89 @@ void shxf(dyn_variables& dyn_var, double wp_width, double threshold, int isNBRA)
         is_cohered[i]=1;
       } //else
     } //i
+ 
+    // Propagate auxiliary positions
+    int a = dyn_var.act_states[traj];
+    MATRIX& invM = *dyn_var.iM;
+
+    for(int i=0; i<nadi; i++){
+      if(is_cohered[i]==1){
+        if(is_first[i]==1){
+          // Initially, the auxiliary position is set to the real position
+          for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+        }
+        else{
+          if(i==a){
+            for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){  
+              dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * dt); 
+            }
+          }
+        }
+      }
+    } //i
+
+    // Propagate auxiliary momenta
+    MATRIX p_real(ndof, 1); 
+    MATRIX p_aux_old(ndof, 1);
+    
+    CMATRIX ham_adi(nadi, nadi);
+    CMATRIX ham_adi_prev(nadi, nadi);
+    ham_adi = ham.children[traj]->get_ham_adi();
+    ham_adi_prev = ham_prev.children[traj]->get_ham_adi();
+
+    for(int i=0; i<nadi; i++){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.p_aux_old[i]->set(idof, traj, dyn_var.p_aux[i]->get(idof, traj));
+      }
+    }
+
+    double alpha; 
+    for(int i=0; i<nadi; i++){
+      if(is_cohered[i]==1){
+        p_real = dyn_var.p->col(traj); 
+        
+        if(i==a){
+          alpha = compute_kinetic_energy(p_real, invM);
+        }
+        else{
+          if(is_first[i]==1){
+            alpha = compute_kinetic_energy(p_real, invM) + ham_adi.get(a,a).real() - ham_adi.get(i,i).real();
+          }
+          else{
+            p_aux_old = dyn_var.p_aux_old[i]->col(traj); 
+            alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          }
+        }
+
+        if (alpha < 0.0){alpha = 0.0;}
+        
+        alpha /= compute_kinetic_energy(p_real, invM);
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.p_aux[i]->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+      }
+    }//i
+
+    // Propagate the spatial derivative of phases
+    for(int i=0; i<nadi; i++){
+      if(is_cohered[i]==1){
+        if(is_first[i]==1){
+          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){
+            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+          }//idof
+        }
+      }
+    }//i
 
   } // traj
 
-  // Propagate auxiliary trajectories
 }
 
 void shxf(vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states){
