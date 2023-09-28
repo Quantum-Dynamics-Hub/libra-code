@@ -363,7 +363,7 @@ class dyn_variables{
   vector<MATRIX*> nab_phase;
 
   /**
-    Quantum momenta
+    Quantum momenta defined as (-1) * \nabla_nuc |\chi| / |\chi|
 
     Options:
      MATRIX(ndof, ntraj) 

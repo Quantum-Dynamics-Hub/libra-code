@@ -931,6 +931,29 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
       }
     }//i
 
+    // Compute the quantum momenta
+    dyn_var.p_quant->set(-1, traj, 0.0);
+
+    for(int i=0; i<nadi; i++){
+      if(is_cohered[i]==1){
+        double a_ii = dm.get(i,i).real();
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
+            *(dyn_var.p->get(idof, traj) - dyn_var.p_aux[i]->get(idof, traj)));
+        }
+      }
+    }
+
+    // Apply the decoherence correction; c(t) += \dot c^dec*dt
+    for(int i=0; i<nadi; i++){
+      for(int j=0; j<nadi; j++){
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.ampl_adi->add(i, traj, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj) *
+            (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj)) *
+            dm.get(j,j).real() * dyn_var.ampl_adi->get(i, traj) *dt);
+        }
+      }
+    }
   } // traj
 
 }
