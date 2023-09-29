@@ -946,11 +946,12 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
     // Apply the decoherence correction; c(t) += \dot c^dec*dt
     for(int i=0; i<nadi; i++){
+      complex<double> C_i = dyn_var.ampl_adi->get(i, traj);
       for(int j=0; j<nadi; j++){
         for(int idof=0; idof<ndof; idof++){
           dyn_var.ampl_adi->add(i, traj, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj) *
             (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj)) *
-            dm.get(j,j).real() * dyn_var.ampl_adi->get(i, traj) *dt);
+            dm.get(j,j).real() * C_i *dt);
         }
       }
     }
