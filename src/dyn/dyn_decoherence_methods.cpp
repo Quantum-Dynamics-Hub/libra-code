@@ -939,7 +939,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
         double a_ii = dm.get(i,i).real();
         for(int idof=0; idof<ndof; idof++){
           dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
-            *(dyn_var.p->get(idof, traj) - dyn_var.p_aux[i]->get(idof, traj)));
+            *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
         }
       }
     }
