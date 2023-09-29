@@ -278,6 +278,7 @@ class dyn_variables{
   */
   MATRIX* coherence_time;
 
+
   ///================= For FSSH2 ===================
   /**
     Status of the FSSH2 vars
@@ -295,7 +296,6 @@ class dyn_variables{
   */
   vector<CMATRIX*> dm_dia_prev;
 
-
   /**
     Electronic density matrix in adiabatic representation, at previous timestep
 
@@ -305,6 +305,78 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
+  ///================= For SHXF ===================
+  /**
+    Status of the SHXF vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int shxf_vars_status;
+
+  /**
+    Whether an adiabatic state interacts with the others
+
+    Options:
+     vector< vector<int> > is_cohered(ntraj, nadi)
+  */
+  vector<vector<int>> is_cohered;
+  
+  /**
+    Whether the decoherence is turned on first time
+
+    Options:
+     vector< vector<int> > is_first(ntraj, nadi)
+  */
+  vector<vector<int>> is_first;
+
+  /**
+    Nuclear coordinates of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> q_aux;
+
+  /**
+    Nuclear momenta of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> p_aux;
+
+  /**
+    Auxiliary momenta of previous step
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> p_aux_old;
+  
+  /**
+    Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
+
+    Options:
+     vector<nadi, MATRIX(ndof, ntraj)> 
+  */
+  vector<MATRIX*> nab_phase;
+
+  /**
+    Quantum momenta defined as (-1) * \nabla_nuc |\chi| / |\chi|
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* p_quant;
+  
+  /**
+    Exact vector potential
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* VP;
 
 
   ///====================== In dyn_variables.cpp =====================
@@ -315,6 +387,7 @@ class dyn_variables{
   void allocate_bcsh();
   void allocate_dish();
   void allocate_fssh2();
+  void allocate_shxf();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 

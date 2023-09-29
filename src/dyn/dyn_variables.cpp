@@ -99,6 +99,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= FSSH2 ===================
   fssh2_vars_status = 0;
   
+  ///================= SHXF ====================
+  shxf_vars_status = 0;
+
 }
 
 
@@ -166,7 +169,36 @@ void dyn_variables::allocate_fssh2(){
   }
 }
 
+void dyn_variables::allocate_shxf(){
 
+  if(shxf_vars_status==0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      is_cohered.push_back(vector<int>());
+      is_first.push_back(vector<int>());
+      for(int i=0; i<nadi; i++){
+        is_cohered[itraj].push_back(0);
+        is_first[itraj].push_back(0);
+      } // i
+    } // itraj
+
+    q_aux = vector<MATRIX*>(nadi); 
+    p_aux = vector<MATRIX*>(nadi);
+    p_aux_old = vector<MATRIX*>(nadi);
+    nab_phase = vector<MATRIX*>(nadi);
+
+    for(int i=0; i<nadi; i++){
+      q_aux[i] = new MATRIX(ndof, ntraj);
+      p_aux[i] = new MATRIX(ndof, ntraj);
+      p_aux_old[i] = new MATRIX(ndof, ntraj);
+      nab_phase[i] = new MATRIX(ndof, ntraj);
+    }
+
+    p_quant = new MATRIX(ndof, ntraj);
+    VP = new MATRIX(ndof, ntraj);
+  
+    shxf_vars_status = 1;
+  }
+}// allocate_shxf
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
@@ -245,9 +277,26 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     for(itraj=0; itraj<ntraj; itraj++){
       *dm_dia_prev[itraj] = *x.dm_dia_prev[itraj];
       *dm_adi_prev[itraj] = *x.dm_adi_prev[itraj];
-    }    
+    }
+
   }// if FSSH2 vars
-  
+ 
+  // SHXF vars - only if initialized
+  if(x.shxf_vars_status==1){
+    allocate_shxf();
+    
+    // Copy content
+    for(int i=0; i<nadi; i++){
+        *q_aux[i] = *x.q_aux[i];
+        *p_aux[i] = *x.p_aux[i];
+        *p_aux_old[i] = *x.p_aux_old[i];
+        *nab_phase[i] = *x.nab_phase[i];
+    }
+    *p_quant = *x.p_quant;
+    *VP = *x.VP;
+
+  }// if SHXF vars
+
 }// dyn_variables cctor
 
 
@@ -323,6 +372,27 @@ dyn_variables::~dyn_variables(){
     dm_adi_prev.clear();
 
     fssh2_vars_status = 0;
+  }
+
+  if(shxf_vars_status==1){
+    for(int i; i<nadi; i++){
+
+        delete q_aux[i];
+        delete p_aux[i];
+        delete p_aux_old[i];
+        delete nab_phase[i];
+
+    }
+
+    q_aux.clear();
+    p_aux.clear();
+    p_aux_old.clear();
+    nab_phase.clear();
+
+    delete p_quant;
+    delete VP;
+
+    shxf_vars_status = 0;
   }
 
 }

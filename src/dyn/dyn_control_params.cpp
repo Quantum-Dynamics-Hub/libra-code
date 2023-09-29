@@ -79,6 +79,8 @@ dyn_control_params::dyn_control_params(){
   collapse_option = 0;
   decoherence_rates = NULL;
   ave_gaps = NULL;
+  wp_width = 0.1;
+  coherence_threshold = 0.01;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = 0;
@@ -148,6 +150,8 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   dephasing_informed = x.dephasing_informed;
   instantaneous_decoherence_variant = x.instantaneous_decoherence_variant; 
   collapse_option = x.collapse_option;
+  wp_width = x.wp_width;
+  coherence_threshold = x.coherence_threshold;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = x.entanglement_opt;
@@ -324,6 +328,8 @@ void dyn_control_params::set_parameters(bp::dict params){
         for(int b=0;b<x.n_cols;b++){ ave_gaps->set(a, b, x.get(a,b));   }
       } 
     }
+    else if(key=="wp_width"){ wp_width = bp::extract<double>(params.values()[i]); }
+    else if(key=="coherence_threshold"){ coherence_threshold = bp::extract<double>(params.values()[i]); }
 
     ///================= Entanglement of trajectories ================================
     else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
