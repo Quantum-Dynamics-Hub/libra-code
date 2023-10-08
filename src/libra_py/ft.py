@@ -88,8 +88,11 @@ def ft2(X, wmin, wmax, dw, dt):
         tuple: (W, J): where
 
             W ( list of npoints doubles): frequencies               
-            J ( list of npoints doubles): amplitudes of the complex-transform
-            I ( list of npoints doubles): intensities
+            J ( list of npoints complex): amplitudes of the complex-transform, J
+            I ( list of npoints doubles): intensities, I = |J|
+            I2 ( list of npoints doubles): squared intensities, I^2 = |J|^2
+            J_re (list of npoints doubles): real components of J coefficients
+            J_im (list of npoints doubles): imaginary components of J coefficients
 
     """
 
