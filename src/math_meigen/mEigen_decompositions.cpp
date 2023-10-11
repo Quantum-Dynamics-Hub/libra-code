@@ -256,6 +256,39 @@ void BDCSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V){
 
 
 
+void LLT_decomposition(MATRIX& A, MATRIX& L){
+/** A wrapper of Eigen::LLT<MatrixXd>.matrixL()
+   A - the source matrix
+   L - lower triangular
+
+  Really, what happens is:
+
+  A = L * L.T()
+
+*/
+
+  int N = A.n_cols;
+  int i,j;
+
+  MatrixXd a(N,N);
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      a(i,j) = A.M[i*N+j];
+    }// for j
+  }// for i
+
+  Eigen::MatrixXd l( a.llt().matrixL() );
+
+  for(i=0;i<N;i++){
+    for(j=0;j<N;j++){
+      L.M[i*N+j] = l(i,j);
+    }// for j
+  }// for i
+
+}
+
+
+
 
 }// namespace libmeigen
 }// namespace liblibra

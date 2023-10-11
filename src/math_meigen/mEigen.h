@@ -123,6 +123,8 @@ void FullPivLU_decomposition(CMATRIX& A, CMATRIX& P, CMATRIX& L, CMATRIX& U, CMA
 void JacobiSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V);
 void BDCSVD_decomposition(CMATRIX& A, CMATRIX& U, CMATRIX& S, CMATRIX& V);
 
+void LLT_decomposition(MATRIX& A, MATRIX& L);
+
 ///=========== Look in: mEigen_linsolve.cpp ==================
 ///< Solver for a system of linear equations (iterative schemes)
 bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold);
