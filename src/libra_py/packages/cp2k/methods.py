@@ -264,12 +264,13 @@ def read_cp2k_tddfpt_log_file( params ):
 
     for i in range(len(lines)):
         if 'TDDFPT|' in lines[i]:
-            try:
-                tmp = lines[i].split()
-                exc_ener = float(tmp[2])
-                excitation_energies.append(exc_ener)
-            except:
-                pass
+            if 'Molecular' not in lines[i-1]:
+                try:
+                    tmp = lines[i].split()
+                    exc_ener = float(tmp[2])
+                    excitation_energies.append(exc_ener)
+                except:
+                    pass
 
     # Start from 5 lines after finding the line contaning 'Excitation analysis'
     # From that point we have the state numbers with their configurations.
