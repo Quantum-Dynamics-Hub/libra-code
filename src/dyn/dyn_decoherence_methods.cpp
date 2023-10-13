@@ -804,7 +804,7 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
     /**
-    \brief The generic framework of the SHXF (Surface hopping based on eXact Factorization) method of
+    \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
     Ha, J.-K.; Lee, I. S.; Min, S. K. J. Phys. Chem. Lett. 2018, 9, 1097
 
     */
@@ -931,31 +931,10 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
       }
     }//i
 
-    // Compute the quantum momenta
-    dyn_var.p_quant->set(-1, traj, 0.0);
-
-    for(int i=0; i<nadi; i++){
-      if(is_cohered[i]==1){
-        double a_ii = dm.get(i,i).real();
-        for(int idof=0; idof<ndof; idof++){
-          dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
-            *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
-        }
-      }
-    }
-
-    // Apply the decoherence correction; c(t) += \dot c^dec*dt
-    for(int i=0; i<nadi; i++){
-      complex<double> C_i = dyn_var.ampl_adi->get(i, traj);
-      for(int j=0; j<nadi; j++){
-        for(int idof=0; idof<ndof; idof++){
-          dyn_var.ampl_adi->add(i, traj, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj) *
-            (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj)) *
-            dm.get(j,j).real() * C_i *dt);
-        }
-      }
-    }
   } // traj
+
+  //cout << "SHXF " << dyn_var.p_quant->get(0,0) << " " << dyn_var.q_aux[0]->get(0,0) << " " << dyn_var.q_aux[1]->get(0,0)
+  //     << " " << dyn_var.p_aux[0]->get(0,0) << " " << dyn_var.p_aux[1]->get(0,0) <<endl; // Debug
 
 }
 
@@ -969,8 +948,42 @@ for(traj = 0; traj < ntraj; traj++){
     if(accepted_states[traj] != initial_states[traj]){
       is_cohered[traj].assign(nadi, 0);
       is_first[traj].assign(nadi, 0);
+      cout << "destroy auxiliary trajectories " << traj << endl;
     }
   }// traj
+}
+
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, double fac, int traj){
+
+  int ndof = dyn_var.ndof;
+  int nst = dyn_var.nadi;
+  MATRIX& invM = *dyn_var.iM;
+  
+  vector<int>& is_cohered = dyn_var.is_cohered[traj];
+
+  // Compute quantum momenta
+  dyn_var.p_quant->set(-1, traj, 0.0);
+
+  for(int i=0; i<nst; i++){
+    if(is_cohered[i]==1){
+      double a_ii = std::real(C.get(i, 0) * std::conj(C.get(i, 0)));
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
+          *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
+      }
+    }
+  }
+
+  // Add the XF-based decoherence correction
+  for(int i=0; i<nst; i++){
+    for(int j=0; j<nst; j++){
+      for(int idof=0; idof<ndof; idof++){
+        Ham.add(i,j, fac*complex<double>(0.0, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*
+          (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj))) *
+          C.get(i, 0) * std::conj(C.get(j, 0)) );
+      }
+    }
+  }
 }
 
 }// namespace libdyn
