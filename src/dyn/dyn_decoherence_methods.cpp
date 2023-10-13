@@ -818,7 +818,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
   for(int traj=0; traj<ntraj; traj++){
 
     // Destroy auxiliary trajectories if the electronic state is decohered
-    vector<int>& is_cohered = dyn_var.is_cohered[traj];
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
     CMATRIX& dm = *dyn_var.dm_adi[traj];
 
@@ -826,7 +826,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
     for(int i=0; i<nadi; i++){
       double a_ii = dm.get(i,i).real();
-      if(is_cohered[i]==1){
+      if(is_mixed[i]==1){
         if(a_ii>upper_lim){
           is_decohered = 1;
           collapse(*dyn_var.ampl_adi, traj, i, 0);
@@ -837,17 +837,17 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
     if(is_decohered==1){
        for(int i=0; i<nadi; i++){dyn_var.nab_phase[i]->set(-1, traj, 0.0);}
-       is_cohered.assign(nadi, 0);
+       is_mixed.assign(nadi, 0);
        is_first.assign(nadi, 0);
     }
 
     // Check the coherence between adiabatic states
     for(int i=0; i<nadi; i++){
       double a_ii = dm.get(i,i).real(); 
-      if(a_ii<=lower_lim || a_ii>upper_lim){is_cohered[i]=0;}
+      if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[i]=0;}
       else{
-        is_cohered[i]==1 ? is_first[i]=0:is_first[i]=1;
-        is_cohered[i]=1;
+        is_mixed[i]==1 ? is_first[i]=0:is_first[i]=1;
+        is_mixed[i]=1;
       } //else
     } //i
  
@@ -856,7 +856,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
     MATRIX& invM = *dyn_var.iM;
 
     for(int i=0; i<nadi; i++){
-      if(is_cohered[i]==1){
+      if(is_mixed[i]==1){
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
           for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
@@ -891,7 +891,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
     double alpha; 
     for(int i=0; i<nadi; i++){
-      if(is_cohered[i]==1){
+      if(is_mixed[i]==1){
         p_real = dyn_var.p->col(traj); 
         
         if(i==a){
@@ -919,7 +919,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
     // Propagate the spatial derivative of phases
     for(int i=0; i<nadi; i++){
-      if(is_cohered[i]==1){
+      if(is_mixed[i]==1){
         if(is_first[i]==1){
           dyn_var.nab_phase[i]->set(-1, traj, 0.0);
         }
@@ -938,15 +938,15 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
 }
 
-void shxf(vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states){
+void shxf(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states){
   int traj;
-  int ntraj = is_cohered.size();
-  int nadi = is_cohered[0].size();
+  int ntraj = is_mixed.size();
+  int nadi = is_mixed[0].size();
 
 for(traj = 0; traj < ntraj; traj++){
     // When a hop occurs, destroy auxiliary trajectories 
     if(accepted_states[traj] != initial_states[traj]){
-      is_cohered[traj].assign(nadi, 0);
+      is_mixed[traj].assign(nadi, 0);
       is_first[traj].assign(nadi, 0);
       cout << "destroy auxiliary trajectories " << traj << endl;
     }
@@ -959,13 +959,13 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   int nst = dyn_var.nadi;
   MATRIX& invM = *dyn_var.iM;
   
-  vector<int>& is_cohered = dyn_var.is_cohered[traj];
+  vector<int>& is_mixed = dyn_var.is_mixed[traj];
 
   // Compute quantum momenta
   dyn_var.p_quant->set(-1, traj, 0.0);
 
   for(int i=0; i<nst; i++){
-    if(is_cohered[i]==1){
+    if(is_mixed[i]==1){
       double a_ii = std::real(C.get(i, 0) * std::conj(C.get(i, 0)));
       for(int idof=0; idof<ndof; idof++){
         dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii

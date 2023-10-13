@@ -173,10 +173,10 @@ void dyn_variables::allocate_shxf(){
 
   if(shxf_vars_status==0){
     for(int itraj=0; itraj<ntraj; itraj++){
-      is_cohered.push_back(vector<int>());
+      is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
-        is_cohered[itraj].push_back(0);
+        is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
       } // i
     } // itraj
