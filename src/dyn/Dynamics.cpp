@@ -1163,6 +1163,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else if(prms.decoherence_algo==5){
     if(prms.rep_tdse==1){
       shxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.isNBRA);
+  
+      if(prms.ensemble==1){
+        for(idof=0; idof<n_therm_dofs; idof++){
+          dof = prms.thermostat_dofs[idof];
+          for(traj=0; traj<ntraj; traj++){
+            for(i=0; i<nadi; i++){
+              dyn_var.p_aux[i]->scale(dof, traj, therm[traj].vel_scale(1.0*prms.dt));
+            }// i
+          }// traj 
+        }//idof
+      }
     }
     else{ cout<<"ERROR: SHXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
