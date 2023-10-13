@@ -833,7 +833,6 @@ void xf_destroy_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first,
          is_mixed[traj].assign(nadi, 0);
          is_first[traj].assign(nadi, 0);
       }
-
     } //traj
 }
 
@@ -850,15 +849,22 @@ void xf_create_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, 
     double lower_lim = threshold;
     
     for(int traj=0; traj<ntraj; traj++){
-  
+      int nr_mixed = 0; 
       for(int i=0; i<nadi; i++){
         double a_ii = std::real(Coeff.get(i,traj) * std::conj(Coeff.get(i,traj)));
         if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[traj][i]=0;}
         else{
           is_mixed[traj][i]==1 ? is_first[traj][i]=0:is_first[traj][i]=1;
           is_mixed[traj][i]=1;
-        } //else
+          nr_mixed += 1;
+        }
       } //i
+
+      // Prevent spurious decoherence
+      if (nr_mixed < 2){
+         is_mixed[traj].assign(nadi, 0);
+         is_first[traj].assign(nadi, 0);
+      }
     } //traj 
 }
 
