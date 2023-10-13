@@ -481,7 +481,7 @@ vector<int> accept_hops(dyn_control_params& prms,
       if(old_st != new_st){
 
         p_tr = p.col(traj);
-        double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+        double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
 
         // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
@@ -528,7 +528,7 @@ vector<int> accept_hops(dyn_control_params& prms,
       if(old_st != new_st){
 
         p_tr = p.col(traj);
-        double T_i = compute_kinetic_energy(p_tr, invM); // initial kinetic energy
+        double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
         double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
         double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
         double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
