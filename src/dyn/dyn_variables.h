@@ -318,9 +318,9 @@ class dyn_variables{
     Whether an adiabatic state interacts with the others
 
     Options:
-     vector< vector<int> > is_cohered(ntraj, nadi)
+     vector< vector<int> > is_mixed(ntraj, nadi)
   */
-  vector<vector<int>> is_cohered;
+  vector<vector<int>> is_mixed;
   
   /**
     Whether the decoherence is turned on first time

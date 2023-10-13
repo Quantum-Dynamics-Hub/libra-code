@@ -330,7 +330,7 @@ void export_dyn_decoherence_objects(){
   def("shxf", expt_shxf_v1);
   
   void (*expt_shxf_v2)
-  (vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
+  (vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
   def("shxf", expt_shxf_v2);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
