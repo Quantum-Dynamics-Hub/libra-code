@@ -802,6 +802,66 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
+void xf_destroy_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, CMATRIX& Coeff, double threshold){
+    /**
+    \brief When the electronic state recovers to an adiabatic state, destroy auxiliary trajectories
+
+    */
+    int traj;
+    int ntraj = is_mixed.size();
+    int nadi = is_mixed[0].size();
+
+    double upper_lim = 1.0 - threshold;
+    double lower_lim = threshold;
+    
+    for(int traj=0; traj<ntraj; traj++){
+
+      int is_recovered = 0;
+
+      for(int i=0; i<nadi; i++){
+        double a_ii = std::real(Coeff.get(i,traj) * std::conj(Coeff.get(i,traj)));
+        if(is_mixed[traj][i]==1){
+          if(a_ii>upper_lim){
+            is_recovered = 1;
+            collapse(Coeff, traj, i, 0);
+            break;
+          }
+        }
+      } //i
+
+      if(is_recovered==1){
+         is_mixed[traj].assign(nadi, 0);
+         is_first[traj].assign(nadi, 0);
+      }
+
+    } //traj
+}
+
+void xf_create_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, CMATRIX& Coeff, double threshold){
+    /**
+    \brief When the electronic state is in a superposition between adiabatic states, create auxiliary trajectories
+
+    */
+    int traj;
+    int ntraj = is_mixed.size();
+    int nadi = is_mixed[0].size();
+
+    double upper_lim = 1.0 - threshold;
+    double lower_lim = threshold;
+    
+    for(int traj=0; traj<ntraj; traj++){
+  
+      for(int i=0; i<nadi; i++){
+        double a_ii = std::real(Coeff.get(i,traj) * std::conj(Coeff.get(i,traj)));
+        if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[traj][i]=0;}
+        else{
+          is_mixed[traj][i]==1 ? is_first[traj][i]=0:is_first[traj][i]=1;
+          is_mixed[traj][i]=1;
+        } //else
+      } //i
+    } //traj 
+}
+
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
     /**
     \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
@@ -815,45 +875,18 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
   double upper_lim = 1.0 - threshold;
   double lower_lim = threshold;
 
+  xf_destroy_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  xf_create_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  MATRIX& invM = *dyn_var.iM;
   for(int traj=0; traj<ntraj; traj++){
 
-    // Destroy auxiliary trajectories if the electronic state is decohered
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
-    CMATRIX& dm = *dyn_var.dm_adi[traj];
 
-    int is_decohered = 0;
-
-    for(int i=0; i<nadi; i++){
-      double a_ii = dm.get(i,i).real();
-      if(is_mixed[i]==1){
-        if(a_ii>upper_lim){
-          is_decohered = 1;
-          collapse(*dyn_var.ampl_adi, traj, i, 0);
-          break;
-        }
-      }
-    } //i
-
-    if(is_decohered==1){
-       for(int i=0; i<nadi; i++){dyn_var.nab_phase[i]->set(-1, traj, 0.0);}
-       is_mixed.assign(nadi, 0);
-       is_first.assign(nadi, 0);
-    }
-
-    // Check the coherence between adiabatic states
-    for(int i=0; i<nadi; i++){
-      double a_ii = dm.get(i,i).real(); 
-      if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[i]=0;}
-      else{
-        is_mixed[i]==1 ? is_first[i]=0:is_first[i]=1;
-        is_mixed[i]=1;
-      } //else
-    } //i
- 
     // Propagate auxiliary positions
     int a = dyn_var.act_states[traj];
-    MATRIX& invM = *dyn_var.iM;
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
@@ -873,8 +906,15 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
         }
       }
     } //i
+  } //traj
 
-    // Propagate auxiliary momenta
+  // Propagate auxiliary momenta
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+    
+    int a = dyn_var.act_states[traj];
+
     MATRIX p_real(ndof, 1); 
     MATRIX p_aux_old(ndof, 1);
     
@@ -916,8 +956,13 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 
       }
     }//i
+  }//traj
 
-    // Propagate the spatial derivative of phases
+  // Propagate the spatial derivative of phases
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         if(is_first[i]==1){
@@ -930,7 +975,6 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
         }
       }
     }//i
-
   } // traj
 
   //cout << "SHXF " << dyn_var.p_quant->get(0,0) << " " << dyn_var.q_aux[0]->get(0,0) << " " << dyn_var.q_aux[1]->get(0,0)
