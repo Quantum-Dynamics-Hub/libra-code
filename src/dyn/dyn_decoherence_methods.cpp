@@ -1003,7 +1003,7 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, double fac, int traj){
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
 
   int ndof = dyn_var.ndof;
   int nst = dyn_var.nadi;
@@ -1011,28 +1011,32 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   
   vector<int>& is_mixed = dyn_var.is_mixed[traj];
 
+  // Construct and transform the density matrix
+  CMATRIX RHO(nst, nst);
+  RHO = T * C * C.H() * T.H();
+
   // Compute quantum momenta
   dyn_var.p_quant->set(-1, traj, 0.0);
 
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
-      double a_ii = std::real(C.get(i, 0) * std::conj(C.get(i, 0)));
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * RHO.get(i,i).real()
           *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
       }
     }
   }
 
   // Add the XF-based decoherence correction
-  for(int i=0; i<nst; i++){
-    for(int j=0; j<nst; j++){
-      for(int idof=0; idof<ndof; idof++){
-        Ham.add(i,j, fac*complex<double>(0.0, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*
-          (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj))) *
-          C.get(i, 0) * std::conj(C.get(j, 0)) );
-      }
+  for(int idof=0; idof<ndof; idof++){
+    // Set a diagonal matrix of nabla_phase for each dof
+    CMATRIX F(nst, nst);
+    for(int i=0; i<nst; i++){
+      F.set(i,i, complex<double>(0.0, 1.0)*dyn_var.nab_phase[i]->get(idof, traj));
     }
+    F = T * F * T.H();
+
+    Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
   }
 }
 
