@@ -487,9 +487,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   if(prms.rep_tdse==0){ Coeff = *dyn_var.ampl_dia; }
   else if(prms.rep_tdse==1){ Coeff = *dyn_var.ampl_adi; }
 
-  int is_xf = 0;
-  if(prms.decoherence_algo==5){is_xf = 1;}
-
 //  dyn_var.compute_kinetic_energies()
 
   ///======================== Now do the integration of the TD-SE ===================
@@ -583,12 +580,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // A crude factorization of the Hamiltonian operator
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T, itraj);}
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
       B = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       C = B * T_new * A * C;
@@ -598,12 +593,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // Trotter-based symmetric splitting
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T, itraj);}
       B = exp_(Hvib, complex<double>(0.0, -0.25*dt) );
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
 
       C = T_new * B * T_new.H() * A * T_new * B * C;
@@ -613,11 +606,9 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // The local diabatization approach
       Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix      
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
       Hvib = T_new.H() * Hvib * T_new;      
       Hvib += Hvib_old;
 
@@ -631,7 +622,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       Hvib = ham_prev->get_hvib_adi();
 
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T, itraj);}
 
       A = exp_(Hvib, complex<double>(0.0, -dt) );
       C = T_new * A * C;
@@ -641,11 +631,9 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 2-point with vibronic Hamiltonian
       Hvib_old = ham_prev->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       Hvib += Hvib_old;
 
@@ -657,12 +645,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 2-point Hvib with vibronic Hamiltonian and correction
       Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_hvib_adi();
       Hvib = T_new.H() * Hvib * T_new;
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       Hvib += Hvib_old;
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
@@ -673,11 +659,9 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 2-point with vibronic Hamiltonian, no reordering 
       Hvib_old = ham_prev->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       Hvib += Hvib_old;
 
@@ -695,13 +679,11 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       Hvib = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T, itraj);}
       propagate_electronic_rot(0.5*dt, C, Hvib);
       C = T_new * C;
 
       Hvib = ham->get_ham_adi(); 
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
       propagate_electronic_rot(0.5*dt, C, Hvib);
 
     }// method == 10 && 110
@@ -710,10 +692,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // Trotter-based symmetric splitting, but with rotations
       Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       propagate_electronic_rot(0.25*dt, C, Hvib_old);
       C = T_new * C;
@@ -728,11 +708,9 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // The local diabatization approach, but with rotation
       Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_ham_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
       Hvib = T_new.H() * Hvib * T_new;
       Hvib += Hvib_old;
 
@@ -745,7 +723,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 1-point with vibronic Hamiltonian
       Hvib = ham_prev->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T, itraj);}
 
       propagate_electronic_rot(dt, C, Hvib);
       C = T_new * C;
@@ -755,11 +732,9 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 2-point with vibronic Hamiltonian
       Hvib_old = ham_prev->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       Hvib += Hvib_old;
 
@@ -771,12 +746,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // 2-point Hvib with vibronic Hamiltonian and correction
       Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
-      if(is_xf){ XF_correction(Hvib_old, dyn_var, C, prms.wp_width, T, itraj);}
 
       Hvib = ham->get_hvib_adi();
       Hvib = T_new.H() * Hvib * T_new;
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
-      if(is_xf){ XF_correction(Hvib, dyn_var, C, prms.wp_width, T_new, itraj);}
 
       Hvib += Hvib_old;
 
@@ -1042,7 +1015,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
-  for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
+  for(i=0; i<num_el; i++){
+    if(prms.decoherence_algo == 5){propagate_half_xf(dyn_var, ham, prms, 0);}
+
+    propagate_electronic(dyn_var, ham, ham_aux, prms);
+
+    if(prms.decoherence_algo == 5){propagate_half_xf(dyn_var, ham, prms, 1);}
+  }
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);

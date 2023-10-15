@@ -19,6 +19,8 @@
 #include "Energy_and_Forces.h"
 #include "dyn_hop_proposal.h"
 #include "dyn_hop_acceptance.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
+#include "../math_meigen/libmeigen.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -1038,6 +1040,75 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
 
     Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
   }
+}
+
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
+  int itraj, i, j;
+
+  int num_el = prms.num_electronic_substeps;
+  double dt = prms.dt / num_el;
+  int method = prms.electronic_integrator;
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst = nadi;
+
+  CMATRIX C(nst, 1);
+  CMATRIX Coeff(nst, ntraj);
+  
+  Coeff = *dyn_var.ampl_adi;
+
+  for(itraj=0; itraj<ntraj; itraj++){
+
+    C = Coeff.col(itraj);
+
+    int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
+    
+    nHamiltonian* ham = Ham.children[traj1];
+    
+    //================= Basis re-expansion ===================
+    CMATRIX P(nadi, nadi);
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(nadi, nadi);
+
+    P = ham->get_time_overlap_adi();  // U_old.H() * U;
+    
+    // More consistent with the new derivations:
+    libmeigen::FullPivLU_inverse(P, T_new);
+    T_new = orthogonalized_T( T_new );
+    
+    if(prms.assume_always_consistent){ T_new.identity(); }
+   
+    // Generate the half-time exponential operator 
+    CMATRIX Hxf_old(nadi, nadi);
+    CMATRIX Hxf(nadi, nadi);
+    CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
+    
+    XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
+    XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+    Hxf = T_new.H() * Hxf * T_new;      
+    Hxf += Hxf_old;
+      
+    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
+
+    if(do_rotation==1){
+      C = T_new * D * T_new.H() * C;
+    }
+    else{
+      C = D * C;
+    }
+
+    *dyn_var.proj_adi[itraj] = T_new;
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
+
+  } //itraj
+  *dyn_var.ampl_adi = Coeff;
 }
 
 }// namespace libdyn
