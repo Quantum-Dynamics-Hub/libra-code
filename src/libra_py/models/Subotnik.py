@@ -203,14 +203,7 @@ def double_arch_geometry(q, params, full_id=None):
 
 
     H01, dH01 = 0.0, 0.0
-    if x<-Z:
-        e_plus = math.exp(C*(x+Z))
-        e_minus = math.exp(C*(x-Z))
-
-        H01 = B * ( -e_minus + e_plus)
-        dH01 = B * C * ( -e_minus + e_plus) 
-
-    elif x>-Z and x<Z:
+    if x>-Z and x<Z:
         e_plus = math.exp(-C*(x+Z))
         e_minus = math.exp(C*(x-Z))
 
@@ -218,10 +211,11 @@ def double_arch_geometry(q, params, full_id=None):
         dH01 = B * C * ( -e_minus + e_plus) 
          
     else:
-        e_plus = math.exp(-C*(x+Z))
-        e_minus = math.exp(-C*(x-Z))
+        sign = x/abs(x)
+        e_plus = math.exp(-C*(x+Z)*sign)
+        e_minus = math.exp(-C*(x-Z)*sign)
 
-        H01 = B * ( e_minus - e_plus) 
+        H01 = B * sign * ( e_minus - e_plus) 
         dH01 = -B * C * ( e_minus - e_plus) 
 
     
