@@ -99,7 +99,7 @@ def dumbbell_geometry(q, params, full_id=None):
         H01 = B * ( e_minus + (2.0 - e_plus) )
         dH01 = B * C * ( e_minus - e_plus) 
 
-    elif x>-Z and x<Z:
+    elif x>=-Z and x=<Z:
         e_plus = math.exp(-C*(x+Z))
         e_minus = math.exp(C*(x-Z))
 
