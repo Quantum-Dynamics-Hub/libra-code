@@ -1016,11 +1016,15 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){
-    if(prms.decoherence_algo == 5){propagate_half_xf(dyn_var, ham, prms, 0);}
+    if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      propagate_half_xf(dyn_var, ham, prms, 0);
+    }
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
-    if(prms.decoherence_algo == 5){propagate_half_xf(dyn_var, ham, prms, 1);}
+    if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      propagate_half_xf(dyn_var, ham, prms, 1);
+    }
   }
 
   // Recompute density matrices in response to the updated amplitudes  
@@ -1165,6 +1169,24 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       }
     }
     else{ cout<<"ERROR: SHXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
+  }
+  // MQCXF
+  else if(prms.decoherence_algo==6){
+    if(prms.rep_tdse==1){
+      mqcxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.isNBRA);
+  
+      if(prms.ensemble==1){
+        for(idof=0; idof<n_therm_dofs; idof++){
+          dof = prms.thermostat_dofs[idof];
+          for(traj=0; traj<ntraj; traj++){
+            for(i=0; i<nadi; i++){
+              dyn_var.p_aux[i]->scale(dof, traj, therm[traj].vel_scale(1.0*prms.dt));
+            }// i
+          }// traj 
+        }//idof
+      }
+    }
+    else{ cout<<"ERROR: MQCXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 
 

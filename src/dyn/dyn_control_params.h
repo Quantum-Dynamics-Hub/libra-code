@@ -488,7 +488,7 @@ class dyn_control_params{
 
 
   /**
-  The width of frozen Gaussian for the decoherence from SHXF
+  The width of frozen Gaussian for the decoherence from SHXF & MQCXF
   [ default : 0.1 ]
   */
   double wp_width;

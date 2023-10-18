@@ -305,7 +305,7 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
-  ///================= For SHXF ===================
+  ///============ For independent-trajectory XF method such as SHXF ============
   /**
     Status of the SHXF vars
 
@@ -313,6 +313,14 @@ class dyn_variables{
     1 - allocated
   */
   int shxf_vars_status;
+  
+  /**
+    Status of the MQCXF vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int mqcxf_vars_status;
 
   /**
     Whether an adiabatic state interacts with the others
@@ -388,6 +396,7 @@ class dyn_variables{
   void allocate_dish();
   void allocate_fssh2();
   void allocate_shxf();
+  void allocate_mqcxf();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 

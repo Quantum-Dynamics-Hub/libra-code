@@ -1005,6 +1005,115 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
+    /**
+    \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
+    Ha, J.-K.; Min, S. K. J. Chem. Phys. 2022, 156, 174109
+
+    */
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
+
+  double upper_lim = 1.0 - threshold;
+  double lower_lim = threshold;
+
+  xf_destroy_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  xf_create_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  MATRIX& invM = *dyn_var.iM;
+  for(int traj=0; traj<ntraj; traj++){
+
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        if(is_first[i]==1){
+          // Initially, the auxiliary position is set to the real position
+          for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){  
+            dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * dt); 
+          }
+        }
+      }
+    } //i
+  } //traj
+
+  // Propagate auxiliary momenta
+  CMATRIX coeff_tmp = *dyn_var.ampl_adi;
+  CMATRIX coeff(nadi, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    MATRIX p_real(ndof, 1); 
+    MATRIX p_aux_old(ndof, 1);
+    
+    CMATRIX ham_adi(nadi, nadi);
+    CMATRIX ham_adi_prev(nadi, nadi);
+    ham_adi = ham.children[traj]->get_ham_adi();
+    ham_adi_prev = ham_prev.children[traj]->get_ham_adi();
+
+    for(int i=0; i<nadi; i++){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.p_aux_old[i]->set(idof, traj, dyn_var.p_aux[i]->get(idof, traj));
+      }
+    }
+   
+    vector<int> _id(2, 0);  _id[1] = traj;
+    coeff = coeff_tmp.col(traj);
+    double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+    double alpha; 
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        p_real = dyn_var.p->col(traj); 
+        
+        if(is_first[i]==1){
+          alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
+        }
+        else{
+          p_aux_old = dyn_var.p_aux_old[i]->col(traj); 
+          alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+        }
+
+        if (alpha < 0.0){alpha = 0.0;}
+        
+        alpha /= compute_kinetic_energy(p_real, invM);
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.p_aux[i]->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+      }
+    }//i
+  }//traj
+
+  // Propagate the spatial derivative of phases
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        if(is_first[i]==1){
+          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){
+            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+          }//idof
+        }
+      }
+    }//i
+  } // traj
+
+}
+
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
 
   int ndof = dyn_var.ndof;
