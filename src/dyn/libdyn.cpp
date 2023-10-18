@@ -199,6 +199,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("dish_vars_status", &dyn_variables::dish_vars_status)
       .def_readwrite("fssh2_vars_status", &dyn_variables::fssh2_vars_status)
       .def_readwrite("shxf_vars_status", &dyn_variables::shxf_vars_status)
+      .def_readwrite("mqcxf_vars_status", &dyn_variables::mqcxf_vars_status)
 
 
       .def("set_parameters", expt_set_parameters_v1)
@@ -210,6 +211,7 @@ void export_dyn_variables_objects(){
       .def("allocate_dish", &dyn_variables::allocate_dish)
       .def("allocate_fssh2", &dyn_variables::allocate_fssh2)
       .def("allocate_shxf", &dyn_variables::allocate_shxf)
+      .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -332,6 +334,10 @@ void export_dyn_decoherence_objects(){
   void (*expt_shxf_v2)
   (vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
   def("shxf", expt_shxf_v2);
+  
+  void (*expt_mqcxf_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA) = &shxf;
+  def("mqcxf", expt_mqcxf_v1);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
 

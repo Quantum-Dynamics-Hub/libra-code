@@ -102,6 +102,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= SHXF ====================
   shxf_vars_status = 0;
 
+  ///================= MQCXF ====================
+  mqcxf_vars_status = 0;
+
 }
 
 
@@ -200,6 +203,37 @@ void dyn_variables::allocate_shxf(){
   }
 }// allocate_shxf
 
+void dyn_variables::allocate_mqcxf(){
+
+  if(mqcxf_vars_status==0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      is_mixed.push_back(vector<int>());
+      is_first.push_back(vector<int>());
+      for(int i=0; i<nadi; i++){
+        is_mixed[itraj].push_back(0);
+        is_first[itraj].push_back(0);
+      } // i
+    } // itraj
+
+    q_aux = vector<MATRIX*>(nadi); 
+    p_aux = vector<MATRIX*>(nadi);
+    p_aux_old = vector<MATRIX*>(nadi);
+    nab_phase = vector<MATRIX*>(nadi);
+
+    for(int i=0; i<nadi; i++){
+      q_aux[i] = new MATRIX(ndof, ntraj);
+      p_aux[i] = new MATRIX(ndof, ntraj);
+      p_aux_old[i] = new MATRIX(ndof, ntraj);
+      nab_phase[i] = new MATRIX(ndof, ntraj);
+    }
+
+    p_quant = new MATRIX(ndof, ntraj);
+    VP = new MATRIX(ndof, ntraj);
+  
+    mqcxf_vars_status = 1;
+  }
+}// allocate_mqcxf
+
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
@@ -296,6 +330,22 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *VP = *x.VP;
 
   }// if SHXF vars
+  
+  // MQCXF vars - only if initialized
+  if(x.mqcxf_vars_status==1){
+    allocate_mqcxf();
+    
+    // Copy content
+    for(int i=0; i<nadi; i++){
+        *q_aux[i] = *x.q_aux[i];
+        *p_aux[i] = *x.p_aux[i];
+        *p_aux_old[i] = *x.p_aux_old[i];
+        *nab_phase[i] = *x.nab_phase[i];
+    }
+    *p_quant = *x.p_quant;
+    *VP = *x.VP;
+
+  }// if MQCXF vars
 
 }// dyn_variables cctor
 
@@ -393,6 +443,27 @@ dyn_variables::~dyn_variables(){
     delete VP;
 
     shxf_vars_status = 0;
+  }
+
+  if(mqcxf_vars_status==1){
+    for(int i; i<nadi; i++){
+
+        delete q_aux[i];
+        delete p_aux[i];
+        delete p_aux_old[i];
+        delete nab_phase[i];
+
+    }
+
+    q_aux.clear();
+    p_aux.clear();
+    p_aux_old.clear();
+    nab_phase.clear();
+
+    delete p_quant;
+    delete VP;
+
+    mqcxf_vars_status = 0;
   }
 
 }

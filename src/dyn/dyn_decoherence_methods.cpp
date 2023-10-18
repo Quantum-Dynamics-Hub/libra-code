@@ -19,6 +19,8 @@
 #include "Energy_and_Forces.h"
 #include "dyn_hop_proposal.h"
 #include "dyn_hop_acceptance.h"
+#include "../math_specialfunctions/libspecialfunctions.h"
+#include "../math_meigen/libmeigen.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -1003,7 +1005,116 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, double fac, int traj){
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
+    /**
+    \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
+    Ha, J.-K.; Min, S. K. J. Chem. Phys. 2022, 156, 174109
+
+    */
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
+
+  double upper_lim = 1.0 - threshold;
+  double lower_lim = threshold;
+
+  xf_destroy_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  xf_create_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+
+  MATRIX& invM = *dyn_var.iM;
+  for(int traj=0; traj<ntraj; traj++){
+
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        if(is_first[i]==1){
+          // Initially, the auxiliary position is set to the real position
+          for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){  
+            dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * dt); 
+          }
+        }
+      }
+    } //i
+  } //traj
+
+  // Propagate auxiliary momenta
+  CMATRIX coeff_tmp = *dyn_var.ampl_adi;
+  CMATRIX coeff(nadi, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    MATRIX p_real(ndof, 1); 
+    MATRIX p_aux_old(ndof, 1);
+    
+    CMATRIX ham_adi(nadi, nadi);
+    CMATRIX ham_adi_prev(nadi, nadi);
+    ham_adi = ham.children[traj]->get_ham_adi();
+    ham_adi_prev = ham_prev.children[traj]->get_ham_adi();
+
+    for(int i=0; i<nadi; i++){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.p_aux_old[i]->set(idof, traj, dyn_var.p_aux[i]->get(idof, traj));
+      }
+    }
+   
+    vector<int> _id(2, 0);  _id[1] = traj;
+    coeff = coeff_tmp.col(traj);
+    double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+    double alpha; 
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        p_real = dyn_var.p->col(traj); 
+        
+        if(is_first[i]==1){
+          alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
+        }
+        else{
+          p_aux_old = dyn_var.p_aux_old[i]->col(traj); 
+          alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+        }
+
+        if (alpha < 0.0){alpha = 0.0;}
+        
+        alpha /= compute_kinetic_energy(p_real, invM);
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.p_aux[i]->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+      }
+    }//i
+  }//traj
+
+  // Propagate the spatial derivative of phases
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        if(is_first[i]==1){
+          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){
+            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+          }//idof
+        }
+      }
+    }//i
+  } // traj
+
+}
+
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
 
   int ndof = dyn_var.ndof;
   int nst = dyn_var.nadi;
@@ -1011,29 +1122,102 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   
   vector<int>& is_mixed = dyn_var.is_mixed[traj];
 
+  // Construct and transform the density matrix
+  CMATRIX RHO(nst, nst);
+  RHO = T * C * C.H() * T.H();
+
   // Compute quantum momenta
   dyn_var.p_quant->set(-1, traj, 0.0);
 
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
-      double a_ii = std::real(C.get(i, 0) * std::conj(C.get(i, 0)));
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * a_ii
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * RHO.get(i,i).real()
           *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
       }
     }
   }
 
   // Add the XF-based decoherence correction
-  for(int i=0; i<nst; i++){
-    for(int j=0; j<nst; j++){
-      for(int idof=0; idof<ndof; idof++){
-        Ham.add(i,j, fac*complex<double>(0.0, -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*
-          (dyn_var.nab_phase[j]->get(idof, traj) - dyn_var.nab_phase[i]->get(idof, traj))) *
-          C.get(i, 0) * std::conj(C.get(j, 0)) );
-      }
+  for(int idof=0; idof<ndof; idof++){
+    // Set a diagonal matrix of nabla_phase for each dof
+    CMATRIX F(nst, nst);
+    for(int i=0; i<nst; i++){
+      F.set(i,i, complex<double>(0.0, 1.0)*dyn_var.nab_phase[i]->get(idof, traj));
     }
+    F = T * F * T.H();
+
+    Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
   }
+}
+
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
+  int itraj, i, j;
+
+  int num_el = prms.num_electronic_substeps;
+  double dt = prms.dt / num_el;
+  int method = prms.electronic_integrator;
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst = nadi;
+
+  CMATRIX C(nst, 1);
+  CMATRIX Coeff(nst, ntraj);
+  
+  Coeff = *dyn_var.ampl_adi;
+
+  for(itraj=0; itraj<ntraj; itraj++){
+
+    C = Coeff.col(itraj);
+
+    int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
+    
+    nHamiltonian* ham = Ham.children[traj1];
+    
+    //================= Basis re-expansion ===================
+    CMATRIX P(nadi, nadi);
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(nadi, nadi);
+
+    P = ham->get_time_overlap_adi();  // U_old.H() * U;
+    
+    // More consistent with the new derivations:
+    libmeigen::FullPivLU_inverse(P, T_new);
+    T_new = orthogonalized_T( T_new );
+    
+    if(prms.assume_always_consistent){ T_new.identity(); }
+   
+    // Generate the half-time exponential operator 
+    CMATRIX Hxf_old(nadi, nadi);
+    CMATRIX Hxf(nadi, nadi);
+    CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
+    
+    XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
+    XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+    Hxf = T_new.H() * Hxf * T_new;      
+    Hxf += Hxf_old;
+      
+    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
+
+    if(do_rotation==1){
+      C = T_new * D * T_new.H() * C;
+    }
+    else{
+      C = D * C;
+    }
+
+    *dyn_var.proj_adi[itraj] = T_new;
+
+    // Insert the propagated result back
+    for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
+
+  } //itraj
+  *dyn_var.ampl_adi = Coeff;
 }
 
 }// namespace libdyn
