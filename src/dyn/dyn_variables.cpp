@@ -229,6 +229,7 @@ void dyn_variables::allocate_mqcxf(){
 
     p_quant = new MATRIX(ndof, ntraj);
     VP = new MATRIX(ndof, ntraj);
+    f_xf = new MATRIX(ndof, ntraj);
   
     mqcxf_vars_status = 1;
   }
@@ -344,6 +345,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     }
     *p_quant = *x.p_quant;
     *VP = *x.VP;
+    *f_xf = *x.f_xf;
 
   }// if MQCXF vars
 
@@ -462,6 +464,7 @@ dyn_variables::~dyn_variables(){
 
     delete p_quant;
     delete VP;
+    delete f_xf;
 
     mqcxf_vars_status = 0;
   }

@@ -385,7 +385,14 @@ class dyn_variables{
      MATRIX(ndof, ntraj) 
   */
   MATRIX* VP;
+  
+  /**
+    Decoherence force in MQCXF
 
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* f_xf;
 
   ///====================== In dyn_variables.cpp =====================
 

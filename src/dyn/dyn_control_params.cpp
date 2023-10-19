@@ -81,6 +81,7 @@ dyn_control_params::dyn_control_params(){
   ave_gaps = NULL;
   wp_width = 0.1;
   coherence_threshold = 0.01;
+  use_xf_force = 0;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = 0;

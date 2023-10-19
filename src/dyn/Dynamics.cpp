@@ -1039,8 +1039,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
   update_forces(prms, dyn_var, ham);
- 
-
+  
+  if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
+    update_forces_xf(dyn_var, ham, ham_aux);
+    *dyn_var.f += *dyn_var.f_xf;
+  }
 
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -1055,6 +1058,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
 
+  //if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
+  //  update_forces_xf(dyn_var, ham);
+  //  *dyn_var.p = *dyn_var.p + prms.dt* (*dyn_var.f_xf);
+  //}
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
