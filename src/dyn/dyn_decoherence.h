@@ -75,7 +75,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
 void shxf(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states);
 
 // For MQCXF
-void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA);
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA);
 
 // XF propagation
 void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& Ham_prev);

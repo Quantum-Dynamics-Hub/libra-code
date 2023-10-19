@@ -1008,7 +1008,7 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA){
     /**
     \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
     Ha, J.-K.; Min, S. K. J. Chem. Phys. 2022, 156, 174109
@@ -1096,27 +1096,27 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, do
     }//i
   }//traj
 
-  // For the energy conservation, the spatial derivative of phases set to be proportional to the real momentum.
-  // Refer to the reference for details
+  // When the decoherence force based on XF is used, nabla_phase set to be proportional to the real momentum for energy conservation. Refer to the reference for details.
+  if(use_xf_force == 0){
+    // Propagate the spatial derivative of phases
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
 
-  //for(int traj=0; traj<ntraj; traj++){
-  //  vector<int>& is_mixed = dyn_var.is_mixed[traj];
-  //  vector<int>& is_first = dyn_var.is_first[traj];
-
-  //  for(int i=0; i<nadi; i++){
-  //    if(is_mixed[i]==1){
-  //      if(is_first[i]==1){
-  //        dyn_var.nab_phase[i]->set(-1, traj, 0.0);
-  //      }
-  //      else{
-  //        for(int idof=0; idof<ndof; idof++){
-  //          dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
-  //        }//idof
-  //      }
-  //    }
-  //  }//i
-  //} // traj
-
+      for(int i=0; i<nadi; i++){
+        if(is_mixed[i]==1){
+          if(is_first[i]==1){
+            dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){
+              dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+            }//idof
+          }
+        }
+      }//i
+    } // traj
+  }
 }
 
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){

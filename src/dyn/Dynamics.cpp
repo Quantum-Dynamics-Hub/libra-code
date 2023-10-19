@@ -1058,11 +1058,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
 
-  //if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
-  //  update_forces_xf(dyn_var, ham);
-  //  *dyn_var.p = *dyn_var.p + prms.dt* (*dyn_var.f_xf);
-  //}
-
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
     dyn_var.p->scale(prms.constrained_dofs[cdof], -1, 0.0); 
@@ -1180,7 +1175,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // MQCXF
   else if(prms.decoherence_algo==6){
     if(prms.rep_tdse==1){
-      mqcxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.isNBRA);
+      mqcxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.use_xf_force, prms.isNBRA);
   
       if(prms.ensemble==1){
         for(idof=0; idof<n_therm_dofs; idof++){
