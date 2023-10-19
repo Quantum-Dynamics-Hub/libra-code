@@ -804,68 +804,80 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
-void xf_destroy_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, CMATRIX& Coeff, double threshold){
+void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
     /**
     \brief When the electronic state recovers to an adiabatic state, destroy auxiliary trajectories
 
     */
     int traj;
-    int ntraj = is_mixed.size();
-    int nadi = is_mixed[0].size();
+    int ntraj = dyn_var.ntraj;
+    int nadi = dyn_var.nadi;
 
     double upper_lim = 1.0 - threshold;
     double lower_lim = threshold;
     
     for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      CMATRIX& dm = *dyn_var.dm_adi[traj];
 
       int is_recovered = 0;
 
       for(int i=0; i<nadi; i++){
-        double a_ii = std::real(Coeff.get(i,traj) * std::conj(Coeff.get(i,traj)));
-        if(is_mixed[traj][i]==1){
+        double a_ii = dm.get(i,i).real(); 
+        if(is_mixed[i]==1){
           if(a_ii>upper_lim){
             is_recovered = 1;
-            collapse(Coeff, traj, i, 0);
+            collapse(*dyn_var.ampl_adi, traj, i, 0);
             break;
           }
         }
       } //i
 
       if(is_recovered==1){
-         is_mixed[traj].assign(nadi, 0);
-         is_first[traj].assign(nadi, 0);
+         for(int i=0; i<nadi; i++){
+           dyn_var.q_aux[i]->set(-1, traj, 0.0);
+           dyn_var.p_aux[i]->set(-1, traj, 0.0);
+           dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+         }
+         is_mixed.assign(nadi, 0);
+         is_first.assign(nadi, 0);
       }
     } //traj
 }
 
-void xf_create_AT(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, CMATRIX& Coeff, double threshold){
+void xf_create_AT(dyn_variables& dyn_var, double threshold){
     /**
     \brief When the electronic state is in a superposition between adiabatic states, create auxiliary trajectories
 
     */
     int traj;
-    int ntraj = is_mixed.size();
-    int nadi = is_mixed[0].size();
-
+    int ntraj = dyn_var.ntraj;
+    int nadi = dyn_var.nadi;
+    
     double upper_lim = 1.0 - threshold;
     double lower_lim = threshold;
     
     for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      CMATRIX& dm = *dyn_var.dm_adi[traj];
+
       int nr_mixed = 0; 
       for(int i=0; i<nadi; i++){
-        double a_ii = std::real(Coeff.get(i,traj) * std::conj(Coeff.get(i,traj)));
-        if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[traj][i]=0;}
+        double a_ii = dm.get(i,i).real(); 
+        if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[i]=0;}
         else{
-          is_mixed[traj][i]==1 ? is_first[traj][i]=0:is_first[traj][i]=1;
-          is_mixed[traj][i]=1;
+          is_mixed[i]==1 ? is_first[i]=0:is_first[i]=1;
+          is_mixed[i]=1;
           nr_mixed += 1;
         }
       } //i
 
       // Prevent spurious decoherence
       if (nr_mixed < 2){
-         is_mixed[traj].assign(nadi, 0);
-         is_first[traj].assign(nadi, 0);
+         is_mixed.assign(nadi, 0);
+         is_first.assign(nadi, 0);
       }
     } //traj 
 }
@@ -883,9 +895,9 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
   double upper_lim = 1.0 - threshold;
   double lower_lim = threshold;
 
-  xf_destroy_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+  xf_destroy_AT(dyn_var, threshold);
 
-  xf_create_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+  xf_create_AT(dyn_var, threshold);
 
   MATRIX& invM = *dyn_var.iM;
   for(int traj=0; traj<ntraj; traj++){
@@ -963,6 +975,9 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
         }
 
       }
+      else{
+        dyn_var.p_aux[i]->set(-1, traj, 0.0);
+      }
     }//i
   }//traj
 
@@ -1005,7 +1020,7 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA){
     /**
     \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
     Ha, J.-K.; Min, S. K. J. Chem. Phys. 2022, 156, 174109
@@ -1018,9 +1033,9 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, do
   double upper_lim = 1.0 - threshold;
   double lower_lim = threshold;
 
-  xf_destroy_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+  xf_destroy_AT(dyn_var, threshold);
 
-  xf_create_AT(dyn_var.is_mixed, dyn_var.is_first, *dyn_var.ampl_adi, threshold);
+  xf_create_AT(dyn_var, threshold);
 
   MATRIX& invM = *dyn_var.iM;
   for(int traj=0; traj<ntraj; traj++){
@@ -1094,24 +1109,44 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, do
   }//traj
 
   // Propagate the spatial derivative of phases
-  for(int traj=0; traj<ntraj; traj++){
-    vector<int>& is_mixed = dyn_var.is_mixed[traj];
-    vector<int>& is_first = dyn_var.is_first[traj];
+  if(use_xf_force == 0){
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
 
-    for(int i=0; i<nadi; i++){
-      if(is_mixed[i]==1){
-        if(is_first[i]==1){
-          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+      for(int i=0; i<nadi; i++){
+        if(is_mixed[i]==1){
+          if(is_first[i]==1){
+            dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){
+              dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+            }//idof
+          }
         }
-        else{
+      }//i
+    } // traj
+  }
+  // When the decoherence force based on XF is used, nabla_phase set to be proportional to the real momentum for energy conservation. Refer to the reference for details.
+  else{
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      
+      CMATRIX ham_adi(nadi, nadi);
+      ham_adi = ham.children[traj]->get_ham_adi();
+      double Ekin = dyn_var.compute_kinetic_energy(traj);
+
+      for(int i=0; i<nadi; i++){
+        if(is_mixed[i]==1){
           for(int idof=0; idof<ndof; idof++){
-            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
-          }//idof
+            dyn_var.nab_phase[i]->add(idof, traj, -0.5*dyn_var.p->get(idof, traj) * ham_adi.get(i,i).real() / Ekin);
+          }
         }
-      }
-    }//i
-  } // traj
-
+      }//i
+    }//traj
+  }
 }
 
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
@@ -1140,6 +1175,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
 
   // Add the XF-based decoherence correction
   for(int idof=0; idof<ndof; idof++){
+
     // Set a diagonal matrix of nabla_phase for each dof
     CMATRIX F(nst, nst);
     for(int i=0; i<nst; i++){
@@ -1149,6 +1185,62 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
 
     Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
   }
+}
+
+void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& Ham_prev){
+  /**
+    Add the decoherence force in XFMQC
+  */
+
+  int ntraj = dyn_var.ntraj;
+  int ndof = dyn_var.ndof;
+  int nst = dyn_var.nadi;
+  MATRIX& invM = *dyn_var.iM;
+  
+  CMATRIX C(nst, 1);
+  CMATRIX Coeff(nst, ntraj);
+
+  // termporary
+  vector<CMATRIX> F(ndof);
+
+  for(int idof=0; idof<ndof; idof++){
+    F[idof] = CMATRIX(nst, nst);
+  }
+
+  Coeff = *dyn_var.ampl_adi;
+
+  dyn_var.f_xf->set(-1, -1, 0.0);
+  for(int traj=0; traj<ntraj; traj++){
+    C = Coeff.col(traj);
+
+    CMATRIX T_new(nst, nst);
+    T_new = dyn_var.proj_adi[traj];
+
+    double Ekin = dyn_var.compute_kinetic_energy(traj);
+
+    // Compute F for each dof
+    for(int idof=0; idof<ndof; idof++){
+      for(int i=0; i<nst; i++){
+        F[idof].set(i,i, dyn_var.nab_phase[i]->get(idof, traj));
+      }
+    }
+
+    // Save vector potential (contribution from NAC is neglected)
+    for(int idof=0; idof<ndof; idof++){
+      CMATRIX temp = C.H()*F[idof]*C;
+      dyn_var.VP->set(idof, traj, temp.get(0,0).real());
+    }
+
+    // Compute the decoherence force
+    for(int idof=0; idof<ndof; idof++){
+      for(int jdof=0; jdof<ndof; jdof++){
+        //CMATRIX temp = (C.H()*F[jdof]*C) * (C.H()*F[idof]*C) - (F[jdof]*C).H() * (F[idof]*C); 
+        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
+        dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
+         (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
+      }
+    }
+  } //traj
 }
 
 void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
@@ -1163,6 +1255,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
   int ntraj = dyn_var.ntraj;
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
+  MATRIX& invM = *dyn_var.iM;
 
   int nst = nadi;
 
@@ -1185,7 +1278,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     CMATRIX T_new(nadi, nadi);
 
     P = ham->get_time_overlap_adi();  // U_old.H() * U;
-    
+  
     // More consistent with the new derivations:
     libmeigen::FullPivLU_inverse(P, T_new);
     T_new = orthogonalized_T( T_new );
@@ -1196,9 +1289,10 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
-    
+
     XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
     XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+
     Hxf = T_new.H() * Hxf * T_new;      
     Hxf += Hxf_old;
       
