@@ -103,6 +103,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
