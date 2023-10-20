@@ -647,6 +647,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_bcsh()
     elif decoherence_algo==5: # SHXF
         dyn_var.allocate_shxf()
+    elif decoherence_algo==6: # MQCXF
+        dyn_var.allocate_mqcxf()
     if tsh_method==5: # DISH
         dyn_var.allocate_dish()
     if tsh_method==7: #  FSSH2

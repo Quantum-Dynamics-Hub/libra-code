@@ -488,7 +488,7 @@ class dyn_control_params{
 
 
   /**
-  The width of frozen Gaussian for the decoherence from SHXF
+  The width of frozen Gaussian for the decoherence from SHXF & MQCXF
   [ default : 0.1 ]
   */
   double wp_width;
@@ -499,6 +499,13 @@ class dyn_control_params{
   [ default : 0.01 ]
   */
   double coherence_threshold;
+  
+  /**
+  Whether to use the decoherence force in MQCXF
+  The corresponding electronic propagation is adjusted for the energy conservation
+  [ default : 0 ]
+  */
+  int use_xf_force;
 
   /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories

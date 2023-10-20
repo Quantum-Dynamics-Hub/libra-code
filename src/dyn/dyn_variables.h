@@ -305,7 +305,7 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
-  ///================= For SHXF ===================
+  ///============ For independent-trajectory XF method such as SHXF ============
   /**
     Status of the SHXF vars
 
@@ -313,6 +313,14 @@ class dyn_variables{
     1 - allocated
   */
   int shxf_vars_status;
+  
+  /**
+    Status of the MQCXF vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int mqcxf_vars_status;
 
   /**
     Whether an adiabatic state interacts with the others
@@ -377,7 +385,14 @@ class dyn_variables{
      MATRIX(ndof, ntraj) 
   */
   MATRIX* VP;
+  
+  /**
+    Decoherence force in MQCXF
 
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* f_xf;
 
   ///========= For thermally-corrected NBRA ======================
   /**
@@ -404,7 +419,11 @@ class dyn_variables{
   void allocate_dish();
   void allocate_fssh2();
   void allocate_shxf();
+<<<<<<< HEAD
   void allocate_tcnbra();
+=======
+  void allocate_mqcxf();
+>>>>>>> aa5f65575063dff28b15527a494de08c08c5831b
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
