@@ -419,11 +419,8 @@ class dyn_variables{
   void allocate_dish();
   void allocate_fssh2();
   void allocate_shxf();
-<<<<<<< HEAD
   void allocate_tcnbra();
-=======
   void allocate_mqcxf();
->>>>>>> aa5f65575063dff28b15527a494de08c08c5831b
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
