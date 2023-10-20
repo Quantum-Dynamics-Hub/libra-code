@@ -71,14 +71,14 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
 
 // For SHXF
-void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA);
+void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
 void shxf(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states);
 
 // For MQCXF
-void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA);
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
 
 // XF propagation
-void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& Ham_prev);
+void update_forces_xf(dyn_variables& dyn_var);
 void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, int do_rotation);
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj);
 

@@ -1041,8 +1041,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_forces(prms, dyn_var, ham);
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
-    update_forces_xf(dyn_var, ham, ham_aux);
-    *dyn_var.f += *dyn_var.f_xf;
+    update_forces_xf(dyn_var);
   }
 
   // NVT dynamics
@@ -1157,7 +1156,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // SHXF
   else if(prms.decoherence_algo==5){
     if(prms.rep_tdse==1){
-      shxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.isNBRA);
+      shxf(dyn_var, ham, ham_aux, prms);
   
       if(prms.ensemble==1){
         for(idof=0; idof<n_therm_dofs; idof++){
@@ -1175,7 +1174,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // MQCXF
   else if(prms.decoherence_algo==6){
     if(prms.rep_tdse==1){
-      mqcxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.use_xf_force, prms.isNBRA);
+      mqcxf(dyn_var, ham, ham_aux, prms);
   
       if(prms.ensemble==1){
         for(idof=0; idof<n_therm_dofs; idof++){

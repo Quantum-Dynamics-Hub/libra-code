@@ -820,6 +820,7 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
       vector<int>& is_mixed = dyn_var.is_mixed[traj];
       vector<int>& is_first = dyn_var.is_first[traj];
       CMATRIX& dm = *dyn_var.dm_adi[traj];
+      CMATRIX& Coeff = *dyn_var.ampl_adi;
 
       int is_recovered = 0;
 
@@ -828,7 +829,7 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
         if(is_mixed[i]==1){
           if(a_ii>upper_lim){
             is_recovered = 1;
-            collapse(*dyn_var.ampl_adi, traj, i, 0);
+            collapse(Coeff, traj, i, 0);
             break;
           }
         }
@@ -882,7 +883,7 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
     } //traj 
 }
 
-void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA){
+void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
     Ha, J.-K.; Lee, I. S.; Min, S. K. J. Phys. Chem. Lett. 2018, 9, 1097
@@ -892,12 +893,9 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
   int nadi = dyn_var.nadi;
   int ndof = dyn_var.ndof; 
 
-  double upper_lim = 1.0 - threshold;
-  double lower_lim = threshold;
+  xf_destroy_AT(dyn_var, prms.coherence_threshold);
 
-  xf_destroy_AT(dyn_var, threshold);
-
-  xf_create_AT(dyn_var, threshold);
+  xf_create_AT(dyn_var, prms.coherence_threshold);
 
   MATRIX& invM = *dyn_var.iM;
   for(int traj=0; traj<ntraj; traj++){
@@ -920,7 +918,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dou
           }
           else{
             for(int idof=0; idof<ndof; idof++){  
-              dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * dt); 
+              dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * prms.dt); 
             }
           }
         }
@@ -1017,7 +1015,7 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA){
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
     Ha, J.-K.; Min, S. K. J. Chem. Phys. 2022, 156, 174109
@@ -1027,12 +1025,9 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, do
   int nadi = dyn_var.nadi;
   int ndof = dyn_var.ndof; 
 
-  double upper_lim = 1.0 - threshold;
-  double lower_lim = threshold;
+  xf_destroy_AT(dyn_var, prms.coherence_threshold);
 
-  xf_destroy_AT(dyn_var, threshold);
-
-  xf_create_AT(dyn_var, threshold);
+  xf_create_AT(dyn_var, prms.coherence_threshold);
 
   MATRIX& invM = *dyn_var.iM;
   for(int traj=0; traj<ntraj; traj++){
@@ -1048,7 +1043,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, do
         }
         else{
           for(int idof=0; idof<ndof; idof++){  
-            dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * dt); 
+            dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * prms.dt); 
           }
         }
       }
@@ -1163,7 +1158,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   }
 }
 
-void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& Ham_prev){
+void update_forces_xf(dyn_variables& dyn_var){
   /**
     Add the decoherence force in XFMQC
   */
@@ -1184,9 +1179,6 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& H
   dyn_var.f_xf->set(-1, -1, 0.0);
   for(int traj=0; traj<ntraj; traj++){
     C = Coeff.col(traj);
-
-    CMATRIX T_new(nst, nst);
-    T_new = dyn_var.proj_adi[traj];
 
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
@@ -1210,6 +1202,9 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& Ham, nHamiltonian& H
       }
     }
   } //traj
+  
+  // Add the XF contribution
+  *dyn_var.f += *dyn_var.f_xf;
 }
 
 void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){

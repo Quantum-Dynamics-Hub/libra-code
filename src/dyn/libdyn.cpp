@@ -329,7 +329,7 @@ void export_dyn_decoherence_objects(){
   def("mfsd", expt_mfsd_v2);
 
   void (*expt_shxf_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA) = &shxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
   def("shxf", expt_shxf_v1);
   
   void (*expt_shxf_v2)
@@ -337,7 +337,7 @@ void export_dyn_decoherence_objects(){
   def("shxf", expt_shxf_v2);
   
   void (*expt_mqcxf_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA) = &mqcxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &mqcxf;
   def("mqcxf", expt_mqcxf_v1);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
