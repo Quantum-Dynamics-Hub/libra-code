@@ -379,6 +379,22 @@ class dyn_variables{
   MATRIX* VP;
 
 
+  ///========= For thermally-corrected NBRA ======================
+  /**
+    Status of the TCNBRA vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int tcnbra_vars_status;
+  
+  /** 
+    The alpha parameters to scale NACs
+  */
+  vector<double> thermal_correction_factors; 
+
+
+
   ///====================== In dyn_variables.cpp =====================
 
   void allocate_electronic_vars();
@@ -388,6 +404,7 @@ class dyn_variables{
   void allocate_dish();
   void allocate_fssh2();
   void allocate_shxf();
+  void allocate_tcnbra();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 

@@ -317,6 +317,8 @@ void export_nhamiltonian_objects(){
 
       .def_readwrite("eigen_algo", &nHamiltonian::eigen_algo)
       .def_readwrite("phase_corr_ovlp_tol", &nHamiltonian::phase_corr_ovlp_tol)
+
+      .def_readwrite("gs_kinetic_energy", &nHamiltonian::gs_kinetic_energy)
   
       .def("set_levels", &nHamiltonian::set_levels)
       .def("add_child", &nHamiltonian::add_child)

@@ -102,6 +102,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= SHXF ====================
   shxf_vars_status = 0;
 
+  ///================ TCNBRA ===================
+  tcnbra_vars_status = 0;
+
 }
 
 
@@ -201,6 +204,16 @@ void dyn_variables::allocate_shxf(){
 }// allocate_shxf
 
 
+void dyn_variables::allocate_tcnbra(){
+
+  if(tcnbra_vars_status==0){
+    thermal_correction_factors = vector<double>(ntraj, 1.0); 
+
+    tcnbra_vars_status = 1;
+  }
+}// allocate_tcnbra
+
+
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
@@ -270,7 +283,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
   }// if DISH vars
 
   // FSSH2 vars - only if initialized
-  if(x.fssh2_vars_status==1){
+    if(x.fssh2_vars_status==1){
     allocate_fssh2();
  
     // Copy content
@@ -296,6 +309,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *VP = *x.VP;
 
   }// if SHXF vars
+
+ 
+  // TCNBRA vars - only if initialized
+  if(x.tcnbra_vars_status==1){
+    allocate_tcnbra();
+
+    // Copy content
+    thermal_correction_factors = x.thermal_correction_factors;
+
+  }// if TCNBRA vars
 
 }// dyn_variables cctor
 
@@ -393,6 +416,12 @@ dyn_variables::~dyn_variables(){
     delete VP;
 
     shxf_vars_status = 0;
+  }
+
+  if(tcnbra_vars_status==1){
+    thermal_correction_factors.clear(); 
+
+    tcnbra_vars_status = 0;
   }
 
 }

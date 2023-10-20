@@ -457,6 +457,87 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 
 }
 
+void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+/**
+  Computes the thermal corrections the adiabatic NACs according to the experimental method
+  and scales NACs according to it
+*/
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst, a,b;
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+
+//  CMATRIX res(nst, nst);
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+  
+    int i = dyn_var.act_states[itraj];
+    double E_tot = prms.total_energy; 
+    double T0 = ham.children[itraj]->gs_kinetic_energy;
+    double Ei = ham.children[itraj]->get_ham_adi().get(i,i).real();
+    double E0 = ham.children[itraj]->get_ham_adi().get(0,0).real();
+    double alp = (E_tot - Ei)/(E_tot - E0); 
+
+    if(alp>0.0){  alp = sqrt(alp); }
+    else{  alp = 1.0; }
+
+    dyn_var.thermal_correction_factors[itraj] = alp;
+
+    // Scale hvib_adi, and nac_adi by the alp parameter
+    for(a=0; a<nst; a++){
+      for(b=0; b<nst; b++){
+
+        if(a!=b){
+          ham.children[itraj]->nac_adi->scale(a, b, alp);
+          ham.children[itraj]->hvib_adi->scale(a, b, alp);
+          ham.children[itraj]->time_overlap_adi->scale(a, b, alp);
+//          ham->children[itraj]->ovlp_adi->scale(a, b, alp)
+        }       
+      }// for b
+    }// for a
+
+  }// for itraj
+
+}
+
+void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst, a,b;
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+
+    double alp = dyn_var.thermal_correction_factors[itraj];
+
+    // Scale hvib_adi, and nac_adi by the alp parameter
+    for(a=0; a<nst; a++){
+      for(b=0; b<nst; b++){
+
+        if(a!=b){
+          ham.children[itraj]->nac_adi->scale(a, b, 1.0/alp);
+          ham.children[itraj]->hvib_adi->scale(a, b, 1.0/alp);
+          ham.children[itraj]->time_overlap_adi->scale(a, b, 1.0/alp);
+//          ham->children[itraj]->ovlp_adi->scale(a, b, alp)
+        }
+      }// for b
+    }// for a
+
+  }// for itraj
+
+}
+
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -510,6 +591,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     CMATRIX T_new(ham->nadi, ham->nadi);
 
     P = ham->get_time_overlap_adi();  // U_old.H() * U;
+
+//    if(prms.thermally_corrected_nbra){
+//      P = thermally_corrected_time_overlap(dyn_var, ham, prms, itraj);
+//    }
 
     // More consistent with the new derivations:
     FullPivLU_inverse(P, T_new);
@@ -1030,6 +1115,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms);    }
+
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
@@ -1199,6 +1286,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     vector<int> old_states(dyn_var.act_states); 
 
+
+    // Potentially apply thermal correction to NBRA
+    //if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms);    }
+
     //========================== Hop proposal and acceptance ================================
 
     // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7)
@@ -1270,10 +1361,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
 
 
+  //  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
         
   }// tsh_method == 0, 1, 2, 3, 4, 5
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
+
+  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
 
 
   // Update the amplitudes and DM, so that we have them consistent in the output

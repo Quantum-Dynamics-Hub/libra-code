@@ -168,6 +168,11 @@ void nHamiltonian::init_mem_status(int ndia_, int nadi_, int nnucl_){
   cum_phase_corr = nullptr;       cum_phase_corr_mem_status = 0;
 
 
+
+  /** Other external parameters*/
+  gs_kinetic_energy = 1.0;      
+
+
   /**  Control parameters  */
   eigen_algo = 0;
 
@@ -353,7 +358,7 @@ void nHamiltonian::copy_level_content(nHamiltonian* src){
   if(time_overlap_adi_mem_status != 0  && src->time_overlap_adi_mem_status != 0 ){   *time_overlap_adi = *(src->time_overlap_adi); }
   if(cum_phase_corr_mem_status != 0  && src->cum_phase_corr_mem_status != 0 ){   *cum_phase_corr = *(src->cum_phase_corr); }
 
-
+  gs_kinetic_energy = src->gs_kinetic_energy;
 
 
 

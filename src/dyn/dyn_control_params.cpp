@@ -103,6 +103,9 @@ dyn_control_params::dyn_control_params(){
   num_electronic_substeps = 1;
   electronic_integrator = 0;
   assume_always_consistent = 0;
+
+  thermally_corrected_nbra = 0;
+  total_energy = 0.01; // some reasonable value
 }
 
 
@@ -184,6 +187,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   schwartz_decoherence_inv_alpha = new MATRIX( x.schwartz_decoherence_inv_alpha->n_rows, x.schwartz_decoherence_inv_alpha->n_cols );
   *schwartz_decoherence_inv_alpha = *x.schwartz_decoherence_inv_alpha;
+
+  thermally_corrected_nbra = x.thermally_corrected_nbra;
+  total_energy = x.total_energy;
 
 
 }
@@ -362,6 +368,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
     else if(key=="electronic_integrator"){ electronic_integrator = bp::extract<int>(params.values()[i]); }
     else if(key=="assume_always_consistent"){  assume_always_consistent = bp::extract<int>(params.values()[i]); }
+
+    else if(key=="thermally_corrected_nbra"){ thermally_corrected_nbra = bp::extract<int>(params.values()[i]); }
+    else if(key=="total_energy") { total_energy = bp::extract<double>(params.values()[i]);  }
 
   }// for i
 

@@ -684,6 +684,18 @@ class dyn_control_params{
   */
   int assume_always_consistent;
 
+ 
+  /**
+    Flag setting to use the thermal correction to NBRA: 0 - no (default approach); 1 - rescale NACs
+  */
+  int thermally_corrected_nbra;
+
+
+  /**
+    Total energy of the system - should be set according to the initial condition of the experiment
+    Used by the nbra rescaling approach (experimental method)
+  */ 
+  double total_energy;
 
 
   dyn_control_params();

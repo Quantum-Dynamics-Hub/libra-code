@@ -501,7 +501,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 
-                             "is_nbra":0, "icond":0, "nfiles":-1
+                             "is_nbra":0, "icond":0, "nfiles":-1, "thermally_corrected_nbra":0, "total_energy":0.0
                            } )
 
     #================= Surface hopping: proposal, acceptance =======================
@@ -569,6 +569,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     icond = dyn_params["icond"]    # Setting the initial geoemtry in the dynamics    
     nfiles = dyn_params["nfiles"]  # The number of loaded Ham files
     tsh_method = dyn_params["tsh_method"] 
+    thermally_corrected_nbra = dyn_params["thermally_corrected_nbra"]
+    total_energy = dyn_params["total_energy"]
+ 
 
     #q = MATRIX(_q)
     #p = MATRIX(_p)
@@ -649,6 +652,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     if tsh_method==7: #  FSSH2
         dyn_var.allocate_fssh2()
         dyn_var.save_curr_dm_into_prev()
+
+    if thermally_corrected_nbra==1:
+        dyn_var.allocate_tcnbra()
 
 
     #sys.exit(0)

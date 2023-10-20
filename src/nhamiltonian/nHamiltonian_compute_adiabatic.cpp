@@ -584,7 +584,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object 
     }
   
   
-  
+  // Additional properties that may be needed in some NBRA calculations:
+    has_attr=0;
+    has_attr = (int)hasattr(obj,"gs_kinetic_energy");
+    if(has_attr){
+
+      //check_cmatrix(obj, "gs_kinetic_energy", 1, 1);
+      gs_kinetic_energy = extract<double>(obj.attr("gs_kinetic_energy"));
+    }
+ 
   
   }// if lvl == level
 

@@ -121,6 +121,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
       .def_readwrite("electronic_integrator", &dyn_control_params::electronic_integrator)
       .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
+      .def_readwrite("thermally_corrected_nbra", &dyn_control_params::thermally_corrected_nbra)
+      .def_readwrite("total_energy", &dyn_control_params::total_energy)
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -199,6 +201,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("dish_vars_status", &dyn_variables::dish_vars_status)
       .def_readwrite("fssh2_vars_status", &dyn_variables::fssh2_vars_status)
       .def_readwrite("shxf_vars_status", &dyn_variables::shxf_vars_status)
+      .def_readwrite("tcnbra_vars_status", &dyn_variables::tcnbra_vars_status)
 
 
       .def("set_parameters", expt_set_parameters_v1)
@@ -210,6 +213,7 @@ void export_dyn_variables_objects(){
       .def("allocate_dish", &dyn_variables::allocate_dish)
       .def("allocate_fssh2", &dyn_variables::allocate_fssh2)
       .def("allocate_shxf", &dyn_variables::allocate_shxf)
+      .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
