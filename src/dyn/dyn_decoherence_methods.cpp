@@ -820,7 +820,6 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
       vector<int>& is_mixed = dyn_var.is_mixed[traj];
       vector<int>& is_first = dyn_var.is_first[traj];
       CMATRIX& dm = *dyn_var.dm_adi[traj];
-      CMATRIX& Coeff = *dyn_var.ampl_adi;
 
       int is_recovered = 0;
 
@@ -829,7 +828,7 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
         if(is_mixed[i]==1){
           if(a_ii>upper_lim){
             is_recovered = 1;
-            collapse(Coeff, traj, i, 0);
+            collapse(*dyn_var.ampl_adi, traj, i, 0);
             break;
           }
         }

@@ -305,7 +305,19 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 E_ij = <|E_i - E_j|>.  It is needed when dephasing_informed option is used
 
 
+            * **dyn_params["wp_width"]** ( double ): A width of a Gaussian function as an approximation to adiabatic wave packets. [ default: 0.3 Bohr ]
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
+
+            * **dyn_params["coherence_threshold"]** ( double ): A population threshold for creating/destroying auxiliary trajectories. [ default: 0.01 ]
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["use_xf_force"]** (int): Whether to use the XF-based force.
+                Only used with `decoherence_algo == 6`
+                
+                - 0: Only Ehrenfest-like force; EhXF [ default ]
+                - 1: The whole force including the XF-correction; MQCXF 
 
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
@@ -518,7 +530,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
-                             "wp_width":0.1, "coherence_threshold":0.01
+                             "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0
                            } )
 
     #================= Entanglement of trajectories ================================
