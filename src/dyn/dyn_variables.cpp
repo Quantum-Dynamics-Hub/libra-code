@@ -244,6 +244,15 @@ void dyn_variables::allocate_tcnbra(){
   if(tcnbra_vars_status==0){
     thermal_correction_factors = vector<double>(ntraj, 1.0); 
 
+    for(int i=0; i<ntraj; i++){
+      Thermostat th;
+      th.nu_therm = 0.001; th.thermostat_type = "Nose-Hoover"; th.NHC_size = 1;     
+      // by default, thermostat has 1 translational DOF
+      th.init_nhc();
+      tcnbra_thermostats.push_back(th); 
+    }
+    tcnbra_ekin = vector<double>(ntraj, -1.0);
+
     tcnbra_vars_status = 1;
   }
 }// allocate_tcnbra
@@ -370,6 +379,9 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     // Copy content
     thermal_correction_factors = x.thermal_correction_factors;
 
+    tcnbra_thermostats = x.tcnbra_thermostats;
+    tcnbra_ekin = x.tcnbra_ekin; 
+
   }// if TCNBRA vars
 
 }// dyn_variables cctor
@@ -472,6 +484,8 @@ dyn_variables::~dyn_variables(){
 
   if(tcnbra_vars_status==1){
     thermal_correction_factors.clear(); 
+    tcnbra_thermostats.clear();
+    tcnbra_ekin.clear();
 
     tcnbra_vars_status = 0;
 

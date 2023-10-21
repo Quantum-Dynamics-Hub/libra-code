@@ -414,11 +414,15 @@ double boltz_factor(double E_new, double E_old, double T, int boltz_opt){
 }
 
 
-
+//accept_hops(dyn_var, ham, prms, prop_states, rnd);
+/*
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
        vector<int>& which_trajectories){
+*/
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+                        dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories){
 /**
   This function returns the new state indices if the corresponding transitions can be
   accepted according to given criteria
@@ -438,9 +442,17 @@ vector<int> accept_hops(dyn_control_params& prms,
   32 - Maxwell-Boltzmann
   33 - updated quantum Boltzmann
 
+  40 - based on tcnbra_ekin
+
 */
 
   vector<int>& which_dofs = prms.quantum_dofs;
+
+  MATRIX& q = *dyn_var.q;
+  MATRIX& p = *dyn_var.p;
+  MATRIX& invM = *dyn_var.iM;
+  CMATRIX& C = *dyn_var.ampl_adi; 
+  vector<int> initial_states = dyn_var.act_states; 
 
   int ndof = q.n_rows;
   int ndof_active = which_dofs.size();
@@ -770,32 +782,63 @@ vector<int> accept_hops(dyn_control_params& prms,
 
   }// algo = 33
 
+  else if(prms.hop_acceptance_algo==40){  // based on tcnbra_ekin
+
+    for(itraj=0; itraj<ntraj_active; itraj++){
+      traj = which_trajectories[itraj];
+
+      int old_st = initial_states[traj];
+      int new_st = proposed_states[traj];
+
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy
+
+//      ekin_new = E_i + 
+/*
+      if(ksi < prob ){
+        fstates[traj] = proposed_states[traj];
+      }
+      else{
+        fstates[traj] = initial_states[traj];
+      }
+*/
+
+    }// for itraj
+  }// algo == 40
+
 
   return fstates;
 
 }
 
-
+/*
 vector<int> accept_hops(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
+*/
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+                        dyn_control_params& prms,Random& rnd){
 
-    int ntraj = q.n_cols;
+    int ntraj = dyn_var.ntraj;
     vector<int> which_trajectories(ntraj);
 
     for(int i=0; i<ntraj; i++){ which_trajectories[i] = i; }
 
-    return accept_hops(prms, q, p, invM, C, /*projectors,*/ ham, proposed_states, initial_states, rnd, which_trajectories);
+    return accept_hops(dyn_var, ham, proposed_states, prms, rnd, which_trajectories);
+
+//    return accept_hops(prms, q, p, invM, C, /*projectors,*/ ham, proposed_states, initial_states, rnd, which_trajectories);
 
 }
 
 
 
 
-
+/*
 vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
        nHamiltonian& ham, vector<int>& act_states, Random& rnd){
+*/
+vector<int> where_can_we_hop(int traj, dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms,Random& rnd){
 /**
    This function gives a list of indices of states to which a trajectory of index `traj` can
    hop to from its current active state
@@ -808,9 +851,14 @@ vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
    We don't care about all other values in act_states, q, p, etc. ... other than corresponding to the index `traj`
 
 */
+//  MATRIX& q = *dyn_var.q;
+//  MATRIX& p = *dyn_var.p;
+//  MATRIX& invM = *dyn_var.iM;
+//  CMATRIX& Coeff = *dyn_var.ampl_adi;
+    vector<int> act_states = dyn_var.act_states;
 
     int ntraj = act_states.size();
-    int nstates = Coeff.n_rows;
+    int nstates = dyn_var.nadi; // Coeff.n_rows;
 
     vector<int> proposed_states(ntraj, -1);
     vector<int> new_states(ntraj, -1);
@@ -827,7 +875,9 @@ vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
         /// Decide if we can accept the transitions, the function below only checks the hopping for a single trajectory `traj`
         /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
         /// the variable `which_trajectories` instructs to handle only the current trajectory
-        new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, act_states, rnd, which_trajectories);
+        //new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, act_states, rnd, which_trajectories);
+
+        new_states = accept_hops(dyn_var, ham, proposed_states, prms, rnd);
 
         if(new_states[traj]!=act_states[traj]){
           all_possible_hops.push_back(new_states[traj]);
@@ -842,10 +892,13 @@ vector<int> where_can_we_hop(int traj, dyn_control_params& prms,
 
 
 
-
+/*
 void handle_hops_nuclear(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
+       MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
        nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states){
+*/
+void handle_hops_nuclear(dyn_variables& dyn_var, nHamiltonian& ham, 
+vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 /**
   This function changes the nuclear dynamical variables after successful or frustrated hops
 
@@ -863,6 +916,10 @@ void handle_hops_nuclear(dyn_control_params& prms,
   211 - along difference of state-specific forces, reverse on frustrated hops
 
 */
+  MATRIX& q = *dyn_var.q;
+  MATRIX& p = *dyn_var.p;
+  MATRIX& invM = *dyn_var.iM;
+  CMATRIX& C = *dyn_var.ampl_adi;
 
   vector<int>& which_dofs = prms.quantum_dofs;
 

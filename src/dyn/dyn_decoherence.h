@@ -107,11 +107,15 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& i
 
 
 ///================  In dyn_methods_dish.cpp  ===================================
-
+/*
 vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
        nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
        vector<MATRIX>& decoherence_rates, Random& rnd);
+*/
+
+vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
+                 vector<MATRIX>& decoherence_rates, dyn_control_params& prms,Random& rnd);
 
 /*
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);

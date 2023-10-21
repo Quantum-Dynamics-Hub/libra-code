@@ -330,6 +330,8 @@ class dyn_control_params{
       - 31: accept hops with the probability taken from the quantum Boltzmann distribution
       - 32: accept hops with the probability taken from the classical Maxwell-Boltzmann distribution
       - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
+
+      - 40: based on possibility to conserve energy using tcnbra_ekin variables (experimental for TC-NBRA)
   */
   int hop_acceptance_algo;
 
@@ -350,6 +352,8 @@ class dyn_control_params{
       - 201: along derivative coupling vectors, reverse on frustrated hops
       - 210: along difference of state-specific forces, don't reverse on frustrated hops
       - 211: along difference of state-specific forces, reverse on frustrated hops
+
+      - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
   */
   int momenta_rescaling_algo;
 
@@ -703,6 +707,19 @@ class dyn_control_params{
     Used by the nbra rescaling approach (experimental method)
   */ 
   double total_energy;
+
+
+  /**
+    Frequency of the auxiliary thermostats in the TC-NBRA method
+  */
+  double tcnbra_nu_therm; 
+
+
+  /**
+    Length of the auxiliary NHC thermostat in the TC-NBRA method
+  */
+  double tcnbra_nhc_size;
+  
 
 
   dyn_control_params();

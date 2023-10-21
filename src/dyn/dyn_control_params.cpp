@@ -107,6 +107,8 @@ dyn_control_params::dyn_control_params(){
 
   thermally_corrected_nbra = 0;
   total_energy = 0.01; // some reasonable value
+  tcnbra_nu_therm = 0.001; 
+  tcnbra_nhc_size = 1;
 }
 
 
@@ -191,7 +193,8 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   thermally_corrected_nbra = x.thermally_corrected_nbra;
   total_energy = x.total_energy;
-
+  tcnbra_nu_therm = x.tcnbra_nu_therm;
+  tcnbra_nhc_size = x.tcnbra_nhc_size;
 
 }
 dyn_control_params::~dyn_control_params() {  
@@ -372,6 +375,8 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     else if(key=="thermally_corrected_nbra"){ thermally_corrected_nbra = bp::extract<int>(params.values()[i]); }
     else if(key=="total_energy") { total_energy = bp::extract<double>(params.values()[i]);  }
+    else if(key=="tcnbra_nu_therm") { tcnbra_nu_therm =  bp::extract<double>(params.values()[i]); }
+    else if(key=="tcnbra_nhc_size") { tcnbra_nhc_size =  bp::extract<int>(params.values()[i]); }
 
   }// for i
 

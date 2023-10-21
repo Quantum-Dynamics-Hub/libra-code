@@ -457,7 +457,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 
 }
 
-void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, Random& rnd){
 /**
   Computes the thermal corrections the adiabatic NACs according to the experimental method
   and scales NACs according to it
@@ -475,6 +475,13 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
 
 //  CMATRIX res(nst, nst);
 
+//  double Dt = sqrt(prms.dt);
+//  double E_tot = prms.total_energy;
+//  E_tot += Dt * rnd.normal() * ham.children[0]->gs_kinetic_energy;
+//  prms.total_energy = E_tot;
+
+//  cout<<"In thermal correction\n";
+
   for(int itraj=0; itraj<ntraj; itraj++){
   
     int i = dyn_var.act_states[itraj];
@@ -482,10 +489,39 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
     double T0 = ham.children[itraj]->gs_kinetic_energy;
     double Ei = ham.children[itraj]->get_ham_adi().get(i,i).real();
     double E0 = ham.children[itraj]->get_ham_adi().get(0,0).real();
-    double alp = (E_tot - Ei)/(E_tot - E0); 
+    double alp = (E_tot - Ei )/(E_tot - E0); 
+    //alp += 0.01*rnd.normal();
+
+    // the first call of the thermal correction function after initialization
+    if( dyn_var.tcnbra_ekin[itraj] < 0.0){  
+      dyn_var.tcnbra_ekin[itraj] = (E_tot - Ei );  
+
+      dyn_var.tcnbra_thermostats[itraj].nu_therm = prms.tcnbra_nu_therm;
+      dyn_var.tcnbra_thermostats[itraj].NHC_size = prms.tcnbra_nhc_size;
+      dyn_var.tcnbra_thermostats[itraj].init_nhc();
+    }
+
+//    cout<<"itraj = "<<itraj<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+
+    double scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+    dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
+//    cout<<"first scaling = "<<scl;
+
+    dyn_var.tcnbra_thermostats[itraj].propagate_nhc(prms.dt, dyn_var.tcnbra_ekin[itraj], 0.0, 0.0);  
+
+    scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+    dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
+//    cout<<"second scaling = "<<scl<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+
+    alp = dyn_var.tcnbra_ekin[itraj] / T0;
+
+//    cout<<"alp = "<<alp<<endl;
 
     if(alp>0.0){  alp = sqrt(alp); }
     else{  alp = 1.0; }
+
+
+    alp = 1.3;
 
     dyn_var.thermal_correction_factors[itraj] = alp;
 
@@ -1098,7 +1134,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms);    }
+  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
@@ -1319,7 +1355,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     
       // Decide if to accept the transitions (and then which)
       // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-      act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+      // 10/21/2023 - deprecate this version 
+      //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+      // in favor of this:
+      act_states = accept_hops(dyn_var, ham, prop_states, prms, rnd);
 
 
       //=== Post-hop decoherence options ===
@@ -1351,11 +1390,14 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       dyn_var.coherence_time->add(-1, -1, prms.dt);
       MATRIX coherence_time(*dyn_var.coherence_time);
 
-      /// New version, as of 8/3/2020
       //cout<<"Entering DISH ============\n";
       //dyn_var.coherence_time->show_matrix();
+/*
       act_states = dish(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, dyn_var.act_states, coherence_time, 
                         decoherence_rates, rnd);
+*/
+      act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
+
  
 
       *dyn_var.coherence_time = coherence_time;
@@ -1365,10 +1407,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
+    /*
     p = *dyn_var.p;
     handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
     *dyn_var.p = p;
     dyn_var.act_states = act_states;
+    */
+    handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 

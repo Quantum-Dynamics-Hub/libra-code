@@ -29,6 +29,7 @@
 #include "../math_specialfunctions/libspecialfunctions.h"
 #include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
+#include "thermostat/Thermostat.h"
 
 
 
@@ -43,6 +44,8 @@ using namespace libnhamiltonian;
 
 /// libdyn namespace
 namespace libdyn{
+
+using namespace libthermostat;
 
 namespace bp = boost::python;
 
@@ -405,8 +408,21 @@ class dyn_variables{
   
   /** 
     The alpha parameters to scale NACs
+  */ 
+  vector<double> thermal_correction_factors;
+
+
+  /**
+    Auxiliary thermostats for each trajectory
+    This is a list of ntraj thermostat objects
   */
-  vector<double> thermal_correction_factors; 
+  vector<Thermostat> tcnbra_thermostats;
+
+
+  /**
+    Kinetic energies for each trajectory
+  */
+  vector<double> tcnbra_ekin;
 
 
 

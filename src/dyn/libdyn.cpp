@@ -123,6 +123,9 @@ void export_dyn_control_params_objects(){
       .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
       .def_readwrite("thermally_corrected_nbra", &dyn_control_params::thermally_corrected_nbra)
       .def_readwrite("total_energy", &dyn_control_params::total_energy)
+      .def_readwrite("tcnbra_nu_therm", &dyn_control_params::tcnbra_nu_therm)
+      .def_readwrite("tcnbra_nhc_size", &dyn_control_params::tcnbra_nhc_size)
+
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -203,7 +206,8 @@ void export_dyn_variables_objects(){
       .def_readwrite("shxf_vars_status", &dyn_variables::shxf_vars_status)
       .def_readwrite("tcnbra_vars_status", &dyn_variables::tcnbra_vars_status)
       .def_readwrite("mqcxf_vars_status", &dyn_variables::mqcxf_vars_status)
-
+      .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
+      .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -401,11 +405,16 @@ void export_dyn_decoherence_objects(){
 
 
   ///================== In dyn_methods_dish.cpp  =======================
-
+/*
   vector<int> (*expt_dish_v1)
   (dyn_control_params& prms, MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
-  /*vector<CMATRIX>& projectors,*/ nHamiltonian& ham, vector<int>& act_states, 
+   nHamiltonian& ham, vector<int>& act_states, 
   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
+*/
+
+  vector<int> (*expt_dish_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& decoherence_rates, 
+   dyn_control_params& prms,Random& rnd) = &dish;
   def("dish", expt_dish_v1);
 
 
@@ -473,33 +482,53 @@ void export_dyn_hop_acceptance_objects(){
   def("boltz_factor", expt_boltz_factor_v1);
 
 
-
+/*
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
    vector<int>& which_trajectories) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
 
   vector<int> (*expt_accept_hops_v2)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
+  def("accept_hops", expt_accept_hops_v2);
+*/
+
+  vector<int> (*expt_accept_hops_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+   dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories) = &accept_hops;
+  def("accept_hops", expt_accept_hops_v1);
+
+  vector<int> (*expt_accept_hops_v2)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+   dyn_control_params& prms,Random& rnd) = &accept_hops;
   def("accept_hops", expt_accept_hops_v2);
 
 
-
+/*
   vector<int> (*expt_where_can_we_hop_v1)
   (int traj, dyn_control_params& prms,
-   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
    nHamiltonian& ham, vector<int>& act_states, Random& rnd) = &where_can_we_hop;
   def("where_can_we_hop", expt_where_can_we_hop_v1);
+*/
+  vector<int> (*expt_where_can_we_hop_v1)
+  (int traj, dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms,Random& rnd) = &where_can_we_hop;
+  def("where_can_we_hop", expt_where_can_we_hop_v1);
 
-
+/*
   void (*expt_handle_hops_nuclear_v1)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
    nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states) = &handle_hops_nuclear;
+*/
+
+  void (*expt_handle_hops_nuclear_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham,
+  vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms) = &handle_hops_nuclear;
   def("handle_hops_nuclear", expt_handle_hops_nuclear_v1);
 
 }

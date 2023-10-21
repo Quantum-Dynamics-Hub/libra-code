@@ -501,7 +501,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
                              "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 
-                             "is_nbra":0, "icond":0, "nfiles":-1, "thermally_corrected_nbra":0, "total_energy":0.0
+                             "is_nbra":0, "icond":0, "nfiles":-1, "thermally_corrected_nbra":0, "total_energy":0.0,
+                             "tcnbra_nu_therm":0.001, "tcnbra_nhc_size":1
                            } )
 
     #================= Surface hopping: proposal, acceptance =======================
