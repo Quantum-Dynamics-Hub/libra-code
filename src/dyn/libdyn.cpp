@@ -103,6 +103,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -332,7 +333,7 @@ void export_dyn_decoherence_objects(){
   def("mfsd", expt_mfsd_v2);
 
   void (*expt_shxf_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA) = &shxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
   def("shxf", expt_shxf_v1);
   
   void (*expt_shxf_v2)
@@ -340,7 +341,7 @@ void export_dyn_decoherence_objects(){
   def("shxf", expt_shxf_v2);
   
   void (*expt_mqcxf_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int use_xf_force, int isNBRA) = &mqcxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &mqcxf;
   def("mqcxf", expt_mqcxf_v1);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
