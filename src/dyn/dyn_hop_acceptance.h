@@ -50,10 +50,10 @@ double HO_prob_up(vector<double>& E, vector<int>& qn, double T, vector<double>& 
 double boltz_factor(double E_new, double E_old, double T, int boltz_opt);
 
 
-vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham,vector<int>& proposed_states, 
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham,vector<int>& proposed_states, vector<int>& initial_states, 
           dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories);
 
-vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham,vector<int>& proposed_states,
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham,vector<int>& proposed_states, vector<int>& initial_states,
           dyn_control_params& prms,Random& rnd);
 
 /**

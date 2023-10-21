@@ -244,7 +244,7 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
               old_states = act_states;
 //              new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, old_states, rnd, which_trajectories);
 
-              new_states = accept_hops(dyn_var, ham, proposed_states, prms, rnd);
+              new_states = accept_hops(dyn_var, ham, proposed_states, old_states, prms, rnd, which_trajectories);
 
            
               //cout<<"proposed_state = "<<proposed_states[traj]<<"  accepted hop "<<new_states[traj]<<endl;

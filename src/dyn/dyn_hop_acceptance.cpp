@@ -421,7 +421,7 @@ vector<int> accept_hops(dyn_control_params& prms,
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
        vector<int>& which_trajectories){
 */
-vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,  vector<int>& initial_states,
                         dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories){
 /**
   This function returns the new state indices if the corresponding transitions can be
@@ -448,11 +448,11 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
 
   vector<int>& which_dofs = prms.quantum_dofs;
 
-  MATRIX& q = *dyn_var.q;
-  MATRIX& p = *dyn_var.p;
-  MATRIX& invM = *dyn_var.iM;
-  CMATRIX& C = *dyn_var.ampl_adi; 
-  vector<int> initial_states = dyn_var.act_states; 
+  MATRIX q(*dyn_var.q);
+  MATRIX p(*dyn_var.p);
+  MATRIX invM(*dyn_var.iM);
+  CMATRIX C(*dyn_var.ampl_adi); 
+//  vector<int> initial_states = dyn_var.act_states; 
 
   int ndof = q.n_rows;
   int ndof_active = which_dofs.size();
@@ -793,15 +793,10 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy
 
-//      ekin_new = E_i + 
-/*
-      if(ksi < prob ){
-        fstates[traj] = proposed_states[traj];
-      }
-      else{
-        fstates[traj] = initial_states[traj];
-      }
-*/
+      double ekin_new = E_i + dyn_var.tcnbra_ekin[traj] - E_f;
+
+      if(ekin_new >= 0.0){    fstates[traj] = proposed_states[traj];   }
+      else{    fstates[traj] = initial_states[traj];      }
 
     }// for itraj
   }// algo == 40
@@ -816,7 +811,7 @@ vector<int> accept_hops(dyn_control_params& prms,
        MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
        nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ){
 */
-vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states,
                         dyn_control_params& prms,Random& rnd){
 
     int ntraj = dyn_var.ntraj;
@@ -824,7 +819,7 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
 
     for(int i=0; i<ntraj; i++){ which_trajectories[i] = i; }
 
-    return accept_hops(dyn_var, ham, proposed_states, prms, rnd, which_trajectories);
+    return accept_hops(dyn_var, ham, proposed_states, initial_states, prms, rnd, which_trajectories);
 
 //    return accept_hops(prms, q, p, invM, C, /*projectors,*/ ham, proposed_states, initial_states, rnd, which_trajectories);
 
@@ -877,7 +872,7 @@ vector<int> where_can_we_hop(int traj, dyn_variables& dyn_var, nHamiltonian& ham
         /// the variable `which_trajectories` instructs to handle only the current trajectory
         //new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, act_states, rnd, which_trajectories);
 
-        new_states = accept_hops(dyn_var, ham, proposed_states, prms, rnd);
+        new_states = accept_hops(dyn_var, ham, proposed_states, act_states, prms, rnd, which_trajectories);
 
         if(new_states[traj]!=act_states[traj]){
           all_possible_hops.push_back(new_states[traj]);
@@ -916,10 +911,10 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
   211 - along difference of state-specific forces, reverse on frustrated hops
 
 */
-  MATRIX& q = *dyn_var.q;
-  MATRIX& p = *dyn_var.p;
-  MATRIX& invM = *dyn_var.iM;
-  CMATRIX& C = *dyn_var.ampl_adi;
+  MATRIX q(*dyn_var.q);
+  MATRIX p(*dyn_var.p);
+  MATRIX invM(*dyn_var.iM);
+  CMATRIX C(*dyn_var.ampl_adi);
 
   vector<int>& which_dofs = prms.quantum_dofs;
 
@@ -1116,6 +1111,27 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
     }// for traj
 
   }// algo = 210 || 211
+
+  else if(prms.momenta_rescaling_algo==40){  // based on tcnbra_ekin
+    for(traj=0; traj<ntraj; traj++){
+
+      int old_st = old_states[traj];
+      int new_st = new_states[traj];
+
+      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+      double E_f = hvib.get(new_st, new_st).real();  // final potential energy
+
+      double ekin_new = E_i + dyn_var.tcnbra_ekin[traj] - E_f;
+      dyn_var.tcnbra_ekin[traj] = ekin_new;
+
+    }// for itraj
+  }// algo == 40
+
+
+  *dyn_var.q = q;
+  *dyn_var.p = p;
+  *dyn_var.ampl_adi = C;
+
 
 
 }// handle_hops_nuclear

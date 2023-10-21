@@ -513,7 +513,9 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
     dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
 //    cout<<"second scaling = "<<scl<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
 
+//    if(T0>0.0){
     alp = dyn_var.tcnbra_ekin[itraj] / T0;
+//    }else{ alp = 1.0; }
 
 //    cout<<"alp = "<<alp<<endl;
 
@@ -521,7 +523,7 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
     else{  alp = 1.0; }
 
 
-    alp = 1.3;
+    alp = 1.0;
 
     dyn_var.thermal_correction_factors[itraj] = alp;
 
@@ -1357,7 +1359,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       // 10/21/2023 - deprecate this version 
       //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
       // in favor of this:
-      act_states = accept_hops(dyn_var, ham, prop_states, prms, rnd);
+      act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
 
 
       //=== Post-hop decoherence options ===
@@ -1411,8 +1413,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
     *dyn_var.p = p;
     dyn_var.act_states = act_states;
+
     */
     handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+    dyn_var.act_states = act_states;
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 

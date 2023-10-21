@@ -499,12 +499,12 @@ void export_dyn_hop_acceptance_objects(){
 */
 
   vector<int> (*expt_accept_hops_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states,
    dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
 
   vector<int> (*expt_accept_hops_v2)
-  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states,
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states,
    dyn_control_params& prms,Random& rnd) = &accept_hops;
   def("accept_hops", expt_accept_hops_v2);
 
