@@ -175,14 +175,15 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 
   vector<double> res(ntraj, 0.0);
 
+/*
   if(prms.force_method==0){  // No forces
 
     // Don't compute forces at all - e.g. in NBRA
     for(itraj=0; itraj<ntraj; itraj++){ res[itraj] = 0.0; }
 
   }// NBRA
-
-  else if(prms.force_method==1){   // State-specific forces
+*/
+  if(prms.force_method==0 || prms.force_method==1){   // State-specific forces
 
     // TSH or adiabatic (including excited states)
     // state-specific forces
@@ -274,7 +275,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 
   }// NBRA
 
-  else if(prms.force_method==1){   // State-specific forces
+  if(prms.force_method==1){   // State-specific forces
 
     // TSH or adiabatic (including excited states)
     // state-specific forces   

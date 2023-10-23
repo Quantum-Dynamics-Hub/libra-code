@@ -497,6 +497,10 @@ class dyn_variables{
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop();
 
+
+  double compute_tcnbra_ekin();
+  double compute_tcnbra_thermostat_energy();
+
   void save_curr_dm_into_prev();
 
 

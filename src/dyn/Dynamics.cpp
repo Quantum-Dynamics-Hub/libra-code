@@ -457,7 +457,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 
 }
 
-void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, Random& rnd){
+void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_old, vector<int> old_states, dyn_control_params& prms, Random& rnd){
 /**
   Computes the thermal corrections the adiabatic NACs according to the experimental method
   and scales NACs according to it
@@ -494,12 +494,26 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
 
     // the first call of the thermal correction function after initialization
     if( dyn_var.tcnbra_ekin[itraj] < 0.0){  
+//      cout<<"in apply thermal correction: traj = "<<itraj<<" state = "<<i<<"  ekin = "<<E_tot - Ei<<endl;
       dyn_var.tcnbra_ekin[itraj] = (E_tot - Ei );  
 
       dyn_var.tcnbra_thermostats[itraj].nu_therm = prms.tcnbra_nu_therm;
       dyn_var.tcnbra_thermostats[itraj].NHC_size = prms.tcnbra_nhc_size;
       dyn_var.tcnbra_thermostats[itraj].init_nhc();
     }
+   
+
+
+      int prev_i = old_states[itraj];
+      double E_prev_i = ham_old.children[itraj]->get_ham_adi().get(prev_i,prev_i).real();
+      double dE = Ei - E_prev_i; // adiabatic change of potential energy
+      dyn_var.tcnbra_ekin[itraj] -= dE; // reflect it in the kinetic energy
+
+      //if(itraj==0 || itraj==1){  cout<<"ekin = "<<dyn_var.tcnbra_ekin[itraj]<<" E_prev = "<<E_prev_i<<"  E_curr = "<<Ei<<endl;
+      
+
+      if(dyn_var.tcnbra_ekin[itraj]<0.0){ dyn_var.tcnbra_ekin[itraj] = 0.0; }
+    
 
 //    cout<<"itraj = "<<itraj<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
 
@@ -511,7 +525,9 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
 
     scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
     dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
-//    cout<<"second scaling = "<<scl<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+
+	//    cout<<"second scaling = "<<scl<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+
 
 //    if(T0>0.0){
     alp = dyn_var.tcnbra_ekin[itraj] / T0;
@@ -523,7 +539,7 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_con
     else{  alp = 1.0; }
 
 
-    alp = 1.0;
+//    alp = 1.0;
 
     dyn_var.thermal_correction_factors[itraj] = alp;
 
@@ -1130,13 +1146,21 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   ham_aux.copy_content(ham);
 
+//  cout<<"Before recompute:\n";
+//  cout<<"ham = \n";  ham.children[0]->get_ham_adi().show_matrix();
+//  cout<<"ham_aux = \n"; ham_aux.children[0]->get_ham_adi().show_matrix();
+
 
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
+//  cout<<"After recompute:\n";
+//  cout<<"ham = \n";  ham.children[0]->get_ham_adi().show_matrix();
+//  cout<<"ham_aux = \n"; ham_aux.children[0]->get_ham_adi().show_matrix();
+
+//  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
@@ -1156,11 +1180,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
 
+ 
+  vector<int> old_states( dyn_var.act_states);
+
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
   if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
     dyn_var.update_active_states();
   }
+
+  // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
+  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
   update_forces(prms, dyn_var, ham);
@@ -1336,6 +1366,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     vector<int> old_states(dyn_var.act_states); 
 
+//    if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
 
     // Potentially apply thermal correction to NBRA
     //if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms);    }
@@ -1398,9 +1429,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
                         decoherence_rates, rnd);
 */
       act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
-
- 
-
       *dyn_var.coherence_time = coherence_time;
 
     }// DISH
@@ -1417,6 +1445,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     */
     handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
     dyn_var.act_states = act_states;
+
+    // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
+    if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
@@ -1428,7 +1459,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
-  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
+//  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
 
 
   // Update the amplitudes and DM, so that we have them consistent in the output
@@ -1438,6 +1469,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Saves the current density matrix into the previous - needed for FSSH2
   dyn_var.save_curr_dm_into_prev();
+
+  
 
 }
 

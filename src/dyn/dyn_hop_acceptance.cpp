@@ -786,6 +786,7 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
 
     for(itraj=0; itraj<ntraj_active; itraj++){
       traj = which_trajectories[itraj];
+      hvib = ham.children[traj]->get_hvib_adi();
 
       int old_st = initial_states[traj];
       int new_st = proposed_states[traj];
@@ -1118,10 +1119,20 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
       int old_st = old_states[traj];
       int new_st = new_states[traj];
 
+      hvib = ham.children[traj]->get_ham_adi();
+
       double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
       double E_f = hvib.get(new_st, new_st).real();  // final potential energy
 
       double ekin_new = E_i + dyn_var.tcnbra_ekin[traj] - E_f;
+
+//      if(old_st!=new_st){
+//        cout<<"trajectory = "<<traj<<" total energy (before) = "<<E_i + dyn_var.tcnbra_ekin[traj]<<"  (after) = "<<E_f + ekin_new<<endl;
+//        cout<<" ekin(old)= "<<dyn_var.tcnbra_ekin[traj]<<" ekin(new)= "<<ekin_new<<endl;
+//      if(old_st!=new_st){
+//        cout<<"transition from "<<old_st<<" to "<<new_st<<" ekin(old)= "<<dyn_var.tcnbra_ekin[traj]<<" ekin(new)= "<<ekin_new<<endl;
+//        cout<<"E(old) = "<<E_i<<" E(new) = "<<E_f<<endl;
+//      }
       dyn_var.tcnbra_ekin[traj] = ekin_new;
 
     }// for itraj

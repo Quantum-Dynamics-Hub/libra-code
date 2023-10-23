@@ -266,6 +266,9 @@ void export_dyn_variables_objects(){
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
 
+      .def("compute_tcnbra_ekin", &dyn_variables::compute_tcnbra_ekin)
+      .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
+
       .def("save_curr_dm_into_prev", &dyn_variables::save_curr_dm_into_prev)
 
   ;

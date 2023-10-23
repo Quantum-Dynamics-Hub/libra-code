@@ -98,7 +98,15 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
 
         # System + thermostat energy
         if "E_NHC" in saver.keywords:
-            saver.add_dataset("E_NHC", (_nsteps,) , "R")  
+            saver.add_dataset("E_NHC", (_nsteps,) , "R") 
+
+        # TC-NBRA kinetic energy - averaged over all trajectories
+        if "tcnbra_ekin" in saver.keywords:
+            saver.add_dataset("tcnbra_ekin", (_nsteps,) , "R" )
+
+        # TC-NBRA thermostat energy
+        if "tcnbra_thermostat_energy" in saver.keywords:
+            saver.add_dataset("tcnbra_thermostat_energy", (_nsteps,), "R")
 
 
     if output_level>=2:
@@ -381,7 +389,15 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
     # System + thermostat energy
     saver.save_scalar(t, "E_NHC", E_NHC)  
 
+    # TC-NBRA average kinetic energy    
+    if "tcnbra_ekin" in saver.keywords and "tcnbra_ekin" in saver.np_data.keys():
+        tcnbra_ekin = dyn_var.compute_tcnbra_ekin()
+        saver.save_scalar(t, "tcnbra_ekin", tcnbra_ekin)
 
+    # TC-NBRA average energy of thermostat
+    if "tcnbra_thermostat_energy" in saver.keywords and "tcnbra_thermostat_energy" in saver.np_data.keys():
+        tcnbra_thermostat_energy = dyn_var.compute_tcnbra_thermostat_energy();
+        saver.save_scalar(t, "tcnbra_thermostat_energy", tcnbra_thermostat_energy)
 
 
 def save_hdf5_2D(saver, i, states, txt_type=0):
