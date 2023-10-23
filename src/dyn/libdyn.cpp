@@ -126,6 +126,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("total_energy", &dyn_control_params::total_energy)
       .def_readwrite("tcnbra_nu_therm", &dyn_control_params::tcnbra_nu_therm)
       .def_readwrite("tcnbra_nhc_size", &dyn_control_params::tcnbra_nhc_size)
+      .def_readwrite("tcnbra_do_nac_scaling", &dyn_control_params::tcnbra_do_nac_scaling)
 
 
       .def("sanity_check", expt_sanity_check_v1)

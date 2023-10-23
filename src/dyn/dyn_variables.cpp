@@ -251,7 +251,7 @@ void dyn_variables::allocate_tcnbra(){
       th.init_nhc();
       tcnbra_thermostats.push_back(th); 
     }
-    tcnbra_ekin = vector<double>(ntraj, -1.0);
+    tcnbra_ekin = vector<double>(ntraj, -1000.0);
 
     tcnbra_vars_status = 1;
   }

@@ -704,21 +704,36 @@ class dyn_control_params{
 
   /**
     Total energy of the system - should be set according to the initial condition of the experiment
-    Used by the nbra rescaling approach (experimental method)
+    Used by the nbra rescaling approach (experimental method) [ units: a.u. ]
+    Default = 0.01 a.u.
   */ 
   double total_energy;
 
 
   /**
     Frequency of the auxiliary thermostats in the TC-NBRA method
+    Default = 0.001
   */
   double tcnbra_nu_therm; 
 
 
   /**
-    Length of the auxiliary NHC thermostat in the TC-NBRA method
+    Length of the auxiliary NHC thermostat in the TC-NBRA method [units: unitless]
+    Default = 1 
   */
-  double tcnbra_nhc_size;
+  int tcnbra_nhc_size;
+
+
+  /**
+    Whether to rescale NACs to reflect the fact that the instantaneous velocities 
+    may be different from those in the ground state sampling. This would rescale off-diagonal
+    elements of NAC, Hvib, and time-overlap matrices. Does not rescale derivative coupling
+    vectors cause the chances are - they won't be used in NBRA or if they are used, it is not
+    NBRA anymore.
+    0 - do not rescale NACs etc. 
+    1 - do rescale them [ default ]
+  */
+  int tcnbra_do_nac_scaling;
   
 
 

@@ -109,6 +109,7 @@ dyn_control_params::dyn_control_params(){
   total_energy = 0.01; // some reasonable value
   tcnbra_nu_therm = 0.001; 
   tcnbra_nhc_size = 1;
+  tcnbra_do_nac_scaling = 1;
 }
 
 
@@ -196,6 +197,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   total_energy = x.total_energy;
   tcnbra_nu_therm = x.tcnbra_nu_therm;
   tcnbra_nhc_size = x.tcnbra_nhc_size;
+  tcnbra_do_nac_scaling = x.tcnbra_do_nac_scaling;
 
 }
 dyn_control_params::~dyn_control_params() {  
@@ -379,6 +381,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="total_energy") { total_energy = bp::extract<double>(params.values()[i]);  }
     else if(key=="tcnbra_nu_therm") { tcnbra_nu_therm =  bp::extract<double>(params.values()[i]); }
     else if(key=="tcnbra_nhc_size") { tcnbra_nhc_size =  bp::extract<int>(params.values()[i]); }
+    else if(key=="tcnbra_do_nac_scaling") { tcnbra_do_nac_scaling =  bp::extract<int>(params.values()[i]); }
 
   }// for i
 

@@ -457,7 +457,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 
 }
 
-void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_old, vector<int> old_states, dyn_control_params& prms, Random& rnd){
+void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_old, 
+                              vector<int> old_states, dyn_control_params& prms, Random& rnd){
 /**
   Computes the thermal corrections the adiabatic NACs according to the experimental method
   and scales NACs according to it
@@ -473,14 +474,6 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamilt
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
-//  CMATRIX res(nst, nst);
-
-//  double Dt = sqrt(prms.dt);
-//  double E_tot = prms.total_energy;
-//  E_tot += Dt * rnd.normal() * ham.children[0]->gs_kinetic_energy;
-//  prms.total_energy = E_tot;
-
-//  cout<<"In thermal correction\n";
 
   for(int itraj=0; itraj<ntraj; itraj++){
   
@@ -488,73 +481,55 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamilt
     double E_tot = prms.total_energy; 
     double T0 = ham.children[itraj]->gs_kinetic_energy;
     double Ei = ham.children[itraj]->get_ham_adi().get(i,i).real();
-    double E0 = ham.children[itraj]->get_ham_adi().get(0,0).real();
-    double alp = (E_tot - Ei )/(E_tot - E0); 
-    //alp += 0.01*rnd.normal();
 
     // the first call of the thermal correction function after initialization
-    if( dyn_var.tcnbra_ekin[itraj] < 0.0){  
-//      cout<<"in apply thermal correction: traj = "<<itraj<<" state = "<<i<<"  ekin = "<<E_tot - Ei<<endl;
+    if( fabs(dyn_var.tcnbra_ekin[itraj] - (-1000.0)) < 1e-4){  
       dyn_var.tcnbra_ekin[itraj] = (E_tot - Ei );  
-
       dyn_var.tcnbra_thermostats[itraj].nu_therm = prms.tcnbra_nu_therm;
       dyn_var.tcnbra_thermostats[itraj].NHC_size = prms.tcnbra_nhc_size;
       dyn_var.tcnbra_thermostats[itraj].init_nhc();
     }
    
 
-
       int prev_i = old_states[itraj];
-      double E_prev_i = ham_old.children[itraj]->get_ham_adi().get(prev_i,prev_i).real();
+      double E_prev_i = ham_old.children[itraj]->get_ham_adi().get(prev_i, prev_i).real();
       double dE = Ei - E_prev_i; // adiabatic change of potential energy
       dyn_var.tcnbra_ekin[itraj] -= dE; // reflect it in the kinetic energy
 
-      //if(itraj==0 || itraj==1){  cout<<"ekin = "<<dyn_var.tcnbra_ekin[itraj]<<" E_prev = "<<E_prev_i<<"  E_curr = "<<Ei<<endl;
       
+    if(dyn_var.tcnbra_ekin[itraj] > 0.0){
 
-      if(dyn_var.tcnbra_ekin[itraj]<0.0){ dyn_var.tcnbra_ekin[itraj] = 0.0; }
-    
+      double scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+      dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
 
-//    cout<<"itraj = "<<itraj<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+      dyn_var.tcnbra_thermostats[itraj].propagate_nhc(prms.dt, dyn_var.tcnbra_ekin[itraj], 0.0, 0.0);  
 
-    double scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
-    dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
-//    cout<<"first scaling = "<<scl;
-
-    dyn_var.tcnbra_thermostats[itraj].propagate_nhc(prms.dt, dyn_var.tcnbra_ekin[itraj], 0.0, 0.0);  
-
-    scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
-    dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
-
-	//    cout<<"second scaling = "<<scl<<" ekin = "<<dyn_var.tcnbra_ekin[itraj]<<endl;
+      scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+      dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
+    }
 
 
-//    if(T0>0.0){
-    alp = dyn_var.tcnbra_ekin[itraj] / T0;
-//    }else{ alp = 1.0; }
+    if(prms.tcnbra_do_nac_scaling==1){
+      double alp = dyn_var.tcnbra_ekin[itraj] / T0;
 
-//    cout<<"alp = "<<alp<<endl;
+      if(alp>0.0){  alp = sqrt(alp); }
+      else{  alp = 1.0; }
 
-    if(alp>0.0){  alp = sqrt(alp); }
-    else{  alp = 1.0; }
+      dyn_var.thermal_correction_factors[itraj] = alp;
 
+      // Scale hvib_adi, and nac_adi by the alp parameter
+      for(a=0; a<nst; a++){
+        for(b=0; b<nst; b++){
 
-//    alp = 1.0;
-
-    dyn_var.thermal_correction_factors[itraj] = alp;
-
-    // Scale hvib_adi, and nac_adi by the alp parameter
-    for(a=0; a<nst; a++){
-      for(b=0; b<nst; b++){
-
-        if(a!=b){
-          ham.children[itraj]->nac_adi->scale(a, b, alp);
-          ham.children[itraj]->hvib_adi->scale(a, b, alp);
-          ham.children[itraj]->time_overlap_adi->scale(a, b, alp);
-//          ham->children[itraj]->ovlp_adi->scale(a, b, alp)
-        }       
-      }// for b
-    }// for a
+          if(a!=b){
+            ham.children[itraj]->nac_adi->scale(a, b, alp);
+            ham.children[itraj]->hvib_adi->scale(a, b, alp);
+            ham.children[itraj]->time_overlap_adi->scale(a, b, alp);
+          }       
+        }// for b
+      }// for a
+    }// if do scaling
+    else{  dyn_var.thermal_correction_factors[itraj] = 1.0; }
 
   }// for itraj
 
@@ -1146,21 +1121,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   ham_aux.copy_content(ham);
 
-//  cout<<"Before recompute:\n";
-//  cout<<"ham = \n";  ham.children[0]->get_ham_adi().show_matrix();
-//  cout<<"ham_aux = \n"; ham_aux.children[0]->get_ham_adi().show_matrix();
-
-
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-//  cout<<"After recompute:\n";
-//  cout<<"ham = \n";  ham.children[0]->get_ham_adi().show_matrix();
-//  cout<<"ham_aux = \n"; ham_aux.children[0]->get_ham_adi().show_matrix();
-
-//  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
@@ -1365,12 +1330,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
     vector<int> old_states(dyn_var.act_states); 
-
-//    if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms, rnd);    }
-
-    // Potentially apply thermal correction to NBRA
-    //if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, prms);    }
-
     //========================== Hop proposal and acceptance ================================
 
     // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7)
@@ -1447,7 +1406,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     dyn_var.act_states = act_states;
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
-    if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
+    if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
