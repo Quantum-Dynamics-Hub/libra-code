@@ -835,11 +835,10 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
       } //i
 
       if(is_recovered==1){
-         for(int i=0; i<nadi; i++){
-           dyn_var.q_aux[i]->set(-1, traj, 0.0);
-           dyn_var.p_aux[i]->set(-1, traj, 0.0);
-           dyn_var.nab_phase[i]->set(-1, traj, 0.0);
-         }
+         dyn_var.q_aux[traj]->set(-1, -1, 0.0);
+         dyn_var.p_aux[traj]->set(-1, -1, 0.0);
+         dyn_var.nab_phase[traj]->set(-1, -1, 0.0);
+
          is_mixed.assign(nadi, 0);
          is_first.assign(nadi, 0);
       }
@@ -901,6 +900,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& q_aux = *dyn_var.q_aux[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
 
     // Propagate auxiliary positions
     int a = dyn_var.act_states[traj];
@@ -909,15 +910,15 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
       if(is_mixed[i]==1){
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
-          for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+          for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
         }
         else{
           if(i==a){
-            for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+            for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
           }
           else{
             for(int idof=0; idof<ndof; idof++){  
-              dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * prms.dt); 
+              q_aux.add(i, idof, invM.get(idof,0) * p_aux.get(i, idof) * prms.dt); 
             }
           }
         }
@@ -929,11 +930,13 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
+    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
     
     int a = dyn_var.act_states[traj];
 
     MATRIX p_real(ndof, 1); 
-    MATRIX p_aux_old(ndof, 1);
+    MATRIX p_aux_temp(ndof, 1);
     
     CMATRIX ham_adi(nadi, nadi);
     CMATRIX ham_adi_prev(nadi, nadi);
@@ -942,7 +945,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     for(int i=0; i<nadi; i++){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_aux_old[i]->set(idof, traj, dyn_var.p_aux[i]->get(idof, traj));
+        p_aux_old.set(i, idof, p_aux.get(i, idof));
       }
     }
 
@@ -959,8 +962,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
             alpha = compute_kinetic_energy(p_real, invM) + ham_adi.get(a,a).real() - ham_adi.get(i,i).real();
           }
           else{
-            p_aux_old = dyn_var.p_aux_old[i]->col(traj); 
-            alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+            p_aux_temp = p_aux_old.row(i).T(); 
+            alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
           }
         }
 
@@ -968,7 +971,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         
         alpha /= compute_kinetic_energy(p_real, invM);
         for(int idof=0; idof<ndof; idof++){
-          dyn_var.p_aux[i]->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+          p_aux.set(i, idof, dyn_var.p->get(idof, traj) * sqrt(alpha));
         }
 
       }
@@ -979,23 +982,26 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
+    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         if(is_first[i]==1){
-          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+          nab_phase.set(i, -1, 0.0);
         }
         else{
           for(int idof=0; idof<ndof; idof++){
-            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+            nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
           }//idof
         }
       }
     }//i
   } // traj
 
-  //cout << "SHXF " << dyn_var.p_quant->get(0,0) << " " << dyn_var.q_aux[0]->get(0,0) << " " << dyn_var.q_aux[1]->get(0,0)
-  //     << " " << dyn_var.p_aux[0]->get(0,0) << " " << dyn_var.p_aux[1]->get(0,0) <<endl; // Debug
+  //cout << "SHXF " << dyn_var.p_quant->get(0,0) << " " << dyn_var.q_aux[0]->get(0,0) << " " << dyn_var.q_aux[0]->get(1,0)
+  //     << " " << dyn_var.p_aux[0]->get(0,0) << " " << dyn_var.p_aux[0]->get(1,0) <<endl; // Debug
 
 }
 
@@ -1033,16 +1039,18 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& q_aux = *dyn_var.q_aux[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
-          for(int idof=0; idof<ndof; idof++){dyn_var.q_aux[i]->set(idof, traj, dyn_var.q->get(idof, traj));}
+          for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
         }
         else{
           for(int idof=0; idof<ndof; idof++){  
-            dyn_var.q_aux[i]->add(idof, traj, invM.get(idof,0) * dyn_var.p_aux[i]->get(idof, traj) * prms.dt); 
+            q_aux.add(i, idof, invM.get(idof,0) * p_aux.get(i, idof) * prms.dt); 
           }
         }
       }
@@ -1056,9 +1064,11 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
+    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
 
     MATRIX p_real(ndof, 1); 
-    MATRIX p_aux_old(ndof, 1);
+    MATRIX p_aux_temp(ndof, 1);
     
     CMATRIX ham_adi(nadi, nadi);
     CMATRIX ham_adi_prev(nadi, nadi);
@@ -1067,7 +1077,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
     for(int i=0; i<nadi; i++){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_aux_old[i]->set(idof, traj, dyn_var.p_aux[i]->get(idof, traj));
+        p_aux_old.set(i, idof, p_aux.get(i, idof));
       }
     }
    
@@ -1084,7 +1094,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
           alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
         else{
-          p_aux_old = dyn_var.p_aux_old[i]->col(traj); 
+          p_aux_temp = p_aux_old.row(i).T(); 
           alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
         }
 
@@ -1092,7 +1102,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         
         alpha /= compute_kinetic_energy(p_real, invM);
         for(int idof=0; idof<ndof; idof++){
-          dyn_var.p_aux[i]->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+          p_aux.set(i, idof, dyn_var.p->get(idof, traj) * sqrt(alpha));
         }
 
       }
@@ -1103,15 +1113,18 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
+    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
   
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         if(is_first[i]==1){
-          dyn_var.nab_phase[i]->set(-1, traj, 0.0);
+          nab_phase.set(i, -1, 0.0);
         }
         else{
           for(int idof=0; idof<ndof; idof++){
-            dyn_var.nab_phase[i]->add(idof, traj, dyn_var.p_aux[i]->get(idof, traj) - dyn_var.p_aux_old[i]->get(idof, traj));
+            nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
           }//idof
         }
       }
@@ -1138,7 +1151,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
     if(is_mixed[i]==1){
       for(int idof=0; idof<ndof; idof++){
         dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * RHO.get(i,i).real()
-          *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[i]->get(idof, traj)));
+          *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
       }
     }
   }
@@ -1149,7 +1162,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
     // Set a diagonal matrix of nabla_phase for each dof
     CMATRIX F(nst, nst);
     for(int i=0; i<nst; i++){
-      F.set(i,i, complex<double>(0.0, 1.0)*dyn_var.nab_phase[i]->get(idof, traj));
+      F.set(i,i, complex<double>(0.0, 1.0)*dyn_var.nab_phase[traj]->get(i, idof));
     }
     F = T * F * T.H();
 
@@ -1176,13 +1189,14 @@ void update_forces_xf(dyn_variables& dyn_var){
   Coeff = *dyn_var.ampl_adi;
 
   dyn_var.f_xf->set(-1, -1, 0.0);
+
   for(int traj=0; traj<ntraj; traj++){
     C = Coeff.col(traj);
 
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
       for(int i=0; i<nst; i++){
-        F[idof].set(i,i, dyn_var.nab_phase[i]->get(idof, traj));
+        F[idof].set(i,i, dyn_var.nab_phase[traj]->get(i, idof));
       }
     }
 
@@ -1201,7 +1215,7 @@ void update_forces_xf(dyn_variables& dyn_var){
       }
     }
   } //traj
-  
+
   // Add the XF contribution
   *dyn_var.f += *dyn_var.f_xf;
 }

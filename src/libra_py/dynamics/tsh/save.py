@@ -175,6 +175,17 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "Cdia" in saver.keywords: # and "Cdia" in saver.np_data.keys():
             saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C") 
 
+        # Trajectory-resolved quantum momenta
+        if "p_quant" in saver.keywords: # and "p_quant" in saver.np_data.keys():
+            saver.add_dataset("p_quant", (_nsteps, _ntraj, _ndof), "R") 
+
+        # Trajectory-resolved exact vector potential
+        if "VP" in saver.keywords: # and "p_quant" in saver.np_data.keys():
+            saver.add_dataset("VP", (_nsteps, _ntraj, _ndof), "R") 
+
+        # Trajectory-resolved decoherence forces based on XF
+        if "f_xf" in saver.keywords: # and "f_xf" in saver.np_data.keys():
+            saver.add_dataset("f_xf", (_nsteps, _ntraj, _ndof), "R")
 
     if output_level>=4:
 
@@ -198,8 +209,17 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "projector" in saver.keywords: # and "projector" in saver.np_data.keys():
             saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C") 
 
+        # Trajectory-resolved auxiliary coordinates
+        if "q_aux" in saver.keywords: # and "hvib_adi" in saver.np_data.keys():
+            saver.add_dataset("q_aux", (_nsteps, _ntraj, _nadi, _ndof), "R") 
 
+        # Trajectory-resolved auxiliary momenta
+        if "p_aux" in saver.keywords: # and "hvib_adi" in saver.np_data.keys():
+            saver.add_dataset("p_aux", (_nsteps, _ntraj, _nadi, _ndof), "R") 
 
+        # Trajectory-resolved nabla_phase
+        if "nab_phase" in saver.keywords: # and "hvib_adi" in saver.np_data.keys():
+            saver.add_dataset("nab_phase", (_nsteps, _ntraj, _nadi, _ndof), "R") 
 
 
 def init_tsh_savers(params, model_params, nsteps, ntraj, nnucl, nadi, ndia):
@@ -581,9 +601,27 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
         Cdia = dyn_var.get_ampl_dia()
         saver.save_matrix(t, "Cdia", Cdia.T()) 
 
+    # Trajectory-resolved quantum momenta
+    # Format: saver.add_dataset("p_quant", (_nsteps, _ntraj, _dof), "R")
+    if "p_quant" in saver.keywords and "p_quant" in saver.np_data.keys():
+        p_quant = dyn_var.get_p_quant()
+        saver.save_matrix(t, "p_quant", p_quant.T())
+    
+    # Trajectory-resolved exact vector potential
+    # Format: saver.add_dataset("VP", (_nsteps, _ntraj, _dof), "R")
+    if "VP" in saver.keywords and "VP" in saver.np_data.keys():
+        VP = dyn_var.get_VP()
+        saver.save_matrix(t, "VP", VP.T())
+    
+    # Trajectory-resolved XF-based decoherence force 
+    # Format: saver.add_dataset("f_xf", (_nsteps, _ntraj, _dof), "R")
+    if "f_xf" in saver.keywords and "f_xf" in saver.np_data.keys():
+        f_xf = dyn_var.get_f_xf()
+        saver.save_matrix(t, "f_xf", f_xf.T())
 
 
-def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector, txt_type=0):
+
+def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector, q_aux=None, p_aux=None, nab_phase=None, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
@@ -621,6 +659,20 @@ def save_hdf5_4D(saver, i, tr, hvib_adi, hvib_dia, St, U, projector, txt_type=0)
     if "projector" in saver.keywords and "projector" in saver.np_data.keys():
         saver.save_multi_matrix(t, tr, "projector", projector) 
 
+    # Trajectory-resolved auxiliary coordinates
+    # Format: saver.add_dataset("q_aux", (_nsteps, _ntraj, _nadi, _ndof), "R") 
+    if "q_aux" in saver.keywords and "q_aux" in saver.np_data.keys():
+        saver.save_multi_matrix(t, tr, "q_aux", q_aux) 
+
+    # Trajectory-resolved auxiliary momenta
+    # Format: saver.add_dataset("p_aux", (_nsteps, _ntraj, _nadi, _ndof), "R") 
+    if "p_aux" in saver.keywords and "p_aux" in saver.np_data.keys():
+        saver.save_multi_matrix(t, tr, "p_aux", p_aux) 
+
+    # Trajectory-resolved spatial derivatives of coefficient phase
+    # Format: saver.add_dataset("nab_phase", (_nsteps, _ntraj, _nadi, _ndof), "R") 
+    if "nab_phase" in saver.keywords and "nab_phase" in saver.np_data.keys():
+        saver.save_multi_matrix(t, tr, "nab_phase", nab_phase) 
 
 
 
@@ -781,27 +833,32 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
  
         U = ham.get_basis_transform(Py2Cpp_int([0, tr]) )
         St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
-        
+   
+        q_aux, p_aux, nab_phase = None, None, None 
+        if dyn_var.shxf_vars_status == 1 or dyn_var.mqcxf_vars_status == 1:
+            q_aux = dyn_var.get_coords_aux(tr) 
+            p_aux = dyn_var.get_momenta_aux(tr) 
+            nab_phase = dyn_var.get_nab_phase(tr) 
 
         if hdf5_output_level>=4 and _savers["hdf5_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U, None)
+            save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
 
         if mem_output_level>=4 and _savers["mem_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U, None)
+            save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
 
         if txt_output_level>=4 and _savers["txt_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U, None)
+            save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
 
         if txt2_output_level>=4 and _savers["txt2_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, 1)
+            save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase, 1)
 
 
 

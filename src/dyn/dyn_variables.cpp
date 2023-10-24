@@ -187,16 +187,16 @@ void dyn_variables::allocate_shxf(){
       } // i
     } // itraj
 
-    q_aux = vector<MATRIX*>(nadi); 
-    p_aux = vector<MATRIX*>(nadi);
-    p_aux_old = vector<MATRIX*>(nadi);
-    nab_phase = vector<MATRIX*>(nadi);
+    q_aux = vector<MATRIX*>(ntraj); 
+    p_aux = vector<MATRIX*>(ntraj);
+    p_aux_old = vector<MATRIX*>(ntraj);
+    nab_phase = vector<MATRIX*>(ntraj);
 
-    for(int i=0; i<nadi; i++){
-      q_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux_old[i] = new MATRIX(ndof, ntraj);
-      nab_phase[i] = new MATRIX(ndof, ntraj);
+    for(int itraj=0; itraj<ntraj; itraj++){
+      q_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux_old[itraj] = new MATRIX(nadi, ndof);
+      nab_phase[itraj] = new MATRIX(nadi, ndof);
     }
 
     p_quant = new MATRIX(ndof, ntraj);
@@ -218,16 +218,16 @@ void dyn_variables::allocate_mqcxf(){
       } // i
     } // itraj
 
-    q_aux = vector<MATRIX*>(nadi); 
-    p_aux = vector<MATRIX*>(nadi);
-    p_aux_old = vector<MATRIX*>(nadi);
-    nab_phase = vector<MATRIX*>(nadi);
+    q_aux = vector<MATRIX*>(ntraj); 
+    p_aux = vector<MATRIX*>(ntraj);
+    p_aux_old = vector<MATRIX*>(ntraj);
+    nab_phase = vector<MATRIX*>(ntraj);
 
-    for(int i=0; i<nadi; i++){
-      q_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux_old[i] = new MATRIX(ndof, ntraj);
-      nab_phase[i] = new MATRIX(ndof, ntraj);
+    for(int itraj=0; itraj<ntraj; itraj++){
+      q_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux_old[itraj] = new MATRIX(nadi, ndof);
+      nab_phase[itraj] = new MATRIX(nadi, ndof);
     }
 
     p_quant = new MATRIX(ndof, ntraj);
@@ -343,11 +343,11 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_shxf();
     
     // Copy content
-    for(int i=0; i<nadi; i++){
-        *q_aux[i] = *x.q_aux[i];
-        *p_aux[i] = *x.p_aux[i];
-        *p_aux_old[i] = *x.p_aux_old[i];
-        *nab_phase[i] = *x.nab_phase[i];
+    for(int itraj=0; itraj<ntraj; itraj++){
+        *q_aux[itraj] = *x.q_aux[itraj];
+        *p_aux[itraj] = *x.p_aux[itraj];
+        *p_aux_old[itraj] = *x.p_aux_old[itraj];
+        *nab_phase[itraj] = *x.nab_phase[itraj];
     }
     *p_quant = *x.p_quant;
     *VP = *x.VP;
@@ -359,11 +359,11 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_mqcxf();
     
     // Copy content
-    for(int i=0; i<nadi; i++){
-        *q_aux[i] = *x.q_aux[i];
-        *p_aux[i] = *x.p_aux[i];
-        *p_aux_old[i] = *x.p_aux_old[i];
-        *nab_phase[i] = *x.nab_phase[i];
+    for(int itraj=0; itraj<ntraj; itraj++){
+        *q_aux[itraj] = *x.q_aux[itraj];
+        *p_aux[itraj] = *x.p_aux[itraj];
+        *p_aux_old[itraj] = *x.p_aux_old[itraj];
+        *nab_phase[itraj] = *x.nab_phase[itraj];
     }
     *p_quant = *x.p_quant;
     *VP = *x.VP;
@@ -462,12 +462,12 @@ dyn_variables::~dyn_variables(){
   }
 
   if(shxf_vars_status==1){
-    for(int i; i<nadi; i++){
+    for(int itraj; itraj<ntraj; itraj++){
 
-        delete q_aux[i];
-        delete p_aux[i];
-        delete p_aux_old[i];
-        delete nab_phase[i];
+        delete q_aux[itraj];
+        delete p_aux[itraj];
+        delete p_aux_old[itraj];
+        delete nab_phase[itraj];
 
     }
 
@@ -492,12 +492,12 @@ dyn_variables::~dyn_variables(){
   }
 
   if(mqcxf_vars_status==1){
-    for(int i; i<nadi; i++){
+    for(int itraj; itraj<ntraj; itraj++){
 
-        delete q_aux[i];
-        delete p_aux[i];
-        delete p_aux_old[i];
-        delete nab_phase[i];
+        delete q_aux[itraj];
+        delete p_aux[itraj];
+        delete p_aux_old[itraj];
+        delete nab_phase[itraj];
 
     }
 
@@ -528,7 +528,6 @@ CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
   else if(prev_steps==1){ return *dm_dia_prev[i]; }
   else{ ;; }
 }
-
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

@@ -345,7 +345,7 @@ class dyn_variables{
     Nuclear coordinates of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> q_aux;
 
@@ -353,7 +353,7 @@ class dyn_variables{
     Nuclear momenta of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> p_aux;
 
@@ -361,7 +361,7 @@ class dyn_variables{
     Auxiliary momenta of previous step
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> p_aux_old;
   
@@ -369,7 +369,7 @@ class dyn_variables{
     Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> nab_phase;
 
@@ -459,6 +459,14 @@ class dyn_variables{
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
   MATRIX get_forces(){ return *f; }
+  MATRIX get_p_quant(){ return *p_quant; }
+  MATRIX get_VP(){ return *VP; }
+  MATRIX get_f_xf(){ return *f_xf; }
+  MATRIX get_coords_aux(int i){ return *q_aux[i]; }
+  MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
+  MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
+  
+
   
 
 

@@ -154,6 +154,9 @@ void export_dyn_variables_objects(){
   CMATRIX (dyn_variables::*expt_get_dm_dia_v1)(int i, int prev_steps) = &dyn_variables::get_dm_dia;
   CMATRIX (dyn_variables::*expt_get_dm_dia_v2)(int i) = &dyn_variables::get_dm_dia;
 
+  MATRIX (dyn_variables::*expt_get_coords_aux)(int i) = &dyn_variables::get_coords_aux;
+  MATRIX (dyn_variables::*expt_get_momenta_aux)(int i) = &dyn_variables::get_momenta_aux;
+  MATRIX (dyn_variables::*expt_get_nab_phase)(int i) = &dyn_variables::get_nab_phase;
 
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
@@ -235,6 +238,12 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_p_quant", &dyn_variables::get_p_quant)
+      .def("get_VP", &dyn_variables::get_VP)
+      .def("get_f_xf", &dyn_variables::get_f_xf)
+      .def("get_coords_aux", expt_get_coords_aux)
+      .def("get_momenta_aux", expt_get_momenta_aux)
+      .def("get_nab_phase", expt_get_nab_phase)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
