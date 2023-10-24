@@ -879,6 +879,7 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
          is_first.assign(nadi, 0);
       }
     } //traj 
+
 }
 
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
@@ -1095,7 +1096,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         }
         else{
           p_aux_temp = p_aux_old.row(i).T(); 
-          alpha = compute_kinetic_energy(p_aux_old, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
         }
 
         if (alpha < 0.0){alpha = 0.0;}
