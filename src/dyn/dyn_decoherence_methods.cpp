@@ -1163,7 +1163,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
     // Set a diagonal matrix of nabla_phase for each dof
     CMATRIX F(nst, nst);
     for(int i=0; i<nst; i++){
-      F.set(i,i, complex<double>(0.0, 1.0)*dyn_var.nab_phase[traj]->get(i, idof));
+      F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
     }
     F = T * F * T.H();
 
@@ -1185,7 +1185,10 @@ void update_forces_xf(dyn_variables& dyn_var){
   CMATRIX Coeff(nst, ntraj);
 
   // termporaries for nabla_phase and adiabatic force
-  vector<CMATRIX> F(ndof, CMATRIX(nst, nst));
+  vector<CMATRIX> F;
+  for(int idof=0; idof<ndof; idof++){
+    F.push_back(CMATRIX(nst, nst));
+  }
   
   Coeff = *dyn_var.ampl_adi;
 
@@ -1196,8 +1199,9 @@ void update_forces_xf(dyn_variables& dyn_var){
 
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
+      F[idof].set(-1,-1, complex<double> (0.0, 0.0));
       for(int i=0; i<nst; i++){
-        F[idof].set(i,i, dyn_var.nab_phase[traj]->get(i, idof));
+        F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
       }
     }
 
