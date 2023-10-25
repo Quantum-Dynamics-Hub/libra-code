@@ -82,6 +82,7 @@ dyn_control_params::dyn_control_params(){
   wp_width = 0.1;
   coherence_threshold = 0.01;
   use_xf_force = 0;
+  project_out_aux = 0;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = 0;
@@ -159,6 +160,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   wp_width = x.wp_width;
   coherence_threshold = x.coherence_threshold;
   use_xf_force = x.use_xf_force;
+  project_out_aux = x.project_out_aux;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = x.entanglement_opt;
@@ -342,6 +344,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="wp_width"){ wp_width = bp::extract<double>(params.values()[i]); }
     else if(key=="coherence_threshold"){ coherence_threshold = bp::extract<double>(params.values()[i]); }
     else if(key=="use_xf_force"){ use_xf_force = bp::extract<int>(params.values()[i]); }
+    else if(key=="project_out_aux"){ project_out_aux = bp::extract<int>(params.values()[i]); }
 
     ///================= Entanglement of trajectories ================================
     else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }

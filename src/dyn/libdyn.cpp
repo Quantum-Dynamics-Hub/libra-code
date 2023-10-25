@@ -104,6 +104,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
       .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
+      .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
