@@ -512,6 +512,12 @@ class dyn_control_params{
   int use_xf_force;
 
   /**
+  Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden
+  [ default : 0 ]
+  */
+  int project_out_aux;
+
+  /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
   we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
   If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
