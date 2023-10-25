@@ -804,6 +804,27 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 }
 
+void xf_init_AT(dyn_variables& dyn_var, int traj, int ist){
+    /**
+    \brief Initialize the ist-th auxiliary trajectory. When ist==-1, initialize all auxiliary trajectories 
+
+    */
+    int nadi = dyn_var.nadi;
+
+    dyn_var.q_aux[traj]->set(ist, -1, 0.0);
+    dyn_var.p_aux[traj]->set(ist, -1, 0.0);
+    dyn_var.nab_phase[traj]->set(ist, -1, 0.0);
+
+    if( ist == -1){
+      dyn_var.is_mixed[traj].assign(nadi, 0);
+      dyn_var.is_first[traj].assign(nadi, 0);
+    }
+    else{
+      dyn_var.is_mixed[traj][ist] = 0;
+      dyn_var.is_first[traj][ist] = 0;
+    }
+}
+
 void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
     /**
     \brief When the electronic state recovers to an adiabatic state, destroy auxiliary trajectories
@@ -834,14 +855,7 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
         }
       } //i
 
-      if(is_recovered==1){
-         dyn_var.q_aux[traj]->set(-1, -1, 0.0);
-         dyn_var.p_aux[traj]->set(-1, -1, 0.0);
-         dyn_var.nab_phase[traj]->set(-1, -1, 0.0);
-
-         is_mixed.assign(nadi, 0);
-         is_first.assign(nadi, 0);
-      }
+      if(is_recovered==1){xf_init_AT(dyn_var, traj, -1);}
     } //traj
 }
 
@@ -968,11 +982,28 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
           }
         }
 
-        if (alpha < 0.0){alpha = 0.0;}
+        if (alpha < 0.0){
+          alpha = 0.0;
+          project_out(*dyn_var.ampl_adi, traj, i);
+          xf_init_AT(dyn_var, traj, i);
+          cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
+        }
         
         alpha /= compute_kinetic_energy(p_real, invM);
         for(int idof=0; idof<ndof; idof++){
           p_aux.set(i, idof, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+        // Check the turning point
+        if (is_first[i] == 0){
+          double temp = 0.0;
+          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
+          if(temp<0.0){
+            collapse(*dyn_var.ampl_adi, traj, a, 0);
+            xf_init_AT(dyn_var, traj, -1);
+            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+            break;
+          }
         }
 
       }
@@ -1006,17 +1037,15 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
 }
 
-void shxf(vector<vector<int>>& is_mixed, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states){
+void shxf(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states){
   int traj;
-  int ntraj = is_mixed.size();
-  int nadi = is_mixed[0].size();
+  int ntraj = dyn_var.ntraj;
 
 for(traj = 0; traj < ntraj; traj++){
     // When a hop occurs, destroy auxiliary trajectories 
     if(accepted_states[traj] != initial_states[traj]){
-      is_mixed[traj].assign(nadi, 0);
-      is_first[traj].assign(nadi, 0);
-      cout << "destroy auxiliary trajectories " << traj << endl;
+      xf_init_AT(dyn_var, traj, -1);
+      cout << "destroy auxiliary trajectories of traj " << traj << " due to a hop" << endl;
     }
   }// traj
 }

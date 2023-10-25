@@ -1377,7 +1377,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
       }// AFSSH
       else if(prms.decoherence_algo==5){
-        shxf(dyn_var.is_mixed, dyn_var.is_first, act_states, old_states);
+        shxf(dyn_var, act_states, old_states);
       } // SHXF
 
     }
