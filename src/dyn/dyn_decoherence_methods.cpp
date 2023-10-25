@@ -983,10 +983,10 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         }
 
         if (alpha < 0.0){
-          alpha = 0.0;
           project_out(*dyn_var.ampl_adi, traj, i);
           xf_init_AT(dyn_var, traj, i);
           cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
+          continue;
         }
         
         alpha /= compute_kinetic_energy(p_real, invM);
@@ -1128,11 +1128,31 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
           alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
         }
 
-        if (alpha < 0.0){alpha = 0.0;}
-        
+        if (alpha < 0.0){
+          project_out(*dyn_var.ampl_adi, traj, i);
+          xf_init_AT(dyn_var, traj, i);
+          cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
+          continue;
+        }
+
         alpha /= compute_kinetic_energy(p_real, invM);
         for(int idof=0; idof<ndof; idof++){
           p_aux.set(i, idof, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+        
+        // Check the turning point
+        if (is_first[i] == 0){
+          double temp = 0.0;
+          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
+          if(temp<0.0){
+            int a; complex<double> max_val;
+            coeff.max_col_elt(0, max_val, a);
+            collapse(*dyn_var.ampl_adi, traj, a, 0);
+            xf_init_AT(dyn_var, traj, -1);
+            cout << "Collapse to the most probable state " << a << " with " << pow(fabs(max_val), 2)  <<
+              " at a classical turning point on traj " << traj <<endl;
+            break;
+          }
         }
 
       }
