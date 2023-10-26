@@ -813,11 +813,14 @@ void xf_init_AT(dyn_variables& dyn_var, int traj, int ist){
 
     dyn_var.q_aux[traj]->set(ist, -1, 0.0);
     dyn_var.p_aux[traj]->set(ist, -1, 0.0);
+    dyn_var.p_aux_old[traj]->set(ist, -1, 0.0);
     dyn_var.nab_phase[traj]->set(ist, -1, 0.0);
 
     if( ist == -1){
       dyn_var.is_mixed[traj].assign(nadi, 0);
       dyn_var.is_first[traj].assign(nadi, 0);
+      dyn_var.p_quant->set(-1, traj, 0.0);
+      dyn_var.VP->set(-1, traj, 0.0);
     }
     else{
       dyn_var.is_mixed[traj][ist] = 0;
@@ -1246,7 +1249,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   }
 }
 
-void update_forces_xf(dyn_variables& dyn_var){
+void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev){
   /**
     Add the decoherence force in XFMQC
   */
@@ -1272,6 +1275,17 @@ void update_forces_xf(dyn_variables& dyn_var){
   for(int traj=0; traj<ntraj; traj++){
     C = Coeff.col(traj);
 
+    CMATRIX E(nst, nst);
+    E = ham.children[traj]->get_ham_adi();
+
+    double Epot = (C.H()*E*C).get(0,0).real();
+
+    MATRIX p_real(ndof, 1);
+    p_real = dyn_var.p->col(traj); 
+    double Ekin = compute_kinetic_energy(p_real, invM);
+    
+    C = Coeff.col(traj);
+
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
       F[idof].set(-1,-1, complex<double> (0.0, 0.0));
@@ -1286,13 +1300,23 @@ void update_forces_xf(dyn_variables& dyn_var){
       dyn_var.VP->set(idof, traj, temp.get(0,0).real());
     }
 
-    // Compute the decoherence force
+    // Original form of the decoherence force
+    //for(int idof=0; idof<ndof; idof++){
+    //  for(int jdof=0; jdof<ndof; jdof++){
+    //    CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
+    //    dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
+    //      (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
+    //  }
+    //}
+
+    // Energy-conserving treatment
     for(int idof=0; idof<ndof; idof++){
+      double temp = 0.0;
       for(int jdof=0; jdof<ndof; jdof++){
-        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
-        dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
-          (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
+        temp +=invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)* 
+        ( dyn_var.VP->get(jdof, traj)*Epot - (C.H()*F[jdof]*E*C).get(0,0).real() );
       }
+      dyn_var.f_xf->set(idof, traj, temp / Ekin * dyn_var.p->get(idof, traj) );
     }
   } //traj
 
