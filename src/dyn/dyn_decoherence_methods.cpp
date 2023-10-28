@@ -1189,26 +1189,50 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   }//traj
 
   // Propagate the spatial derivative of phases
-  for(int traj=0; traj<ntraj; traj++){
-    vector<int>& is_mixed = dyn_var.is_mixed[traj];
-    vector<int>& is_first = dyn_var.is_first[traj];
-    MATRIX& p_aux = *dyn_var.p_aux[traj];
-    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
-    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-  
-    for(int i=0; i<nadi; i++){
-      if(is_mixed[i]==1){
-        if(is_first[i]==1){
-          nab_phase.set(i, -1, 0.0);
+  if(prms.use_xf_force==0){
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      MATRIX& p_aux = *dyn_var.p_aux[traj];
+      MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+    
+      for(int i=0; i<nadi; i++){
+        if(is_mixed[i]==1){
+          if(is_first[i]==1){
+            nab_phase.set(i, -1, 0.0);
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){
+              nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
+            }//idof
+          }
         }
-        else{
+      }//i
+    } // traj
+  }
+  else{
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+    
+      CMATRIX E(nadi, nadi);
+      E = ham.children[traj]->get_ham_adi();
+
+      MATRIX p_real(ndof, 1);
+      p_real = dyn_var.p->col(traj); 
+      double Ekin = compute_kinetic_energy(p_real, invM);
+    
+      for(int i=0; i<nadi; i++){
+        if(is_mixed[i]==1){
           for(int idof=0; idof<ndof; idof++){
-            nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
+            nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/Ekin);
           }//idof
         }
-      }
-    }//i
-  } // traj
+      }//i
+    } // traj
+  }
 }
 
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
@@ -1301,23 +1325,23 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     }
 
     // Original form of the decoherence force
-    //for(int idof=0; idof<ndof; idof++){
-    //  for(int jdof=0; jdof<ndof; jdof++){
-    //    CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
-    //    dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
-    //      (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
-    //  }
-    //}
-
-    // Energy-conserving treatment
     for(int idof=0; idof<ndof; idof++){
-      double temp = 0.0;
       for(int jdof=0; jdof<ndof; jdof++){
-        temp +=invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)* 
-        ( dyn_var.VP->get(jdof, traj)*Epot - (C.H()*F[jdof]*E*C).get(0,0).real() );
+        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
+        dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
+          (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
       }
-      dyn_var.f_xf->set(idof, traj, temp / Ekin * dyn_var.p->get(idof, traj) );
     }
+
+    //// Energy-conserving treatment
+    //for(int idof=0; idof<ndof; idof++){
+    //  double temp = 0.0;
+    //  for(int jdof=0; jdof<ndof; jdof++){
+    //    temp +=invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)* 
+    //    ( dyn_var.VP->get(jdof, traj)*Epot - (C.H()*F[jdof]*E*C).get(0,0).real() );
+    //  }
+    //  dyn_var.f_xf->set(idof, traj, temp / Ekin * dyn_var.p->get(idof, traj) );
+    //}
   } //traj
 
   // Add the XF contribution
