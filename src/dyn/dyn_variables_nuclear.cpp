@@ -318,6 +318,26 @@ vector<double> dyn_variables::compute_kinetic_energies(vector<int>& which_dofs){
 }
 
 
+double dyn_variables::compute_tcnbra_ekin(){
+
+  double res = 0.0;
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    res += tcnbra_ekin[itraj];
+  }
+  return res/ntraj;
+
+}
+
+double dyn_variables::compute_tcnbra_thermostat_energy(){
+
+  double res = 0.0;
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    res += tcnbra_thermostats[itraj].energy();
+  }
+  return res/ntraj;
+
+}
+
 
 
 

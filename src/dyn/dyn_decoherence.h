@@ -71,8 +71,16 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
 
 // For SHXF
-void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA);
-void shxf(vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states);
+void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
+void shxf(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states);
+
+// For MQCXF
+void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms);
+
+// XF propagation
+void update_forces_xf(dyn_variables& dyn_var);
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, int do_rotation);
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj);
 
 ///================  In dyn_decoherence_time.cpp  ===================================
 
@@ -99,11 +107,15 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& i
 
 
 ///================  In dyn_methods_dish.cpp  ===================================
-
+/*
 vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
        nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
        vector<MATRIX>& decoherence_rates, Random& rnd);
+*/
+
+vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
+                 vector<MATRIX>& decoherence_rates, dyn_control_params& prms,Random& rnd);
 
 /*
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);

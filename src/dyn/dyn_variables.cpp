@@ -102,6 +102,12 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= SHXF ====================
   shxf_vars_status = 0;
 
+  ///================ TCNBRA ===================
+  tcnbra_vars_status = 0;
+  
+  ///================= MQCXF ====================
+  mqcxf_vars_status = 0;
+
 }
 
 
@@ -173,24 +179,24 @@ void dyn_variables::allocate_shxf(){
 
   if(shxf_vars_status==0){
     for(int itraj=0; itraj<ntraj; itraj++){
-      is_cohered.push_back(vector<int>());
+      is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
-        is_cohered[itraj].push_back(0);
+        is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
       } // i
     } // itraj
 
-    q_aux = vector<MATRIX*>(nadi); 
-    p_aux = vector<MATRIX*>(nadi);
-    p_aux_old = vector<MATRIX*>(nadi);
-    nab_phase = vector<MATRIX*>(nadi);
+    q_aux = vector<MATRIX*>(ntraj); 
+    p_aux = vector<MATRIX*>(ntraj);
+    p_aux_old = vector<MATRIX*>(ntraj);
+    nab_phase = vector<MATRIX*>(ntraj);
 
-    for(int i=0; i<nadi; i++){
-      q_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux[i] = new MATRIX(ndof, ntraj);
-      p_aux_old[i] = new MATRIX(ndof, ntraj);
-      nab_phase[i] = new MATRIX(ndof, ntraj);
+    for(int itraj=0; itraj<ntraj; itraj++){
+      q_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux_old[itraj] = new MATRIX(nadi, ndof);
+      nab_phase[itraj] = new MATRIX(nadi, ndof);
     }
 
     p_quant = new MATRIX(ndof, ntraj);
@@ -199,6 +205,57 @@ void dyn_variables::allocate_shxf(){
     shxf_vars_status = 1;
   }
 }// allocate_shxf
+
+void dyn_variables::allocate_mqcxf(){
+
+  if(mqcxf_vars_status==0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      is_mixed.push_back(vector<int>());
+      is_first.push_back(vector<int>());
+      for(int i=0; i<nadi; i++){
+        is_mixed[itraj].push_back(0);
+        is_first[itraj].push_back(0);
+      } // i
+    } // itraj
+
+    q_aux = vector<MATRIX*>(ntraj); 
+    p_aux = vector<MATRIX*>(ntraj);
+    p_aux_old = vector<MATRIX*>(ntraj);
+    nab_phase = vector<MATRIX*>(ntraj);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      q_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux[itraj] = new MATRIX(nadi, ndof);
+      p_aux_old[itraj] = new MATRIX(nadi, ndof);
+      nab_phase[itraj] = new MATRIX(nadi, ndof);
+    }
+
+    p_quant = new MATRIX(ndof, ntraj);
+    VP = new MATRIX(ndof, ntraj);
+    f_xf = new MATRIX(ndof, ntraj);
+  
+    mqcxf_vars_status = 1;
+  }
+}// allocate_mqcxf
+
+
+void dyn_variables::allocate_tcnbra(){
+
+  if(tcnbra_vars_status==0){
+    thermal_correction_factors = vector<double>(ntraj, 1.0); 
+
+    for(int i=0; i<ntraj; i++){
+      Thermostat th;
+      th.nu_therm = 0.001; th.thermostat_type = "Nose-Hoover"; th.NHC_size = 1;     
+      // by default, thermostat has 1 translational DOF
+      th.init_nhc();
+      tcnbra_thermostats.push_back(th); 
+    }
+    tcnbra_ekin = vector<double>(ntraj, -1000.0);
+
+    tcnbra_vars_status = 1;
+  }
+}// allocate_tcnbra
 
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
@@ -270,7 +327,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
   }// if DISH vars
 
   // FSSH2 vars - only if initialized
-  if(x.fssh2_vars_status==1){
+    if(x.fssh2_vars_status==1){
     allocate_fssh2();
  
     // Copy content
@@ -286,16 +343,46 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_shxf();
     
     // Copy content
-    for(int i=0; i<nadi; i++){
-        *q_aux[i] = *x.q_aux[i];
-        *p_aux[i] = *x.p_aux[i];
-        *p_aux_old[i] = *x.p_aux_old[i];
-        *nab_phase[i] = *x.nab_phase[i];
+    for(int itraj=0; itraj<ntraj; itraj++){
+        *q_aux[itraj] = *x.q_aux[itraj];
+        *p_aux[itraj] = *x.p_aux[itraj];
+        *p_aux_old[itraj] = *x.p_aux_old[itraj];
+        *nab_phase[itraj] = *x.nab_phase[itraj];
     }
     *p_quant = *x.p_quant;
     *VP = *x.VP;
 
   }// if SHXF vars
+  
+  // MQCXF vars - only if initialized
+  if(x.mqcxf_vars_status==1){
+    allocate_mqcxf();
+    
+    // Copy content
+    for(int itraj=0; itraj<ntraj; itraj++){
+        *q_aux[itraj] = *x.q_aux[itraj];
+        *p_aux[itraj] = *x.p_aux[itraj];
+        *p_aux_old[itraj] = *x.p_aux_old[itraj];
+        *nab_phase[itraj] = *x.nab_phase[itraj];
+    }
+    *p_quant = *x.p_quant;
+    *VP = *x.VP;
+    *f_xf = *x.f_xf;
+
+  }// if MQCXF vars
+
+ 
+  // TCNBRA vars - only if initialized
+  if(x.tcnbra_vars_status==1){
+    allocate_tcnbra();
+
+    // Copy content
+    thermal_correction_factors = x.thermal_correction_factors;
+
+    tcnbra_thermostats = x.tcnbra_thermostats;
+    tcnbra_ekin = x.tcnbra_ekin; 
+
+  }// if TCNBRA vars
 
 }// dyn_variables cctor
 
@@ -375,12 +462,12 @@ dyn_variables::~dyn_variables(){
   }
 
   if(shxf_vars_status==1){
-    for(int i; i<nadi; i++){
+    for(int itraj; itraj<ntraj; itraj++){
 
-        delete q_aux[i];
-        delete p_aux[i];
-        delete p_aux_old[i];
-        delete nab_phase[i];
+        delete q_aux[itraj];
+        delete p_aux[itraj];
+        delete p_aux_old[itraj];
+        delete nab_phase[itraj];
 
     }
 
@@ -393,6 +480,37 @@ dyn_variables::~dyn_variables(){
     delete VP;
 
     shxf_vars_status = 0;
+  }
+
+  if(tcnbra_vars_status==1){
+    thermal_correction_factors.clear(); 
+    tcnbra_thermostats.clear();
+    tcnbra_ekin.clear();
+
+    tcnbra_vars_status = 0;
+
+  }
+
+  if(mqcxf_vars_status==1){
+    for(int itraj; itraj<ntraj; itraj++){
+
+        delete q_aux[itraj];
+        delete p_aux[itraj];
+        delete p_aux_old[itraj];
+        delete nab_phase[itraj];
+
+    }
+
+    q_aux.clear();
+    p_aux.clear();
+    p_aux_old.clear();
+    nab_phase.clear();
+
+    delete p_quant;
+    delete VP;
+    delete f_xf;
+
+    mqcxf_vars_status = 0;
   }
 
 }
@@ -410,7 +528,6 @@ CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
   else if(prev_steps==1){ return *dm_dia_prev[i]; }
   else{ ;; }
 }
-
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

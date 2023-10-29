@@ -330,6 +330,8 @@ class dyn_control_params{
       - 31: accept hops with the probability taken from the quantum Boltzmann distribution
       - 32: accept hops with the probability taken from the classical Maxwell-Boltzmann distribution
       - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
+
+      - 40: based on possibility to conserve energy using tcnbra_ekin variables (experimental for TC-NBRA)
   */
   int hop_acceptance_algo;
 
@@ -350,6 +352,8 @@ class dyn_control_params{
       - 201: along derivative coupling vectors, reverse on frustrated hops
       - 210: along difference of state-specific forces, don't reverse on frustrated hops
       - 211: along difference of state-specific forces, reverse on frustrated hops
+
+      - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
   */
   int momenta_rescaling_algo;
 
@@ -488,7 +492,7 @@ class dyn_control_params{
 
 
   /**
-  The width of frozen Gaussian for the decoherence from SHXF
+  The width of frozen Gaussian for the decoherence from SHXF & MQCXF
   [ default : 0.1 ]
   */
   double wp_width;
@@ -499,6 +503,19 @@ class dyn_control_params{
   [ default : 0.01 ]
   */
   double coherence_threshold;
+  
+  /**
+  Whether to use the decoherence force in MQCXF
+  The corresponding electronic propagation is adjusted for the energy conservation
+  [ default : 0 ]
+  */
+  int use_xf_force;
+
+  /**
+  Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden
+  [ default : 0 ]
+  */
+  int project_out_aux;
 
   /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
@@ -684,6 +701,46 @@ class dyn_control_params{
   */
   int assume_always_consistent;
 
+ 
+  /**
+    Flag setting to use the thermal correction to NBRA: 0 - no (default approach); 1 - rescale NACs
+  */
+  int thermally_corrected_nbra;
+
+
+  /**
+    Total energy of the system - should be set according to the initial condition of the experiment
+    Used by the nbra rescaling approach (experimental method) [ units: a.u. ]
+    Default = 0.01 a.u.
+  */ 
+  double total_energy;
+
+
+  /**
+    Frequency of the auxiliary thermostats in the TC-NBRA method
+    Default = 0.001
+  */
+  double tcnbra_nu_therm; 
+
+
+  /**
+    Length of the auxiliary NHC thermostat in the TC-NBRA method [units: unitless]
+    Default = 1 
+  */
+  int tcnbra_nhc_size;
+
+
+  /**
+    Whether to rescale NACs to reflect the fact that the instantaneous velocities 
+    may be different from those in the ground state sampling. This would rescale off-diagonal
+    elements of NAC, Hvib, and time-overlap matrices. Does not rescale derivative coupling
+    vectors cause the chances are - they won't be used in NBRA or if they are used, it is not
+    NBRA anymore.
+    0 - do not rescale NACs etc. 
+    1 - do rescale them [ default ]
+  */
+  int tcnbra_do_nac_scaling;
+  
 
 
   dyn_control_params();

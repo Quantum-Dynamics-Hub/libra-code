@@ -96,11 +96,21 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
 
 }
 
-
+/*
 vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
        nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
        vector<MATRIX>& decoherence_rates, Random& rnd){
+*/
+vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham, 
+                 vector<MATRIX>& decoherence_rates,  dyn_control_params& prms,Random& rnd){
+
+    MATRIX& q = *dyn_var.q;
+    MATRIX& p = *dyn_var.p;
+    CMATRIX& Coeff = *dyn_var.ampl_adi;
+    MATRIX& invM = *dyn_var.iM;
+    vector<int>& act_states = dyn_var.act_states;
+    MATRIX& coherence_time = *dyn_var.coherence_time;
 
     int collapse_option = 0;
 
@@ -175,7 +185,8 @@ vector<int> dish(dyn_control_params& prms,
               /// some other state
 
               vector<int> possible_outcomes;
-              possible_outcomes = where_can_we_hop(traj, prms, q, p, invM, Coeff, /*projectors,*/ ham, act_states, rnd);
+              //possible_outcomes = where_can_we_hop(traj, prms, q, p, invM, Coeff, /*projectors,*/ ham, act_states, rnd);
+              possible_outcomes  = where_can_we_hop(traj, dyn_var, ham, prms, rnd);
              
               /// Transitions to some of the states are possible: then, we'll just need to determine where
               int num_allowed = possible_outcomes.size();
@@ -231,7 +242,9 @@ vector<int> dish(dyn_control_params& prms,
               /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
               /// the variable `which_trajectories` instructs to handle only the current trajectory
               old_states = act_states;
-              new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, old_states, rnd, which_trajectories);              
+//              new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, old_states, rnd, which_trajectories);
+
+              new_states = accept_hops(dyn_var, ham, proposed_states, old_states, prms, rnd, which_trajectories);
 
            
               //cout<<"proposed_state = "<<proposed_states[traj]<<"  accepted hop "<<new_states[traj]<<endl;

@@ -29,6 +29,7 @@
 #include "../math_specialfunctions/libspecialfunctions.h"
 #include "../nhamiltonian/libnhamiltonian.h"
 #include "dyn_control_params.h"
+#include "thermostat/Thermostat.h"
 
 
 
@@ -43,6 +44,8 @@ using namespace libnhamiltonian;
 
 /// libdyn namespace
 namespace libdyn{
+
+using namespace libthermostat;
 
 namespace bp = boost::python;
 
@@ -305,7 +308,7 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
-  ///================= For SHXF ===================
+  ///============ For independent-trajectory XF method such as SHXF ============
   /**
     Status of the SHXF vars
 
@@ -313,14 +316,22 @@ class dyn_variables{
     1 - allocated
   */
   int shxf_vars_status;
+  
+  /**
+    Status of the MQCXF vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int mqcxf_vars_status;
 
   /**
     Whether an adiabatic state interacts with the others
 
     Options:
-     vector< vector<int> > is_cohered(ntraj, nadi)
+     vector< vector<int> > is_mixed(ntraj, nadi)
   */
-  vector<vector<int>> is_cohered;
+  vector<vector<int>> is_mixed;
   
   /**
     Whether the decoherence is turned on first time
@@ -334,7 +345,7 @@ class dyn_variables{
     Nuclear coordinates of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> q_aux;
 
@@ -342,7 +353,7 @@ class dyn_variables{
     Nuclear momenta of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> p_aux;
 
@@ -350,7 +361,7 @@ class dyn_variables{
     Auxiliary momenta of previous step
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> p_aux_old;
   
@@ -358,7 +369,7 @@ class dyn_variables{
     Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
 
     Options:
-     vector<nadi, MATRIX(ndof, ntraj)> 
+     vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> nab_phase;
 
@@ -377,6 +388,42 @@ class dyn_variables{
      MATRIX(ndof, ntraj) 
   */
   MATRIX* VP;
+  
+  /**
+    Decoherence force in MQCXF
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* f_xf;
+
+  ///========= For thermally-corrected NBRA ======================
+  /**
+    Status of the TCNBRA vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int tcnbra_vars_status;
+  
+  /** 
+    The alpha parameters to scale NACs
+  */ 
+  vector<double> thermal_correction_factors;
+
+
+  /**
+    Auxiliary thermostats for each trajectory
+    This is a list of ntraj thermostat objects
+  */
+  vector<Thermostat> tcnbra_thermostats;
+
+
+  /**
+    Kinetic energies for each trajectory
+  */
+  vector<double> tcnbra_ekin;
+
 
 
   ///====================== In dyn_variables.cpp =====================
@@ -388,6 +435,8 @@ class dyn_variables{
   void allocate_dish();
   void allocate_fssh2();
   void allocate_shxf();
+  void allocate_tcnbra();
+  void allocate_mqcxf();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
@@ -410,6 +459,14 @@ class dyn_variables{
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
   MATRIX get_forces(){ return *f; }
+  MATRIX get_p_quant(){ return *p_quant; }
+  MATRIX get_VP(){ return *VP; }
+  MATRIX get_f_xf(){ return *f_xf; }
+  MATRIX get_coords_aux(int i){ return *q_aux[i]; }
+  MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
+  MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
+  
+
   
 
 
@@ -447,6 +504,10 @@ class dyn_variables{
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop();
+
+
+  double compute_tcnbra_ekin();
+  double compute_tcnbra_thermostat_energy();
 
   void save_curr_dm_into_prev();
 

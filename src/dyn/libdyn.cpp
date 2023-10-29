@@ -103,6 +103,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
+      .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -121,6 +123,12 @@ void export_dyn_control_params_objects(){
       .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
       .def_readwrite("electronic_integrator", &dyn_control_params::electronic_integrator)
       .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
+      .def_readwrite("thermally_corrected_nbra", &dyn_control_params::thermally_corrected_nbra)
+      .def_readwrite("total_energy", &dyn_control_params::total_energy)
+      .def_readwrite("tcnbra_nu_therm", &dyn_control_params::tcnbra_nu_therm)
+      .def_readwrite("tcnbra_nhc_size", &dyn_control_params::tcnbra_nhc_size)
+      .def_readwrite("tcnbra_do_nac_scaling", &dyn_control_params::tcnbra_do_nac_scaling)
+
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -148,6 +156,9 @@ void export_dyn_variables_objects(){
   CMATRIX (dyn_variables::*expt_get_dm_dia_v1)(int i, int prev_steps) = &dyn_variables::get_dm_dia;
   CMATRIX (dyn_variables::*expt_get_dm_dia_v2)(int i) = &dyn_variables::get_dm_dia;
 
+  MATRIX (dyn_variables::*expt_get_coords_aux)(int i) = &dyn_variables::get_coords_aux;
+  MATRIX (dyn_variables::*expt_get_momenta_aux)(int i) = &dyn_variables::get_momenta_aux;
+  MATRIX (dyn_variables::*expt_get_nab_phase)(int i) = &dyn_variables::get_nab_phase;
 
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
@@ -199,7 +210,10 @@ void export_dyn_variables_objects(){
       .def_readwrite("dish_vars_status", &dyn_variables::dish_vars_status)
       .def_readwrite("fssh2_vars_status", &dyn_variables::fssh2_vars_status)
       .def_readwrite("shxf_vars_status", &dyn_variables::shxf_vars_status)
-
+      .def_readwrite("tcnbra_vars_status", &dyn_variables::tcnbra_vars_status)
+      .def_readwrite("mqcxf_vars_status", &dyn_variables::mqcxf_vars_status)
+      .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
+      .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -210,6 +224,8 @@ void export_dyn_variables_objects(){
       .def("allocate_dish", &dyn_variables::allocate_dish)
       .def("allocate_fssh2", &dyn_variables::allocate_fssh2)
       .def("allocate_shxf", &dyn_variables::allocate_shxf)
+      .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
+      .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -224,6 +240,12 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_p_quant", &dyn_variables::get_p_quant)
+      .def("get_VP", &dyn_variables::get_VP)
+      .def("get_f_xf", &dyn_variables::get_f_xf)
+      .def("get_coords_aux", expt_get_coords_aux)
+      .def("get_momenta_aux", expt_get_momenta_aux)
+      .def("get_nab_phase", expt_get_nab_phase)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -254,6 +276,9 @@ void export_dyn_variables_objects(){
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
+
+      .def("compute_tcnbra_ekin", &dyn_variables::compute_tcnbra_ekin)
+      .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
 
       .def("save_curr_dm_into_prev", &dyn_variables::save_curr_dm_into_prev)
 
@@ -326,12 +351,16 @@ void export_dyn_decoherence_objects(){
   def("mfsd", expt_mfsd_v2);
 
   void (*expt_shxf_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, double wp_width, double threshold, double dt, int isNBRA) = &shxf;
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
   def("shxf", expt_shxf_v1);
   
   void (*expt_shxf_v2)
-  (vector<vector<int>>& is_cohered, vector<vector<int>>& is_first, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
+  (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
   def("shxf", expt_shxf_v2);
+  
+  void (*expt_mqcxf_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &mqcxf;
+  def("mqcxf", expt_mqcxf_v1);
 
   ///================  In dyn_decoherence_time.cpp  ===================================
 
@@ -391,11 +420,16 @@ void export_dyn_decoherence_objects(){
 
 
   ///================== In dyn_methods_dish.cpp  =======================
-
+/*
   vector<int> (*expt_dish_v1)
   (dyn_control_params& prms, MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, 
-  /*vector<CMATRIX>& projectors,*/ nHamiltonian& ham, vector<int>& act_states, 
+   nHamiltonian& ham, vector<int>& act_states, 
   MATRIX& coherence_time, vector<MATRIX>& decoherence_rates, Random& rnd) = &dish;
+*/
+
+  vector<int> (*expt_dish_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<MATRIX>& decoherence_rates, 
+   dyn_control_params& prms,Random& rnd) = &dish;
   def("dish", expt_dish_v1);
 
 
@@ -463,33 +497,53 @@ void export_dyn_hop_acceptance_objects(){
   def("boltz_factor", expt_boltz_factor_v1);
 
 
-
+/*
   vector<int> (*expt_accept_hops_v1)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd, 
    vector<int>& which_trajectories) = &accept_hops;
   def("accept_hops", expt_accept_hops_v1);
 
   vector<int> (*expt_accept_hops_v2)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C,
    nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states, Random& rnd ) = &accept_hops;
+  def("accept_hops", expt_accept_hops_v2);
+*/
+
+  vector<int> (*expt_accept_hops_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states,
+   dyn_control_params& prms,Random& rnd,  vector<int>& which_trajectories) = &accept_hops;
+  def("accept_hops", expt_accept_hops_v1);
+
+  vector<int> (*expt_accept_hops_v2)
+  (dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& proposed_states, vector<int>& initial_states,
+   dyn_control_params& prms,Random& rnd) = &accept_hops;
   def("accept_hops", expt_accept_hops_v2);
 
 
-
+/*
   vector<int> (*expt_where_can_we_hop_v1)
   (int traj, dyn_control_params& prms,
-   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff, /*vector<CMATRIX>& projectors, */
+   MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
    nHamiltonian& ham, vector<int>& act_states, Random& rnd) = &where_can_we_hop;
   def("where_can_we_hop", expt_where_can_we_hop_v1);
+*/
+  vector<int> (*expt_where_can_we_hop_v1)
+  (int traj, dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms,Random& rnd) = &where_can_we_hop;
+  def("where_can_we_hop", expt_where_can_we_hop_v1);
 
-
+/*
   void (*expt_handle_hops_nuclear_v1)
   (dyn_control_params& prms,
-   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, /*vector<CMATRIX>& projectors,*/
+   MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, 
    nHamiltonian& ham, vector<int>& new_states, vector<int>& old_states) = &handle_hops_nuclear;
+*/
+
+  void (*expt_handle_hops_nuclear_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham,
+  vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms) = &handle_hops_nuclear;
   def("handle_hops_nuclear", expt_handle_hops_nuclear_v1);
 
 }

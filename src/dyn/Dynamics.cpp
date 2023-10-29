@@ -457,6 +457,116 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonia
 
 }
 
+void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_old, 
+                              vector<int> old_states, dyn_control_params& prms, Random& rnd){
+/**
+  Computes the thermal corrections the adiabatic NACs according to the experimental method
+  and scales NACs according to it
+*/
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst, a,b;
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+  
+    int i = dyn_var.act_states[itraj];
+    double E_tot = prms.total_energy; 
+    double T0 = ham.children[itraj]->gs_kinetic_energy;
+    double Ei = ham.children[itraj]->get_ham_adi().get(i,i).real();
+
+    // the first call of the thermal correction function after initialization
+    if( fabs(dyn_var.tcnbra_ekin[itraj] - (-1000.0)) < 1e-4){  
+      dyn_var.tcnbra_ekin[itraj] = (E_tot - Ei );  
+      dyn_var.tcnbra_thermostats[itraj].nu_therm = prms.tcnbra_nu_therm;
+      dyn_var.tcnbra_thermostats[itraj].NHC_size = prms.tcnbra_nhc_size;
+      dyn_var.tcnbra_thermostats[itraj].init_nhc();
+    }
+   
+
+      int prev_i = old_states[itraj];
+      double E_prev_i = ham_old.children[itraj]->get_ham_adi().get(prev_i, prev_i).real();
+      double dE = Ei - E_prev_i; // adiabatic change of potential energy
+      dyn_var.tcnbra_ekin[itraj] -= dE; // reflect it in the kinetic energy
+
+      
+    if(dyn_var.tcnbra_ekin[itraj] > 0.0){
+
+      double scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+      dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
+
+      dyn_var.tcnbra_thermostats[itraj].propagate_nhc(prms.dt, dyn_var.tcnbra_ekin[itraj], 0.0, 0.0);  
+
+      scl = dyn_var.tcnbra_thermostats[itraj].vel_scale(0.5*prms.dt);
+      dyn_var.tcnbra_ekin[itraj] *= (scl * scl);
+    }
+
+
+    if(prms.tcnbra_do_nac_scaling==1){
+      double alp = dyn_var.tcnbra_ekin[itraj] / T0;
+
+      if(alp>0.0){  alp = sqrt(alp); }
+      else{  alp = 1.0; }
+
+      dyn_var.thermal_correction_factors[itraj] = alp;
+
+      // Scale hvib_adi, and nac_adi by the alp parameter
+      for(a=0; a<nst; a++){
+        for(b=0; b<nst; b++){
+
+          if(a!=b){
+            ham.children[itraj]->nac_adi->scale(a, b, alp);
+            ham.children[itraj]->hvib_adi->scale(a, b, alp);
+            ham.children[itraj]->time_overlap_adi->scale(a, b, alp);
+          }       
+        }// for b
+      }// for a
+    }// if do scaling
+    else{  dyn_var.thermal_correction_factors[itraj] = 1.0; }
+
+  }// for itraj
+
+}
+
+void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndia = dyn_var.ndia;
+
+  int nst, a,b;
+  if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+
+    double alp = dyn_var.thermal_correction_factors[itraj];
+
+    // Scale hvib_adi, and nac_adi by the alp parameter
+    for(a=0; a<nst; a++){
+      for(b=0; b<nst; b++){
+
+        if(a!=b){
+          ham.children[itraj]->nac_adi->scale(a, b, 1.0/alp);
+          ham.children[itraj]->hvib_adi->scale(a, b, 1.0/alp);
+          ham.children[itraj]->time_overlap_adi->scale(a, b, 1.0/alp);
+//          ham->children[itraj]->ovlp_adi->scale(a, b, alp)
+        }
+      }// for b
+    }// for a
+
+  }// for itraj
+
+}
+
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -507,6 +617,10 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     CMATRIX T_new(ham->nadi, ham->nadi);
 
     P = ham->get_time_overlap_adi();  // U_old.H() * U;
+
+//    if(prms.thermally_corrected_nbra){
+//      P = thermally_corrected_time_overlap(dyn_var, ham, prms, itraj);
+//    }
 
     // More consistent with the new derivations:
     FullPivLU_inverse(P, T_new);
@@ -574,7 +688,6 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     CMATRIX Hvib_old(ham->nadi, ham->nadi);
     CMATRIX A(ham->nadi, ham->nadi); /// this is A(t)
     CMATRIX B(ham->nadi, ham->nadi); /// this is actually A(t+dt)
-
 
     if(method==-1){ ;;  } // No evolution
     else if(method==0 || method==100){
@@ -1008,19 +1121,32 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute the matrices at the new geometry and apply any necessary fixes 
   ham_aux.copy_content(ham);
 
-
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
-  for(i=0; i<num_el; i++){  propagate_electronic(dyn_var, ham, ham_aux, prms);  }
+  for(i=0; i<num_el; i++){
+    if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      propagate_half_xf(dyn_var, ham, prms, 0);
+    }
+
+    propagate_electronic(dyn_var, ham, ham_aux, prms);
+
+    if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      propagate_half_xf(dyn_var, ham, prms, 1);
+    }
+  }
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
+
+ 
+  vector<int> old_states( dyn_var.act_states);
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
@@ -1028,10 +1154,15 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     dyn_var.update_active_states();
   }
 
+  // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
+  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
+
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
   update_forces(prms, dyn_var, ham);
  
-
+  if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
+    update_forces_xf(dyn_var);
+  }
 
   // NVT dynamics
   if(prms.ensemble==1){  
@@ -1045,7 +1176,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
-
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1146,9 +1276,38 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // SHXF
   else if(prms.decoherence_algo==5){
     if(prms.rep_tdse==1){
-      shxf(dyn_var, ham, ham_aux, prms.wp_width, prms.coherence_threshold, prms.dt, prms.isNBRA);
+      shxf(dyn_var, ham, ham_aux, prms);
+  
+      if(prms.ensemble==1){
+        for(idof=0; idof<n_therm_dofs; idof++){
+          dof = prms.thermostat_dofs[idof];
+          for(traj=0; traj<ntraj; traj++){
+            for(i=0; i<nadi; i++){
+              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
+            }// i
+          }// traj 
+        }//idof
+      }
     }
     else{ cout<<"ERROR: SHXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
+  }
+  // MQCXF
+  else if(prms.decoherence_algo==6){
+    if(prms.rep_tdse==1){
+      mqcxf(dyn_var, ham, ham_aux, prms);
+  
+      if(prms.ensemble==1){
+        for(idof=0; idof<n_therm_dofs; idof++){
+          dof = prms.thermostat_dofs[idof];
+          for(traj=0; traj<ntraj; traj++){
+            for(i=0; i<nadi; i++){
+              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
+            }// i
+          }// traj 
+        }//idof
+      }
+    }
+    else{ cout<<"ERROR: MQCXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 
 
@@ -1171,7 +1330,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
     vector<int> old_states(dyn_var.act_states); 
-
     //========================== Hop proposal and acceptance ================================
 
     // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7)
@@ -1188,7 +1346,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     
       // Decide if to accept the transitions (and then which)
       // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-      act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+      // 10/21/2023 - deprecate this version 
+      //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+      // in favor of this:
+      act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
 
 
       //=== Post-hop decoherence options ===
@@ -1206,7 +1367,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
       }// AFSSH
       else if(prms.decoherence_algo==5){
-        shxf(dyn_var.is_cohered, dyn_var.is_first, act_states, old_states);
+        shxf(dyn_var, act_states, old_states);
       } // SHXF
 
     }
@@ -1220,13 +1381,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       dyn_var.coherence_time->add(-1, -1, prms.dt);
       MATRIX coherence_time(*dyn_var.coherence_time);
 
-      /// New version, as of 8/3/2020
       //cout<<"Entering DISH ============\n";
       //dyn_var.coherence_time->show_matrix();
+/*
       act_states = dish(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, dyn_var.act_states, coherence_time, 
                         decoherence_rates, rnd);
- 
-
+*/
+      act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
       *dyn_var.coherence_time = coherence_time;
 
     }// DISH
@@ -1234,19 +1395,30 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
+    /*
     p = *dyn_var.p;
     handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
     *dyn_var.p = p;
     dyn_var.act_states = act_states;
+
+    */
+    handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+    dyn_var.act_states = act_states;
+
+    // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
+    if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
 
 
+  //  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
         
   }// tsh_method == 0, 1, 2, 3, 4, 5
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
+
+//  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
 
 
   // Update the amplitudes and DM, so that we have them consistent in the output
@@ -1256,6 +1428,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Saves the current density matrix into the previous - needed for FSSH2
   dyn_var.save_curr_dm_into_prev();
+
+  
 
 }
 

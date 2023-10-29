@@ -248,6 +248,7 @@ public:
 
 
 
+  double gs_kinetic_energy;
   /**
      
      All the basic methods: constructor, destructor, getters, setters, etc.
