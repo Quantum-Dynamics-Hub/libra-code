@@ -1161,7 +1161,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_forces(prms, dyn_var, ham);
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
-    update_forces_xf(dyn_var);
+    update_forces_xf(dyn_var, ham, ham_aux);
   }
 
   // NVT dynamics
