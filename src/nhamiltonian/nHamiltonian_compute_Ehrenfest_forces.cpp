@@ -266,8 +266,11 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, C
 
 
     if(option==0){ // Original formulation with NACs - for non-LD integrators
+
+// This is the original approach
 //      tmp = dc1_adi[n]->H() * (*ham_adi) + (*ham_adi) * (dc1_adi[n]->H());
      
+// This is how i think it should be
       tmp = (T.H() * (*dc1_adi[n]) ).H() *  (T.H() * (*ham_adi) * T);
       tmp = tmp + tmp.H();
       res.M[n] = -( ampl_adi.H() * ( T.H() * (*d1ham_adi[n]) * T - tmp ) * ampl_adi ).M[0];

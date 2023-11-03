@@ -233,7 +233,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
         coeff = dyn_vars.ampl_adi->col(itraj);
-        res[itraj] = ham.Ehrenfest_energy_adi(coeff, id).real();
+        res[itraj] = ham.Ehrenfest_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real();
       }
     }
   
