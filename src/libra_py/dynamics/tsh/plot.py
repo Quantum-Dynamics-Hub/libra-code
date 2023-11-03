@@ -1610,3 +1610,657 @@ def hdf2xyz(labels, filename, snaps, trajectories, atoms, unit_conversion_factor
                     md_xyz = md_xyz + F"{labels[iatom] }  {x} {y} {z}\n"                    
     
     return md_xyz
+
+
+# For XF-based algorithms
+def add_cooordinates_aux_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved auxiliary coordinates vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_states = plot_params["which_adi_states"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Auxiliary Coordinates, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Coordinate, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, nstates, ndof = 0, 0, 0    
+
+    if "q_aux/data" in hdf_file.keys():
+        ntraj = hdf_file["q_aux/data"].shape[1]
+        nstates = hdf_file["q_aux/data"].shape[2]
+        ndofs = hdf_file["q_aux/data"].shape[3]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = "black") 
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q/data"][:, tr, dof],
+                                     label=F"Real, traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = "black")
+
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                indx = -1
+                for istate in range(nstates):
+                    if istate in which_states:
+                        indx = indx + 1            
+                        for dof in range(ndofs):
+                            if dof in which_dofs:
+                                if no_label:
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q_aux/data"][:, tr, istate, dof],
+                                             label="", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+                                else: 
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["q_aux/data"][:, tr, istate, dof],
+                                             label=F"traj={tr} state={istate} dof={dof}", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res
+
+def add_momenta_aux_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved auxiliary momenta vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_states = plot_params["which_adi_states"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Auxiliary Momenta, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, nstates, ndof = 0, 0, 0    
+
+    if "p_aux/data" in hdf_file.keys():
+        ntraj = hdf_file["p_aux/data"].shape[1]
+        nstates = hdf_file["p_aux/data"].shape[2]
+        ndofs = hdf_file["p_aux/data"].shape[3]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = "black") 
+                        else:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p/data"][:, tr, dof],
+                                     label=F"Real, traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = "black") 
+
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                indx = -1
+                for istate in range(nstates):
+                    if istate in which_states:
+                        indx = indx + 1            
+                        for dof in range(ndofs):
+                            if dof in which_dofs:
+                                if no_label:
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p_aux/data"][:, tr, istate, dof],
+                                             label="", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+                                else: 
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p_aux/data"][:, tr, istate, dof],
+                                             label=F"traj={tr} state={istate} dof={dof}", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res
+
+def add_nab_phase_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved spatial derivatives of the phase vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_states = plot_params["which_adi_states"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Spatial derivatives of the Phase, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, nstates, ndof = 0, 0, 0    
+
+    if "nab_phase/data" in hdf_file.keys():
+        ntraj = hdf_file["nab_phase/data"].shape[1]
+        nstates = hdf_file["nab_phase/data"].shape[2]
+        ndofs = hdf_file["nab_phase/data"].shape[3]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                indx = -1
+                for istate in range(nstates):
+                    if istate in which_states:
+                        indx = indx + 1            
+                        for dof in range(ndofs):
+                            if dof in which_dofs:
+                                if no_label:
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["nab_phase/data"][:, tr, istate, dof],
+                                             label="", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+                                else: 
+                                    plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["nab_phase/data"][:, tr, istate, dof],
+                                             label=F"traj={tr} state={istate} dof={dof}", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res
+
+
+def add_phase_space_aux(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved auxiliary momenta vs. auxiliary coordinates (phase space)
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_states = plot_params["which_adi_states"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+
+            
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+
+    plt.title('Phase Space Portrait', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Coordinate, a.u.', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+    res = 0
+    ntraj, ndof = 0, 0    
+    if "q_aux/data" in hdf_file.keys() and "p_aux/data" in hdf_file.keys() :    
+        ntraj = hdf_file["p_aux/data"].shape[1]
+        nstates = hdf_file["p_aux/data"].shape[2]
+        ndofs = hdf_file["p_aux/data"].shape[3]
+        res = 1
+
+    if res==1:
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = "black") 
+                        else:
+                            plt.plot(hdf_file["q/data"][:, tr, dof], hdf_file["p/data"][:, tr, dof],
+                                     label=F"Real, traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = "black") 
+
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                indx = -1
+                for istate in range(nstates):
+                    if istate in which_states:
+                        indx = indx + 1            
+                        for dof in range(ndofs):
+                            if dof in which_dofs:
+                                if no_label:
+                                    plt.plot(hdf_file["q_aux/data"][:, tr, istate, dof], hdf_file["p_aux/data"][:, tr, istate, dof],
+                                             label="", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+                                else:
+                                    plt.plot(hdf_file["q_aux/data"][:, tr, istate, dof], hdf_file["p_aux/data"][:, tr, istate, dof],
+                                             label=F"traj={tr} state={istate} dof={dof}", linewidth=Lw, 
+                                             color = colors[ clrs_index[indx] ]) 
+        
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+                
+    return res    
+
+
+def add_p_quant_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved spatial derivatives of the phase vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Quantum Momenta, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, ndof = 0, 0    
+
+    if "p_quant/data" in hdf_file.keys():
+        ntraj = hdf_file["p_quant/data"].shape[1]
+        ndofs = hdf_file["p_quant/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p_quant/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else: 
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["p_quant/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res    
+
+
+def add_VP_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved spatial derivatives of the phase vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Vector Potential, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Momentum, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, ndof = 0, 0    
+
+    if "VP/data" in hdf_file.keys():
+        ntraj = hdf_file["VP/data"].shape[1]
+        ndofs = hdf_file["VP/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["VP/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else: 
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["VP/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res    
+
+
+def add_f_xf_vs_t(plt, hdf_file, plot_params_):
+    """
+    Adds the plotting of the trajectory and dof-resolved spatial derivatives of the phase vs. time
+    This function does not plot it though
+    
+    Call it after adding a sub-plot
+    """
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_trajectories = plot_params["which_trajectories"]
+    which_dofs   = plot_params["which_dofs"]
+
+    no_label = plot_params["no_label"]
+    
+        
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+    
+    plt.title('Time-dependent Decoherence Forces, a.u.', fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Force, a.u.', fontsize=axes_label_fontsize[1])   
+
+
+
+    res = 0
+    ntraj, ndof = 0, 0    
+
+    if "f_xf/data" in hdf_file.keys():
+        ntraj = hdf_file["f_xf/data"].shape[1]
+        ndofs = hdf_file["f_xf/data"].shape[2]
+        res = 1
+
+    if res==1 and "time/data" in hdf_file.keys():    
+        for tr in range(ntraj):        
+            if tr in which_trajectories:
+                for dof in range(ndofs):
+                    if dof in which_dofs:
+                        if no_label:
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f_xf/data"][:, tr, dof],
+                                     label="", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+                        else: 
+                            plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file["f_xf/data"][:, tr, dof],
+                                     label=F"traj={tr} dof={dof}", linewidth=Lw, 
+                                     color = colors[ clrs_index[dof] ]) 
+    else:
+        res = 0
+    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()
+
+    return res    
+
+
+def plot_dynamics_xf(plot_params_):
+    """
+    This function plots a 2 x 1 figure containing:
+    supblot 1: average kinetic, potential, and total energies for the ensemble of trajectories
+    subplot 2: the adiabatic potential energies for selected trajectories
+        
+    """
+    
+    plot_params = common_defaults(plot_params_)
+        
+    
+    filename           = plot_params["filename"]
+    prefix             = plot_params["prefix"]
+    output_level       = plot_params["output_level"]
+    which_dofs         = plot_params["which_dofs"]
+    which_trajectories = plot_params["which_trajectories"]
+    which_adi_states   = plot_params["which_adi_states"]
+    which_dia_states   = plot_params["which_dia_states"]
+    what_to_plot       = plot_params["what_to_plot"]  
+    out_prefix = prefix
+    
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    do_show = plot_params["do_show"]    
+
+    with h5py.File(F"{prefix}/{filename}", 'r') as f:
+        
+        #===== Coordinates vs Time  =========            
+        if "q_aux" in what_to_plot:
+            plt.figure(num=1, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_cooordinates_aux_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/q_aux-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Momenta vs Time  =========            
+        if "p_aux" in what_to_plot:
+            plt.figure(num=2, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_momenta_aux_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/p_aux-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Spatial derivaties of the Phase vs Time  =========            
+        if "nab_phase" in what_to_plot:
+            plt.figure(num=3, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_nab_phase_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/nab_phase-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Phase space  =========            
+        if "phase_space_aux" in what_to_plot:
+            plt.figure(num=4, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_phase_space_aux(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/phase_space_aux.png", dpi=plot_params["dpi"])
+
+
+        #===== Quantum momenta vs Time  =========            
+        if "p_quant" in what_to_plot:
+            plt.figure(num=5, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_p_quant_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/p_quant-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Vector potential vs Time  =========            
+        if "VP" in what_to_plot:
+            plt.figure(num=6, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_VP_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/VP-vs-t.png", dpi=plot_params["dpi"])
+
+
+        #===== Vector potential vs Time  =========            
+        if "f_xf" in what_to_plot:
+            plt.figure(num=7, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_f_xf_vs_t(plt, f, plot_params)
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/f_xf-vs-t.png", dpi=plot_params["dpi"])
+        
+        
+        if do_show:         
+            plt.show()
+

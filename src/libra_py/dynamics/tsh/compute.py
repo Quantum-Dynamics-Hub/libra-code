@@ -318,6 +318,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 
                 - 0: Only Ehrenfest-like force; EhXF [ default ]
                 - 1: The whole force including the XF-correction; MQCXF 
+            
+            * **dyn_params["project_out_aux"]** (int): Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden. [ default: 0]
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
@@ -531,7 +534,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
-                             "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0
+                             "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0,
+                             "project_out_aux": 0
                            } )
 
     #================= Entanglement of trajectories ================================

@@ -1161,7 +1161,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_forces(prms, dyn_var, ham);
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
-    update_forces_xf(dyn_var);
+    update_forces_xf(dyn_var, ham, ham_aux);
   }
 
   // NVT dynamics
@@ -1283,7 +1283,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
           dof = prms.thermostat_dofs[idof];
           for(traj=0; traj<ntraj; traj++){
             for(i=0; i<nadi; i++){
-              dyn_var.p_aux[i]->scale(dof, traj, therm[traj].vel_scale(1.0*prms.dt));
+              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
             }// i
           }// traj 
         }//idof
@@ -1301,7 +1301,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
           dof = prms.thermostat_dofs[idof];
           for(traj=0; traj<ntraj; traj++){
             for(i=0; i<nadi; i++){
-              dyn_var.p_aux[i]->scale(dof, traj, therm[traj].vel_scale(1.0*prms.dt));
+              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
             }// i
           }// traj 
         }//idof
@@ -1367,7 +1367,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         ///apply_afssh(dyn_var, Coeff, act_states, invM, ham, dyn_params, rnd);
       }// AFSSH
       else if(prms.decoherence_algo==5){
-        shxf(dyn_var.is_mixed, dyn_var.is_first, act_states, old_states);
+        shxf(dyn_var, act_states, old_states);
       } // SHXF
 
     }
