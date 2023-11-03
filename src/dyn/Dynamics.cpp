@@ -1155,7 +1155,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
-  if(prms.thermally_corrected_nbra){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
+  if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
   update_forces(prms, dyn_var, ham);
