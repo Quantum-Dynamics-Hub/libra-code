@@ -386,6 +386,7 @@ class dyn_control_params{
       - 2: AFSSH
       - 3: BCSH of Linjun Wang
       - 4: MF-SD of Bedard-Hearn, Larsen, Schwartz
+      - 5: SHXF of Min
   */
   double decoherence_algo;
 
