@@ -942,40 +942,41 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
       int old_st = old_states[traj];
       int new_st = new_states[traj];
 
-      p_tr = p.col(traj);
+      if(old_st!=new_st){
 
-      double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
-      // Do the calculations only for itraj=0 if isNBRA is 1
-      if(isNBRA==1){
-      if(traj==0){
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      }
-      else{
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
-      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+        p_tr = p.col(traj);
 
+        double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
+        // Do the calculations only for itraj=0 if isNBRA is 1
+        if(isNBRA==1){
+        if(traj==0){
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        }
+        else{
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+        double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
+        double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
 
-      double scl_fac = 1.0;
+        double scl_fac = 1.0;
 
-      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-      else{
-        if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
-        else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
-      }      
+        if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+        else{
+          if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
+          else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
+        }      
 
-      //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
-      for(idof = 0; idof < n_active_dof; idof++){   
-        dof = which_dofs[idof];
-        p.scale(dof, traj, scl_fac);  
-      }
-
-    }
+        //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+        for(idof = 0; idof < n_active_dof; idof++){   
+          dof = which_dofs[idof];
+          p.scale(dof, traj, scl_fac);  
+        }
+      }// if different states
+    }// for traj
   }// algo = 100 || 101
 
   else if(prms.momenta_rescaling_algo==110 || prms.momenta_rescaling_algo==111){  // rescale momenta uniformly based on diabatic energies
@@ -985,28 +986,29 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
       int old_st = old_states[traj];
       int new_st = new_states[traj];
 
-      p_tr = p.col(traj);
-      double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
-      double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
-      double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
-      double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
+      if(old_st!=new_st){
 
-      double scl_fac = 1.0;
+        p_tr = p.col(traj);
+        double T_i = compute_kinetic_energy(p_tr, invM, which_dofs); // initial kinetic energy
+        double E_i = ham.children[traj]->get_ham_dia().get(old_st, old_st).real();  // initial potential energy
+        double E_f = ham.children[traj]->get_ham_dia().get(new_st, new_st).real();  // final potential energy  
+        double T_f = T_i + E_i - E_f;             // predicted final kinetic energy
 
-      if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-      else{
-        if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
-        else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
-      }      
+        double scl_fac = 1.0;
 
-      //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
-      for(idof = 0; idof < n_active_dof; idof++){   
-        dof = which_dofs[idof];
-        p.scale(dof, traj, scl_fac);  
-      }
+        if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+        else{
+          if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
+          else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
+        }      
 
-
-    }
+        //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
+        for(idof = 0; idof < n_active_dof; idof++){   
+          dof = which_dofs[idof];
+          p.scale(dof, traj, scl_fac);  
+        }
+      }// if different states
+    }// for traj
   }// algo = 110 || algo = 111
 
 
@@ -1022,34 +1024,37 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 
       int old_st = old_states[traj];
       int new_st = new_states[traj];
-      // Do the calculations only for itraj=0 if isNBRA is 1
-      if(isNBRA==1){
-      if(traj==0){
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      }
-      else{
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
 
-      dNAC = 0.0;
-      for(idof = 0; idof < n_active_dof; idof++){
-        dof = which_dofs[idof];
-        nac = ham.children[traj]->get_dc1_adi(dof);
-        //nac = projectors[traj].H() * nac * projectors[traj];
-        dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
-      }
+      if(old_st!=new_st){
 
-      p_tr = p.col(traj);       
-      rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse, which_dofs); 
+        // Do the calculations only for itraj=0 if isNBRA is 1
+        if(isNBRA==1){
+        if(traj==0){
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        }
+        else{
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+        double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
 
-      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+        dNAC = 0.0;
+        for(idof = 0; idof < n_active_dof; idof++){
+          dof = which_dofs[idof];
+          nac = ham.children[traj]->get_dc1_adi(dof);
+          //nac = projectors[traj].H() * nac * projectors[traj];
+          dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
+        }
 
+        p_tr = p.col(traj);       
+        rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse, which_dofs); 
 
+        for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+
+      }// if different states
     }// for traj
 
   }// algo = 200 || 201
@@ -1082,33 +1087,37 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 
       int old_st = old_states[traj];
       int new_st = new_states[traj];
-      // Do the calculations only for itraj=0 if isNBRA is 1
-      if(isNBRA==1){
-      if(traj==0){
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      }
-      else{
-      hvib = ham.children[traj]->get_ham_adi();
-      //hvib = projectors[traj].H() * hvib * projectors[traj];
-      }
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
 
-      dF = 0.0;
-      for(idof = 0; idof < n_active_dof; idof++){
-        dof = which_dofs[idof];
-        df = ham.children[traj]->get_d1ham_adi(dof);
-        //df = projectors[traj].H() * df * projectors[traj];
-        dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
-      }
+      if(old_st!=new_st){
 
-      p_tr = p.col(traj);       
-      rescale_along_vector(E_i, E_f, p_tr, invM, dF, do_reverse, which_dofs); 
+        // Do the calculations only for itraj=0 if isNBRA is 1
+        if(isNBRA==1){
+        if(traj==0){
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        }
+        else{
+        hvib = ham.children[traj]->get_ham_adi();
+        //hvib = projectors[traj].H() * hvib * projectors[traj];
+        }
+        double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+        double E_f = hvib.get(new_st, new_st).real();  // final potential energy        
 
-      for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
-      
+        dF = 0.0;
+        for(idof = 0; idof < n_active_dof; idof++){
+          dof = which_dofs[idof];
+          df = ham.children[traj]->get_d1ham_adi(dof);
+          //df = projectors[traj].H() * df * projectors[traj];
+          dF.set(dof, 0, df.get(old_st, old_st).real() - df.get(new_st, new_st).real());
+        }
+
+        p_tr = p.col(traj);       
+        rescale_along_vector(E_i, E_f, p_tr, invM, dF, do_reverse, which_dofs); 
+
+        for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
+   
+      }// if different states   
     }// for traj
 
   }// algo = 210 || 211
@@ -1118,24 +1127,20 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 
       int old_st = old_states[traj];
       int new_st = new_states[traj];
+ 
+      if(old_st!=new_st){
 
-      hvib = ham.children[traj]->get_ham_adi();
+        hvib = ham.children[traj]->get_ham_adi();
 
-      double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
-      double E_f = hvib.get(new_st, new_st).real();  // final potential energy
+        double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
+        double E_f = hvib.get(new_st, new_st).real();  // final potential energy
 
-      double ekin_new = E_i + dyn_var.tcnbra_ekin[traj] - E_f;
+        double ekin_new = E_i + dyn_var.tcnbra_ekin[traj] - E_f;
 
-//      if(old_st!=new_st){
-//        cout<<"trajectory = "<<traj<<" total energy (before) = "<<E_i + dyn_var.tcnbra_ekin[traj]<<"  (after) = "<<E_f + ekin_new<<endl;
-//        cout<<" ekin(old)= "<<dyn_var.tcnbra_ekin[traj]<<" ekin(new)= "<<ekin_new<<endl;
-//      if(old_st!=new_st){
-//        cout<<"transition from "<<old_st<<" to "<<new_st<<" ekin(old)= "<<dyn_var.tcnbra_ekin[traj]<<" ekin(new)= "<<ekin_new<<endl;
-//        cout<<"E(old) = "<<E_i<<" E(new) = "<<E_f<<endl;
-//      }
-      dyn_var.tcnbra_ekin[traj] = ekin_new;
+        dyn_var.tcnbra_ekin[traj] = ekin_new;
 
-    }// for itraj
+      }// if different states
+    }// for traj
   }// algo == 40
 
 
