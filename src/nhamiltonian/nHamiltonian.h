@@ -545,10 +545,14 @@ public:
 
 
   ///< In nHamiltonian_compute_Ehrenfest.cpp and nHamiltonian_compute_Ehrenfest_forces.cpp
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, CMATRIX& transform);
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
+  complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_, CMATRIX& transform);
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRIX& transform);      ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option);      ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);                  ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option, vector<CMATRIX*>& transforms);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);              ///< Ehrenfest forces in adiabatic basis
 

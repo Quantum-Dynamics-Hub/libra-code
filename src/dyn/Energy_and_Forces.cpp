@@ -233,7 +233,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
         coeff = dyn_vars.ampl_adi->col(itraj);
-        res[itraj] = ham.Ehrenfest_energy_adi(coeff, id).real();
+        res[itraj] = ham.Ehrenfest_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real();
       }
     }
   
@@ -315,8 +315,14 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
          prms.electronic_integrator==11 ||
          prms.electronic_integrator==12 ){ option = 1; } 
 
-      *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1, option).real(); 
-
+      option = 0;
+      *dyn_vars.f = ham.Ehrenfest_forces_adi(*dyn_vars.ampl_adi, 1, option, dyn_vars.proj_adi).real();
+/*
+      CMATRIX& U = *ham.basis_transform;
+      CMATRIX& C = *dyn_vars.ampl_adi;
+      double nrm = (C.H() * U * U.H() * C).get(0,0).real();
+      cout<<"nrm in Ehrenfest frcs = "<<nrm<<endl;
+*/
     }     
   }// Ehrenfest
 

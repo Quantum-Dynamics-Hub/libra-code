@@ -86,7 +86,7 @@ complex<double> nHamiltonian::Ehrenfest_energy_dia(CMATRIX& ampl_dia, vector<int
 
 
 
-complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi){
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, CMATRIX& transform){
 /**
   Compute the expectation value of the Hamiltonian in the adiabatic basis:
 
@@ -106,15 +106,20 @@ complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi){
 //  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_energy_adi(): the amplitudes of the adiabatic states are\
 //  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-
+  CMATRIX& T = transform;
   complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
   
-  return (ampl_adi.H() * (*ham_adi) * ampl_adi).M[0] / norm;
+  return (ampl_adi.H() *  T.H() * (*ham_adi) * T * ampl_adi).M[0] / norm;
 
 }
 
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi){
+  CMATRIX I(nadi, nadi); I.identity();
+  return Ehrenfest_energy_adi(ampl_adi, I);
+}
 
-complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_){
+
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_, CMATRIX& transform){
 /**
   See the description of the Ehrenfest_energy_adi(CMATRIX& ampl_adi) function
 */
@@ -124,10 +129,14 @@ complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int
   }
   else{
     vector<int> next(id_.begin()+1,id_.end());
-    return children[id_[1]]->Ehrenfest_energy_adi(ampl_adi, next);
+    return children[id_[1]]->Ehrenfest_energy_adi(ampl_adi, next, transform);
   }
 }
 
+complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_){
+  CMATRIX I(nadi, nadi); I.identity();
+  return Ehrenfest_energy_adi(ampl_adi, id_, I);
+}
 
 
 

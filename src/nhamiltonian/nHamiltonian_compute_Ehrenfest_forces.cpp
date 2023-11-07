@@ -110,6 +110,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia, int option){
 }
 
 
+
 CMATRIX nHamiltonian::Ehrenfest_forces_dia_unit(CMATRIX& ampl_dia){
   return Ehrenfest_forces_dia_unit(ampl_dia, 0);
 }
@@ -209,7 +210,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_dia(CMATRIX& ampl_dia, vector<int>& id_){
 
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRIX& transform){
 /**
   \param[in] ampl_adi: MATRIX(nadi, 1) diabatic amplitudes for one trajectory
 
@@ -246,10 +247,13 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
   but it is needed for the calculations\n"; exit(0); }
 
 
-  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
+  complex<double> norm = (ampl_adi.H() * ampl_adi).M[0];
+
 
   CMATRIX res(nnucl,1);
   CMATRIX tmp(nadi, nadi);
+
+  CMATRIX& T = transform;
 
 
   for(int n=0;n<nnucl;n++){
@@ -262,11 +266,17 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
 
 
     if(option==0){ // Original formulation with NACs - for non-LD integrators
-      tmp = dc1_adi[n]->H() * (*ham_adi) + (*ham_adi) * (dc1_adi[n]->H());
-      res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] - tmp ) * ampl_adi ).M[0];
+
+// This is the original approach
+//      tmp = dc1_adi[n]->H() * (*ham_adi) + (*ham_adi) * (dc1_adi[n]->H());
+     
+// This is how i think it should be
+      tmp = (T.H() * (*dc1_adi[n]) ).H() *  (T.H() * (*ham_adi) * T);
+      tmp = tmp + tmp.H();
+      res.M[n] = -( ampl_adi.H() * ( T.H() * (*d1ham_adi[n]) * T - tmp ) * ampl_adi ).M[0];
     }
     else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
-      res.M[n] = -( ampl_adi.H() * ( *d1ham_adi[n] ) * ampl_adi ).M[0];
+      res.M[n] = -( ampl_adi.H() * T.H() * ( *d1ham_adi[n] ) * T * ampl_adi ).M[0];
     }
 
   }// for n
@@ -277,12 +287,18 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
   return res;
 }
 
+CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option){
+  CMATRIX I(nadi, nadi); I.identity();
+  return Ehrenfest_forces_adi_unit(ampl_adi,option, I);
+}
+
 CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi){
-  return Ehrenfest_forces_adi_unit(ampl_adi, 0);
+  CMATRIX I(nadi, nadi); I.identity();
+  return Ehrenfest_forces_adi_unit(ampl_adi, 0, I);
 }
 
 
-CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option){
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option, vector<CMATRIX*>& transforms){
 /**
   \brief Computes the Ehrenfest forces in the adiabatic basis
 
@@ -342,7 +358,7 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int optio
         frc_tmp = Ehrenfest_forces_adi_unit(ampl_tmp, option);
     }
     if(lvl==1){
-        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp, option);
+        frc_tmp = children[i]->Ehrenfest_forces_adi_unit(ampl_tmp, option, *transforms[i] );
     }
 
     push_submatrix(F, frc_tmp, stenc_frc, stenc_col);
@@ -352,8 +368,40 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int optio
   return F;
 }
 
+CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option){
+  int ntraj = ampl_adi.n_cols;
+  vector<CMATRIX*> I(ntraj);
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    I[itraj] = new CMATRIX(nadi, nadi);
+    I[itraj]->load_identity();
+  }      
+
+  CMATRIX F(nnucl, ampl_adi.n_cols);
+
+  F = Ehrenfest_forces_adi(ampl_adi, lvl, option, I);
+
+  for(int itraj=0; itraj<ntraj; itraj++){  delete I[itraj];  }  I.clear();
+
+  return F;
+
+}
+
 CMATRIX nHamiltonian::Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl){
-  return Ehrenfest_forces_adi(ampl_adi, lvl, 0);
+  int ntraj = ampl_adi.n_cols;
+  vector<CMATRIX*> I(ntraj);
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    I[itraj] = new CMATRIX(nadi, nadi);
+    I[itraj]->load_identity();
+  }  
+
+  CMATRIX F(nnucl, ampl_adi.n_cols);
+
+  F = Ehrenfest_forces_adi(ampl_adi, lvl, 0, I);
+
+  for(int itraj=0; itraj<ntraj; itraj++){  delete I[itraj];  }  I.clear();
+  return F;
 }
 
 
