@@ -109,8 +109,13 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
     MATRIX& p = *dyn_var.p;
     CMATRIX& Coeff = *dyn_var.ampl_adi;
     MATRIX& invM = *dyn_var.iM;
-    vector<int>& act_states = dyn_var.act_states;
+    vector<int> act_states = dyn_var.act_states;
     MATRIX& coherence_time = *dyn_var.coherence_time;
+
+    /// Advance coherence times
+    //dyn_var.coherence_time->add(-1, -1, prms.dt);
+    //  MATRIX coherence_time(*dyn_var.coherence_time);
+    coherence_time.add(-1, -1, prms.dt);
 
     int collapse_option = 0;
 
@@ -131,8 +136,8 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
     MATRIX coherence_interval(nst, ntraj); 
     coherence_interval = coherence_intervals(Coeff, decoherence_rates);
 
-    //cout<<"coherence_interval =\n";
-    //coherence_interval.show_matrix();
+//    cout<<"coherence_interval =\n";
+//    coherence_interval.show_matrix();
  
     /// Determine which states may experience decoherence event
     /// If the decohered_states[traj] == -1, this means no basis states on the trajectory traj
@@ -140,16 +145,16 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
     /// such state for each trajectory
     vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, prms.dish_decoherence_event_option, rnd) );
 
-    //cout<<"coherence_time = \n"; coherence_time.show_matrix();
-    //cout<<"Decohered states \n";
-    //for(int a=0; a<decohered_states.size(); a++){ cout<<" "<<decohered_states[a]; } cout<<endl;
-    //cout<<"======= In dish... ==========\n";
+//    cout<<"coherence_time = \n"; coherence_time.show_matrix();
+//    cout<<"Decohered states \n";
+//    for(int a=0; a<decohered_states.size(); a++){ cout<<" "<<decohered_states[a]; } cout<<endl;
+//    cout<<"======= In dish... ==========\n";
 
     for(traj=0; traj < ntraj; traj++){
 
       int istate = decohered_states[traj];
 
-      //cout<<"   == Trajectory "<<traj<<"  decohered state: "<<istate<<" ===\n";
+//      cout<<"   == Trajectory "<<traj<<"  decohered state: "<<istate<<" ===\n";
 
       /// Exclude the situation when no decoherence event occurs (-1)
       /// in those cases we just continue the coherent evolution
@@ -172,12 +177,13 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
         /// Situation 1: Decohered state is the active state
         if(istate == act_states[traj]){
 
-            //cout<<"=== Place 1: decohered state is the active one\n";
+//            cout<<"=== Place 1: decohered state is the active one\n";
 
             if(ksi<=prob){   
-              //cout<<" ... collapsing onto state "<<istate<<endl;
+//              cout<<" ... collapsing onto state "<<istate<<endl;
               /// Collapse the wavefunction onto the current active state, stay on that state - no hops
               collapse(Coeff, traj, act_states[traj], collapse_option); 
+        //      coherence_time.set(istate, traj, 0.0);
             }
             else{
 
@@ -191,9 +197,9 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
               /// Transitions to some of the states are possible: then, we'll just need to determine where
               int num_allowed = possible_outcomes.size();
 
-              //cout<<" ... can collapse onto: ";
-              //for(j=0;j<num_allowed;j++){  cout<<possible_outcomes[j]<<"  "; }
-              //cout<<endl;
+//              cout<<" ... can collapse onto: ";
+//              for(j=0;j<num_allowed;j++){  cout<<possible_outcomes[j]<<"  "; }
+//              cout<<endl;
 
               if(num_allowed > 0){
 
@@ -213,17 +219,22 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
                 double ksi2 = rnd.uniform(0.0, 1.0);
                 int selected_state_index = hop(0, hop_probabilities, ksi2);
 
-                //cout<<"  selected_state_index = "<<selected_state_index<<"  value = "<<possible_outcomes[selected_state_index]<<endl;
+//                cout<<"  selected_state_index = "<<selected_state_index<<"  value = "<<possible_outcomes[selected_state_index]<<endl;
 
                 /// We hop to this state
                 final_states[traj] = possible_outcomes[selected_state_index];
 
                 /// We project out the current active state
                 project_out(Coeff, traj, istate); 
+          //      coherence_time.set(istate, traj, 0.0);
 
               }/// num_allowed > 0
               /// There are no states to where the transitions are possible => do nothing
               else{ ;; } ///  Do nothing
+              //else{ // Collapse onto the current active state
+              //  collapse(Coeff, traj, act_states[traj], collapse_option);
+            //    coherence_time.set(istate, traj, 0.0);
+             // }
 
             }
 
@@ -231,9 +242,9 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
 
         /// Situation 2: Decohered state is an inactive state
         else{
-            //cout<<"=== Place 2: decohered state is one of the inactive states\n";
+//            cout<<"=== Place 2: decohered state is one of the inactive states\n";
 
-            if(ksi<=prob){   
+            if(ksi<=prob){  // Try to collapse on the decohered state with the |C_istate|^2 probability
               /// The decohered state becomes the proposed state
               proposed_states[traj] = istate;
               which_trajectories[0] = traj;
@@ -242,12 +253,11 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
               /// other elements of the input and output vector<int> variables (old_states, new_states, proposed_states) are irrelevant
               /// the variable `which_trajectories` instructs to handle only the current trajectory
               old_states = act_states;
-//              new_states = accept_hops(prms, q, p, invM, Coeff, /*projectors,*/ ham, proposed_states, old_states, rnd, which_trajectories);
 
               new_states = accept_hops(dyn_var, ham, proposed_states, old_states, prms, rnd, which_trajectories);
 
            
-              //cout<<"proposed_state = "<<proposed_states[traj]<<"  accepted hop "<<new_states[traj]<<endl;
+//              cout<<"proposed_state = "<<proposed_states[traj]<<"  accepted hop "<<new_states[traj]<<endl;
 
               /// The proposed transition can be accepted => collapse onto this state, hop onto this state
               if(new_states[traj] == proposed_states[traj]){
@@ -257,14 +267,18 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
 
                 /// Mark the hop
                 final_states[traj] = new_states[traj];
+                //coherence_time.set(istate, traj, 0.0);
+                coherence_time.set(final_states[traj], traj, 0.0);
 
               }
               else{  ;; }  /// Do nothing
+              //else { coherence_time.set(istate, traj, 0.0); }
 
             }
             else{
               /// Project out the state from the superposition, no hops
               project_out(Coeff, traj, istate); 
+              //coherence_time.set(istate, traj, 0.0);
             }
 
         }/// decohered state is the inactive state
@@ -272,6 +286,12 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
       }// istate > -1
     
     }// for traj
+
+//    cout<<"In DISH\n";
+//    for(traj=0; traj < ntraj; traj++){
+//      cout<<"itraj = "<<traj<<" act_state = "<<act_states[traj]<<" final_state = "<<final_states[traj]<<endl;
+//    }
+ 
 
     return final_states;
 
