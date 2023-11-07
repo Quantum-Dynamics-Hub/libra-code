@@ -1910,6 +1910,14 @@ def read_wfn_file(filename):
     natom, nspin, nao, nset_max, nshell_max, nset_info, nshell_info, nso_info
     for ispin in range(nspins):
         nmo, homo, lfomo, nelectron, (eigenvalues(1:nmo), occupation_numbers(1:nmo)), mo_coeff
+
+    Args:
+        filename (string): The name of the wfn file
+
+    Returns:
+        basis_data (list): A list that contains the basis set data
+        spin_data (list): A list containing the alpha and beta spin data
+        eigen_vals_and_occ_nums (list): A list that contains the energies and occupation numbers.
     """
     wfn_file = io.FortranFile(filename,'r')
     basis_data = []
@@ -1948,6 +1956,18 @@ def read_wfn_file(filename):
 
 
 def write_wfn_file(filename, basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs):
+    """
+    This function writes a set of data including basis sets, spin data, eigenvalues and occupation numbers, and 
+    MO coefficients into a binary file (wfn) readable by CP2K.
+    Args:
+        filename (string): The name of the output wfn file.
+        basis_data (list): A list that contains the basis set data
+        spin_data (list): A list containing the alpha and beta spin data
+        eigen_vals_and_occ_nums (list): A list that contains the energies and occupation numbers.
+        mo_coeffs (numpy array): The numpy array that contains the MO coefficients.
+    Returns:
+        None
+    """
     wfn_file = io.FortranFile(filename,'w')
     natom = basis_data[0]
     nspin = basis_data[1]
@@ -1972,5 +1992,86 @@ def write_wfn_file(filename, basis_data, spin_data, eigen_vals_and_occ_nums, mo_
             #zero_coeffs = np.random.random(mo_coeffs[spin][mo].shape)
             #wfn_file.write_record(zero_coeffs)
     wfn_file.close()
+
+
+def compute_energies_coeffs(ks_mat, overlap):
+    """
+    This function solves the general eigenvalue problem described above using a Cholesky decomposition
+    of the overlap matrix. The eigenvalues are sorted.
+    More information: https://doi.org/10.1016/j.cpc.2004.12.014
+    Args:
+        ks_mat (numpy array): The Kohn-Sham matrix
+        overlap (numpy array): The atomic orbital overlap matrix
+    Returns:
+        eigenvalues (numpy array): The energies (eigenvalues)
+        eigenvectors (numpy array): The MO coefficients
+    """
+    # Cholesky decomposition of the overlap matrix
+    U = np.linalg.cholesky( overlap ).T
+    # One ca also use the following as well but it is computationally more demanding
+    # U = scipy.linalg.fractional_matrix_power(S, 0.5)
+    U_inv = np.linalg.inv( U )
+    UT_inv = np.linalg.inv( U.T )
+    K_prime = np.linalg.multi_dot( [UT_inv, ks_mat, U_inv] )
+    eigenvalues, eigenvectors = np.linalg.eig( K_prime )
+    # Transform back the coefficients 
+    eigenvectors = np.dot(U_inv, eigenvectors)
+    sorted_indices = np.argsort(eigenvalues)
+    eigenvectors = eigenvectors[:,sorted_indices].T
+    
+    
+    return eigenvalues, eigenvectors
+
+def compute_density_matrix(eigenvectors, homo_index):
+    """
+    This function computes the density matrix: P=2\times c_{occ}\times c_{occ}^T
+    Args:
+        eigenvectors (numpy array): The set of eigenvectors
+        homo_index (integer): The HOMO index to select only the occupied orbitals
+    Returns:
+        density_mat (numpy array): The density matrix.
+    """
+    occupied_eigenvectors = eigenvectors[0:homo_index]
+    density_mat = 2*np.dot(occupied_eigenvectors.T, occupied_eigenvectors)
+    return density_mat
+
+def compute_convergence(ks_mat, overlap, density_mat):
+    """
+    This function computes the convergence error based on the commutator relation: e=KPS-SPK 
+    More information: https://doi.org/10.1016/j.cpc.2004.12.014
+    At this point, this function gives not exact results as in CP2K and the results seems to be different.
+    TODO: Need to check this in more details by checking the CP2K source code.
+    """
+    return np.linalg.multi_dot([ks_mat,density_mat,overlap])-np.linalg.multi_dot([overlap,density_mat,ks_mat])
+
+def scf_timing(log_filename):
+    """
+    This function returns the timing data related to CP2K log file.
+    Args:
+        log_filename (string): The name of the logfile
+    Returns:
+        ncycle (int): Number of SCF cycles in the log file
+        convergence (numpy array): The convergence value at each SCF step 
+        timing (float): The total time of the SCF cycle
+    """
+    f = open(log_filename,'r')
+    lines = f.readlines()
+    f.close()
+    for i in range(len(lines)):
+        if '*** SCF run ' in lines[i] or 'Leaving inner SCF loop' in lines[i]:
+            end = i
+        elif 'Step' in lines[i] and 'Convergence' in lines[i]:
+            start = i+2
+    timing = 0
+    ncycle = 0
+    convergence = []
+    for i in range(start, end):
+        tmp = lines[i].split()
+        if len(tmp)>0:
+            ncycle += 1
+            timing += float(tmp[3])
+            convergence.append(float(tmp[4]))
+    return ncycle, np.array(convergence), timing
+
 
 
