@@ -124,7 +124,7 @@ def generate(_params):
                        "charge":0, "multiplicity":1, "uks":".FALSE.",
 
                        "method":"PBE", "max_scf":100,
-                       "solver":"DIAG",
+                       "solver":"DIAG", "outer_scf": False,
                        "ot.preconditioner":"FULL_SINGLE_INVERSE", "ot.minimizer":"DIIS", "ot.linesearch":"2PNT", "ot.energygap":0.01,
                        "diag.preconditioner":"FULL_SINGLE_INVERSE", "diag.energygap":0.01,
                        "added_mos":20, "smearing":False,
@@ -133,7 +133,7 @@ def generate(_params):
                        "istate":0, "nstates":2, "tddft_kernel":"FULL",
 
                        "cell.A":[30.0, 0.0, 0.0], "cell.B":[0.0, 30.0, 0.0], "cell.C":[0.0, 0.0, 30.0], "cell.periodic":"XYZ",
-                       "xyz_file":"inp.xyz", 
+                       "xyz_file":"inp.xyz", "center_coordinates": "T",
 
                        "kinds": [  h_kind, ti_kind  ]
                      }
@@ -155,7 +155,7 @@ def generate(_params):
 
     global_inp = F"""
 &GLOBAL
-  PROJECT {project}
+  PROJECT_NAME {project}
   RUN_TYPE {run_type}
   PRINT_LEVEL {print_level}
 &END GLOBAL
@@ -218,7 +218,45 @@ def generate(_params):
         &END PARAMETER
       &END xTB
         """
-
+    elif method in ["manual_XC"]:
+        xc_input = "&XC\n      &XC_FUNCTIONAL\n"
+        functional_names =  params["functional_names"]  
+        functional_keys = params["functional_keys"] 
+        functional_key_vals = params["functional_key_vals"]
+        if not len(functional_keys)==len(functional_names):
+            raise "The length of functional_names and functional_keys must be the same"
+        for i in range(len(functional_names)):
+            xc_input += F"        &{functional_names[i]}\n"
+            for j in range(len(functional_keys[i])):
+                xc_input += F"           {functional_keys[i][j]} {functional_key_vals[i][j]}\n"
+            xc_input += F"        &END\n"
+        xc_input += "      &END XC_FUNCTIONAL\n"
+        if params["HF_exchange"]:
+            eps_schwarz = params["eps_schwarz"]
+            hf_input = "      &HF\n        &SCREENING\n"
+            hf_input += F"          EPS_SCHWARZ {eps_schwarz}\n"
+            hf_input += "        &END\n"
+            interaction_potential_type = params["interaction_potential_type"]
+            omega = params["omega"]
+            hf_exchange_fraction = params["HF_exchange_fraction"]
+            if params["interaction_potential"]:
+                hf_input += "        &INTERACTION_POTENTIAL\n"
+                hf_input += F"          POTENTIAL_TYPE {interaction_potential_type}\n"
+                hf_input += F"          OMEGA {omega}\n"
+                if "mix_cl" in interaction_potential_type.lower():
+                    scale_longrange = params["scale_longrange"]
+                    scale_coulomb = params["scale_coulomb"]
+                    hf_input += F"          SCALE_COULOMB {scale_coulomb}"
+                    hf_input += F"          SCALE_LONGRANGE {scale_longrange}"
+                hf_input += "        &END\n"
+            hf_input += F"        FRACTION {hf_exchange_fraction}\n"
+            hf_input += F"      &END\n"
+        else:
+            hf_input = ""
+        xc_input += hf_input
+        xc_input += "    &END XC\n"
+        
+        
     # Explicit names of the functionals
     else:
         xc_input = F"""
@@ -234,17 +272,19 @@ def generate(_params):
 
     #>>> ============ AUX ===================
     aux_input = ""
-#    if method in ["HSE06", "HSE12" "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
-#        aux_input=F"""
-#!    &AUXILIARY_DENSITY_MATRIX_METHOD
-#!      ! recommended, i.e. use a smaller basis for HFX
-#!      ! each kind will need an AUX_FIT_BASIS_SET.
-#!      METHOD BASIS_PROJECTION
-#!      ! recommended, this method is stable and allows for MD. 
-#!      ! can be expensive for large systems
-#!      ADMM_PURIFICATION_METHOD MO_DIAG
-#!    &END
-#        """
+    if params["admm_calculations"]:
+        admm_purification_method = params["admm_purification_method"]
+    #if method in ["HSE06", "HSE12" "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
+        aux_input=F"""
+    &AUXILIARY_DENSITY_MATRIX_METHOD
+      ! recommended, i.e. use a smaller basis for HFX
+      ! each kind will need an AUX_FIT_BASIS_SET.
+      METHOD BASIS_PROJECTION
+      ! recommended, this method is stable and allows for MD. 
+      ! can be expensive for large systems
+      ADMM_PURIFICATION_METHOD {admm_purification_method}
+    &END
+        """
 
     #>>> ============ AUX END ===============
 
@@ -278,6 +318,11 @@ def generate(_params):
           ENERGY_GAP {egap}
         &END
       &END DIAGONALIZATION
+       &MIXING  T
+         METHOD  BROYDEN_MIXING
+         ALPHA     0.5
+         NBUFFER  8
+       &END MIXING
         """
 
     #<<<<< ============ SOLVER END ==========
@@ -301,33 +346,48 @@ def generate(_params):
       &END
       """
 
-    max_scf = params["max_scf"]    
+    max_scf = params["max_scf"]
+    scf_guess = params["scf_guess"]    
+    eps_scf = params["eps_scf"]
+    if params["outer_scf"]:
+        outer_scf = F"""
+    &OUTER_SCF
+      MAX_SCF {max_scf}
+      EPS_SCF {eps_scf}
+    &END
+        """
+    else:
+        outer_scf = "\n"
 
     scf_input = F"""
     &SCF
       MAX_SCF {max_scf}
-      SCF_GUESS RESTART
-      EPS_SCF 1.e-6        
+      SCF_GUESS {scf_guess}
+      EPS_SCF {eps_scf} 
       {solver_input}
       {added_mos_input}
       {smearing_input}
+      {outer_scf}
     &END SCF
     """
     #<<<< ============ SCF END ==================
-
+    eps_default = params["eps_default"]
     qs_input = F"""
     &QS
       METHOD {qs_method}
       {xtb_input}
+      EPS_DEFAULT {eps_default}
     &END QS
     """
     #<<<============ QS END ====================
 
     #>>>============ POISSON ===================
+    xyz = params["cell.periodic"]
+    poisson_solver = params["poisson_solver"]
     poisson_input = F"""
     &POISSON
-      POISSON_SOLVER PERIODIC
-      PERIODIC XYZ
+      POISSON_SOLVER {poisson_solver}
+      PERIODIC {xyz}
     &END POISSON
     """
     #<<<============ POISSON END ===============
@@ -346,11 +406,15 @@ def generate(_params):
 
 
     #<<<============ PRINT =====================
-    print_input = F"""
+    if not params["dft_print"]=="":
+        print_input = params["dft_print"]
+    else:
+        print_input = F"""
     &PRINT
       &MO
         ENERGIES .TRUE.
         OCCUPATION_NUMBERS .TRUE.
+        FILENAME coeffs
         NDIGITS 8
         &EACH
           QS_SCF 0
@@ -363,7 +427,7 @@ def generate(_params):
     charge = params["charge"]
     multiplicity = params["multiplicity"]
     uks = params["uks"]
-
+    wfn_restart_name = params["wfn_restart_name"]
     dft_input = F"""
   &DFT
     BASIS_SET_FILE_NAME BASIS_MOLOPT
@@ -371,7 +435,7 @@ def generate(_params):
     BASIS_SET_FILE_NAME BASIS_ADMM_MOLOPT
     BASIS_SET_FILE_NAME GTH_BASIS_SETS
     POTENTIAL_FILE_NAME GTH_POTENTIALS
-
+    WFN_RESTART_FILE_NAME {wfn_restart_name}
     CHARGE {charge}
     MULTIPLICITY {multiplicity}
     UKS {uks}
@@ -424,7 +488,6 @@ def generate(_params):
     Ax, Ay, Az = params["cell.A"][0], params["cell.A"][1], params["cell.A"][2]
     Bx, By, Bz = params["cell.B"][0], params["cell.B"][1], params["cell.B"][2]
     Cx, Cy, Cz = params["cell.C"][0], params["cell.C"][1], params["cell.C"][2]
-    xyz = params["cell.periodic"]
 
     cell_input = F"""
     &CELL
@@ -436,11 +499,12 @@ def generate(_params):
     """  
 
     xyz_file = params["xyz_file"]
+    center_coordinates = params["center_coordinates"]
     topo_input = F"""
     &TOPOLOGY   
       COORD_FILE_NAME {xyz_file}
       COORD_FILE_FORMAT XYZ
-      &CENTER_COORDINATES T
+      &CENTER_COORDINATES {center_coordinates}
       &END
     &END    
     """
@@ -493,9 +557,89 @@ def generate(_params):
 &END FORCE_EVAL
 """
 
+    #<============= MOTION ===============
+
+    if run_type=="GEO_OPT":
+        max_iter = params["max_iter"]
+        max_disp = params["max_disp"]
+        max_force = params["max_force"]
+        motion_input = F"""
+&MOTION
+ &GEO_OPT
+   OPTIMIZER BFGS
+   MAX_ITER  {max_iter}
+   MAX_DR    [bohr] {max_disp}
+   MAX_FORCE {max_force}
+   RMS_DR    [bohr] {max_disp}
+   RMS_FORCE {max_force}
+   &BFGS
+   &END
+  &END
+  &PRINT
+   &TRAJECTORY
+     &EACH
+       GEO_OPT 1
+     &END EACH
+   &END TRAJECTORY
+   &FORCES ON
+   &END FORCES
+   &RESTART
+     BACKUP_COPIES 1
+     &EACH
+       GEO_OPT 1
+     &END EACH
+   &END RESTART
+  &END PRINT
+&END
+"""
+    elif run_type=="MD":
+        ensemble = params["ensemble"]
+        nsteps = params["nsteps"]
+        time_step = params["time_step"]
+        temperature = params["temperature"]
+        time_const = params["time_const"]
+        motion_input = F"""
+&MOTION
+  &MD
+    ENSEMBLE {ensemble}
+    STEPS {nsteps}
+    TIMESTEP {time_step}
+    TEMPERATURE {temperature}
+   &THERMOSTAT
+     REGION GLOBAL
+     TYPE CSVR
+         &CSVR
+           TIMECON {time_const}
+         &END
+   &END THERMOSTAT
+  &END MD
+  &PRINT
+   &TRAJECTORY
+     &EACH
+       MD 1
+     &END EACH
+   &END TRAJECTORY
+   &VELOCITIES ON
+   &END VELOCITIES
+   &FORCES ON
+   &END FORCES
+   &RESTART
+     BACKUP_COPIES 1
+     &EACH
+       MD 1
+     &END EACH
+   &END RESTART
+   &END
+&END MOTION
+"""
+    else:
+        motion_input = " "
+
+    #<============= MOTION END ==============
+
 
     #============ OVERALL ===============  
-    input = F"""{global_inp} {force_eval_input}"""
+    input = F"""{global_inp} {force_eval_input} {motion_input}"""
 
 
     f = open(input_filename, "w+")
