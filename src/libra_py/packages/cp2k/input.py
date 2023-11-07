@@ -236,18 +236,19 @@ def generate(_params):
             hf_input = "      &HF\n        &SCREENING\n"
             hf_input += F"          EPS_SCHWARZ {eps_schwarz}\n"
             hf_input += "        &END\n"
-            interaction_potential = params["interaction_potential"]
+            interaction_potential_type = params["interaction_potential_type"]
             omega = params["omega"]
             hf_exchange_fraction = params["HF_exchange_fraction"]
-            hf_input += "        &INTERACTION_POTENTIAL\n"
-            hf_input += F"          POTENTIAL_TYPE {interaction_potential}\n"
-            hf_input += F"          OMEGA {omega}\n"
-            if "mix_cl" in interaction_potential.lower():
-                scale_longrange = params["scale_longrange"]
-                scale_coulomb = params["scale_coulomb"]
-                hf_input += F"          SCALE_COULOMB {scale_coulomb}"
-                hf_input += F"          SCALE_LONGRANGE {scale_longrange}"
-            hf_input += "        &END\n"
+            if params["interaction_potential"]:
+                hf_input += "        &INTERACTION_POTENTIAL\n"
+                hf_input += F"          POTENTIAL_TYPE {interaction_potential_type}\n"
+                hf_input += F"          OMEGA {omega}\n"
+                if "mix_cl" in interaction_potential_type.lower():
+                    scale_longrange = params["scale_longrange"]
+                    scale_coulomb = params["scale_coulomb"]
+                    hf_input += F"          SCALE_COULOMB {scale_coulomb}"
+                    hf_input += F"          SCALE_LONGRANGE {scale_longrange}"
+                hf_input += "        &END\n"
             hf_input += F"        FRACTION {hf_exchange_fraction}\n"
             hf_input += F"      &END\n"
         else:
@@ -317,6 +318,11 @@ def generate(_params):
           ENERGY_GAP {egap}
         &END
       &END DIAGONALIZATION
+       &MIXING  T
+         METHOD  BROYDEN_MIXING
+         ALPHA     0.5
+         NBUFFER  8
+       &END MIXING
         """
 
     #<<<<< ============ SOLVER END ==========
@@ -408,6 +414,7 @@ def generate(_params):
       &MO
         ENERGIES .TRUE.
         OCCUPATION_NUMBERS .TRUE.
+        FILENAME coeffs
         NDIGITS 8
         &EACH
           QS_SCF 0

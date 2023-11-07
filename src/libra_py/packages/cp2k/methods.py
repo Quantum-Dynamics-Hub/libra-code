@@ -26,7 +26,7 @@ import scipy.sparse as sp
 import time
 import glob 
 from libra_py.workflows.nbra import step2_many_body
-
+import scipy.io as io
 
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -1873,5 +1873,104 @@ def extract_energies_sparse(params):
     md_time = np.arange(0,energies.shape[0]*dt,dt)
     
     return md_time, energies
+
+
+def read_wfn_file(filename):
+    """
+    This function reads the data stored in wfn files produced by CP2K.
+    These data are stored in this format (from the cp2k/src/qs_mo_io.F file):
+    
+    From the subroutine 'write_mo_set_low':
+    ### ================================================== 
+    WRITE (ires) natom, nspin, nao, nset_max, nshell_max
+    WRITE (ires) nset_info
+    WRITE (ires) nshell_info
+    WRITE (ires) nso_info
+    
+    DO ispin = 1, nspin
+         nmo = mo_array(ispin)%nmo
+         IF ((ires > 0) .AND. (nmo > 0)) THEN
+            WRITE (ires) nmo, &
+               mo_array(ispin)%homo, &
+               mo_array(ispin)%lfomo, &
+               mo_array(ispin)%nelectron
+            WRITE (ires) mo_array(ispin)%eigenvalues(1:nmo), &
+               mo_array(ispin)%occupation_numbers(1:nmo)
+         END IF
+         IF (PRESENT(rt_mos)) THEN
+            DO imat = 2*ispin - 1, 2*ispin
+               CALL cp_fm_write_unformatted(rt_mos(imat), ires)
+            END DO
+         ELSE
+            CALL cp_fm_write_unformatted(mo_array(ispin)%mo_coeff, ires)
+         END IF
+      END DO
+    ### ================================================== 
+    SUMMARY:
+    natom, nspin, nao, nset_max, nshell_max, nset_info, nshell_info, nso_info
+    for ispin in range(nspins):
+        nmo, homo, lfomo, nelectron, (eigenvalues(1:nmo), occupation_numbers(1:nmo)), mo_coeff
+    """
+    wfn_file = io.FortranFile(filename,'r')
+    basis_data = []
+    natom, nspin, nao, nset_max, nshell_max = wfn_file.read_ints()
+    nset_info = wfn_file.read_ints()
+    nshell_info = wfn_file.read_ints()
+    nso_info = wfn_file.read_ints()
+    basis_data.append(natom)
+    basis_data.append(nspin)
+    basis_data.append(nao)
+    basis_data.append(nset_max)
+    basis_data.append(nshell_max)
+    basis_data.append(nset_info)
+    basis_data.append(nshell_info)
+    basis_data.append(nso_info)
+    spin_data = []
+    eigen_vals_and_occ_nums = []
+    mo_coeffs = []
+    for spin in range(nspin):
+        spin_tmp = []
+        nmo, homo, lfomo, nelectron = wfn_file.read_ints()
+        spin_tmp.append(nmo)
+        spin_tmp.append(homo)
+        spin_tmp.append(lfomo)
+        spin_tmp.append(nelectron)
+        spin_data.append(spin_tmp)
+        eigen_val_and_occ_num = wfn_file.read_reals(dtype=np.float32)
+        eigen_vals_and_occ_nums.append(eigen_val_and_occ_num)
+        mo_coeff = []
+        for mo in range(nmo):
+            coeffs = wfn_file.read_reals()
+            mo_coeff.append(coeffs)
+        mo_coeffs.append(mo_coeff)
+    wfn_file.close()
+    return basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs
+
+
+def write_wfn_file(filename, basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs):
+    wfn_file = io.FortranFile(filename,'w')
+    natom = basis_data[0]
+    nspin = basis_data[1]
+    nao = basis_data[2]
+    nset_max = basis_data[3]
+    nshell_max = basis_data[4]
+    nset_info = basis_data[5]
+    nshell_info = basis_data[6]
+    nso_info = basis_data[7]
+    wfn_file.write_record(natom, nspin, nao, nset_max, nshell_max)
+    wfn_file.write_record(nset_info)
+    wfn_file.write_record(nshell_info)
+    wfn_file.write_record(nso_info)
+    for spin in range(nspin):
+        wfn_file.write_record(spin_data[spin][0], spin_data[spin][1], spin_data[spin][2], spin_data[spin][3])
+        nmo = spin_data[spin][0]
+        wfn_file.write_record(eigen_vals_and_occ_nums[spin])#, dtype=np.float32)
+        #zero_eig_occ = np.zeros(eigen_vals_and_occ_nums[spin].shape)
+        #wfn_file.write_record(zero_eig_occ)#, dtype=np.float32)
+        for mo in range(nmo):
+            wfn_file.write_record(mo_coeffs[spin][mo])
+            #zero_coeffs = np.random.random(mo_coeffs[spin][mo].shape)
+            #wfn_file.write_record(zero_coeffs)
+    wfn_file.close()
 
 
