@@ -95,15 +95,9 @@ vector<int> decoherence_event(MATRIX& coherence_time, MATRIX& coherence_interval
   return decoherence_event(coherence_time, coherence_interval, 0, rnd);
 
 }
-
-/*
-vector<int> dish(dyn_control_params& prms,
-       MATRIX& q, MATRIX& p,  MATRIX& invM, CMATRIX& Coeff,
-       nHamiltonian& ham, vector<int>& act_states, MATRIX& coherence_time, 
-       vector<MATRIX>& decoherence_rates, Random& rnd){
-*/
 vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham, 
                  vector<MATRIX>& decoherence_rates,  dyn_control_params& prms,Random& rnd){
+
 
     MATRIX& q = *dyn_var.q;
     MATRIX& p = *dyn_var.p;
@@ -113,8 +107,6 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
     MATRIX& coherence_time = *dyn_var.coherence_time;
 
     /// Advance coherence times
-    //dyn_var.coherence_time->add(-1, -1, prms.dt);
-    //  MATRIX coherence_time(*dyn_var.coherence_time);
     coherence_time.add(-1, -1, prms.dt);
 
     int collapse_option = 0;
@@ -298,6 +290,60 @@ vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
 }
 
 
+
+void dish_rev2023(dyn_variables& dyn_var, nHamiltonian& ham, 
+                  vector<MATRIX>& decoherence_rates,
+                  dyn_control_params& prms,Random& rnd){
+
+  CMATRIX& Coeff = *dyn_var.ampl_adi;
+  vector<int> act_states = dyn_var.act_states;
+  MATRIX& coherence_time = *dyn_var.coherence_time;
+
+  int collapse_option = 0;
+
+  int i,j, traj;
+  int nst = Coeff.n_rows;
+  int ntraj = Coeff.n_cols;
+
+
+  /// Advance coherence times
+  coherence_time.add(-1, -1, prms.dt);
+
+  /// Update coherence intervals
+  MATRIX coherence_interval(nst, ntraj);
+  coherence_interval = coherence_intervals(Coeff, decoherence_rates);
+
+  // Determine the if any state may be subject to decoherence event
+  vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, prms.dish_decoherence_event_option, rnd) );
+
+
+  // Handle
+  for(traj=0; traj < ntraj; traj++){
+
+    int istate = decohered_states[traj];
+
+    /// Exclude the situation when no decoherence event occurs (-1)
+    /// in those cases we just continue the coherent evolution
+    if(istate>-1){ 
+
+      /// The cohrence interval is reset for the decohered state, since the state
+      /// has experienced a decoherence event
+      coherence_time.set(istate, traj, 0.0);
+
+
+      /// Compute the quantum probability of the decohered state
+      double prob = (std::conj(Coeff.get(istate, traj)) * Coeff.get(istate, traj) ).real();
+      double ksi = rnd.uniform(0.0, 1.0);
+
+      /// with the |c_istate|^2 probability, collapse onto this state
+      /// with the 1 - |c_istate|^2 probability project out this state
+      if(ksi<=prob){  collapse(Coeff, traj, istate, collapse_option);  }
+      else{   project_out(Coeff, traj, istate);    }
+
+    }// decoherence event is found
+  }// for traj
+
+}// dish_rev2023
 
 
 vector<int> dish_hop_proposal(vector<int>& act_states, CMATRIX& Coeff, 

@@ -432,6 +432,10 @@ void export_dyn_decoherence_objects(){
    dyn_control_params& prms,Random& rnd) = &dish;
   def("dish", expt_dish_v1);
 
+  void (*expt_dish_rev2023_v1)(dyn_variables& dyn_var, nHamiltonian& ham,
+                  vector<MATRIX>& decoherence_rates,
+                  dyn_control_params& prms,Random& rnd) = &dish_rev2023;
+
 
   CMATRIX (*expt_afssh_dzdt_v1)
   (CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state) = &afssh_dzdt;

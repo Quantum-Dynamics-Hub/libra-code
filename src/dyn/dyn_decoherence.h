@@ -117,6 +117,10 @@ vector<int> dish(dyn_control_params& prms,
 vector<int> dish(dyn_variables& dyn_var, nHamiltonian& ham,
                  vector<MATRIX>& decoherence_rates, dyn_control_params& prms,Random& rnd);
 
+void dish_rev2023(dyn_variables& dyn_var, nHamiltonian& ham,
+                  vector<MATRIX>& decoherence_rates,
+                  dyn_control_params& prms,Random& rnd);
+
 /*
 int ida(CMATRIX& Coeff, int old_st, int new_st, double E_old, double E_new, double T, double ksi);
 int dish(Electronic& el, MATRIX& t_m, const MATRIX& tau_m, const CMATRIX& Hvib,

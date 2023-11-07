@@ -1310,6 +1310,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     else{ cout<<"ERROR: MQCXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 
+  // DISH, rev2023
+  if(prms.decoherence_algo==7){  dish_rev2023(dyn_var, ham,  decoherence_rates, prms, rnd);   }
+
 
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1);
@@ -1371,31 +1374,16 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       else if(prms.decoherence_algo==5){  shxf(dyn_var, act_states, old_states);   } // SHXF
 
     }
-    // DISH
+    // DISH - the old one
     else if(prms.tsh_method == 5){
       if(prms.decoherence_algo==-1){ ;; }
       else{ cout<<"ERROR: DISH method should be used only with decoherence_algo = -1\nExiting now...\n"; exit(0); }
-        
-
-      /// Advance coherence times
-//      dyn_var.coherence_time->add(-1, -1, prms.dt);
-//      MATRIX coherence_time(*dyn_var.coherence_time);
-
       act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
-//      *dyn_var.coherence_time = coherence_time;
-
     }// DISH
 
 
     //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
-    /*
-    p = *dyn_var.p;
-    handle_hops_nuclear(prms, *dyn_var.q, p, invM, *dyn_var.ampl_adi, ham, act_states, old_states);
-    *dyn_var.p = p;
-    dyn_var.act_states = act_states;
-
-    */
     handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
     dyn_var.act_states = act_states;
 
@@ -1404,16 +1392,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
-
-
-  //  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
         
   }// tsh_method == 0, 1, 2, 3, 4, 5
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
-
-//  if(prms.thermally_corrected_nbra){    remove_thermal_correction(dyn_var, ham, prms);    }
-
 
   // Update the amplitudes and DM, so that we have them consistent in the output
   dyn_var.update_density_matrix(prms, ham, 1);
