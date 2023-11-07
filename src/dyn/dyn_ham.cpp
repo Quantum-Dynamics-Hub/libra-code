@@ -37,6 +37,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
   update_type:
      - 0: in response to changed q
      - 1: in response to changed p
+     - 2: in response to changed electronic amplitudes
 
   The key parameters in the `prms` are:
 
@@ -207,6 +208,12 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
     }
 
   }// update_type==0 || update_type==1
+
+
+  if(update_type==2){  // in responce to updated electronic variables
+
+
+  }// update_type==2
 
 
   // Now apply the projectors to reflect any state switches that may have occurred in the meantime
