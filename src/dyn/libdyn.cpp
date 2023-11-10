@@ -232,6 +232,7 @@ void export_dyn_variables_objects(){
       .def("set_f", &dyn_variables::set_f)
       .def("get_ampl_adi", &dyn_variables::get_ampl_adi)
       .def("get_ampl_dia", &dyn_variables::get_ampl_dia)
+      .def("get_proj_adi", &dyn_variables::get_proj_adi)
       .def("get_dm_adi", expt_get_dm_adi_v1)
       .def("get_dm_adi", expt_get_dm_adi_v2)
       .def("get_dm_dia", expt_get_dm_dia_v1)

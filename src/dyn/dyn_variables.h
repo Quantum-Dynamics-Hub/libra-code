@@ -451,6 +451,7 @@ class dyn_variables{
 
   CMATRIX get_ampl_adi(){ return *ampl_adi; }
   CMATRIX get_ampl_dia(){ return *ampl_dia; }
+  CMATRIX get_proj_adi(int i){ return *proj_adi[i]; } 
   CMATRIX get_dm_adi(int i){  return *dm_adi[i]; }
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
   CMATRIX get_dm_adi(int i, int prev_steps);
