@@ -1012,7 +1012,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   Return: propagates C, q, p and updates state variables
 
 */
-  //cout<<"Here\n"; exit(0);
 
   //======== General variables =======================
   int i,j, cdof, traj, dof, idof, ntraj1, n_therm_dofs, nst;
@@ -1020,9 +1019,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //========= Control parameters variables ===========
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
-
-
-//  cout<<"Here\n"; exit(0);
 
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
@@ -1033,22 +1029,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
-  //cout<<"Start dyn func\n"; exit(0);
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
-  //if(prms.decoherence_algo==2){   dyn_var.allocate_afssh(); }
-
-  //cout<<" ndof = "<<ndof<<" nst = "<<nst<<" ntraj = "<<ntraj<<endl;
-  //exit(0);
-  //========== Aliases ===============================
-//  CMATRIX Cact(nst, ntraj);  
-//  if(prms.rep_tdse==0){ Cact  = *dyn_var.ampl_dia; } //*dyn_var.ampl_dia; }
-//  else if(prms.rep_tdse==1){ Cact = *dyn_var.ampl_adi; } //*dyn_var.ampl_adi; }
-
 
   vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
-//  MATRIX q(*dyn_var.q);
   MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
