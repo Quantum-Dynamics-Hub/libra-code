@@ -210,7 +210,7 @@ class mem_saver:
                 for j in range(ny):       
                     self.np_data[data_name][istep, imatrix, i, j] = _data.get(i, j)
 
-    def save_multi_matrix(self, istep, imatrix, imatrix2, data_name, _data):
+    def save_multi_matrix2(self, istep, imatrix, imatrix2, data_name, _data):
         """
         Saves one of a series of matrices
 
@@ -521,7 +521,7 @@ class hdf5_saver:
                         f[F"{data_name}/data"][istep, imatrix, i, j] = data.get(i, j)
 
 
-    def save_multi_matrix(self, istep, imatrix, imatrix2, data_name, data):
+    def save_multi_matrix2(self, istep, imatrix, imatrix2, data_name, data):
         """
           Add a matrix
 

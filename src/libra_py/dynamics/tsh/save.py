@@ -712,7 +712,7 @@ def save_hdf5_5D(saver, i, tr, idof, dc1_adi, txt_type=0):
     # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
     # Format: saver.add_dataset("dc1_adi", (_nsteps, _ntraj, _nadi, _nadi, _ndof), "R")
     if "dc1_adi" in saver.keywords and "dc1_adi" in saver.np_data.keys():        
-        saver.save_multi_matrix(t, tr, idof, "dc1_adi", dc1_adi)
+        saver.save_multi_matrix2(t, tr, idof, "dc1_adi", dc1_adi)
 
 
 
@@ -865,7 +865,8 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
     for tr in tr_range:
  
         U = ham.get_basis_transform(Py2Cpp_int([0, tr]) )
-        St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) ) 
+        St = ham.get_time_overlap_adi(Py2Cpp_int([0, tr]) )
+        T = dyn_var.get_proj_adi(tr) 
    
         q_aux, p_aux, nab_phase = None, None, None 
         if dyn_var.shxf_vars_status == 1 or dyn_var.mqcxf_vars_status == 1:
@@ -876,22 +877,22 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
         if hdf5_output_level>=4 and _savers["hdf5_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if mem_output_level>=4 and _savers["mem_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if txt_output_level>=4 and _savers["txt_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if txt2_output_level>=4 and _savers["txt2_saver"]!=None: 
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr])) 
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr])) 
-            save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U, None, q_aux, p_aux, nab_phase, 1)
+            save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase, 1)
 
 
     #============= Using save_hdf5_5D(saver, i, tr, idof, dc1) =========================
@@ -899,8 +900,9 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
         for idof in range(dyn_var.ndof):
 
             dc1 = ham.get_dc1_adi( idof, (Py2Cpp_int([0, tr]) ) ) # .real()
-            T = dyn_var.get_proj_adi(tr)
-            dc1 = (T.H() * dc1 * T).real()
+            dc1 = dc1.real()
+            #T = dyn_var.get_proj_adi(tr)
+            #dc1 = (T.H() * dc1 * T).real()
              
             if hdf5_output_level>=5 and _savers["hdf5_saver"]!=None:
                 save_hdf5_5D(_savers["hdf5_saver"], i, tr, idof, dc1)
