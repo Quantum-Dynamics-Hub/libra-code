@@ -210,6 +210,24 @@ class mem_saver:
                 for j in range(ny):       
                     self.np_data[data_name][istep, imatrix, i, j] = _data.get(i, j)
 
+    def save_multi_matrix(self, istep, imatrix, imatrix2, data_name, _data):
+        """
+        Saves one of a series of matrices
+
+        Args:
+
+          istep ( int ) :  index of the timestep for the data
+          data_name ( string ) : how to call this data set internally
+          data ( (C)MATRIX(nx, ny) ) : the actual data to save
+
+        """
+
+        if data_name in self.keywords and data_name in self.np_data.keys():
+            nx, ny = _data.num_of_rows, _data.num_of_cols
+            for i in range(nx):
+                for j in range(ny):
+                    self.np_data[data_name][istep, imatrix, imatrix2, i, j] = _data.get(i, j)
+
     
     def save_data(self, filename, data_names, mode):
         """
@@ -503,6 +521,25 @@ class hdf5_saver:
                         f[F"{data_name}/data"][istep, imatrix, i, j] = data.get(i, j)
 
 
+    def save_multi_matrix(self, istep, imatrix, imatrix2, data_name, data):
+        """
+          Add a matrix
+
+          istep ( int ) :  index of the timestep for the data
+          data_name ( string ) : how to call this data set internally
+          data ( (C)MATRIX(nx, ny) ) : the actual data to save
+
+        """
+
+        if data_name in self.keywords:
+
+            nx, ny = data.num_of_rows, data.num_of_cols
+
+            with h5py.File(self.filename, "a") as f:
+
+                for i in range(nx):
+                    for j in range(ny):
+                        f[F"{data_name}/data"][istep, imatrix, imatrix2, i, j] = data.get(i, j)
 
 
 
