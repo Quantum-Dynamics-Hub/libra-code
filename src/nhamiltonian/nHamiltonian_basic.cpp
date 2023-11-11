@@ -21,10 +21,13 @@
 #endif 
 
 #include "nHamiltonian.h"
+#include "../math_meigen/mEigen.h"
 
 
 /// liblibra namespace
 namespace liblibra{
+
+using namespace libmeigen;
 
 /// libnhamiltonian namespace 
 namespace libnhamiltonian{
@@ -354,7 +357,7 @@ void nHamiltonian::copy_level_content(nHamiltonian* src){
 
 
   if(basis_transform_mem_status != 0  && src->basis_transform_mem_status != 0 ){   *basis_transform = *(src->basis_transform);  }
-  if(time_overlap_dia_mem_status != 0  && src->time_overlap_dia_mem_status != 0 ){   *time_overlap_adi = *(src->time_overlap_dia); }
+  if(time_overlap_dia_mem_status != 0  && src->time_overlap_dia_mem_status != 0 ){   *time_overlap_dia = *(src->time_overlap_dia); }
   if(time_overlap_adi_mem_status != 0  && src->time_overlap_adi_mem_status != 0 ){   *time_overlap_adi = *(src->time_overlap_adi); }
   if(cum_phase_corr_mem_status != 0  && src->cum_phase_corr_mem_status != 0 ){   *cum_phase_corr = *(src->cum_phase_corr); }
 
@@ -2121,6 +2124,87 @@ CMATRIX nHamiltonian::get_cum_phase_corr(vector<int>& id_){
     vector<int> next(id_.begin()+1,id_.end());
     return children[id_[1]]->get_cum_phase_corr(next);
   }
+}
+
+
+
+void nHamiltonian::transform_all(CMATRIX* T, int option){
+/**
+ changes all the adiabatic properties of the Hamiltonian by the matrix T
+
+  option = 0 - use matrix U = T
+         = 1 - use matrix U = T.H()
+   
+*/
+
+  CMATRIX U(*T); // option == 0
+  if (option==1){  U = CMATRIX(T->H()); }
+  else if(option==2 || option==4){
+
+    int nst = nadi;
+    CMATRIX t2(nst,nst);
+    CMATRIX t2_half(nst, nst);
+    CMATRIX t2_i_half(nst, nst);
+
+    CMATRIX t(*T);
+    t2 = t.H() * t;
+    sqrt_matrix(t2, t2_half, t2_i_half);
+    t2 = t * t2_i_half;
+
+    if(option==4){
+      FullPivLU_inverse(t2, U);
+    }
+
+  }
+  else if(option==3){
+    CMATRIX invU(nadi, nadi);
+    FullPivLU_inverse(U, invU);
+    U = invU;
+  }
+  
+  //FullPivLU_inverse(t, U); // U = t^{-1}
+
+
+  // Energy
+  *ham_adi = U.H() * (*ham_adi) * U;
+
+  // NAC
+  *nac_adi = U.H() * (*nac_adi) * U;
+
+  // Hvib
+  *hvib_adi = U.H() * (*hvib_adi) * U;
+
+  // Basis transform
+  *basis_transform =  (*basis_transform) * U; // assuming U.H = invU
+
+
+  // Time-overlaps
+  *time_overlap_adi = U.H() * (*time_overlap_adi) * U;
+  
+  // Derivatives
+  for(int i=0; i<nnucl; i++){
+    // Derivative couplings
+    *dc1_adi[i] = U.H() * (*dc1_adi[i]) * U;
+
+    // Gradients
+    *d1ham_adi[i] = U.H() * (*d1ham_adi[i]) * U;
+
+    // Second derivatives:
+    //for(int j=0; j<nnucl; j++){
+    //}
+
+  }
+
+}
+
+void  nHamiltonian::transform_all(vector<CMATRIX*>& T, int option){
+/**
+ changes all the properties of all the children Hamiltonians by the matrices in T
+*/
+
+ int ntraj = children.size();
+ for(int i=0; i<ntraj; i++){ children[i]->transform_all(T[i], option); }
+
 }
 
 
