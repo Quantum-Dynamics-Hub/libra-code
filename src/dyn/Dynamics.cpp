@@ -1013,6 +1013,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 */
 
+//  cout<<"In compute_dynamics\n";
   //======== General variables =======================
   int i,j, cdof, traj, dof, idof, ntraj1, n_therm_dofs, nst;
 
@@ -1103,7 +1104,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
 
-  // Recompute the matrices at the new geometry and apply any necessary fixes 
+  // Recompute the matrices at the new geometry and apply any necessary fixes   
+  ham.transform_all(dyn_var.proj_adi, 1); // use 4 (with normalization), 3 ( U^-1)  or even 1 (U.H)
   ham_aux.copy_content(ham);
 
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
@@ -1126,6 +1128,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }
   }
 
+
+  // Apply the basis change to all the adiabatic properties
+  ham.transform_all(dyn_var.proj_adi, 0); // use with 0 (U) or 2 (normalized)
+
+
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
@@ -1144,6 +1151,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute forces in respose to the updated amplitudes/density matrix/state indices
   update_forces(prms, dyn_var, ham);
+
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -1177,10 +1185,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// idof 
   }
 
-
+  //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
-//  exit(0);
    
   //============== Electronic propagation ===================
   // Evolve electronic DOFs for all trajectories
@@ -1298,14 +1305,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // DISH, rev2023
   if(prms.decoherence_algo==7){  dish_rev2023(dyn_var, ham,  decoherence_rates, prms, rnd);   }
 
-
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1);
-
-  //========= Use the resulting amplitudes to do the hopping =======
-  //dyn_var.update_amplitudes(prms, ham);
-  //dyn_var.update_density_matrix(prms, ham, 1);
-
 
 
   //************************************ TSH options ****************************************
@@ -1383,8 +1384,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
   // Update the amplitudes and DM, so that we have them consistent in the output
+  dyn_var.update_amplitudes(prms, ham); 
   dyn_var.update_density_matrix(prms, ham, 1);
-  dyn_var.update_amplitudes(prms, ham);
 
 
   // Saves the current density matrix into the previous - needed for FSSH2

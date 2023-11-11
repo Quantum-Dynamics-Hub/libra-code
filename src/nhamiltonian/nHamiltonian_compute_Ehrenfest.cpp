@@ -106,7 +106,9 @@ complex<double> nHamiltonian::Ehrenfest_energy_adi(CMATRIX& ampl_adi, CMATRIX& t
 //  if(ampl_adi_mem_status==0){ cout<<"Error in Ehrenfest_energy_adi(): the amplitudes of the adiabatic states are\
 //  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  CMATRIX& T = transform;
+//  CMATRIX& T = transform;
+  CMATRIX T(transform); T.identity();
+
   complex<double> norm = (ampl_adi.H() * ampl_adi).M[0]; 
   
   return (ampl_adi.H() *  T.H() * (*ham_adi) * T * ampl_adi).M[0] / norm;

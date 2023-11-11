@@ -253,7 +253,8 @@ CMATRIX nHamiltonian::Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, C
   CMATRIX res(nnucl,1);
   CMATRIX tmp(nadi, nadi);
 
-  CMATRIX& T = transform;
+//  CMATRIX& T = transform;
+  CMATRIX T(transform);  T.identity();
 
 
   for(int n=0;n<nnucl;n++){
