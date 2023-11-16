@@ -1246,51 +1246,27 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     }//i
   }//traj
 
-  // Propagate the spatial derivative of phases
-  if(prms.use_xf_force==0){
-    for(int traj=0; traj<ntraj; traj++){
-      vector<int>& is_mixed = dyn_var.is_mixed[traj];
-      vector<int>& is_first = dyn_var.is_first[traj];
-      MATRIX& p_aux = *dyn_var.p_aux[traj];
-      MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
-      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-    
-      for(int i=0; i<nadi; i++){
-        if(is_mixed[i]==1){
-          if(is_first[i]==1){
-            nab_phase.set(i, -1, 0.0);
-          }
-          else{
-            for(int idof=0; idof<ndof; idof++){
-              nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
-            }//idof
-          }
-        }
-      }//i
-    } // traj
-  }
-  else{
-    for(int traj=0; traj<ntraj; traj++){
-      vector<int>& is_mixed = dyn_var.is_mixed[traj];
-      vector<int>& is_first = dyn_var.is_first[traj];
-      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-    
-      CMATRIX E(nadi, nadi);
-      E = ham.children[traj]->get_ham_adi();
+  // Propagate the spatial derivative of phases; the E-based approximation is used
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+  
+    CMATRIX E(nadi, nadi);
+    E = ham.children[traj]->get_ham_adi();
 
-      MATRIX p_real(ndof, 1);
-      p_real = dyn_var.p->col(traj); 
-      double Ekin = compute_kinetic_energy(p_real, invM);
-    
-      for(int i=0; i<nadi; i++){
-        if(is_mixed[i]==1){
-          for(int idof=0; idof<ndof; idof++){
-            nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/Ekin);
-          }//idof
-        }
-      }//i
-    } // traj
-  }
+    MATRIX p_real(ndof, 1);
+    p_real = dyn_var.p->col(traj); 
+    double Ekin = compute_kinetic_energy(p_real, invM);
+  
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        for(int idof=0; idof<ndof; idof++){
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/Ekin);
+        }//idof
+      }
+    }//i
+  } // traj
 }
 
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
