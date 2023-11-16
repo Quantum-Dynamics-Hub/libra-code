@@ -862,6 +862,63 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
     } //traj
 }
 
+void xf_destroy_AT(dyn_variables& dyn_var, nHamiltonian& ham, double threshold){
+    /**
+    \brief When the electronic state recovers to an adiabatic state, destroy auxiliary trajectories
+           Here, momentum rescaling is also performed.
+    */
+    int traj;
+    int ntraj = dyn_var.ntraj;
+    int nadi = dyn_var.nadi;
+
+    double upper_lim = 1.0 - threshold;
+    double lower_lim = threshold;
+    
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      CMATRIX& dm = *dyn_var.dm_adi[traj];
+
+      int is_recovered = 0;
+
+      for(int i=0; i<nadi; i++){
+        double a_ii = dm.get(i,i).real(); 
+        if(is_mixed[i]==1){
+          if(a_ii>upper_lim){
+            is_recovered = 1;
+
+            // Before the collapse
+            vector<int> _id(2, 0);  _id[1] = traj;
+            CMATRIX coeff(nadi, 1);
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot_old = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+            collapse(*dyn_var.ampl_adi, traj, i, 0);
+            
+            // After the collapse
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+            // Rescaling momenta for the energy conservation
+            MATRIX p_real(dyn_var.ndof, 1); p_real = dyn_var.p->col(traj); 
+            double alpha = compute_kinetic_energy(p_real, *dyn_var.iM) + Epot_old - Epot;
+
+            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, *dyn_var.iM);}
+            else{alpha = 0.0;}
+
+            for(int idof=0; idof<dyn_var.ndof; idof++){
+              dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+            }
+
+            break;
+          }
+        }
+      } //i
+
+      if(is_recovered==1){xf_init_AT(dyn_var, traj, -1);}
+    } //traj
+}
+
 void xf_create_AT(dyn_variables& dyn_var, double threshold){
     /**
     \brief When the electronic state is in a superposition between adiabatic states, create auxiliary trajectories
@@ -1065,7 +1122,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   int nadi = dyn_var.nadi;
   int ndof = dyn_var.ndof; 
 
-  xf_destroy_AT(dyn_var, prms.coherence_threshold);
+  xf_destroy_AT(dyn_var, ham, prms.coherence_threshold);
 
   xf_create_AT(dyn_var, prms.coherence_threshold);
 
