@@ -1058,9 +1058,9 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         if (alpha < 0.0){ alpha = 0.0;
           if (prms.project_out_aux == 1){
             project_out(*dyn_var.ampl_adi, traj, i);
-            xf_init_AT(dyn_var, traj, i);
+            xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
-            continue;
+            break;
           }
         }
         
@@ -1150,7 +1150,6 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   } //traj
 
   // Propagate auxiliary momenta
-  CMATRIX coeff_tmp = *dyn_var.ampl_adi;
   CMATRIX coeff(nadi, 1);
 
   for(int traj=0; traj<ntraj; traj++){
@@ -1174,7 +1173,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     }
    
     vector<int> _id(2, 0);  _id[1] = traj;
-    coeff = coeff_tmp.col(traj);
+    coeff = dyn_var.ampl_adi->col(traj);
     double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
 
     double alpha; 
@@ -1194,13 +1193,12 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         if (alpha < 0.0){ alpha = 0.0;
           if (prms.project_out_aux == 1){
             project_out(*dyn_var.ampl_adi, traj, i);
-            xf_init_AT(dyn_var, traj, i);
+            xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
 
             // rescaling velocity
             double Epot_old = Epot;
-            coeff_tmp = *dyn_var.ampl_adi;
-            coeff = coeff_tmp.col(traj);
+            coeff = dyn_var.ampl_adi->col(traj);
             Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
 
             alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
@@ -1209,7 +1207,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
             }
 
-            continue;
+            break;
           }
         }
 
@@ -1223,21 +1221,28 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
           double temp = 0.0;
           for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
           if(temp<0.0){
-            int a; complex<double> max_val;
-            coeff.max_col_elt(0, max_val, a);
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the most probable state " << a << " with " << pow(fabs(max_val), 2)  <<
-              " at a classical turning point on traj " << traj <<endl;
+            double Epot_old = Epot;
 
-            // rescaling velocity
-            alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(a,a).real();
-            if (alpha < 0.0){alpha = 0.0;}
-            alpha /= compute_kinetic_energy(p_real, invM);
-            for(int idof=0; idof<ndof; idof++){
+            int a = dyn_var.act_states[traj];
+            collapse(*dyn_var.ampl_adi, traj, a, 0);
+            
+            // After the collapse
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+            
+            // Rescaling momenta for the energy conservation
+            p_real = dyn_var.p->col(traj); 
+            double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
+
+            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
+            else{alpha = 0.0;}
+
+            for(int idof=0; idof<dyn_var.ndof; idof++){
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
             }
 
+            xf_init_AT(dyn_var, traj, -1);
+            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
             break;
           }
         }
