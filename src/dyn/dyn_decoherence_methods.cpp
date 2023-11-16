@@ -899,6 +899,19 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
 
 }
 
+void xf_hop_reset(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states){
+  int traj;
+  int ntraj = dyn_var.ntraj;
+
+for(traj = 0; traj < ntraj; traj++){
+    // When a hop occurs, destroy auxiliary trajectories 
+    if(accepted_states[traj] != initial_states[traj]){
+      xf_init_AT(dyn_var, traj, -1);
+      cout << "destroy auxiliary trajectories of traj " << traj << " due to a hop" << endl;
+    }
+  }// traj
+}
+
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
@@ -1042,19 +1055,6 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
 }
 
-void shxf(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states){
-  int traj;
-  int ntraj = dyn_var.ntraj;
-
-for(traj = 0; traj < ntraj; traj++){
-    // When a hop occurs, destroy auxiliary trajectories 
-    if(accepted_states[traj] != initial_states[traj]){
-      xf_init_AT(dyn_var, traj, -1);
-      cout << "destroy auxiliary trajectories of traj " << traj << " due to a hop" << endl;
-    }
-  }// traj
-}
-
 void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
@@ -1131,6 +1131,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         else{
           p_aux_temp = p_aux_old.row(i).T(); 
           alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          //alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
 
         if (alpha < 0.0){ alpha = 0.0;
@@ -1248,13 +1249,15 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   RHO = T * C * C.H() * T.H();
 
   // Compute quantum momenta
-  dyn_var.p_quant->set(-1, traj, 0.0);
+  int a = dyn_var.act_states[traj];
 
+  dyn_var.p_quant->set(-1, traj, 0.0);
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * RHO.get(i,i).real()
-          *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2.0) * RHO.get(i,i).real()
+          *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
+         // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
       }
     }
   }
@@ -1307,8 +1310,6 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     MATRIX p_real(ndof, 1);
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
-    
-    C = Coeff.col(traj);
 
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
@@ -1327,7 +1328,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     // Original form of the decoherence force
     for(int idof=0; idof<ndof; idof++){
       for(int jdof=0; jdof<ndof; jdof++){
-        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
+        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C);
         dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
           (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
       }
@@ -1380,15 +1381,16 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     //================= Basis re-expansion ===================
     CMATRIX P(nadi, nadi);
     CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-    CMATRIX T_new(nadi, nadi);
 
-    P = ham->get_time_overlap_adi();  // U_old.H() * U;
-  
-    // More consistent with the new derivations:
-    libmeigen::FullPivLU_inverse(P, T_new);
-    T_new = orthogonalized_T( T_new );
-    
-    if(prms.assume_always_consistent){ T_new.identity(); }
+    // Don't apply T, since hamiltonian elements were already transformed through the transform_all method  
+    CMATRIX T_new(nadi, nadi); T_new.load_identity();
+    //P = ham->get_time_overlap_adi();  // U_old.H() * U;
+    // 
+    //// More consistent with the new derivations:
+    //libmeigen::FullPivLU_inverse(P, T_new);
+    //T_new = orthogonalized_T( T_new );
+    //
+    //if(prms.assume_always_consistent){ T_new.identity(); }
    
     // Generate the half-time exponential operator 
     CMATRIX Hxf_old(nadi, nadi);
