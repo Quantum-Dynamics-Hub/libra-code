@@ -1235,7 +1235,10 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
             double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
 
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
-            else{alpha = 0.0;}
+            else{
+              alpha = 0.0;
+              cout << "Energy is drifted due to a classically forbidden hop" << endl;
+            }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
@@ -1263,11 +1266,12 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     MATRIX p_real(ndof, 1);
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
-  
+
+    double e = 1.0e-6; // masking for classical turning points
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         for(int idof=0; idof<ndof; idof++){
-          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/Ekin);
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + e));
         }//idof
       }
     }//i
