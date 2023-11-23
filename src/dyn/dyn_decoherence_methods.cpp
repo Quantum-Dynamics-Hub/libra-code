@@ -862,6 +862,63 @@ void xf_destroy_AT(dyn_variables& dyn_var, double threshold){
     } //traj
 }
 
+void xf_destroy_AT(dyn_variables& dyn_var, nHamiltonian& ham, double threshold){
+    /**
+    \brief When the electronic state recovers to an adiabatic state, destroy auxiliary trajectories
+           Here, momentum rescaling is also performed.
+    */
+    int traj;
+    int ntraj = dyn_var.ntraj;
+    int nadi = dyn_var.nadi;
+
+    double upper_lim = 1.0 - threshold;
+    double lower_lim = threshold;
+    
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      CMATRIX& dm = *dyn_var.dm_adi[traj];
+
+      int is_recovered = 0;
+
+      for(int i=0; i<nadi; i++){
+        double a_ii = dm.get(i,i).real(); 
+        if(is_mixed[i]==1){
+          if(a_ii>upper_lim){
+            is_recovered = 1;
+
+            // Before the collapse
+            vector<int> _id(2, 0);  _id[1] = traj;
+            CMATRIX coeff(nadi, 1);
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot_old = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+            collapse(*dyn_var.ampl_adi, traj, i, 0);
+            
+            // After the collapse
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+
+            // Rescaling momenta for the energy conservation
+            MATRIX p_real(dyn_var.ndof, 1); p_real = dyn_var.p->col(traj); 
+            double alpha = compute_kinetic_energy(p_real, *dyn_var.iM) + Epot_old - Epot;
+
+            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, *dyn_var.iM);}
+            else{alpha = 0.0;}
+
+            for(int idof=0; idof<dyn_var.ndof; idof++){
+              dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+            }
+
+            break;
+          }
+        }
+      } //i
+
+      if(is_recovered==1){xf_init_AT(dyn_var, traj, -1);}
+    } //traj
+}
+
 void xf_create_AT(dyn_variables& dyn_var, double threshold){
     /**
     \brief When the electronic state is in a superposition between adiabatic states, create auxiliary trajectories
@@ -897,6 +954,19 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
       }
     } //traj 
 
+}
+
+void xf_hop_reset(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states){
+  int traj;
+  int ntraj = dyn_var.ntraj;
+
+for(traj = 0; traj < ntraj; traj++){
+    // When a hop occurs, destroy auxiliary trajectories 
+    if(accepted_states[traj] != initial_states[traj]){
+      xf_init_AT(dyn_var, traj, -1);
+      cout << "destroy auxiliary trajectories of traj " << traj << " due to a hop" << endl;
+    }
+  }// traj
 }
 
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
@@ -988,9 +1058,9 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         if (alpha < 0.0){ alpha = 0.0;
           if (prms.project_out_aux == 1){
             project_out(*dyn_var.ampl_adi, traj, i);
-            xf_init_AT(dyn_var, traj, i);
+            xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
-            continue;
+            break;
           }
         }
         
@@ -1042,19 +1112,6 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
 }
 
-void shxf(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states){
-  int traj;
-  int ntraj = dyn_var.ntraj;
-
-for(traj = 0; traj < ntraj; traj++){
-    // When a hop occurs, destroy auxiliary trajectories 
-    if(accepted_states[traj] != initial_states[traj]){
-      xf_init_AT(dyn_var, traj, -1);
-      cout << "destroy auxiliary trajectories of traj " << traj << " due to a hop" << endl;
-    }
-  }// traj
-}
-
 void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the MQCXF (Mixed Quantum-Classical based on eXact Factorization) method of
@@ -1065,7 +1122,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   int nadi = dyn_var.nadi;
   int ndof = dyn_var.ndof; 
 
-  xf_destroy_AT(dyn_var, prms.coherence_threshold);
+  xf_destroy_AT(dyn_var, ham, prms.coherence_threshold);
 
   xf_create_AT(dyn_var, prms.coherence_threshold);
 
@@ -1093,7 +1150,6 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   } //traj
 
   // Propagate auxiliary momenta
-  CMATRIX coeff_tmp = *dyn_var.ampl_adi;
   CMATRIX coeff(nadi, 1);
 
   for(int traj=0; traj<ntraj; traj++){
@@ -1117,7 +1173,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     }
    
     vector<int> _id(2, 0);  _id[1] = traj;
-    coeff = coeff_tmp.col(traj);
+    coeff = dyn_var.ampl_adi->col(traj);
     double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
 
     double alpha; 
@@ -1131,18 +1187,18 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         else{
           p_aux_temp = p_aux_old.row(i).T(); 
           alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          //alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
 
         if (alpha < 0.0){ alpha = 0.0;
           if (prms.project_out_aux == 1){
             project_out(*dyn_var.ampl_adi, traj, i);
-            xf_init_AT(dyn_var, traj, i);
+            xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
 
             // rescaling velocity
             double Epot_old = Epot;
-            coeff_tmp = *dyn_var.ampl_adi;
-            coeff = coeff_tmp.col(traj);
+            coeff = dyn_var.ampl_adi->col(traj);
             Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
 
             alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
@@ -1151,7 +1207,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
             }
 
-            continue;
+            break;
           }
         }
 
@@ -1165,21 +1221,31 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
           double temp = 0.0;
           for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
           if(temp<0.0){
-            int a; complex<double> max_val;
-            coeff.max_col_elt(0, max_val, a);
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the most probable state " << a << " with " << pow(fabs(max_val), 2)  <<
-              " at a classical turning point on traj " << traj <<endl;
+            double Epot_old = Epot;
 
-            // rescaling velocity
-            alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(a,a).real();
-            if (alpha < 0.0){alpha = 0.0;}
-            alpha /= compute_kinetic_energy(p_real, invM);
-            for(int idof=0; idof<ndof; idof++){
+            int a = dyn_var.act_states[traj];
+            collapse(*dyn_var.ampl_adi, traj, a, 0);
+            
+            // After the collapse
+            coeff = dyn_var.ampl_adi->col(traj);
+            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+            
+            // Rescaling momenta for the energy conservation
+            p_real = dyn_var.p->col(traj); 
+            double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
+
+            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
+            else{
+              alpha = 0.0;
+              cout << "Energy is drifted due to a classically forbidden hop" << endl;
+            }
+
+            for(int idof=0; idof<dyn_var.ndof; idof++){
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
             }
 
+            xf_init_AT(dyn_var, traj, -1);
+            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
             break;
           }
         }
@@ -1188,51 +1254,28 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     }//i
   }//traj
 
-  // Propagate the spatial derivative of phases
-  if(prms.use_xf_force==0){
-    for(int traj=0; traj<ntraj; traj++){
-      vector<int>& is_mixed = dyn_var.is_mixed[traj];
-      vector<int>& is_first = dyn_var.is_first[traj];
-      MATRIX& p_aux = *dyn_var.p_aux[traj];
-      MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
-      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-    
-      for(int i=0; i<nadi; i++){
-        if(is_mixed[i]==1){
-          if(is_first[i]==1){
-            nab_phase.set(i, -1, 0.0);
-          }
-          else{
-            for(int idof=0; idof<ndof; idof++){
-              nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
-            }//idof
-          }
-        }
-      }//i
-    } // traj
-  }
-  else{
-    for(int traj=0; traj<ntraj; traj++){
-      vector<int>& is_mixed = dyn_var.is_mixed[traj];
-      vector<int>& is_first = dyn_var.is_first[traj];
-      MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-    
-      CMATRIX E(nadi, nadi);
-      E = ham.children[traj]->get_ham_adi();
+  // Propagate the spatial derivative of phases; the E-based approximation is used
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+  
+    CMATRIX E(nadi, nadi);
+    E = ham.children[traj]->get_ham_adi();
 
-      MATRIX p_real(ndof, 1);
-      p_real = dyn_var.p->col(traj); 
-      double Ekin = compute_kinetic_energy(p_real, invM);
-    
-      for(int i=0; i<nadi; i++){
-        if(is_mixed[i]==1){
-          for(int idof=0; idof<ndof; idof++){
-            nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/Ekin);
-          }//idof
-        }
-      }//i
-    } // traj
-  }
+    MATRIX p_real(ndof, 1);
+    p_real = dyn_var.p->col(traj); 
+    double Ekin = compute_kinetic_energy(p_real, invM);
+
+    double e = 1.0e-6; // masking for classical turning points
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        for(int idof=0; idof<ndof; idof++){
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + e));
+        }//idof
+      }
+    }//i
+  } // traj
 }
 
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
@@ -1248,13 +1291,15 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   RHO = T * C * C.H() * T.H();
 
   // Compute quantum momenta
-  dyn_var.p_quant->set(-1, traj, 0.0);
+  int a = dyn_var.act_states[traj];
 
+  dyn_var.p_quant->set(-1, traj, 0.0);
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2) * RHO.get(i,i).real()
-          *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2.0) * RHO.get(i,i).real()
+          *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
+         // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
       }
     }
   }
@@ -1307,8 +1352,6 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     MATRIX p_real(ndof, 1);
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
-    
-    C = Coeff.col(traj);
 
     // Compute F for each dof
     for(int idof=0; idof<ndof; idof++){
@@ -1327,7 +1370,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     // Original form of the decoherence force
     for(int idof=0; idof<ndof; idof++){
       for(int jdof=0; jdof<ndof; jdof++){
-        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C); 
+        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C);
         dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
           (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
       }
@@ -1380,15 +1423,16 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     //================= Basis re-expansion ===================
     CMATRIX P(nadi, nadi);
     CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-    CMATRIX T_new(nadi, nadi);
 
-    P = ham->get_time_overlap_adi();  // U_old.H() * U;
-  
-    // More consistent with the new derivations:
-    libmeigen::FullPivLU_inverse(P, T_new);
-    T_new = orthogonalized_T( T_new );
-    
-    if(prms.assume_always_consistent){ T_new.identity(); }
+    // Don't apply T, since hamiltonian elements were already transformed through the transform_all method  
+    CMATRIX T_new(nadi, nadi); T_new.load_identity();
+    //P = ham->get_time_overlap_adi();  // U_old.H() * U;
+    // 
+    //// More consistent with the new derivations:
+    //libmeigen::FullPivLU_inverse(P, T_new);
+    //T_new = orthogonalized_T( T_new );
+    //
+    //if(prms.assume_always_consistent){ T_new.identity(); }
    
     // Generate the half-time exponential operator 
     CMATRIX Hxf_old(nadi, nadi);
