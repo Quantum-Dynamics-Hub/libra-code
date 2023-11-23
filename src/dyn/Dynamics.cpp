@@ -487,6 +487,9 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamilt
       dyn_var.tcnbra_ekin[itraj] = (E_tot - Ei );  
       dyn_var.tcnbra_thermostats[itraj].nu_therm = prms.tcnbra_nu_therm;
       dyn_var.tcnbra_thermostats[itraj].NHC_size = prms.tcnbra_nhc_size;
+
+      dyn_var.tcnbra_thermostats[itraj].Nf_t = dyn_var.ndof - prms.constrained_dofs.size(); //For now, we assume  prms.quantum_dofs.size(); 
+
       dyn_var.tcnbra_thermostats[itraj].init_nhc();
     }
    
