@@ -64,7 +64,7 @@ class Wfcgrid2{
 */
 
   ///=============== In the Wfcgrid2.cpp ====================
-  void init_numbers(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_);
+  void init_numbers(const vector<double>& rmin_, const vector<double>& rmax_, const vector<double>& dr_, int nstates_);
   void allocate();
   void init_grids();
   void compute_mapping();
@@ -116,10 +116,15 @@ public:
   /// Wavefunction is the diabatic basis
   vector<CMATRIX> PSI_dia;       ///< wavefunction:  list of Npts matrices  nstates x 1
   vector<CMATRIX> reciPSI_dia;   ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin 
+  /// Linearized version:
+  CMATRIX* lin_PSI_dia;          ///< wavefuncton: nstates blocks of Npts points in each, so it is an (nstates * Npts) x 1 matrix
 
   /// Wavefunction is the adiabatic basis
   vector<CMATRIX> PSI_adi;       ///< wavefunction:  list of Npts matrices  nstates x 1
   vector<CMATRIX> reciPSI_adi;   ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin 
+  /// Linearized version:
+  CMATRIX* lin_PSI_adi;          ///< wavefuncton: nstates blocks of Npts points in each, so it is an (nstates * Npts) x 1 matrix
+
 
   /// Wavefunction spatial derivatives
   vector< vector<CMATRIX> > nabla_PSI_dia;  /// d/dR PSI_dia in real space; nablaPSI_dia[dof][ipt].get(istate, 0)   dPSI_dia/dR_dof ( r[ipt]) - nstates x 1 matrix
@@ -133,20 +138,34 @@ public:
 
   /// Hamiltonian and Propagator
   vector<CMATRIX> Hdia;      ///<  diabatic Hamiltoninans for all the Npts points
+  CMATRIX* lin_Hdia;         ///<  linearized diabatic Hamiltonian - a block diagonal matrix (nstates * Npts) x (nstates * Npts)
   vector<CMATRIX> Hadi;      ///<  adiabatic Hamiltoninans for all the Npts points
+  CMATRIX* lin_Hadi;         ///<  linearized adiabatic Hamiltonian - a block diagonal matrix (nstates * Npts) x (nstates * Npts)
   vector<CMATRIX> Vcomplex;  ///<  complex absorbing potential that will be added to the real-space propagator
   vector< vector<CMATRIX> > NAC1;  ///<  1-st order NACS: NAC1[ipt][alpha].get(i,j) = <psi_i| nabla_alpha | psi_j> 
   vector< vector<CMATRIX> > NAC2;  ///<  2-nd order NACS: NAC2[ipt][alpha].get(i,j) = <psi_i| nabla_alpha^2 | psi_j> 
   vector<CMATRIX> U;         ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
+  CMATRIX* lin_U;            ///<  linearized transformation matrix - (nstates * Npts) x (nstates * Npts)
   vector<CMATRIX> expH;      ///<  exponent of the diabatic Hamiltoninans for all the Npts points
+  CMATRIX* lin_expH;         ///<  linearized form of the exponent of the diabatic Hamiltonian - a (nstates * Npts) x (nstates * Npts) matrix
   vector<CMATRIX> expK;      ///<  exponent of the kinetik energy propagator for all the Npts points
 
 
   ///=============== In the Wfcgrid2.cpp ====================
+  //< Auxiliary converter functions:
+  void convert_PSI(int _rep, int _dir); // converts  PSI_dia (PSI_adi) <-> lin_PSI_dia (lin_PSI_adi)
+  void convert_Ham(int _rep, int _dir); // converts  Hdia (Hadi) <-> lin_Hdia (lin_Hadi)
+
+  ///=============== In the Wfcgrid2.cpp ====================
   ///< Grid constructor
-  Wfcgrid2(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_); ///< constructor for n-D wavefunction
+  Wfcgrid2(const vector<double>& rmin_, const vector<double>& rmax_, const vector<double>& dr_, int nstates_); ///< constructor for n-D wavefunction
 
+  ///< Destructor 
+  ~Wfcgrid2();
 
+  //< Copy constructor
+  Wfcgrid2(const Wfcgrid2&);
+   
   ///=============== In the Wfcgrid2_ColbertMiller.cpp ===============
   vector<CMATRIX> T_PSI(vector<CMATRIX>& inp_psi, vector<int>& bc_type, vector<double>& mass, complex<double> scaling);
 
@@ -210,6 +229,7 @@ public:
 
   ///=============== In the Wfcgrid2_SOFT.cpp ====================  
   void update_propagator_H(double dt);
+  void update_propagator_H_lin(double dt);
   void update_propagator_K(double dt, vector<double>& mass);
   void SOFT_propagate();
 

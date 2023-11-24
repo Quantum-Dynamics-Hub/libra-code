@@ -28,7 +28,7 @@ using namespace libwfcgrid;
 namespace libwfcgrid2{
 
 
-void Wfcgrid2::init_numbers(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_){
+void Wfcgrid2::init_numbers(const vector<double>& rmin_, const vector<double>& rmax_, const vector<double>& dr_, int nstates_){
 /**
   \brief Initialize n-D grid dimensions
   \param[in] rmin_ The minimal (leftmost) boundaries of the grid in each dimension
@@ -39,16 +39,15 @@ void Wfcgrid2::init_numbers(vector<double>& rmin_, vector<double>& rmax_, vector
   Computes the number of points in each dimension so that the boundaries are satisfied and the number
   of point is the lowest power of 2 needed to enclose the interval. Also sets other class variables.
 */
-
+  cout<<" == in init_numbers ==\n";
   int dof;
 
   nstates = nstates_;
   ndof = rmin_.size();
 
-  rmin = rmin_;
-  rmax = rmax_;
-  dr = dr_;
-
+  rmin = vector<double>(rmin_);
+  rmax = vector<double>(rmax_);
+  dr = vector<double>(dr_);
 
   if(npts.size()>0){  npts.clear(); }
 
@@ -58,7 +57,7 @@ void Wfcgrid2::init_numbers(vector<double>& rmin_, vector<double>& rmax_, vector
     // Expand the grid to be power of 2 along each dimension
     npts.push_back( libdyn::libwfcgrid::find_grid_size(rmin[dof],rmax[dof],dr[dof]) );
     kmin.push_back( -0.5/dr[dof] );
-    dk.push_back( 1.0/((double)npts[dof]*dr[dof]));
+    dk.push_back( 1.0/(((double)npts[dof])*dr[dof]));
 
     Npts *= npts[dof];
 
@@ -67,14 +66,13 @@ void Wfcgrid2::init_numbers(vector<double>& rmin_, vector<double>& rmax_, vector
   cout<<"Grid size is calculated\n";
 
 
-
   if(kmin.size()>0){  kmin.clear(); }
   for(dof=0; dof<ndof; dof++){
     kmin.push_back( -0.5/dr[dof] );
     cout<<"Minimal wavevector along dimension "<<dof<<" is "<<kmin[dof]<<endl;  
   }
 
-  cout<<"Lower wavevectors are computed \n";
+  cout<<" == done with init_numbers ==\n";
 
 
 }// init_numbers
@@ -91,21 +89,21 @@ void Wfcgrid2::allocate(){
 */
 
   int dof;
-  
+  cout<<" == in allocate ==\n";
   cout<<"nstates = "<<nstates<<endl;
   cout<<"ndof = "<<ndof<<endl;
-  for(dof=0; dof<ndof; dof++){
-    cout<<"Dimension "<<dof<<" has "<<npts[dof]<<" grid points"<<endl;  
-  }
+  for(dof=0; dof<ndof; dof++){  cout<<"Dimension "<<dof<<" has "<<npts[dof]<<" grid points"<<endl;   }
 
-
+  int dim = nstates * Npts;
 
   // Allocate arrays
   PSI_dia = vector<CMATRIX>(Npts, CMATRIX(nstates, 1));          ///< wavefunction  Npts x nstates x 1
   reciPSI_dia = vector<CMATRIX>(Npts, CMATRIX(nstates,1));      ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin
+//  lin_PSI_dia = new CMATRIX(dim, 1);
   
   PSI_adi = vector<CMATRIX>(Npts, CMATRIX(nstates, 1));          ///< wavefunction  Npts x nstates x 1
   reciPSI_adi = vector<CMATRIX>(Npts, CMATRIX(nstates,1));      ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin
+//  lin_PSI_adi = new CMATRIX(dim, 1);
 
   nabla_PSI_dia = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_dia/dR_dof ( r[ipt]) - nstates x 1 matrix
   nabla_PSI_adi = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_adi/dR_dof ( r[ipt]) - nstates x 1 matrix
@@ -113,10 +111,14 @@ void Wfcgrid2::allocate(){
   nabla_reciPSI_adi = vector< vector<CMATRIX> >(ndof, vector<CMATRIX>(Npts, CMATRIX(nstates, 1) ) );  ///   dPSI_adi/dR_dof ( r[ipt]) - nstates x 1 matrix in k-space
 
   Hdia = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  diabatic Hamiltoninans for all the Npts points
+//  lin_Hdia = new CMATRIX(dim, dim);
   Hadi = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  adiabatic Hamiltoninans for all the Npts points
+//  lin_Hadi = new CMATRIX(dim, dim);
   Vcomplex = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  complex absorbing potential
   U = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));      ///<  |adi> = |dia> * U : diabatic-to-adiabatic transformation for all the Npts points
+//  lin_U = new CMATRIX(dim, dim);
   expH = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  exponent of the diabatic Hamiltoninans for all the Npts points
+//  lin_expH = new CMATRIX(dim, dim);
   expK = vector<CMATRIX>(Npts, CMATRIX(nstates, nstates));   ///<  exponent of the kinetic energy propagator for all the Npts points
 
   
@@ -127,6 +129,7 @@ void Wfcgrid2::allocate(){
       kgrid[dof] = new MATRIX(npts[dof], 1);
   }
 
+  cout<<" == done with allocate ==\n";
 
 }// allocate
 
@@ -139,6 +142,8 @@ void Wfcgrid2::init_grids(){
 */
   int dof;
 
+  cout<<"In init_grids, ndof = "<<ndof<<endl;
+
   // Initialize grids
   for(dof=0; dof<ndof; dof++){
 
@@ -150,8 +155,11 @@ void Wfcgrid2::init_grids(){
         kgrid[dof]->M[nx] = kmin[dof] + nx * dk[dof];
       }   
 
+      cout<<"For idof = "<<dof<<"\n";
+      cout<<"Limits of the r-grid: ["<<rgrid[dof]->M[0]<<" , "<<rgrid[dof]->M[ npts[dof]-1 ]<<" ]\n";
+      cout<<"Limits of the k-grid: ["<<kgrid[dof]->M[0]<<" , "<<kgrid[dof]->M[ npts[dof]-1 ]<<" ]\n";
   }
-  cout<<"Grids are initialized\n";
+  cout<<"Grids are initialized, done with init_grids\n";
 
 }// init_grid
 
@@ -173,7 +181,7 @@ int Wfcgrid2::imap(vector<int>& inp){
 
 
 // Constructor
-Wfcgrid2::Wfcgrid2(vector<double>& rmin_, vector<double>& rmax_, vector<double>& dr_, int nstates_){
+Wfcgrid2::Wfcgrid2(const vector<double>& rmin_, const vector<double>& rmax_, const vector<double>& dr_, int nstates_){
 /**
   \brief n-D wavefunction constructors with parameters
   \param[in] rmin_ The minimal (leftmost) boundary of the grids in all dimensions
@@ -187,16 +195,173 @@ Wfcgrid2::Wfcgrid2(vector<double>& rmin_, vector<double>& rmax_, vector<double>&
   3) initialize grids
   4) setup grid mappings (direct and inverse)
 */
-
+  cout<<" === In constructor ===\n";
   init_numbers(rmin_, rmax_, dr_, nstates_);
   allocate();
   init_grids();
   compute_mapping();
+  cout<<" === done with constructor ===\n";
+}
 
+
+Wfcgrid2::Wfcgrid2(const Wfcgrid2& obj){
+
+  cout<<"In copy constructor\n";
+  vector<double> rmin_(obj.rmin);
+  vector<double> rmax_(obj.rmax);
+  vector<double> dr_(obj.dr);
+
+  init_numbers( rmin_, rmax_, dr_, obj.nstates);
+  allocate();
+  init_grids();
+  compute_mapping();
+
+  // Now copy the content:
+  PSI_dia = obj.PSI_dia;
+  reciPSI_dia = obj.reciPSI_dia;
+  
+  PSI_adi = obj.PSI_adi;
+  reciPSI_adi = obj.reciPSI_adi;  
+
+  nabla_PSI_dia = obj.nabla_PSI_dia;
+  nabla_PSI_adi = obj.nabla_PSI_adi;
+
+  nabla_reciPSI_dia = obj.nabla_reciPSI_dia;
+  nabla_reciPSI_adi = obj.nabla_reciPSI_adi;
+
+  Hdia = obj.Hdia;
+  Hadi = obj.Hadi;
+  Vcomplex = obj.Vcomplex;
+  NAC1 = obj.NAC1;
+  NAC2 = obj.NAC2;
+  U = obj.U;
+  expH = obj.expH;
+  expK = obj.expK; 
+
+  cout<<"done with copy constructor\n";
 }
 
 
 
+
+void Wfcgrid2::convert_PSI(int _rep, int _dir){
+/** 
+  converts  PSI_dia (PSI_adi) <-> lin_PSI_dia (lin_PSI_adi)
+  _rep - representation: 0 - diabatic, 1 - adiabatic
+  _dir - direction: 1 - forward: PSI -> lin_PSI;  -1 - backward: lin_PSI -> PSI
+*/
+  int i, ipt;
+  
+  if(_rep==0 && _dir==1){ 
+    for(i=0; i<nstates; i++){ 
+      for(ipt=0;ipt<Npts;ipt++){ lin_PSI_dia->set(i*Npts + ipt, 0,  PSI_dia[ipt].get(i, 0) );  }
+    }
+  }// diabtic, direct-> lin
+
+  if(_rep==1 && _dir==1){
+    for(i=0; i<nstates; i++){
+      for(ipt=0;ipt<Npts;ipt++){ lin_PSI_adi->set(i*Npts + ipt, 0,  PSI_adi[ipt].get(i, 0) );  }
+    }
+  }// adiabtic, direct-> lin
+
+  if(_rep==0 && _dir==-1){
+    for(i=0; i<nstates; i++){
+      for(ipt=0;ipt<Npts;ipt++){ PSI_dia[ipt].set(i, 0, lin_PSI_dia->get(i*Npts + ipt, 0 ) );  }
+    }
+  }// diabtic, lin -> direct
+
+  if(_rep==1 && _dir==-1){
+    for(i=0; i<nstates; i++){
+      for(ipt=0;ipt<Npts;ipt++){ PSI_adi[ipt].set(i, 0, lin_PSI_adi->get(i*Npts + ipt, 0 ) );  }
+    }
+  }// adiabtic, lin -> direct
+
+
+
+/**
+  for(int i=0; i<nstates; i++){  
+    for(int ipt=0;ipt<Npts;ipt++){      
+
+      if(_rep==0){
+        if(_dir==1){           lin_PSI_dia->set(i*Npts + ipt, 0,  PSI_dia[ipt].get(i, 0) );     }
+        else if(_dir==-1){     PSI_dia[ipt].set(i, 0, lin_PSI_dia->get(i*Npts + ipt, 0 ) );     }
+      }
+
+      else if(_rep==1){
+        if(_dir==1){           lin_PSI_adi->set(i*Npts + ipt, 0,  PSI_adi[ipt].get(i, 0) );     }
+        else if(_dir==-1){     PSI_adi[ipt].set(i, 0, lin_PSI_adi->get(i*Npts + ipt, 0 ) );     }
+      }
+
+    }// for ipt - points  
+  }// for i - states
+*/
+
+}
+
+void Wfcgrid2::convert_Ham(int _rep, int _dir){
+/** 
+  converts  Hdia (Hadi) <-> lin_Hdia (lin_Hadi)
+  _rep - representation: 0 - diabatic, 1 - adiabatic
+  _dir - direction: 1 - forward: Ham -> lin_Ham;  -1 - backward: lin_Ham -> Ham
+*/
+
+  for(int i=0; i<nstates; i++){
+    for(int j=0; j<nstates; j++){
+      for(int ipt=0;ipt<Npts;ipt++){
+
+          if(_rep==0){
+            if(_dir==1){           lin_Hdia->set(i*Npts + ipt,  j*Npts + ipt,   Hdia[ipt].get(i, j) );  }
+            else if(_dir==-1){     Hdia[ipt].set(i, j, lin_Hdia->get(i*Npts + ipt, j*Npts + ipt ) );    }
+          }
+
+          else if(_rep==1){
+            if(_dir==1){           lin_Hadi->set(i*Npts + ipt,  j*Npts + ipt,   Hadi[ipt].get(i, j) );  }
+            else if(_dir==-1){     Hadi[ipt].set(i, j, lin_Hadi->get(i*Npts + ipt, j*Npts + ipt ) );    }
+          }
+
+      }// for ipt - points
+    }// for j - states
+  }// for i - states
+
+}
+
+Wfcgrid2::~Wfcgrid2(){
+
+  PSI_dia.clear();
+  reciPSI_dia.clear();  
+//  delete lin_PSI_dia;
+
+  PSI_adi.clear();
+  reciPSI_adi.clear();
+//  delete lin_PSI_adi;
+
+  nabla_PSI_dia.clear();
+  nabla_PSI_adi.clear();
+  nabla_reciPSI_dia.clear();
+  nabla_reciPSI_adi.clear();
+
+  Hdia.clear();
+//  delete lin_Hdia;
+
+  Hadi.clear();
+//  delete lin_Hadi;
+  Vcomplex.clear();
+  U.clear();
+//  delete lin_U;
+  expH.clear();
+//  delete lin_expH;  
+  expK.clear();
+
+  for(int dof=0; dof<ndof; dof++){
+      delete rgrid[dof];
+      delete kgrid[dof]; 
+  }
+  rgrid.clear();
+  kgrid.clear();
+
+
+
+}
 
 
 
