@@ -91,6 +91,10 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
 
   }// for allgrid points
 
+  // Now, convert to the linearized format:
+  //convert_Ham(rep, 1); // direct -> linearized
+
+
 }// update_Hamiltonian
 
 
@@ -105,6 +109,10 @@ void Wfcgrid2::update_adiabatic(){
 
   Hdia * U = S * U * Hadi
 
+  |PSI> = |psi_adi> * C_adi = |psi_dia> * C_dia = |psi_dia> * U * C_adi = |psi_dia> * C_dia
+
+  # so, C_dia = U * C_adi, C_adi = U.H() * C_dia
+
   |psi_adi> = |psi_dia> * U  <=>  phi_i^adi = sum_{a} [ U_ai * phi_a^dia ]
 
   Then: <adi|H|adi> = U.H() * <dia|H|dia> * U or:
@@ -112,9 +120,18 @@ void Wfcgrid2::update_adiabatic(){
   Hdia * U = U * Hadi
 
 */
+ 
+  // Old version:
+//   for(int npt1=0; npt1<Npts; npt1++){ PSI_adi[npt1] = U[npt1].T() * PSI_dia[npt1];  }
 
-  for(int npt1=0; npt1<Npts; npt1++){ PSI_adi[npt1] = U[npt1].T() * PSI_dia[npt1];  }
-  
+  for(int npt1=0; npt1<Npts; npt1++){ PSI_adi[npt1] = U[npt1].H() * PSI_dia[npt1];  }
+
+/*
+  convert_PSI(0, 1); // PSI_dia -> lin_PSI_dia;
+//  *lin_PSI_adi = lin_U->T() * (*lin_PSI_dia); 
+  *lin_PSI_adi = lin_U->H() * (*lin_PSI_dia);
+  convert_PSI(1,-1); // lin_PSI_adi -> PSI_adi
+*/  
 }
 
 void Wfcgrid2::update_diabatic(){
@@ -133,8 +150,17 @@ void Wfcgrid2::update_diabatic(){
 
 */
 
-  for(int npt1=0; npt1<Npts; npt1++){ PSI_dia[npt1] = U[npt1].conj() * PSI_adi[npt1];  }
-  
+  // Old version
+//  for(int npt1=0; npt1<Npts; npt1++){ PSI_dia[npt1] = U[npt1].conj() * PSI_adi[npt1];  }
+
+  for(int npt1=0; npt1<Npts; npt1++){ PSI_dia[npt1] = U[npt1] * PSI_adi[npt1];  }
+
+/*
+  convert_PSI(1, 1); // PSI_adi -> lin_PSI_adi;
+//  *lin_PSI_dia = lin_U->conj() * (*lin_PSI_adi);
+  *lin_PSI_dia = (*lin_U) * (*lin_PSI_adi);
+  convert_PSI(0,-1); // lin_PSI_dia -> PSI_dia
+*/  
 }
 
 
