@@ -350,14 +350,14 @@ void export_dyn_decoherence_objects(){
   (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd) = &mfsd;
   def("mfsd", expt_mfsd_v2);
+  
+  void (*expt_xf_hop_reset)
+  (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &xf_hop_reset;
+  def("xf_hop_reset", expt_xf_hop_reset);
 
   void (*expt_shxf_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
   def("shxf", expt_shxf_v1);
-  
-  void (*expt_shxf_v2)
-  (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &shxf;
-  def("shxf", expt_shxf_v2);
   
   void (*expt_mqcxf_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &mqcxf;
