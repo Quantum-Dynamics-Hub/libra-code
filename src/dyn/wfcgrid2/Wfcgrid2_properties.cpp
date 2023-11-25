@@ -37,6 +37,10 @@ double Wfcgrid2::norm(int rep){
 
   double nrm; nrm = 0.0;
 
+//  if(rep==0){  nrm = (lin_PSI_dia->H() * (*lin_PSI_dia)).get(0,0).real(); }
+//  else if(rep==1){  nrm = (lin_PSI_adi->H() * (*lin_PSI_adi)).get(0,0).real(); }
+  
+  
   for(int npt1=0; npt1<Npts; npt1++){
 
     if(rep==0){
@@ -47,11 +51,9 @@ double Wfcgrid2::norm(int rep){
     }
 
   }// for npt1
+  
 
-
-  for(int idof; idof<ndof; idof++){
-    nrm *= dr[idof];
-  }
+  for(int idof; idof<ndof; idof++){   nrm *= dr[idof];  }
 
   return nrm;
 
@@ -81,9 +83,9 @@ double Wfcgrid2::e_kin(vector<double>& mass, int rep){
     } 
 
     if(rep==0){
-
       res += kfactor * (reciPSI_dia[npt1].H() * reciPSI_dia[npt1]).get(0,0).real();
-      nrm += (PSI_dia[npt1].H() * PSI_dia[npt1]).get(0,0).real();
+      //nrm += (PSI_dia[npt1].H() * PSI_dia[npt1]).get(0,0).real();
+      nrm += (reciPSI_dia[npt1].H() * reciPSI_dia[npt1]).get(0,0).real();
     }
     else if(rep==1){
       res += kfactor * (reciPSI_adi[npt1].H() * reciPSI_adi[npt1]).get(0,0).real();
@@ -105,11 +107,12 @@ double Wfcgrid2::e_kin(vector<double>& mass, int rep){
 */
 
 
-
+/*
   for(idof=0; idof<ndof; idof++){
     res *= dk[idof];
     nrm *= dr[idof];
   }
+*/
   res *= (2.0*M_PI*M_PI);
 
 
@@ -130,6 +133,7 @@ double Wfcgrid2::e_pot(int rep){
   double res; res = 0.0;
   double nrm; nrm = 0.0;
 
+
   for(int npt1=0; npt1<Npts; npt1++){
 
     if(rep==0){
@@ -143,6 +147,16 @@ double Wfcgrid2::e_pot(int rep){
 
   }// for npt1
 
+/*
+  if(rep==0){
+    res = (lin_PSI_dia->H() * (*lin_Hdia) * (*lin_PSI_dia)).get(0,0).real();
+    nrm = (lin_PSI_dia->H() * (*lin_PSI_dia)).get(0,0).real();
+  }
+  else if(rep==1){
+    res = (lin_PSI_adi->H() * (*lin_Hadi) * (*lin_PSI_adi)).get(0,0).real();
+    nrm = (lin_PSI_adi->H() * (*lin_PSI_adi)).get(0,0).real();
+  }
+*/
   res = res / nrm;
 
   return res;

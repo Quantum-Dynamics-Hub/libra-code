@@ -122,7 +122,7 @@ void export_Wfcgrid2_objects(){
 */
 
 
-  class_<Wfcgrid2>("Wfcgrid2",init<vector<double>&, vector<double>&, vector<double>&, int>())
+  class_<Wfcgrid2>("Wfcgrid2",init<const vector<double>&, const vector<double>&, const vector<double>&, int>())
       .def(init<const Wfcgrid2&>())
       .def("__copy__", &generic__copy__<Wfcgrid2>)
       .def("__deepcopy__", &generic__deepcopy__<Wfcgrid2>)
@@ -164,6 +164,9 @@ void export_Wfcgrid2_objects(){
 
 
       .def("imap", &Wfcgrid2::imap)
+
+      .def("convert_PSI", &Wfcgrid2::convert_PSI)
+      .def("convert_Ham", &Wfcgrid2::convert_Ham)
 
       /**  Wfcgrid2_ColbertMiller    */
       .def("T_PSI", &Wfcgrid2::T_PSI)
@@ -217,6 +220,7 @@ void export_Wfcgrid2_objects(){
 
       /**  Wfcgrid2_SOFT    */
       .def("update_propagator_H", &Wfcgrid2::update_propagator_H)
+      .def("update_propagator_H_lin", &Wfcgrid2::update_propagator_H_lin)
       .def("update_propagator_K", &Wfcgrid2::update_propagator_K)
       .def("SOFT_propagate", &Wfcgrid2::SOFT_propagate)
 
