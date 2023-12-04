@@ -494,6 +494,7 @@ class dyn_variables{
   void update_density_matrix(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
   void update_density_matrix(bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl);
 
+  void update_active_states(int direction, int property);
   void update_active_states();
 
   void init_amplitudes(bp::dict params, Random& rnd);
