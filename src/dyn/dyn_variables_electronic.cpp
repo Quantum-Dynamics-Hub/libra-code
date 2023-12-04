@@ -744,52 +744,119 @@ void dyn_variables::init_electronic_dyn_var(bp::dict _params, Random& rnd){
 
 
 //vector<int> update_active_states(vector<int>& act_states, vector<CMATRIX*>& T){
-void dyn_variables:: update_active_states(){
+void dyn_variables:: update_active_states(int direction, int property){
 /*
+  |psi_adi_tilde> C_adi_tilde = |psi_adi> C_adi
+
+  |psi_adi_tilde> = |psi_adi> T, so:
+
+  T C_adi_tilde = C_adi and  C_adi_tilde = T^+ C_adi
+ 
+   direction = 1 - forward:  C_adi_tilde = T^+ C_adi
+              -1 - backward  C_adi = T C_adi_tilde
+
+   property  = 0 - active state only
+             = 1 - adiabatic amplitudes only 
+             = 2 - both active states and adiabatic amplitudes
+
    act_states[itraj] - index of the active adiabatic state for the trajectory `itraj`
                        in terms of the energy-ordered (instantaneous) eign-states
 */
 
-  //cout<<"========= in update_active_states=============\n";
-  //int ntraj = act_states.size();
-  //int nst = T[0]->n_cols;
-  //vector<int> res(ntraj, 0);
-
+  int i;
   int nst = nadi;
-
-  CMATRIX t2(nst,nst);
-  CMATRIX t2_half(nst, nst);
-  CMATRIX t2_i_half(nst, nst);
   CMATRIX coeff(nst, 1);
   complex<double> max_val;
 
   for(int itraj=0; itraj<ntraj; itraj++){
-    //cout<<"itraj = "<<itraj<<endl;
 
-    CMATRIX t(*proj_adi[itraj]);
-    t2 = t.H() * t;
-    sqrt_matrix(t2, t2_half, t2_i_half);
-    t2 = t * t2_i_half;
+    //================ Active states ===================
+    if(property==0 || property==2){
+      coeff = 0.0;
+      coeff.set(act_states[itraj], 0, complex<double>(1.0, 0.0));
 
-    coeff = 0.0;
-    coeff.set(act_states[itraj], 0, complex<double>(1.0, 0.0));
-    //cout<<"initial coeff = \n"; coeff.show_matrix();
-    //cout<<"t2 = \n"; t2.show_matrix();
-    coeff = t2 * coeff;
-    //cout<<"new coeff = \n"; coeff.show_matrix();
-    coeff.max_col_elt(0, max_val, act_states[itraj]);
-    //cout<<" max_val = "<<max_val<<" in position = "<<act_states[itraj]<<endl;
-    //cout<<"itraj = "<<itraj<<"  "<<act_states[itraj]<<endl; //#<<" -> "<<res[itraj]<<endl;
+      if(direction==1){    coeff = proj_adi[itraj]->H() * coeff; }
+      else if(direction==-1){  coeff = (*proj_adi[itraj]) * coeff; }
+
+      coeff.max_col_elt(0, max_val, act_states[itraj]);
+    }
+
+    //============ Amplitudes of states ===================
+    if(property==1 || property==2){
+      coeff = ampl_adi->col(itraj);
+
+      if(direction==1){    coeff = proj_adi[itraj]->H() * coeff; }
+      else if(direction==-1){  coeff = (*proj_adi[itraj]) * coeff; }
+
+      for(i=0; i<nst; i++){ ampl_adi->set(i, itraj,  coeff.get(i, 0) ); }
+    }
 
   }// for itraj
-
-  //cout<<"============ done with the update ================\n";
-
-//  return res;
 }
 
-CMATRIX orthogonalized_T(CMATRIX& T){
+void dyn_variables::update_active_states(){
+/**
+  for backward-compatability
+*/
+   update_active_states(1, 0);
+}
+
+
+
+
+
+
 /*
+void dyn_variables::update_ampl_reproject(int option){
+
+ changes all the adiabatic properties of the Hamiltonian by the matrix T
+
+  option = 0 - use matrix U = T
+         = 1 - use matrix U = T.H()
+
+
+
+  CMATRIX U(*T); // option == 0
+  if (option==1){  U = CMATRIX(T->H()); }
+  else if(option==2 || option==4){
+
+}
+
+*/
+
+
+
+
+
+CMATRIX orthogonalized_T(CMATRIX& T){
+/**
+   Return a unitary equivalent of the matrix T
+
+  |psi_adi_tilde(t+dt)> = |psi_adi(t+dt)> T(t+dt)
+
+  <psi_adi_tilde(t)|psi_adi_tilde(t+dt)> = <psi_adi(t)|psi_adi(t+dt)> T(t+dt)
+        (should be close to I)                    (call it P (t, t+dt)  )
+
+  So:
+
+  I = P(t, t+dt) * T(t+dt)
+
+  So, ideally T(t+dt) should be P^{-1}, but we also want it to be orthonormal
+
+  T = P^{-1} * N
+
+  We want:  T^+ T = N^+ (P^{-1})^+ P^(-1) N = I
+
+  N =  (X^+ X)^-{1/2}, where X = P^(-1), indeed:
+
+  N^+ (P^{-1})^+ P^(-1) N = ((X^+ X)^{-1/2})^+  (X^+ X) (X^+ X )^{-1/2} = 
+
+  = [((X^+ X)^{-1/2})^+ ] [ (X^+ X )^{1/2}] = (X X^+)^{-1/2} (X^+ X)^{1/2} = 
+ 
+  = (X^+)^{-1/2} X^{-1/2}   X^{1/2} (X^+)^{1/2} = (X^+)^{-1/2} (X^+)^{1/2} = I
+  
+  The input to this function should be P^{-1} 
+
 */
 
   int nst = T.n_cols;
