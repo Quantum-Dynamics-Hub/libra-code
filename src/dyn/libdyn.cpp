@@ -122,6 +122,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("dt", &dyn_control_params::dt)
       .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
       .def_readwrite("electronic_integrator", &dyn_control_params::electronic_integrator)
+      .def_readwrite("ampl_transformation_method", &dyn_control_params::ampl_transformation_method)
       .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
       .def_readwrite("thermally_corrected_nbra", &dyn_control_params::thermally_corrected_nbra)
       .def_readwrite("total_energy", &dyn_control_params::total_energy)
@@ -190,6 +191,9 @@ void export_dyn_variables_objects(){
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v1)() = &dyn_variables::compute_kinetic_energies;
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
 
+
+  void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
+  void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
 
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
@@ -267,7 +271,8 @@ void export_dyn_variables_objects(){
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
 
-      .def("update_active_states", &dyn_variables::update_active_states)
+      .def("update_active_states", expt_update_active_states_v1)
+      .def("update_active_states", expt_update_active_states_v2)
 
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
