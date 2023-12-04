@@ -2020,7 +2020,7 @@ def compute_energies_coeffs(ks_mat, overlap):
     eigenvectors = eigenvectors[:,sorted_indices].T
     
     
-    return eigenvalues, eigenvectors
+    return eigenvalues[sorted_indices], eigenvectors
 
 def compute_density_matrix(eigenvectors, homo_index):
     """
