@@ -117,6 +117,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
       exit(0);
     }
 
+
     //============================== Time-overlaps ======================
     /// Don't update time-overlaps
     if(prms.time_overlap_method==0){  ;; }  // maybe it is already pre-computed and stored
@@ -130,6 +131,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
         ham.children[traj]->set_time_overlap_adi_by_val(st);
       }
     }// 1 
+
 
   }// update_type == 0
 
@@ -235,6 +237,58 @@ void update_Hamiltonian_variables(bp::dict prms, dyn_variables& dyn_var,
 
 
 }
+
+
+void update_time_overlaps(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham,  nHamiltonian& ham_prev){
+
+  int nadi = ham.nadi;
+  int ntraj = ham.children.size();
+
+  /// Don't update time-overlaps
+  if(prms.time_overlap_method==0){  ;; }  // maybe it is already pre-computed and stored
+
+  /// Compute the time-overlap directly, using previous MO vectors
+  else if(prms.time_overlap_method==1){   // Explicitly compute it:
+
+    CMATRIX st(nadi, nadi);
+    for(int traj=0; traj<ntraj; traj++){
+      st = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
+      ham.children[traj]->set_time_overlap_adi_by_val(st);
+    }
+  }// 1
+
+}
+
+void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham){ //  nHamiltonian& Ham_prev){
+/**
+  Just re-compute the proj_adi matrices
+*/
+
+  //======= Parameters of the dyn variables ==========
+  int ntraj = dyn_var.ntraj;
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    int traj1 = itraj; // if(method >=100 && method <200){ traj1 = 0; }
+
+    nHamiltonian* ham = Ham.children[traj1];
+    //nHamiltonian* ham_prev = Ham_prev.children[traj1];
+
+    //================= Basis re-expansion ===================
+    CMATRIX P(ham->nadi, ham->nadi);
+    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
+
+    P = ham->get_time_overlap_adi();  // (U_old.H() * U).H();
+
+    
+    // More consistent with the new derivations:
+    FullPivLU_inverse(P, T_new);   
+    T_new = orthogonalized_T( T_new );
+
+    *dyn_var.proj_adi[itraj] = T_new;
+  }//for ntraj
+
+}// reproject_basis
+
 
 
 

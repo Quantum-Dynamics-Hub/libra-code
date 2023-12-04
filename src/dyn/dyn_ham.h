@@ -45,6 +45,11 @@ void update_Hamiltonian_variables(bp::dict prms, dyn_variables& dyn_var,
                                   bp::object py_funct, bp::object model_params, int update_type);
 
 
+void update_time_overlaps(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham,  nHamiltonian& ham_prev);
+
+void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham); // nHamiltonian& Ham_prev);
+
+
 
 }// namespace libdyn
 }// liblibra
