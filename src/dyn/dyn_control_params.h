@@ -695,6 +695,14 @@ class dyn_control_params{
   */
   int electronic_integrator;
 
+
+  /**
+    Whether transform the amplitudes by the T transformation matrix
+         0              - do not transform by the T matrix (naive, but potentially correct approach) 
+         1              - do transform it (as in LD, but maybe not needed if we directly transform basis)
+  */
+  int ampl_transformation_method;
+  
    
   /**
     If set to True (1), we will force the reprojection matrix T_new to be the identity matrix. This effectively
