@@ -570,6 +570,38 @@ void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_co
 
 }
 
+/*
+void update_proj_adi(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
+
+  Just re-compute the proj_adi matrices
+
+
+
+  //======= Parameters of the dyn variables ==========
+  int ntraj = dyn_var.ntraj;
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
+
+    nHamiltonian* ham = Ham->children[traj1];
+    nHamiltonian* ham_prev = Ham_prev->children[traj1];
+
+    //================= Basis re-expansion ===================
+    CMATRIX P(ham->nadi, ham->nadi);
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(ham->nadi, ham->nadi);
+
+    P = ham->get_time_overlap_adi();  // U_old.H() * U;
+
+    // More consistent with the new derivations:
+    FullPivLU_inverse(P, T_new);
+    T_new = orthogonalized_T( T_new );
+
+    *dyn_var.proj_adi[itraj] = T_new;
+  }//for ntraj
+
+}// reproject_basis
+*/
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -591,6 +623,8 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
+  int ampl_transformation_method = prms.ampl_transformation_method;
+
 
   CMATRIX C(nst, 1);
   CMATRIX vRHO(nst*nst, 1); // vectorized DM
@@ -611,7 +645,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
     nHamiltonian* ham = Ham->children[traj1];
     nHamiltonian* ham_prev = Ham_prev->children[traj1];
-
+/*
 
     //================= Basis re-expansion ===================
     CMATRIX P(ham->nadi, ham->nadi);
@@ -629,7 +663,14 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
     FullPivLU_inverse(P, T_new);
     T_new = orthogonalized_T( T_new );
     
-    if(prms.assume_always_consistent){ T_new.identity(); }
+    *dyn_var.proj_adi[itraj] = T_new;
+
+*/
+    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
+    if(prms.assume_always_consistent){    T_new.identity();   }
+
+
+//    if ampl_transformation_method
      
 
   if(rep==0){  // diabatic
@@ -678,6 +719,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
          3              -  1-point, Hvib integration, with exp_
          4              -  2-points, Hvib integration, with exp_
          5              -  2-points, Hvib, integration with the second-point correction of Hvib, with exp_
+         6              -  2-points, Hvib, no reordering
 
         10              -  same as 0, but with rotations
         11              -  same as 1, but with rotations
@@ -731,6 +773,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = T_new * A * C;
+//      C = A * C;
 
     }// method == 2 && 102
 
@@ -785,7 +828,49 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = A * C;
       //T_new.identity();
-    }// method == 4 && 104
+    }// method == 6 && 106
+
+    else if(method==7 || method==107){
+      // 2-point Hvib with vibronic Hamiltonian and correction - same as 5, but different order
+      // Propagate old coefficients using old Hamiltonian, only half-way
+      Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+      A = exp_(Hvib_old, complex<double>(0.0, -0.5*dt) );
+      C = A * C;
+
+      // Reproject the coefficients
+      C = T_new.H() * C;
+
+      // Propagate the new coefficients using the transformed new Hamiltonian, half-way
+      Hvib = ham->get_hvib_adi();
+      Hvib = T_new.H() * Hvib * T_new;
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+
+      A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      C = A * C;
+
+    }// method == 7 && 107
+
+    else if(method==8 || method==108){
+      // new LD: 2-point Ham - same as 2 but different order
+
+      // Propagate with the old Ham
+      Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
+      if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
+      A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      C = A * C;
+
+      // Reorder:
+      C = T_new.H() * C;
+
+      // Propagate with the new Ham
+      Hvib = ham->get_ham_adi();
+      if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
+      Hvib = T_new.H() * Hvib * T_new;
+      A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      C = A * C;
+
+    }// method == 8 && 108
 
 
 
@@ -972,7 +1057,7 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
 
 
-  *dyn_var.proj_adi[itraj] = T_new;
+//  *dyn_var.proj_adi[itraj] = T_new;
 
   // Insert the propagated result back
   for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
@@ -1107,12 +1192,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
 
-  // Recompute the matrices at the new geometry and apply any necessary fixes   
-  ham.transform_all(dyn_var.proj_adi, 1); // use 4 (with normalization), 3 ( U^-1)  or even 1 (U.H)
+
+  // Use the current as the old
   ham_aux.copy_content(ham);
 
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
+
+  // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
+  // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
+  update_proj_adi(prms, dyn_var, ham); 
+
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
@@ -1132,10 +1222,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
 
-  // Apply the basis change to all the adiabatic properties
-  ham.transform_all(dyn_var.proj_adi, 0); // use with 0 (U) or 2 (normalized)
-
-
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
@@ -1146,13 +1232,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
   if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
-    dyn_var.update_active_states();
+    dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
   }
 
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
   if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
-  // Recompute forces in respose to the updated amplitudes/density matrix/state indices
+
   update_forces(prms, dyn_var, ham);
 
  
@@ -1192,14 +1278,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
    
-  //============== Electronic propagation ===================
-  // Evolve electronic DOFs for all trajectories
-// TEMPORARY COMMENT
-  //dyn_var.update_amplitudes(prms, ham);  // Don't do this - then we are fine with the diabatic picture
-
-//  dyn_var.update_density_matrix(prms, ham, 1); // This one is okay
-
-
   //============== Begin the TSH part ===================
 
   //================= Update decoherence rates & times ================
@@ -1308,6 +1386,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // DISH, rev2023
   if(prms.decoherence_algo==7){  dish_rev2023(dyn_var, ham,  decoherence_rates, prms, rnd);   }
 
+
+  // Update amplitudes and density matrices in response to decoherence corrections
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1);
 
@@ -1387,7 +1467,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
-  // Update the amplitudes and DM, so that we have them consistent in the output
+
+  // Update the amplitudes and DM, in response to state hopping and other changes in the TSH part
+  // so that we have them consistent in the output
   dyn_var.update_amplitudes(prms, ham); 
   dyn_var.update_density_matrix(prms, ham, 1);
 
