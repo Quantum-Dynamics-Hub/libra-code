@@ -1549,7 +1549,8 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
     
     nHamiltonian* ham = Ham.children[traj1];
-    
+
+/*    
     //================= Basis re-expansion ===================
     CMATRIX P(nadi, nadi);
     CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
@@ -1562,8 +1563,12 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     //libmeigen::FullPivLU_inverse(P, T_new);
     //T_new = orthogonalized_T( T_new );
     //
-    //if(prms.assume_always_consistent){ T_new.identity(); }
-   
+*/  
+
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
+    if(prms.assume_always_consistent){ T_new.identity(); }
+
     // Generate the half-time exponential operator 
     CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
@@ -1584,7 +1589,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
       C = D * C;
     }
 
-    *dyn_var.proj_adi[itraj] = T_new;
+//  *dyn_var.proj_adi[itraj] = T_new;
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
