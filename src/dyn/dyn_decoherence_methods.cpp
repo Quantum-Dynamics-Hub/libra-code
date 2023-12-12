@@ -1575,7 +1575,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
     XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
-    XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+    XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
 
     Hxf = T_new.H() * Hxf * T_new;      
     Hxf += Hxf_old;
