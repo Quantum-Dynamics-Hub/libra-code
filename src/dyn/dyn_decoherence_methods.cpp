@@ -1521,7 +1521,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1550,21 +1550,6 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     
     nHamiltonian* ham = Ham.children[traj1];
 
-/*    
-    //================= Basis re-expansion ===================
-    CMATRIX P(nadi, nadi);
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-
-    // Don't apply T, since hamiltonian elements were already transformed through the transform_all method  
-    CMATRIX T_new(nadi, nadi); T_new.load_identity();
-    //P = ham->get_time_overlap_adi();  // U_old.H() * U;
-    // 
-    //// More consistent with the new derivations:
-    //libmeigen::FullPivLU_inverse(P, T_new);
-    //T_new = orthogonalized_T( T_new );
-    //
-*/  
-
     CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
     CMATRIX T_new(*dyn_var.proj_adi[itraj]);
     if(prms.assume_always_consistent){ T_new.identity(); }
@@ -1582,12 +1567,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
       
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
 
-    if(do_rotation==1){
-      C = T_new * D * T_new.H() * C;
-    }
-    else{
-      C = D * C;
-    }
+    C = D * C;
 
 //  *dyn_var.proj_adi[itraj] = T_new;
 
