@@ -1367,7 +1367,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
             else{
               alpha = 0.0;
-              cout << "Energy is drifted due to a classically forbidden hop" << endl;
+              cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
             }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
