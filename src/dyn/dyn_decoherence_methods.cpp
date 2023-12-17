@@ -1367,7 +1367,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
             else{
               alpha = 0.0;
-              cout << "Energy is drifted due to a classically forbidden hop" << endl;
+              cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
             }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
@@ -1521,7 +1521,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1549,42 +1549,27 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
     
     nHamiltonian* ham = Ham.children[traj1];
-    
-    //================= Basis re-expansion ===================
-    CMATRIX P(nadi, nadi);
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
 
-    // Don't apply T, since hamiltonian elements were already transformed through the transform_all method  
-    CMATRIX T_new(nadi, nadi); T_new.load_identity();
-    //P = ham->get_time_overlap_adi();  // U_old.H() * U;
-    // 
-    //// More consistent with the new derivations:
-    //libmeigen::FullPivLU_inverse(P, T_new);
-    //T_new = orthogonalized_T( T_new );
-    //
-    //if(prms.assume_always_consistent){ T_new.identity(); }
-   
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
+    if(prms.assume_always_consistent){ T_new.identity(); }
+
     // Generate the half-time exponential operator 
     CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
     XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
-    XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+    XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
 
     Hxf = T_new.H() * Hxf * T_new;      
     Hxf += Hxf_old;
       
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
 
-    if(do_rotation==1){
-      C = T_new * D * T_new.H() * C;
-    }
-    else{
-      C = D * C;
-    }
+    C = D * C;
 
-    *dyn_var.proj_adi[itraj] = T_new;
+//  *dyn_var.proj_adi[itraj] = T_new;
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
