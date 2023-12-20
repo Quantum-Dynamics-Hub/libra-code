@@ -16,6 +16,7 @@
 
 
 #include "dyn_ham.h"
+#include "dyn_projectors.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -267,6 +268,8 @@ void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamilton
   //======= Parameters of the dyn variables ==========
   int ntraj = dyn_var.ntraj;
 
+  double diff = 0.0;
+
   for(int itraj=0; itraj<ntraj; itraj++){
     int traj1 = itraj; // if(method >=100 && method <200){ traj1 = 0; }
 
@@ -279,13 +282,27 @@ void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamilton
 
     P = ham->get_time_overlap_adi();  // (U_old.H() * U).H();
 
-    
-    // More consistent with the new derivations:
-    FullPivLU_inverse(P, T_new);   
-    T_new = orthogonalized_T( T_new );
+    if(prms.state_tracking_algo==-1){ // This is LD
+      // More consistent with the new derivations:
+      FullPivLU_inverse(P, T_new);   
+
+      if( fabs( (P * T_new).tr().real() - P.n_cols) > 0.1 ){
+        cout<<"Problem inverting time-overlap matrix\n";
+        P.show_matrix("p_matrix.txt");
+        exit(0);
+      }
+      T_new = orthogonalized_T( T_new );
+    }
+    else{ // This is based on reordering + phase correction
+      CMATRIX Eadi(ham->get_ham_adi());
+      T_new = P;
+      T_new = compute_projector(prms, Eadi, T_new);
+    }
 
     *dyn_var.proj_adi[itraj] = T_new;
+
   }//for ntraj
+
 
 }// reproject_basis
 
