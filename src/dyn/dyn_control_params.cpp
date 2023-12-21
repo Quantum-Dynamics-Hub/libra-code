@@ -52,7 +52,7 @@ dyn_control_params::dyn_control_params(){
   do_ssy = 0;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
-  state_tracking_algo = 2;
+  state_tracking_algo = -1;
   MK_alpha = 0.0;
   MK_verbosity = 0;
   convergence = 0;
@@ -217,7 +217,8 @@ dyn_control_params::~dyn_control_params() {
 void dyn_control_params::sanity_check(){
 
   ///=================== Options for state tracking ======================
-  if(state_tracking_algo==0 || state_tracking_algo==1 ||
+  if(state_tracking_algo==-1 ||
+     state_tracking_algo==0 || state_tracking_algo==1 ||
      state_tracking_algo==2 || state_tracking_algo==3 ||
      state_tracking_algo==32 || state_tracking_algo==33){ ; ; }
   else{

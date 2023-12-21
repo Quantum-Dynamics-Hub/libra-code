@@ -244,9 +244,10 @@ class dyn_control_params{
 
   /** 
     State tracking algorithm:
+      - -1: use LD approach, it includes phase correction too [ default ]
       - 0: no state tracking
       - 1: method of Kosuke Sato (may fail by getting trapped into an infinite loop)
-      - 2: Munkres-Kuhn (Hungarian) algorithm [ default ]
+      - 2: Munkres-Kuhn (Hungarian) algorithm 
       - 3: experimental stochastic algorithm, the original version with elimination (known problems)
       - 32: experimental stochastic algorithms with all permutations (too expensive)
       - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
