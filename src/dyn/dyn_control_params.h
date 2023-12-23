@@ -244,9 +244,10 @@ class dyn_control_params{
 
   /** 
     State tracking algorithm:
+      - -1: use LD approach, it includes phase correction too [ default ]
       - 0: no state tracking
       - 1: method of Kosuke Sato (may fail by getting trapped into an infinite loop)
-      - 2: Munkres-Kuhn (Hungarian) algorithm [ default ]
+      - 2: Munkres-Kuhn (Hungarian) algorithm 
       - 3: experimental stochastic algorithm, the original version with elimination (known problems)
       - 32: experimental stochastic algorithms with all permutations (too expensive)
       - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
@@ -389,6 +390,7 @@ class dyn_control_params{
       - 5: SHXF of Min
       - 6: MQCXF
       - 7: DISH, rev2023
+      - 8: diabatic IDA, experimental
 
   */
   double decoherence_algo;
@@ -464,8 +466,13 @@ class dyn_control_params{
     only used with decoherence_algo == 1
 
       - 0: ID-S
-      - 1: ID-A [default]
+      - 1: ID-A [default] - if the proposed hop is not successful, we project back to the initial state
+                            if the proposed hop is accepted - we project onto that state
       - 2: ID-C - consistent ID - an experimental algorithm
+      - 3: ID-A, new: if the proposed hop is not successful, we project out the proposed states
+                      if the proposed hop is accepted - we project onto that state
+      - 4: ID-F, new: if the proposed hop is not successful, we project out the proposed states
+                      but we don't do anything if the hop is successful
   */
   int instantaneous_decoherence_variant;
 

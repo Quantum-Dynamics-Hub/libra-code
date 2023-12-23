@@ -825,8 +825,11 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
       Hvib += Hvib_old;
 
-      A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
+      A = exp_(Hvib_old, complex<double>(0.0, -0.5*dt) );
       C = A * C;
+
+      //dyn_var.proj_adi[itraj]->load_identity();
+
       //T_new.identity();
     }// method == 6 && 106
 
@@ -855,20 +858,23 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
       // new LD: 2-point Ham - same as 2 but different order
 
       // Propagate with the old Ham
-      Hvib_old = ham_prev->get_ham_adi();  // T is the identity matrix
+      Hvib_old = ham_prev->get_hvib_adi();  // T is the identity matrix
       if(is_ssy){ SSY_correction(Hvib_old, dyn_var, ham_prev, itraj); }
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = A * C;
 
       // Reorder:
-      C = T_new.H() * C;
+      //C = T_new.H() * C;
 
       // Propagate with the new Ham
-      Hvib = ham->get_ham_adi();
+      Hvib = ham->get_hvib_adi();
       if(is_ssy){ SSY_correction(Hvib, dyn_var, ham, itraj); }
       Hvib = T_new.H() * Hvib * T_new;
       A = exp_(Hvib, complex<double>(0.0, -0.5*dt) );
       C = A * C;
+
+      // Reorder back:
+      //C = T_new * C;
 
     }// method == 8 && 108
 
@@ -1211,13 +1217,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms, 0);
+      propagate_half_xf(dyn_var, ham, prms);
     }
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms, 1);
+      propagate_half_xf(dyn_var, ham, prms);
     }
   }
 
@@ -1440,8 +1446,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       }// AFSSH
       else if(prms.decoherence_algo==3){ ;; } // BCSH of Linjun Wang, nothing to do here
       else if(prms.decoherence_algo==4){ ;; } // MF-SD of Bedard-Hearn, Larsen, Schwartz, nothing to do here 
-      //else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
-      else if(prms.decoherence_algo==5){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
+      else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
+      else if(prms.decoherence_algo==7){ ;; } // DISH rev 2023, nothing to do here
+
+      // Experimental: instantaneous decoherence in diabatic basis
+      else if(prms.decoherence_algo==8){
+        if(prms.rep_tdse==1){
+          instantaneous_decoherence_dia(*dyn_var.ampl_adi, ham, act_states, prop_states, old_states,
+                                    prms.instantaneous_decoherence_variant, prms.collapse_option);
+        }
+        else{ cout<<"ERROR: Instantaneous Decoherence requires rep_tdse = 1\nExiting now...\n"; exit(0); }
+      }// algo == 6
 
     }
     // DISH - the old one
@@ -1450,6 +1465,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       else{ cout<<"ERROR: DISH method should be used only with decoherence_algo = -1\nExiting now...\n"; exit(0); }
       act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
     }// DISH
+
 
 
     //====================== Momenta adjustment after successful/frustrated hops ===================

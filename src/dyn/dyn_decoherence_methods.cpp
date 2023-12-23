@@ -367,6 +367,138 @@ void instantaneous_decoherence(CMATRIX& Coeff,
 
   // ID-A
   else if(instantaneous_decoherence_variant==1){
+    for(traj = 0; traj < ntraj; traj++){
+      if(proposed_states[traj] != initial_states[traj]){
+        // Only apply ID-A, if the proposed states are different from the original ones
+
+        if(accepted_states[traj] == proposed_states[traj]){
+          // Proposed hop is successful - collapse onto newly accepted state
+          collapse(Coeff, traj, accepted_states[traj], collapse_option);
+        }
+        else{
+          // Proposed hop is not successful - collapse onto the original state
+          collapse(Coeff, traj, initial_states[traj], collapse_option);
+        }
+      }
+    }// traj
+  }// ID-A
+
+  // ID-C
+  else if(instantaneous_decoherence_variant==2){
+
+    for(traj = 0; traj < ntraj; traj++){
+      collapse(Coeff, traj, accepted_states[traj], collapse_option);
+    }// traj
+
+  }// ID-C
+
+  // ID-A, new version = IDN
+  else if(instantaneous_decoherence_variant==3){
+    for(traj = 0; traj < ntraj; traj++){
+      if(proposed_states[traj] != initial_states[traj]){
+        // Only apply ID-A, if the proposed states are different from the original ones
+
+        if(accepted_states[traj] == proposed_states[traj]){
+          // Proposed hop is successful - collapse onto newly accepted state
+          collapse(Coeff, traj, accepted_states[traj], collapse_option);
+        }
+        else{
+          // Proposed hop is not successful - project out the proposed state
+          project_out(Coeff, traj, proposed_states[traj]);
+        }
+      }
+    }// traj
+  }// IDN
+
+  // ID-F, ID on the failed transition, experimental
+  else if(instantaneous_decoherence_variant==4){
+    for(traj = 0; traj < ntraj; traj++){
+      if(proposed_states[traj] != initial_states[traj]){
+        // Only apply ID-F, if the proposed states are different from the original ones
+
+        if(accepted_states[traj] != proposed_states[traj]){
+          // Proposed hop is rejected - project out the proposed states, but don't collapse
+          // onto the accepted hop
+          project_out(Coeff, traj, proposed_states[traj]);
+        }
+      }
+    }// traj
+  }// IDF
+
+}
+
+
+void instantaneous_decoherence_dia(CMATRIX& Coeff, nHamiltonian& ham,
+   vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
+   int instantaneous_decoherence_variant, int collapse_option){
+
+/**
+  This is an experimental ID function which does all the same as the normal one does,
+  but in the diabatic basis:
+
+  Args: 
+    Coeff - the adiabatic amplitudes
+    ham - nHamiltonian object
+ 
+  Two options of the algorithm are available:
+  ID-S: wavefunction amplitudes are collapsed only during the successful hops (onto the new state)
+  ID-A: wavefunction amplitudes are collapsed at every attempted hop
+      to the new state, if successful
+      to the old state, if now
+
+  There collapsing options are controlled by the parameter instantaneous_decoherence_variant
+
+   0 - ID-S
+   1 - ID-A
+   2 - ID-C - consistent ID - an experimental algo
+
+   In the "consistent" version, we lift the condition that the accepted/proposed states must be different from
+   the starting state - this option addresses a philosophical question - what if we say that no hops
+   is equivalent to the hop onto the current state? why should the "hopping" into the original state
+   by treated differently from the "actual hopping" to another state? So, in this version we
+   collapse onto the accpeted states, no matter if they are the result of a successfull or frustrated hop.
+
+  The mechanism of the collapse event itself is controlled by the collapse_option parameter
+*/
+  int traj;
+  int ntraj = Coeff.n_cols;
+
+  if(accepted_states.size()!=ntraj){
+    cout<<"ERROR in ids: the sizes of the input variables Coeff and accepted_states are inconsistent\n";
+    cout<<"Coeff.num_of_cols = = "<<ntraj<<"\n";
+    cout<<"accepted_states.size() = "<<accepted_states.size()<<"\n";
+    cout<<"exiting...\n";
+    exit(0);
+  }
+  if(proposed_states.size()!=ntraj){
+    cout<<"ERROR in ids: the sizes of the input variables Coeff and proposed_states are inconsistent\n";
+    cout<<"Coeff.num_of_cols = = "<<ntraj<<"\n";
+    cout<<"proposed_states.size() = "<<proposed_states.size()<<"\n";
+    cout<<"exiting...\n";
+    exit(0);
+  }
+  if(initial_states.size()!=ntraj){
+    cout<<"ERROR in ids: the sizes of the input variables Coeff and initial_states are inconsistent\n";
+    cout<<"Coeff.num_of_cols = = "<<ntraj<<"\n";
+    cout<<"initial_states.size() = "<<initial_states.size()<<"\n";
+    cout<<"exiting...\n";
+    exit(0);
+  }
+
+  // ID-S
+  if(instantaneous_decoherence_variant==0){
+
+    for(traj = 0; traj < ntraj; traj++){
+
+      if(accepted_states[traj] != initial_states[traj]){
+        collapse(Coeff, traj, accepted_states[traj], collapse_option);
+      }
+    }// traj
+
+  }// ID-S
+
+  // ID-A
+  else if(instantaneous_decoherence_variant==1){
 
     for(traj = 0; traj < ntraj; traj++){
 
@@ -386,7 +518,6 @@ void instantaneous_decoherence(CMATRIX& Coeff,
 
   }// ID-A
 
-
   // ID-C
   else if(instantaneous_decoherence_variant==2){
 
@@ -395,7 +526,6 @@ void instantaneous_decoherence(CMATRIX& Coeff,
     }// traj
 
   }// ID-C
-
 
 
 }
@@ -1237,7 +1367,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
             else{
               alpha = 0.0;
-              cout << "Energy is drifted due to a classically forbidden hop" << endl;
+              cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
             }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
@@ -1391,7 +1521,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int do_rotation){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1419,42 +1549,27 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
     
     nHamiltonian* ham = Ham.children[traj1];
-    
-    //================= Basis re-expansion ===================
-    CMATRIX P(nadi, nadi);
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
 
-    // Don't apply T, since hamiltonian elements were already transformed through the transform_all method  
-    CMATRIX T_new(nadi, nadi); T_new.load_identity();
-    //P = ham->get_time_overlap_adi();  // U_old.H() * U;
-    // 
-    //// More consistent with the new derivations:
-    //libmeigen::FullPivLU_inverse(P, T_new);
-    //T_new = orthogonalized_T( T_new );
-    //
-    //if(prms.assume_always_consistent){ T_new.identity(); }
-   
+    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
+    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
+    if(prms.assume_always_consistent){ T_new.identity(); }
+
     // Generate the half-time exponential operator 
     CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
     XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
-    XF_correction(Hxf, dyn_var, C, prms.wp_width, T_new, itraj);
+    XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
 
     Hxf = T_new.H() * Hxf * T_new;      
     Hxf += Hxf_old;
       
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
 
-    if(do_rotation==1){
-      C = T_new * D * T_new.H() * C;
-    }
-    else{
-      C = D * C;
-    }
+    C = D * C;
 
-    *dyn_var.proj_adi[itraj] = T_new;
+//  *dyn_var.proj_adi[itraj] = T_new;
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }

@@ -54,6 +54,9 @@ void instantaneous_decoherence(CMATRIX& Coeff,
    vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
    int instantaneous_decoherence_variant, int collapse_option);
 
+void instantaneous_decoherence_dia(CMATRIX& Coeff, nHamiltonian& ham,
+   vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
+   int instantaneous_decoherence_variant, int collapse_option);
 
 CMATRIX afssh_dzdt(CMATRIX& dz, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state);
 void integrate_afssh_moments(CMATRIX& dR, CMATRIX& dP, CMATRIX& Hvib, CMATRIX& F, CMATRIX& C, double mass, int act_state, double dt, int nsteps);
@@ -78,7 +81,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
 // XF propagation
 void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev);
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, int do_rotation);
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms);
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj);
 
 ///================  In dyn_decoherence_time.cpp  ===================================

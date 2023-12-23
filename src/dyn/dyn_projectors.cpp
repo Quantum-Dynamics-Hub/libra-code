@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2022 Alexey V. Akimov
+* Copyright (C) 2019-2023 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -759,6 +759,53 @@ vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Ea
 
   return res;
 }
+
+
+CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
+/**
+
+ Computes the instantaneous projector = permutation + phase correction
+
+*/
+
+  int nst = St.n_rows;
+
+  vector<int> perm_t(nst,0);
+  for(int i=0; i<nst; i++){ perm_t[i] = i; }
+
+  CMATRIX phase_i(nst, 1);
+  CMATRIX st(St);
+//  CMATRIX ist(nst, nst);
+  CMATRIX res(nst, nst);
+
+
+  if(prms.state_tracking_algo==1){ perm_t = get_reordering(st);  }
+  else if(prms.state_tracking_algo==2){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity);   }
+/*
+  else if(prms.state_tracking_algo==3){ perm_t = get_stochastic_reordering(st, rnd);   }
+  else if(prms.state_tracking_algo==32){ perm_t = get_stochastic_reordering2(st, rnd);  }
+  else if(prms.state_tracking_algo==33){   
+    perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts, prms.min_probability_reordering, 0);
+  }
+*/
+
+  // P -> P * perm
+  res = permutation2cmatrix(perm_t);
+  st = st * res;
+
+  if(prms.do_phase_correction){
+    // ### Compute the instantaneous phase correction factors ###
+    phase_i = compute_phase_corrections(st, prms.phase_correction_tol);  // f(i)
+
+    // ### Scale projections' components by the phases ###
+    for(int a=0; a<nst; a++){ res.scale(-1, a, std::conj(phase_i.get(a)) );  }
+  }
+
+  return res;  // projection of the basis 
+}
+
+
+
 
 
 

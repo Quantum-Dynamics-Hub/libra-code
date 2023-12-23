@@ -335,6 +335,10 @@ void export_dyn_decoherence_objects(){
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence", expt_instantaneous_decoherence_v1);
 
+  void (*expt_instantaneous_decoherence_dia_v1)(CMATRIX& Coeff, nHamiltonian& ham,
+  vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
+  int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
+  def("instantaneous_decoherence_dia", expt_instantaneous_decoherence_dia_v1);
 
 
   void (*expt_wp_reversal_events_v1)
@@ -710,6 +714,9 @@ void export_dyn_projectors_objects(){
   (dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v2);
 
+  CMATRIX (*expt_compute_projector_v1)
+  (dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St) = &compute_projector;
+  def("compute_projector", expt_compute_projector_v1);
 
   CMATRIX (*expt_raw_to_dynconsyst_v1)
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;
