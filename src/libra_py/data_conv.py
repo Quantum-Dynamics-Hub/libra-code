@@ -578,19 +578,4 @@ def vasp_to_xyz(filename):
     f.close() 
 
 
-def upper_vector_to_symmetric_nparray(upper_vector, upper_indices, mat_shape):
-    """
-    This function gets the upper triangular part of a matrix as a vector and retuns a symmetric matrix
-    Args:
-        upper_vector (nparray): The upper triangular of a matrix
-        upper_indices (nparray): The indices of the upper part of the matrix
-        mat_shape (tuple): The shape of the original numpy array
-    Returns:
-        matrix (nparray): The symmetric matix built based on the upper triangular matrix
-    """
-    matrix = np.zeros(mat_shape)
-    matrix[upper_indices] = upper_vector
-    matrix = matrix + matrix.T - np.diag(matrix.diagonal())
-    return matrix
-
 
