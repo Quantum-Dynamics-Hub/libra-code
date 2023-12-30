@@ -340,6 +340,22 @@ class dyn_variables{
      vector< vector<int> > is_first(ntraj, nadi)
   */
   vector<vector<int>> is_first;
+  
+  /**
+    Whether to fix an auxiliary trajectory
+
+    Options:
+     vector< vector<int> > is_fixed(ntraj, nadi)
+  */
+  vector<vector<int>> is_fixed;
+  
+  /**
+    Whether to keep the auxiliary momenta
+
+    Options:
+     vector< vector<int> > is_keep(ntraj, nadi)
+  */
+  vector<vector<int>> is_keep;
 
   /**
     Nuclear coordinates of state-wise auxiliary trajectories

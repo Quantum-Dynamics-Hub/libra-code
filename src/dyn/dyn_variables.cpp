@@ -181,9 +181,13 @@ void dyn_variables::allocate_shxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 
@@ -212,9 +216,13 @@ void dyn_variables::allocate_mqcxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 

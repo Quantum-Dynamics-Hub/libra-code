@@ -949,12 +949,16 @@ void xf_init_AT(dyn_variables& dyn_var, int traj, int ist){
     if( ist == -1){
       dyn_var.is_mixed[traj].assign(nadi, 0);
       dyn_var.is_first[traj].assign(nadi, 0);
+      dyn_var.is_fixed[traj].assign(nadi, 0);
+      dyn_var.is_keep[traj].assign(nadi, 0);
       dyn_var.p_quant->set(-1, traj, 0.0);
       dyn_var.VP->set(-1, traj, 0.0);
     }
     else{
       dyn_var.is_mixed[traj][ist] = 0;
       dyn_var.is_first[traj][ist] = 0;
+      dyn_var.is_fixed[traj][ist] = 0;
+      dyn_var.is_keep[traj][ist] = 0;
     }
 }
 
@@ -1118,6 +1122,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
     MATRIX& q_aux = *dyn_var.q_aux[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
 
@@ -1126,6 +1131,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1){continue;}
+
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
           for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
@@ -1148,6 +1155,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
+    vector<int>& is_keep = dyn_var.is_keep[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
     
@@ -1167,9 +1176,12 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
       }
     }
 
+    int is_tp = 0;
     double alpha; 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1 or is_keep[i]==1){continue;}
+
         p_real = dyn_var.p->col(traj); 
         
         if(i==a){
@@ -1200,19 +1212,50 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         }
 
         // Check the turning point
-        if (is_first[i] == 0){
+        if (is_first[i] == 0 and prms.tp_algo != 0){
           double temp = 0.0;
           for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
           if(temp<0.0){
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
-            break;
+            is_tp = 1;
+            //break;
           }
         }
 
       }
     }//i
+
+    if(is_tp == 1){
+      if(prms.tp_algo == 1){
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+          
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, 0.0);
+            p_aux_old.set(i, idof, 0.0);
+          }
+          is_fixed[i] = 1;
+        }//i
+        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
+        collapse(*dyn_var.ampl_adi, traj, a, 0);
+        xf_init_AT(dyn_var, traj, -1);
+        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 3){
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, p_aux_old.get(i, idof));
+          }
+          is_keep[i] = 1;
+        } 
+        cout << "Keep auxiliary momenta except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+
+      is_tp = 0;
+    }
   }//traj
 
   // Propagate the spatial derivative of phases
@@ -1261,11 +1304,14 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
     MATRIX& q_aux = *dyn_var.q_aux[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1){continue;}
+
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
           for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
@@ -1285,6 +1331,8 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
+    vector<int>& is_keep = dyn_var.is_keep[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
 
@@ -1305,10 +1353,13 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     vector<int> _id(2, 0);  _id[1] = traj;
     coeff = dyn_var.ampl_adi->col(traj);
     double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
-
+    
+    int is_tp = 0;
     double alpha; 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1 or is_keep[i]==1){continue;}
+
         p_real = dyn_var.p->col(traj); 
         
         if(is_first[i]==1){
@@ -1347,41 +1398,75 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         }
         
         // Check the turning point
-        if (is_first[i] == 0){
+        if (is_first[i] == 0 and prms.tp_algo != 0){
           double temp = 0.0;
           for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
           if(temp<0.0){
-            double Epot_old = Epot;
+            is_tp = 1;
+            //break;
 
-            int a = dyn_var.act_states[traj];
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            
-            // After the collapse
-            coeff = dyn_var.ampl_adi->col(traj);
-            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
-            
-            // Rescaling momenta for the energy conservation
-            p_real = dyn_var.p->col(traj); 
-            double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
-
-            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
-            else{
-              alpha = 0.0;
-              cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
-            }
-
-            for(int idof=0; idof<dyn_var.ndof; idof++){
-              dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
-            }
-
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
-            break;
           }
         }
 
       }
     }//i
+    
+    if(is_tp == 1){
+      if(prms.tp_algo == 1){
+        int a = dyn_var.act_states[traj];
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+          
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, 0.0);
+            p_aux_old.set(i, idof, 0.0);
+          }
+          is_fixed[i] = 1;
+        }//i
+        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
+        double Epot_old = Epot;
+
+        int a = dyn_var.act_states[traj];
+        collapse(*dyn_var.ampl_adi, traj, a, 0);
+        
+        // After the collapse
+        coeff = dyn_var.ampl_adi->col(traj);
+        double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+        
+        // Rescaling momenta for the energy conservation
+        p_real = dyn_var.p->col(traj); 
+        double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
+
+        if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
+        else{
+          alpha = 0.0;
+          cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
+        }
+
+        for(int idof=0; idof<dyn_var.ndof; idof++){
+          dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+        xf_init_AT(dyn_var, traj, -1);
+        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 3){
+        int a = dyn_var.act_states[traj];
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, p_aux_old.get(i, idof));
+          }
+          is_keep[i] = 1;
+        } 
+        cout << "Keep auxiliary momenta except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      is_tp = 0;
+    }
+
   }//traj
 
   // Propagate the spatial derivative of phases; the E-based approximation is used
@@ -1397,7 +1482,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
 
-    double e = 1.0e-6; // masking for classical turning points
+    double e = 1.0e-4; // masking for classical turning points
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         for(int idof=0; idof<ndof; idof++){

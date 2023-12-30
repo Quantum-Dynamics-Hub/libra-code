@@ -322,6 +322,12 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             * **dyn_params["project_out_aux"]** (int): Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden. [ default: 0]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
+            * **dyn_params["tp_algo"]** (int): Turning-point algorithm for auxiliary trajectories
+
+               - 0: no treatment of a turning point
+               - 1: fix auxiliary trajectories of adiabatic states other than the active state [default]
+               - 2: collapse to the active state
+
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
             ///===============================================================================
@@ -535,7 +541,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
                              "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0,
-                             "project_out_aux": 0
+                             "project_out_aux": 0, "tp_algo": 1
                            } )
 
     #================= Entanglement of trajectories ================================

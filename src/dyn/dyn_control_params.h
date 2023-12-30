@@ -529,6 +529,16 @@ class dyn_control_params{
   int project_out_aux;
 
   /**
+  Turning-point algorithm for auxiliary trajectories
+
+  Options:
+      - 0: no treatment of a turning point
+      - 1: fix auxiliary trajectories of adiabatic states other than the active state [default]
+      - 2: collapse to the active state
+  */
+  int tp_algo;
+
+  /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
   we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
   If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
