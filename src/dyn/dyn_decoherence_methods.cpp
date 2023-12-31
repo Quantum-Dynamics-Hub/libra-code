@@ -1226,6 +1226,11 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     if(is_tp == 1){
       if(prms.tp_algo == 1){
+        collapse(*dyn_var.ampl_adi, traj, a, 0);
+        xf_init_AT(dyn_var, traj, -1);
+        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
         for(int i=0; i<nadi; i++){
           if(i == a){continue;}
           
@@ -1236,11 +1241,6 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
           is_fixed[i] = 1;
         }//i
         cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
-      }
-      else if(prms.tp_algo == 2){
-        collapse(*dyn_var.ampl_adi, traj, a, 0);
-        xf_init_AT(dyn_var, traj, -1);
-        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
       }
       else if(prms.tp_algo == 3){
         for(int i=0; i<nadi; i++){
@@ -1413,19 +1413,6 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     
     if(is_tp == 1){
       if(prms.tp_algo == 1){
-        int a = dyn_var.act_states[traj];
-        for(int i=0; i<nadi; i++){
-          if(i == a){continue;}
-          
-          for(int idof=0; idof<ndof; idof++){
-            p_aux.set(i, idof, 0.0);
-            p_aux_old.set(i, idof, 0.0);
-          }
-          is_fixed[i] = 1;
-        }//i
-        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
-      }
-      else if(prms.tp_algo == 2){
         double Epot_old = Epot;
 
         int a = dyn_var.act_states[traj];
@@ -1451,6 +1438,19 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
         xf_init_AT(dyn_var, traj, -1);
         cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
+        int a = dyn_var.act_states[traj];
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+          
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, 0.0);
+            p_aux_old.set(i, idof, 0.0);
+          }
+          is_fixed[i] = 1;
+        }//i
+        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
       }
       else if(prms.tp_algo == 3){
         int a = dyn_var.act_states[traj];

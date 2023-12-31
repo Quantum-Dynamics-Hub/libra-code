@@ -533,8 +533,9 @@ class dyn_control_params{
 
   Options:
       - 0: no treatment of a turning point
-      - 1: fix auxiliary trajectories of adiabatic states other than the active state [default]
-      - 2: collapse to the active state
+      - 1: collapse to the active state [default]
+      - 2: fix auxiliary positions of adiabatic states except for the active state
+      - 3: keep auxiliary momenta of adiabatic states except for the active state
   */
   int tp_algo;
 

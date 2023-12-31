@@ -325,8 +325,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             * **dyn_params["tp_algo"]** (int): Turning-point algorithm for auxiliary trajectories
 
                - 0: no treatment of a turning point
-               - 1: fix auxiliary trajectories of adiabatic states other than the active state [default]
-               - 2: collapse to the active state
+               - 1: collapse to the active state [default]
+               - 2: fix auxiliary positions of adiabatic states except for the active state
+               - 3: keep auxiliary momenta of adiabatic states except for the active state
 
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
