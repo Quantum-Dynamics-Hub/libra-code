@@ -1038,7 +1038,9 @@ void xf_destroy_AT(dyn_variables& dyn_var, nHamiltonian& ham, double threshold){
             double alpha = compute_kinetic_energy(p_real, *dyn_var.iM) + Epot_old - Epot;
 
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, *dyn_var.iM);}
-            else{alpha = 0.0;}
+            else{alpha = 0.0;
+              cout << "Total energy is drifted due to adiabatic recovery to a classically forbidden state!" << endl;
+            }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
@@ -1429,7 +1431,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
         else{
           alpha = 0.0;
-          cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
+          cout << "Total energy is drifted due to the dynamics initialization at a classical turning point" << endl;
         }
 
         for(int idof=0; idof<dyn_var.ndof; idof++){
@@ -1606,7 +1608,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int rotation){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1645,12 +1647,16 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
     XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
-    XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
+    //XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
 
-    Hxf = T_new.H() * Hxf * T_new;      
-    Hxf += Hxf_old;
-      
-    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
+    //Hxf = T_new.H() * Hxf * T_new;      
+    //Hxf += Hxf_old;
+    Hxf = Hxf_old;
+
+    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
+    if(rotation == 1){
+      D = T_new * D * T_new.H();      
+    }
 
     C = D * C;
 
