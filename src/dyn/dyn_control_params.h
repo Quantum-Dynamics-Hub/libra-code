@@ -503,10 +503,18 @@ class dyn_control_params{
 
 
   /**
-  The width of frozen Gaussian for the decoherence from SHXF & MQCXF
+  The width of Gaussian for the decoherence from SHXF & MQCXF
   [ default : 0.1 ]
   */
   double wp_width;
+
+
+  /**
+  The velocity of Gaussian for the decoherence from SHXF & MQCXF
+  This value is applied when use_td_width = 1
+  [ default : 0.0 ]
+  */
+  double wp_v;
 
 
   /**
@@ -548,6 +556,16 @@ class dyn_control_params{
       - 3: keep auxiliary momenta of adiabatic states except for the active state
   */
   int tp_algo;
+  
+
+  /**
+  Whether to use the td Gaussian width for the nuclear wave packet approximation
+  This option can be considered when it comes to unbounded systems.
+  This approximation is based on a nuclear wave packet on a free surface:
+    \sigma_x(t)=\sqrt[\sigma_x(0)^2 + (wp_v * t)^2]
+  [ default : 0 ]
+  */
+  int use_td_width;
 
 
   /**
