@@ -1368,9 +1368,9 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
           alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
         else{
-          p_aux_temp = p_aux_old.row(i).T(); 
-          alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
-          //alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
+          //p_aux_temp = p_aux_old.row(i).T(); 
+          //alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
 
         if (alpha < 0.0){ alpha = 0.0;
