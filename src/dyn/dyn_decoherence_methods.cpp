@@ -1075,7 +1075,10 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
       int nr_mixed = 0; 
       for(int i=0; i<nadi; i++){
         double a_ii = dm.get(i,i).real(); 
-        if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[i]=0;}
+        if(a_ii<=lower_lim || a_ii>upper_lim){
+          is_mixed[i]=0;
+          xf_init_AT(dyn_var, traj, i);
+        }
         else{
           is_mixed[i]==1 ? is_first[i]=0:is_first[i]=1;
           is_mixed[i]=1;
