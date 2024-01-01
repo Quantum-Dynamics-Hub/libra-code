@@ -1484,11 +1484,10 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
 
-    double e = 1.0e-4; // masking for classical turning points
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         for(int idof=0; idof<ndof; idof++){
-          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + e));
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + prms.e_mask));
         }//idof
       }
     }//i

@@ -514,7 +514,15 @@ class dyn_control_params{
   [ default : 0.01 ]
   */
   double coherence_threshold;
-  
+
+
+  /**
+  The masking parameter for computing nabla phase vectors in the MQCXF
+  [ default : 0.0001 ]
+  */
+  double e_mask;
+
+
   /**
   Whether to use the decoherence force in MQCXF
   The corresponding electronic propagation is adjusted for the energy conservation
@@ -522,11 +530,13 @@ class dyn_control_params{
   */
   int use_xf_force;
 
+
   /**
   Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden
   [ default : 0 ]
   */
   int project_out_aux;
+
 
   /**
   Turning-point algorithm for auxiliary trajectories
@@ -538,6 +548,7 @@ class dyn_control_params{
       - 3: keep auxiliary momenta of adiabatic states except for the active state
   */
   int tp_algo;
+
 
   /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
