@@ -1529,7 +1529,9 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
     // Set a diagonal matrix of nabla_phase for each dof
     CMATRIX F(nst, nst);
     for(int i=0; i<nst; i++){
-      F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+      if(is_mixed[i]==1){
+        F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+      }
     }
     F = T * F * T.H();
 
@@ -1573,10 +1575,13 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     double Ekin = compute_kinetic_energy(p_real, invM);
 
     // Compute F for each dof
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
     for(int idof=0; idof<ndof; idof++){
       F[idof].set(-1,-1, complex<double> (0.0, 0.0));
       for(int i=0; i<nst; i++){
-        F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+        if(is_mixed[i]==1){
+          F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+        }
       }
     }
 
