@@ -26,7 +26,7 @@ if sys.platform=="cygwin":
 elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 
-from libra_py import data_outs
+from libra_py import data_outs, data_read
 from libra_py import units
 import math
 
@@ -401,4 +401,37 @@ def index_reorder(l_val):
 
     # The indeices
     return np.array(new_order)-1
+
+def write_molden_file(filename, sample_molden_file, path_to_trajectory, step):
+    """
+    This function writes a molden file for a geometry that contains the basis data. It doesn't write the 
+    eigenvectors since they are not needed anymore.
+    Args:
+        filename (strin): The molden file name to be written
+        sample_molden_file (strin): The path to the sample molden file that contains the basis data
+        path_to_trajectory (strin): The path to MD trajectory xyz file
+        step (integer): The MD time step
+    Returns:
+        None
+    """
+    f = open(sample_molden_file)
+    lines = f.readlines()
+    f.close()
+    
+    for i in range(len(lines)):
+        if '[GTO]' in lines[i]:
+            start = i
+        elif '[5D7F]' in lines[i]:
+            end = i
+    
+    atoms, coords = data_read.read_atom_coords(path_to_trajectory, step)
+    coords = coords*units.Angst
+    f = open(filename,'w')
+    f.write('[Molden Format]\n [Atoms] AU\n')
+    for i in range(len(coords)):
+        f.write(F'{atoms[i]} {i+1} 0 {coords[i][0]} {coords[i][1]} {coords[i][2]}\n')
+    for i in range(start, end+1):
+        f.write(lines[i])
+    f.close()
+    
 
