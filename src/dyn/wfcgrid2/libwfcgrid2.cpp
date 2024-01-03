@@ -90,6 +90,9 @@ void export_Wfcgrid2_objects(){
   MATRIX (Wfcgrid2::*expt_get_pops_v2)
   (int rep, vector<double>& bmin, vector<double>& bmax) = &Wfcgrid2::get_pops;
 
+  MATRIX (Wfcgrid2::*expt_get_coherences_v1)
+  (int rep) = &Wfcgrid2::get_coherences;
+
 
 
   // Auxiliary functions
@@ -217,6 +220,7 @@ void export_Wfcgrid2_objects(){
       .def("get_den_mat", &Wfcgrid2::get_den_mat)
       .def("get_pops", expt_get_pops_v1)
       .def("get_pops", expt_get_pops_v2)
+      .def("get_coherences", expt_get_coherences_v1)
 
       /**  Wfcgrid2_SOFT    */
       .def("update_propagator_H", &Wfcgrid2::update_propagator_H)
