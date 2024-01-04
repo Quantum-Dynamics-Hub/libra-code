@@ -79,8 +79,8 @@ dyn_control_params::dyn_control_params(){
   collapse_option = 0;
   decoherence_rates = NULL;
   ave_gaps = NULL;
-  wp_width = 0.1;
-  wp_v = 0.0;
+  wp_width = NULL;
+  wp_v = NULL;
   coherence_threshold = 0.01;
   e_mask = 0.0001;
   use_xf_force = 0;
@@ -163,8 +163,11 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   dephasing_informed = x.dephasing_informed;
   instantaneous_decoherence_variant = x.instantaneous_decoherence_variant; 
   collapse_option = x.collapse_option;
-  wp_width = x.wp_width;
-  wp_v = x.wp_v;
+
+  wp_width = new MATRIX( x.wp_width->n_rows, x.wp_width->n_cols );
+  *wp_width = *x.wp_width;
+  wp_v = new MATRIX( x.wp_v->n_rows, x.wp_v->n_cols );
+  *wp_v = *x.wp_v;
   coherence_threshold = x.coherence_threshold;
   e_mask = x.e_mask;
   use_xf_force = x.use_xf_force;
@@ -216,6 +219,8 @@ dyn_control_params::~dyn_control_params() {
 
   //cout<<"dyn_control_params destructor\n";
 
+  delete wp_width;
+  delete wp_v;
   delete decoherence_rates;  
   delete ave_gaps;
   delete schwartz_decoherence_inv_alpha;
@@ -354,8 +359,20 @@ void dyn_control_params::set_parameters(bp::dict params){
         for(int b=0;b<x.n_cols;b++){ ave_gaps->set(a, b, x.get(a,b));   }
       } 
     }
-    else if(key=="wp_width"){ wp_width = bp::extract<double>(params.values()[i]); }
-    else if(key=="wp_v"){ wp_v = bp::extract<double>(params.values()[i]); }
+    else if(key=="wp_width"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      wp_width = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ wp_width->set(a, b, x.get(a,b));   }
+      } 
+    }
+    else if(key=="wp_v"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      wp_v = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ wp_v->set(a, b, x.get(a,b));   }
+      } 
+    }
     else if(key=="coherence_threshold"){ coherence_threshold = bp::extract<double>(params.values()[i]); }
     else if(key=="e_mask"){ e_mask = bp::extract<double>(params.values()[i]); }
     else if(key=="use_xf_force"){ use_xf_force = bp::extract<int>(params.values()[i]); }

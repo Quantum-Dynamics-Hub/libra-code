@@ -247,6 +247,7 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_wp_width", &dyn_variables::get_wp_width)
       .def("get_p_quant", &dyn_variables::get_p_quant)
       .def("get_VP", &dyn_variables::get_VP)
       .def("get_f_xf", &dyn_variables::get_f_xf)

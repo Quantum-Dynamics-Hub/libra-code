@@ -503,18 +503,18 @@ class dyn_control_params{
 
 
   /**
-  The width of Gaussian for the decoherence from SHXF & MQCXF
-  [ default : 0.1 ]
+  MATRIX(ndof, 1) of (initial) wave packet widths for the decoherence from SHXF & MQCXF
+  [ default : NULL ]
   */
-  double wp_width;
+  MATRIX* wp_width;
 
 
   /**
-  The velocity of Gaussian for the decoherence from SHXF & MQCXF
+  MATRIX(ndof, 1) of wave packet velocities for the decoherence from SHXF & MQCXF
   This value is applied when use_td_width = 1
-  [ default : 0.0 ]
+  [ default : NULL ]
   */
-  double wp_v;
+  MATRIX* wp_v;
 
 
   /**

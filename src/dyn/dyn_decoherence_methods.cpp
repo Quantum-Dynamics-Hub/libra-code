@@ -1497,25 +1497,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   } // traj
 }
 
-double compute_wp_width(dyn_variables& dyn_var, dyn_control_params& prms, bp::dict params, double dt){
-  double elapsed_time, s2;
-  int it;
-    
-  std::string key;
-  for(int i=0;i<len(params.values());i++){
-    key = bp::extract<std::string>(params.keys()[i]);
-    if(key=="timestep") { it = bp::extract<int>(params.values()[i]); }
-    else {continue;}
-  }
-
-  elapsed_time = dt*it;
-  s2 = pow(prms.wp_width, 2.0) + pow(prms.wp_v*elapsed_time, 2.0);
-
-  return sqrt(s2); 
-  
-}
-
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, CMATRIX& T, int traj){
 
   int ndof = dyn_var.ndof;
   int nst = dyn_var.nadi;
@@ -1534,7 +1516,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2.0) * RHO.get(i,i).real()
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(dyn_var.wp_width->get(idof, traj), 2.0) * RHO.get(i,i).real()
           *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
          // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
       }
@@ -1633,7 +1615,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, bp::dict params, int rotation){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int rotation){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1667,24 +1649,14 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     if(prms.assume_always_consistent){ T_new.identity(); }
 
     // Generate the half-time exponential operator 
-    CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
-    double wp_width;
-    if (prms.use_td_width == 1){
-      wp_width = compute_wp_width(dyn_var, prms, params, dt);
-    }
-    else{
-      wp_width = prms.wp_width;
-    }
-
-    XF_correction(Hxf_old, dyn_var, C, wp_width, T, itraj);
-    //XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
+    XF_correction(Hxf, dyn_var, C, T, itraj);
+    //XF_correction(Hxf, dyn_var, C, T, itraj);
 
     //Hxf = T_new.H() * Hxf * T_new;      
     //Hxf += Hxf_old;
-    Hxf = Hxf_old;
 
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
     if(rotation == 1){

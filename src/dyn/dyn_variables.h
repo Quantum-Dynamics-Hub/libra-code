@@ -388,6 +388,14 @@ class dyn_variables{
      vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> nab_phase;
+  
+  /**
+    Wave packet widths based on the Gaussian approximation
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* wp_width;
 
   /**
     Quantum momenta defined as (-1) * \nabla_nuc |\chi| / |\chi|
@@ -441,6 +449,13 @@ class dyn_variables{
   vector<double> tcnbra_ekin;
 
 
+  ///================= Misc ===================
+  /**
+    The current MD time step
+  */
+  int timestep; 
+
+
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -476,6 +491,7 @@ class dyn_variables{
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
   MATRIX get_forces(){ return *f; }
+  MATRIX get_wp_width(){ return *wp_width; }
   MATRIX get_p_quant(){ return *p_quant; }
   MATRIX get_VP(){ return *VP; }
   MATRIX get_f_xf(){ return *f_xf; }
@@ -483,7 +499,14 @@ class dyn_variables{
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   
-
+  void get_current_timestep(bp::dict params){
+    std::string key;
+    for(int i=0;i<len(params.values());i++){
+      key = bp::extract<std::string>(params.keys()[i]);
+      if(key=="timestep") { timestep = bp::extract<int>(params.values()[i]); }
+      else {continue;}
+    }
+  }
   
 
 
