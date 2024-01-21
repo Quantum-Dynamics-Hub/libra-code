@@ -1166,7 +1166,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
     
     int a = dyn_var.act_states[traj];
-
+    
     MATRIX p_real(ndof, 1); 
     MATRIX p_aux_temp(ndof, 1);
     
@@ -1218,11 +1218,21 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
         // Check the turning point
         if (is_first[i] == 0 and prms.tp_algo != 0){
-          double temp = 0.0;
-          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
-          if(temp<0.0){
+          MATRIX Fa(ndof, 1);
+          for(int idof=0; idof<ndof; idof++){
+            Fa.set(idof, 0, dyn_var.f->get(idof,0) );
+          }
+          double dp_old = 0.0;
+          double dp_new = 0.0;
+
+          for(int idof=0; idof<ndof; idof++){
+            dp_old += Fa.get(idof, 0) * p_aux_old.get(i, idof);
+            dp_new += Fa.get(idof, 0) * p_aux.get(i, idof);
+          }
+
+          if(dp_old*dp_new < 0.0){
             is_tp = 1;
-            //break;
+            break;
           }
         }
 
@@ -1404,18 +1414,27 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         
         // Check the turning point
         if (is_first[i] == 0 and prms.tp_algo != 0){
-          double temp = 0.0;
-          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
-          if(temp<0.0){
-            is_tp = 1;
-            //break;
+          MATRIX Fa(ndof, 1);
+          for(int idof=0; idof<ndof; idof++){
+            Fa.set(idof, 0, dyn_var.f->get(idof,0) );
+          }
+          double dp_old = 0.0;
+          double dp_new = 0.0;
 
+          for(int idof=0; idof<ndof; idof++){
+            dp_old += Fa.get(idof, 0) * p_aux_old.get(i, idof);
+            dp_new += Fa.get(idof, 0) * p_aux.get(i, idof);
+          }
+
+          if(dp_old*dp_new < 0.0){
+            is_tp = 1;
+            break;
           }
         }
 
       }
     }//i
-    
+
     if(is_tp == 1){
       if(prms.tp_algo == 1){
         double Epot_old = Epot;
