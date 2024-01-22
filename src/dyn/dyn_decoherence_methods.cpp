@@ -1403,6 +1403,8 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     vector<int>& is_keep = dyn_var.is_keep[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+    
+    int a = dyn_var.act_states[traj];
 
     MATRIX p_real(ndof, 1); 
     MATRIX p_aux_temp(ndof, 1);
@@ -1440,7 +1442,7 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         }
 
         if (alpha < 0.0){ alpha = 0.0;
-          if (prms.project_out_aux == 1){
+          if (prms.project_out_aux == 1 and i!=a){
             project_out(*dyn_var.ampl_adi, traj, i);
             xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
