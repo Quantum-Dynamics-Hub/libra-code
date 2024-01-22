@@ -598,6 +598,21 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
       }
     }
   }
+  else if (prms.use_td_width == 2){
+    double elapsed_time, s2;
+
+    elapsed_time = prms.dt*dyn_var.timestep;
+    
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        s2 = pow(prms.wp_width->get(idof,0), 2.0);
+        dyn_var.wp_width->set(idof, itraj, 4*M_PI/(s2*dyn_var.p->get(idof, itraj)) );
+      }
+    }
+  }
+  else if (prms.use_td_width == 3){
+    ;;
+  }
 }
 
 /*
