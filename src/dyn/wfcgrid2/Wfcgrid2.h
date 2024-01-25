@@ -223,6 +223,8 @@ public:
 
   MATRIX get_pops(int rep);
   MATRIX get_pops(int rep, vector<double>& bmin, vector<double>& bmax);
+  
+  MATRIX get_coherences(int rep);
 
   void compute_wfc_gradients(int rep, int idof, double mass);
 

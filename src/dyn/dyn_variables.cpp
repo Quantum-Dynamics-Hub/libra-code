@@ -181,9 +181,13 @@ void dyn_variables::allocate_shxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 
@@ -199,6 +203,7 @@ void dyn_variables::allocate_shxf(){
       nab_phase[itraj] = new MATRIX(nadi, ndof);
     }
 
+    wp_width = new MATRIX(ndof, ntraj);
     p_quant = new MATRIX(ndof, ntraj);
     VP = new MATRIX(ndof, ntraj);
   
@@ -212,9 +217,13 @@ void dyn_variables::allocate_mqcxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 
@@ -230,6 +239,7 @@ void dyn_variables::allocate_mqcxf(){
       nab_phase[itraj] = new MATRIX(nadi, ndof);
     }
 
+    wp_width = new MATRIX(ndof, ntraj);
     p_quant = new MATRIX(ndof, ntraj);
     VP = new MATRIX(ndof, ntraj);
     f_xf = new MATRIX(ndof, ntraj);
@@ -349,6 +359,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
         *p_aux_old[itraj] = *x.p_aux_old[itraj];
         *nab_phase[itraj] = *x.nab_phase[itraj];
     }
+    *wp_width = *x.wp_width;
     *p_quant = *x.p_quant;
     *VP = *x.VP;
 
@@ -365,6 +376,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
         *p_aux_old[itraj] = *x.p_aux_old[itraj];
         *nab_phase[itraj] = *x.nab_phase[itraj];
     }
+    *wp_width = *x.wp_width;
     *p_quant = *x.p_quant;
     *VP = *x.VP;
     *f_xf = *x.f_xf;
@@ -476,6 +488,7 @@ dyn_variables::~dyn_variables(){
     p_aux_old.clear();
     nab_phase.clear();
 
+    delete wp_width;
     delete p_quant;
     delete VP;
 
@@ -506,6 +519,7 @@ dyn_variables::~dyn_variables(){
     p_aux_old.clear();
     nab_phase.clear();
 
+    delete wp_width;
     delete p_quant;
     delete VP;
     delete f_xf;

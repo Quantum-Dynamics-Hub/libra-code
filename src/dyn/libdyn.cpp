@@ -103,8 +103,10 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("e_mask", &dyn_control_params::e_mask)
       .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
       .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
+      .def_readwrite("tp_algo", &dyn_control_params::tp_algo)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -245,6 +247,7 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_wp_width", &dyn_variables::get_wp_width)
       .def("get_p_quant", &dyn_variables::get_p_quant)
       .def("get_VP", &dyn_variables::get_VP)
       .def("get_f_xf", &dyn_variables::get_f_xf)

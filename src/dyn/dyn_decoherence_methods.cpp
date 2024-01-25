@@ -949,12 +949,16 @@ void xf_init_AT(dyn_variables& dyn_var, int traj, int ist){
     if( ist == -1){
       dyn_var.is_mixed[traj].assign(nadi, 0);
       dyn_var.is_first[traj].assign(nadi, 0);
+      dyn_var.is_fixed[traj].assign(nadi, 0);
+      dyn_var.is_keep[traj].assign(nadi, 0);
       dyn_var.p_quant->set(-1, traj, 0.0);
       dyn_var.VP->set(-1, traj, 0.0);
     }
     else{
       dyn_var.is_mixed[traj][ist] = 0;
       dyn_var.is_first[traj][ist] = 0;
+      dyn_var.is_fixed[traj][ist] = 0;
+      dyn_var.is_keep[traj][ist] = 0;
     }
 }
 
@@ -1034,7 +1038,9 @@ void xf_destroy_AT(dyn_variables& dyn_var, nHamiltonian& ham, double threshold){
             double alpha = compute_kinetic_energy(p_real, *dyn_var.iM) + Epot_old - Epot;
 
             if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, *dyn_var.iM);}
-            else{alpha = 0.0;}
+            else{alpha = 0.0;
+              cout << "Total energy is drifted due to adiabatic recovery to a classically forbidden state!" << endl;
+            }
 
             for(int idof=0; idof<dyn_var.ndof; idof++){
               dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
@@ -1069,7 +1075,10 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
       int nr_mixed = 0; 
       for(int i=0; i<nadi; i++){
         double a_ii = dm.get(i,i).real(); 
-        if(a_ii<=lower_lim || a_ii>upper_lim){is_mixed[i]=0;}
+        if(a_ii<=lower_lim || a_ii>upper_lim){
+          is_mixed[i]=0;
+          xf_init_AT(dyn_var, traj, i);
+        }
         else{
           is_mixed[i]==1 ? is_first[i]=0:is_first[i]=1;
           is_mixed[i]=1;
@@ -1099,6 +1108,56 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
+void td_width_aux(dyn_variables& dyn_var){
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
+
+  double width_temp;
+
+  dyn_var.wp_width->set(-1, -1, 0.0);
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+
+    // wp_width is computed by pairwise widths based on auxiliary trajectories
+    MATRIX sum_inv_w2(ndof, 1);
+    MATRIX w2_temp(ndof, 1);
+    
+    int check_mixing = 0;
+    for(int i=0; i<nadi; i++){
+      for(int j=0; j<nadi; j++){
+        if(i>=j){continue;}
+
+        if(is_mixed[i] == 0 or is_mixed[j] == 0){continue; }
+        check_mixing = 1;
+
+        if(is_first[i] == 1 or is_first[j] == 1){
+          w2_temp.set(-1, 1.0e+10); // At initial, an auxiliary pair does not contribute to wp_width
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){
+            w2_temp.set(idof, 0, fabs(dyn_var.q_aux[traj]->get(i, idof) - dyn_var.q_aux[traj]->get(j, idof))/
+              fabs(dyn_var.p_aux[traj]->get(i, idof) - dyn_var.p_aux[traj]->get(j, idof)) );
+          }
+        }
+
+        for(int idof=0; idof<ndof; idof++){
+          sum_inv_w2.add(idof, 0, 1.0/w2_temp.get(idof));
+        }
+
+      } //j
+    } //i
+    
+    if(check_mixing == 1){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.wp_width->set(idof, traj, sqrt((nadi - 1)* 1.0/sum_inv_w2.get(idof, 0)) );
+      }
+    }
+
+  } // traj
+}
+
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
@@ -1118,6 +1177,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
     MATRIX& q_aux = *dyn_var.q_aux[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
 
@@ -1126,6 +1186,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1){continue;}
+
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
           for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
@@ -1148,11 +1210,13 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
+    vector<int>& is_keep = dyn_var.is_keep[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
     
     int a = dyn_var.act_states[traj];
-
+    
     MATRIX p_real(ndof, 1); 
     MATRIX p_aux_temp(ndof, 1);
     
@@ -1167,9 +1231,12 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
       }
     }
 
+    int is_tp = 0;
     double alpha; 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1 or is_keep[i]==1){continue;}
+
         p_real = dyn_var.p->col(traj); 
         
         if(i==a){
@@ -1200,20 +1267,64 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         }
 
         // Check the turning point
-        if (is_first[i] == 0){
-          double temp = 0.0;
-          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
-          if(temp<0.0){
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+        if (is_first[i] == 0 and prms.tp_algo != 0){
+          MATRIX Fa(ndof, 1);
+          for(int idof=0; idof<ndof; idof++){
+            Fa.set(idof, 0, dyn_var.f->get(idof,0) );
+          }
+          double dp_old = 0.0;
+          double dp_new = 0.0;
+
+          for(int idof=0; idof<ndof; idof++){
+            dp_old += Fa.get(idof, 0) * p_aux_old.get(i, idof);
+            dp_new += Fa.get(idof, 0) * p_aux.get(i, idof);
+          }
+
+          if(dp_old*dp_new < 0.0){
+            is_tp = 1;
             break;
           }
         }
 
       }
     }//i
+
+    if(is_tp == 1){
+      if(prms.tp_algo == 1){
+        collapse(*dyn_var.ampl_adi, traj, a, 0);
+        xf_init_AT(dyn_var, traj, -1);
+        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+          
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, 0.0);
+            p_aux_old.set(i, idof, 0.0);
+          }
+          is_fixed[i] = 1;
+        }//i
+        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 3){
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, p_aux_old.get(i, idof));
+          }
+          is_keep[i] = 1;
+        } 
+        cout << "Keep auxiliary momenta except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+
+      is_tp = 0;
+    }
   }//traj
+
+  // Compute the td width based on auxiliary trajectories
+  if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
   // Propagate the spatial derivative of phases
   for(int traj=0; traj<ntraj; traj++){
@@ -1261,11 +1372,14 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
 
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
     MATRIX& q_aux = *dyn_var.q_aux[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1){continue;}
+
         if(is_first[i]==1){
           // Initially, the auxiliary position is set to the real position
           for(int idof=0; idof<ndof; idof++){q_aux.set(i, idof, dyn_var.q->get(idof, traj));}
@@ -1285,8 +1399,12 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
+    vector<int>& is_fixed = dyn_var.is_fixed[traj];
+    vector<int>& is_keep = dyn_var.is_keep[traj];
     MATRIX& p_aux = *dyn_var.p_aux[traj];
     MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+    
+    int a = dyn_var.act_states[traj];
 
     MATRIX p_real(ndof, 1); 
     MATRIX p_aux_temp(ndof, 1);
@@ -1305,23 +1423,26 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     vector<int> _id(2, 0);  _id[1] = traj;
     coeff = dyn_var.ampl_adi->col(traj);
     double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
-
+    
+    int is_tp = 0;
     double alpha; 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
+        if(is_fixed[i]==1 or is_keep[i]==1){continue;}
+
         p_real = dyn_var.p->col(traj); 
         
         if(is_first[i]==1){
           alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
         else{
-          p_aux_temp = p_aux_old.row(i).T(); 
-          alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
-          //alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
+          //p_aux_temp = p_aux_old.row(i).T(); 
+          //alpha = compute_kinetic_energy(p_aux_temp, invM) + ham_adi_prev.get(i,i).real() - ham_adi.get(i,i).real();
+          alpha = compute_kinetic_energy(p_real, invM) + Epot - ham_adi.get(i,i).real();
         }
 
         if (alpha < 0.0){ alpha = 0.0;
-          if (prms.project_out_aux == 1){
+          if (prms.project_out_aux == 1 and i!=a){
             project_out(*dyn_var.ampl_adi, traj, i);
             xf_init_AT(dyn_var, traj, -1);
             cout << "Project out a classically forbidden state " << i << " on traj " << traj <<endl;
@@ -1347,42 +1468,88 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
         }
         
         // Check the turning point
-        if (is_first[i] == 0){
-          double temp = 0.0;
-          for(int idof=0; idof<ndof; idof++){temp += p_aux_old.get(i, idof)*p_aux.get(i,idof);}
-          if(temp<0.0){
-            double Epot_old = Epot;
+        if (is_first[i] == 0 and prms.tp_algo != 0){
+          MATRIX Fa(ndof, 1);
+          for(int idof=0; idof<ndof; idof++){
+            Fa.set(idof, 0, dyn_var.f->get(idof,0) );
+          }
+          double dp_old = 0.0;
+          double dp_new = 0.0;
 
-            int a = dyn_var.act_states[traj];
-            collapse(*dyn_var.ampl_adi, traj, a, 0);
-            
-            // After the collapse
-            coeff = dyn_var.ampl_adi->col(traj);
-            double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
-            
-            // Rescaling momenta for the energy conservation
-            p_real = dyn_var.p->col(traj); 
-            double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
+          for(int idof=0; idof<ndof; idof++){
+            dp_old += Fa.get(idof, 0) * p_aux_old.get(i, idof);
+            dp_new += Fa.get(idof, 0) * p_aux.get(i, idof);
+          }
 
-            if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
-            else{
-              alpha = 0.0;
-              cout << "Energy is drifted due to the dynamics initialization at a classical turning point" << endl;
-            }
-
-            for(int idof=0; idof<dyn_var.ndof; idof++){
-              dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
-            }
-
-            xf_init_AT(dyn_var, traj, -1);
-            cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+          if(dp_old*dp_new < 0.0){
+            is_tp = 1;
             break;
           }
         }
 
       }
     }//i
+
+    if(is_tp == 1){
+      if(prms.tp_algo == 1){
+        double Epot_old = Epot;
+
+        int a = dyn_var.act_states[traj];
+        collapse(*dyn_var.ampl_adi, traj, a, 0);
+        
+        // After the collapse
+        coeff = dyn_var.ampl_adi->col(traj);
+        double Epot = ham.Ehrenfest_energy_adi(coeff, _id).real();
+        
+        // Rescaling momenta for the energy conservation
+        p_real = dyn_var.p->col(traj); 
+        double alpha = compute_kinetic_energy(p_real, invM) + Epot_old - Epot;
+
+        if(alpha > 0.0){alpha /= compute_kinetic_energy(p_real, invM);}
+        else{
+          alpha = 0.0;
+          cout << "Total energy is drifted due to the dynamics initialization at a classical turning point" << endl;
+        }
+
+        for(int idof=0; idof<dyn_var.ndof; idof++){
+          dyn_var.p->set(idof, traj, dyn_var.p->get(idof, traj) * sqrt(alpha));
+        }
+
+        xf_init_AT(dyn_var, traj, -1);
+        cout << "Collapse to the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 2){
+        int a = dyn_var.act_states[traj];
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+          
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, 0.0);
+            p_aux_old.set(i, idof, 0.0);
+          }
+          is_fixed[i] = 1;
+        }//i
+        cout << "Fix auxiliary trajectory except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      else if(prms.tp_algo == 3){
+        int a = dyn_var.act_states[traj];
+        for(int i=0; i<nadi; i++){
+          if(i == a){continue;}
+
+          for(int idof=0; idof<ndof; idof++){
+            p_aux.set(i, idof, p_aux_old.get(i, idof));
+          }
+          is_keep[i] = 1;
+        } 
+        cout << "Keep auxiliary momenta except for the active state " << a << " at a classical turning point on traj " << traj <<endl;
+      }
+      is_tp = 0;
+    }
+
   }//traj
+
+  // Compute the td width based on auxiliary trajectories
+  if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
   // Propagate the spatial derivative of phases; the E-based approximation is used
   for(int traj=0; traj<ntraj; traj++){
@@ -1397,18 +1564,17 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
 
-    double e = 1.0e-6; // masking for classical turning points
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         for(int idof=0; idof<ndof; idof++){
-          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + e));
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + prms.e_mask));
         }//idof
       }
     }//i
   } // traj
 }
 
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj){
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, CMATRIX& T, int traj){
 
   int ndof = dyn_var.ndof;
   int nst = dyn_var.nadi;
@@ -1427,7 +1593,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
   for(int i=0; i<nst; i++){
     if(is_mixed[i]==1){
       for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(wp_width, 2.0) * RHO.get(i,i).real()
+        dyn_var.p_quant->add(idof, traj, 0.5 / pow(dyn_var.wp_width->get(idof, traj), 2.0) * RHO.get(i,i).real()
           *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
          // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
       }
@@ -1440,7 +1606,9 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_w
     // Set a diagonal matrix of nabla_phase for each dof
     CMATRIX F(nst, nst);
     for(int i=0; i<nst; i++){
-      F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+      if(is_mixed[i]==1){
+        F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+      }
     }
     F = T * F * T.H();
 
@@ -1484,10 +1652,13 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     double Ekin = compute_kinetic_energy(p_real, invM);
 
     // Compute F for each dof
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
     for(int idof=0; idof<ndof; idof++){
       F[idof].set(-1,-1, complex<double> (0.0, 0.0));
       for(int i=0; i<nst; i++){
-        F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+        if(is_mixed[i]==1){
+          F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+        }
       }
     }
 
@@ -1521,7 +1692,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int rotation){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1555,17 +1726,19 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     if(prms.assume_always_consistent){ T_new.identity(); }
 
     // Generate the half-time exponential operator 
-    CMATRIX Hxf_old(nadi, nadi);
     CMATRIX Hxf(nadi, nadi);
     CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
 
-    XF_correction(Hxf_old, dyn_var, C, prms.wp_width, T, itraj);
-    XF_correction(Hxf, dyn_var, C, prms.wp_width, T, itraj);
+    XF_correction(Hxf, dyn_var, C, T, itraj);
+    //XF_correction(Hxf, dyn_var, C, T, itraj);
 
-    Hxf = T_new.H() * Hxf * T_new;      
-    Hxf += Hxf_old;
-      
-    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.25*dt) );
+    //Hxf = T_new.H() * Hxf * T_new;      
+    //Hxf += Hxf_old;
+
+    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
+    if(rotation == 1){
+      D = T_new * D * T_new.H();      
+    }
 
     C = D * C;
 

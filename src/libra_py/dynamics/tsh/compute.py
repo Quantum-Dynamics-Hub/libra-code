@@ -305,12 +305,21 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 E_ij = <|E_i - E_j|>.  It is needed when dephasing_informed option is used
 
 
-            * **dyn_params["wp_width"]** ( double ): A width of a Gaussian function as an approximation to adiabatic wave packets. [ default: 0.3 Bohr ]
+            * **dyn_params["wp_width"]** ( MATRIX(ndof, 1) ): A width of a Gaussian function as an approximation to adiabatic wave packets.
+                This value is used for the initial conditions when the td Gaussian approximation is used, that is, use_td_width == 1
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["wp_v"]** ( MATRIX(ndof,1) ): The velocity of Gaussian wave packet following potential-free td Gaussian
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
 
             * **dyn_params["coherence_threshold"]** ( double ): A population threshold for creating/destroying auxiliary trajectories. [ default: 0.01 ]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["e_mask"]** ( double ): The masking parameter for computing nabla phase vectors. [ default: 0.0001 Ha ]
+                Only used with the MQCXF method, that is, `decoherence_algo == 5`
 
 
             * **dyn_params["use_xf_force"]** (int): Whether to use the XF-based force.
@@ -319,8 +328,26 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 0: Only Ehrenfest-like force; EhXF [ default ]
                 - 1: The whole force including the XF-correction; MQCXF 
             
+
             * **dyn_params["project_out_aux"]** (int): Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden. [ default: 0]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["tp_algo"]** (int): Turning-point algorithm for auxiliary trajectories
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+               - 0: no treatment of a turning point
+               - 1: collapse to the active state [default]
+               - 2: fix auxiliary positions of adiabatic states except for the active state
+               - 3: keep auxiliary momenta of adiabatic states except for the active state
+
+
+            * **dyn_params["use_td_width"]** (int): Whether to use the td Gaussian width for the nuclear wave packet approximation [ default : 0 ]
+                This option can be considered when it comes to unbounded systems.
+                This approximation is based on a nuclear wave packet on a free surface:
+                  \sigma_x(t)=\sqrt[\sigma_x(0)^2 + (wp_v * t)^2] 
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
 
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
@@ -534,8 +561,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
-                             "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0,
-                             "project_out_aux": 0
+                             "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
+                             "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
                            } )
 
     #================= Entanglement of trajectories ================================

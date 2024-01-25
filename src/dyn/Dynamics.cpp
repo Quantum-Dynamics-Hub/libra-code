@@ -570,6 +570,51 @@ void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_co
 
 }
 
+void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
+/**
+  Updates the wave packet width in XF based on the Gaussian approximation
+*/
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+
+  if (prms.use_td_width == 0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.wp_width->set(idof, itraj, prms.wp_width->get(idof, 0));
+      }
+    }
+  }
+  else if (prms.use_td_width == 1){
+    double elapsed_time, s2;
+    
+    elapsed_time = prms.dt*dyn_var.timestep;
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        s2 = pow(prms.wp_width->get(idof, 0), 2.0) + pow(prms.wp_v->get(idof, 0)*elapsed_time, 2.0);
+        dyn_var.wp_width->set(idof, itraj, sqrt(s2));
+      }
+    }
+  }
+  else if (prms.use_td_width == 2){
+    double elapsed_time, s2;
+
+    elapsed_time = prms.dt*dyn_var.timestep;
+    
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        s2 = pow(prms.wp_width->get(idof,0), 2.0);
+        dyn_var.wp_width->set(idof, itraj, 4*M_PI/(s2*dyn_var.p->get(idof, itraj)) );
+      }
+    }
+  }
+  else if (prms.use_td_width == 3){
+    ;;
+  }
+}
+
 /*
 void update_proj_adi(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -1212,18 +1257,23 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+  // Update wave packet width in XF algorithm
+  if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+    dyn_var.get_current_timestep(params);
+    update_wp_width(dyn_var, prms);  
+  }
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms);
+      propagate_half_xf(dyn_var, ham, prms, 0);
     }
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms);
+      propagate_half_xf(dyn_var, ham, prms, 1);
     }
   }
 

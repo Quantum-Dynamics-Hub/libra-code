@@ -423,6 +423,65 @@ MATRIX Wfcgrid2::get_pops(int rep, vector<double>& bmin, vector<double>& bmax){
 }
 
 
+MATRIX Wfcgrid2::get_coherences(int rep){
+/**
+  Compute the coherence indicator between all states in a given representation
+
+  Out:  MATRIX(nstates, nstates)
+  
+*/
+  MATRIX res(nstates, nstates);  
+  
+  int istate, jstate, npt1;
+  
+  MATRIX temp(Npts, 1);
+  if(rep=0){
+    for(npt1=0; npt1<Npts; npt1++){
+      temp.set(npt1, 0, (PSI_dia[npt1].H()*PSI_dia[npt1]).get(0,0).real() );
+    }
+  }
+  else if(rep=1){
+    for(npt1=0; npt1<Npts; npt1++){
+      temp.set(npt1, 0, (PSI_adi[npt1].H()*PSI_adi[npt1]).get(0,0).real() );
+    }
+  }
+  
+  double rho_i, rho_j, coh_ij;
+  if(rep=0){
+    for(npt1=0; npt1<Npts; npt1++){
+      for(istate=0; istate<nstates; istate++){
+        rho_i = (PSI_dia[npt1].get(istate, 0) * std::conj(PSI_dia[npt1].get(istate, 0))).real();
+        for(jstate=0; jstate<nstates; jstate++){  
+          rho_j = (PSI_dia[npt1].get(jstate, 0) * std::conj(PSI_dia[npt1].get(jstate, 0))).real();
+          coh_ij = rho_i*rho_j/temp.get(npt1,0);
+          res.add(istate, jstate, coh_ij);
+        }// for jstate
+      }// for istate
+    }// for npt1
+  }
+  else if(rep=1){
+    for(npt1=0; npt1<Npts; npt1++){
+      for(istate=0; istate<nstates; istate++){
+        rho_i = (PSI_adi[npt1].get(istate, 0) * std::conj(PSI_adi[npt1].get(istate, 0))).real();
+        for(jstate=0; jstate<nstates; jstate++){  
+          rho_j = (PSI_adi[npt1].get(jstate, 0) * std::conj(PSI_adi[npt1].get(jstate, 0))).real();
+          coh_ij = rho_i*rho_j/temp.get(npt1,0);
+          res.add(istate, jstate, coh_ij);
+        }// for jstate
+      }// for istate
+    }// for npt1
+  }
+
+  double dV = 1.0;
+  for(int idof=0; idof<ndof; idof++){  dV *= dr[idof];  }
+
+  res *= dV;
+
+  return res;
+
+}
+
+
 void Wfcgrid2::compute_wfc_gradients(int rep, int idof, double mass){
 // Compute wfc derivatives: first compute them in the k-space, then 
 // FT to the real space
