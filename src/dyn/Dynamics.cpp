@@ -1276,7 +1276,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     //  propagate_half_xf(dyn_var, ham, prms, 1);
     //}
   }
-
+    
+  if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+    update_nab_phase(dyn_var, ham, prms);
+  }
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);
