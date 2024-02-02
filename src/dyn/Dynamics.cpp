@@ -1272,9 +1272,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
-    if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms, 1);
-    }
+    //if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+    //  propagate_half_xf(dyn_var, ham, prms, 1);
+    //}
   }
 
 
