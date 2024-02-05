@@ -1811,7 +1811,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     //Hxf = T_new.H() * Hxf * T_new;      
     //Hxf += Hxf_old;
 
-    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -dt) );
+    D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
     if(rotation == 1){
       D = T_new * D * T_new.H();      
     }
