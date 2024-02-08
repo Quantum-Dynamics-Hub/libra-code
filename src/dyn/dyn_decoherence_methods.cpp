@@ -1326,27 +1326,28 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
   // Compute the td width based on auxiliary trajectories
   if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
-  //// Propagate the spatial derivative of phases
-  //for(int traj=0; traj<ntraj; traj++){
-  //  vector<int>& is_mixed = dyn_var.is_mixed[traj];
-  //  vector<int>& is_first = dyn_var.is_first[traj];
-  //  MATRIX& p_aux = *dyn_var.p_aux[traj];
-  //  MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
-  //  MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+  // Propagate the spatial derivative of phases
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+    vector<int>& is_first = dyn_var.is_first[traj];
+    MATRIX& p_aux = *dyn_var.p_aux[traj];
+    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
+    MATRIX& nab_phase = *dyn_var.nab_phase[traj];
+    MATRIX& nab_phase_old = *dyn_var.nab_phase_old[traj];
 
-  //  for(int i=0; i<nadi; i++){
-  //    if(is_mixed[i]==1){
-  //      if(is_first[i]==1){
-  //        nab_phase.set(i, -1, 0.0);
-  //      }
-  //      else{
-  //        for(int idof=0; idof<ndof; idof++){
-  //          nab_phase.add(i, idof, p_aux.get(i, idof) - p_aux_old.get(i, idof));
-  //        }//idof
-  //      }
-  //    }
-  //  }//i
-  //} // traj
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        if(is_first[i]==1){
+          nab_phase.set(i, -1, 0.0);
+        }
+        else{
+          for(int idof=0; idof<ndof; idof++){
+            nab_phase.set(i, idof, nab_phase_old.get(i, idof) + p_aux.get(i, idof) - p_aux_old.get(i, idof));
+          }//idof
+        }
+      }
+    }//i
+  } // traj
 
   //cout << "SHXF " << dyn_var.p_quant->get(0,0) << " " << dyn_var.q_aux[0]->get(0,0) << " " << dyn_var.q_aux[0]->get(1,0)
   //     << " " << dyn_var.p_aux[0]->get(0,0) << " " << dyn_var.p_aux[0]->get(1,0) <<endl; // Debug
@@ -1552,100 +1553,68 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
   // Compute the td width based on auxiliary trajectories
   if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
-  //// Propagate the spatial derivative of phases; the E-based approximation is used
-  //for(int traj=0; traj<ntraj; traj++){
-  //  vector<int>& is_mixed = dyn_var.is_mixed[traj];
-  //  vector<int>& is_first = dyn_var.is_first[traj];
-  //  MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-  //
-  //  CMATRIX E(nadi, nadi);
-  //  E = ham.children[traj]->get_ham_adi();
-
-  //  MATRIX p_real(ndof, 1);
-  //  p_real = dyn_var.p->col(traj); 
-  //  double Ekin = compute_kinetic_energy(p_real, invM);
-
-  //  for(int i=0; i<nadi; i++){
-  //    if(is_mixed[i]==1){
-  //      for(int idof=0; idof<ndof; idof++){
-  //        nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + prms.e_mask));
-  //      }//idof
-  //    }
-  //  }//i
-  //} // traj
-}
-
-void update_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
-  int ntraj = dyn_var.ntraj;
-  int nadi = dyn_var.nadi;
-  int ndof = dyn_var.ndof; 
-  
+  // Propagate the spatial derivative of phases; the E-based approximation is used
   for(int traj=0; traj<ntraj; traj++){
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     vector<int>& is_first = dyn_var.is_first[traj];
-    MATRIX& p_aux = *dyn_var.p_aux[traj];
-    MATRIX& p_aux_old = *dyn_var.p_aux_old[traj];
     MATRIX& nab_phase = *dyn_var.nab_phase[traj];
-    MATRIX& nab_phase_old = *dyn_var.nab_phase_old[traj];
-    
+  
+    CMATRIX E(nadi, nadi);
+    E = ham.children[traj]->get_ham_adi();
+
+    MATRIX p_real(ndof, 1);
+    p_real = dyn_var.p->col(traj); 
+    double Ekin = compute_kinetic_energy(p_real, invM);
+
+    for(int i=0; i<nadi; i++){
+      if(is_mixed[i]==1){
+        for(int idof=0; idof<ndof; idof++){
+          nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + prms.e_mask));
+        }//idof
+      }
+    }//i
+  } // traj
+}
+
+void rotate_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+  int ntraj = dyn_var.ntraj;
+  int nst = dyn_var.nadi;
+  int ndof = dyn_var.ndof; 
+  
+  CMATRIX phi(nst, nst);
+
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
+
     CMATRIX T_new(*dyn_var.proj_adi[traj]);
     if(prms.assume_always_consistent){ T_new.identity(); }
-          
-    vector<MATRIX> P_AUX; vector<MATRIX> P_AUX_OLD;
+ 
+    // Set a diagonal matrix of nabla_phase for each dof
     for(int idof=0; idof<ndof; idof++){
-      P_AUX.push_back(MATRIX(nadi, nadi));
-      P_AUX_OLD.push_back(MATRIX(nadi, nadi));
-    }
+      for(int i=0; i<nst; i++){
+        if(is_mixed[i]==1){
+          phi.set(i,i, complex<double>(dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+        }
+      }
+      phi = T_new.H() * phi * T_new;
+        
+      for(int i=0; i<nst; i++){
+        if(is_mixed[i]==1){
+          dyn_var.nab_phase[traj]->set(i, idof, phi.get(i,i).real() );
+        }
+      }
+    }//idof
 
     if (prms.decoherence_algo==5){
-      for(int i=0; i<nadi; i++){
-        if(is_mixed[i]==1){
-          if(is_first[i]==1){
-            nab_phase.set(i, -1, 0.0);
-            nab_phase_old.set(i, -1, 0.0);
-          }
-          else{ 
-            for(int idof=0; idof<ndof; idof++){
-              for(int i=0; i<nadi; i++){
-                if(is_mixed[i]==1){
-                  P_AUX[idof].set(i,i, p_aux.get(i, idof) );
-                  P_AUX_OLD[idof].set(i,i, p_aux_old.get(i, idof) );
-                }
-              }
-              P_AUX[idof] = (T_new.H() * P_AUX[idof] * T_new).real();
-              P_AUX_OLD[idof] = (T_new.H() * P_AUX_OLD[idof] * T_new).real();
-            }
-
-            for(int idof=0; idof<ndof; idof++){
-              nab_phase.set(i, idof, nab_phase_old.get(i, idof) + P_AUX[idof].get(i, i) - P_AUX_OLD[idof].get(i, i));
-            }
-            
-            for(int idof=0; idof<ndof; idof++){
-              nab_phase_old.set(i, idof, nab_phase.get(i, idof));
-            }
-          }
-        }
-      }//i
-    }
-    else{
-      MATRIX& invM = *dyn_var.iM;
-      CMATRIX E(nadi, nadi);
-      E = ham.children[traj]->get_ham_adi();
-      E = T_new.H() * E * T_new;
-
-      MATRIX p_real(ndof, 1);
-      p_real = dyn_var.p->col(traj); 
-      double Ekin = compute_kinetic_energy(p_real, invM);
-
-      for(int i=0; i<nadi; i++){
+      for(int i=0; i<nst; i++){
         if(is_mixed[i]==1){
           for(int idof=0; idof<ndof; idof++){
-            nab_phase.set(i, idof, -0.5*E.get(i,i).real()*dyn_var.p->get(idof,traj)/(Ekin + prms.e_mask));
-          }//idof
+            dyn_var.nab_phase_old[traj]->set(i, idof, dyn_var.nab_phase[traj]->get(i, idof) );
+          }
         }
-      }//i
-
+      }
     }
+
   } // traj
 
 }

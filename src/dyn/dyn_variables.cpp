@@ -235,7 +235,7 @@ void dyn_variables::allocate_mqcxf(){
     p_aux = vector<MATRIX*>(ntraj);
     p_aux_old = vector<MATRIX*>(ntraj);
     nab_phase = vector<MATRIX*>(ntraj);
-    nab_phase_old = vector<MATRIX*>(ntraj);
+    //nab_phase_old = vector<MATRIX*>(ntraj);
     ham_xf = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
@@ -243,7 +243,7 @@ void dyn_variables::allocate_mqcxf(){
       p_aux[itraj] = new MATRIX(nadi, ndof);
       p_aux_old[itraj] = new MATRIX(nadi, ndof);
       nab_phase[itraj] = new MATRIX(nadi, ndof);
-      nab_phase_old[itraj] = new MATRIX(nadi, ndof);
+      //nab_phase_old[itraj] = new MATRIX(nadi, ndof);
       ham_xf[itraj] = new CMATRIX(nadi, nadi);
     }
 
@@ -385,7 +385,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
         *p_aux[itraj] = *x.p_aux[itraj];
         *p_aux_old[itraj] = *x.p_aux_old[itraj];
         *nab_phase[itraj] = *x.nab_phase[itraj];
-        *nab_phase_old[itraj] = *x.nab_phase_old[itraj];
+        //*nab_phase_old[itraj] = *x.nab_phase_old[itraj];
         *ham_xf[itraj] = *x.ham_xf[itraj];
     }
     *wp_width = *x.wp_width;
@@ -527,7 +527,7 @@ dyn_variables::~dyn_variables(){
         delete p_aux[itraj];
         delete p_aux_old[itraj];
         delete nab_phase[itraj];
-        delete nab_phase_old[itraj];
+        //delete nab_phase_old[itraj];
         delete ham_xf[itraj];
 
     }
@@ -536,7 +536,7 @@ dyn_variables::~dyn_variables(){
     p_aux.clear();
     p_aux_old.clear();
     nab_phase.clear();
-    nab_phase_old.clear();
+    //nab_phase_old.clear();
     ham_xf.clear();
 
     delete wp_width;

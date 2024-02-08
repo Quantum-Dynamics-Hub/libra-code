@@ -81,7 +81,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
 void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms); // For MQCXF
 
 // XF propagation
-void update_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms);
+void rotate_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms);
 void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev);
 void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms);
 void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, double wp_width, CMATRIX& T, int traj);
