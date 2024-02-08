@@ -1650,45 +1650,58 @@ void update_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_par
 
 }
 
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, int traj){
+void update_ham_xf(dyn_variables& dyn_var){
 
   int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
   int nst = dyn_var.nadi;
   MATRIX& invM = *dyn_var.iM;
-  
-  vector<int>& is_mixed = dyn_var.is_mixed[traj];
 
   // Construct and transform the density matrix
+  CMATRIX C(nst, 1);
+  CMATRIX Coeff(nst, ntraj);
   CMATRIX RHO(nst, nst);
-  RHO = C * C.H();
+  
+  Coeff = *dyn_var.ampl_adi;
 
-  // Compute quantum momenta
-  int a = dyn_var.act_states[traj];
+  // temp for the XF Hamiltonian
+  CMATRIX iphi(nst, nst);
+  CMATRIX Ham_xf(nst, nst);
 
-  dyn_var.p_quant->set(-1, traj, 0.0);
-  for(int i=0; i<nst; i++){
-    if(is_mixed[i]==1){
-      for(int idof=0; idof<ndof; idof++){
-        dyn_var.p_quant->add(idof, traj, 0.5 / pow(dyn_var.wp_width->get(idof, traj), 2.0) * RHO.get(i,i).real()
-          *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
-         // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
-      }
-    }
-  }
+  for(int traj=0; traj<ntraj; traj++){
+    vector<int>& is_mixed = dyn_var.is_mixed[traj];
 
-  // Add the XF-based decoherence correction
-  for(int idof=0; idof<ndof; idof++){
+    C = Coeff.col(traj);
+    RHO = C * C.H();
 
-    // Set a diagonal matrix of nabla_phase for each dof
-    CMATRIX F(nst, nst);
+    // Compute quantum momenta
+    int a = dyn_var.act_states[traj];
+
+    dyn_var.p_quant->set(-1, traj, 0.0);
     for(int i=0; i<nst; i++){
       if(is_mixed[i]==1){
-        F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.p_quant->add(idof, traj, 0.5 / pow(dyn_var.wp_width->get(idof, traj), 2.0) * RHO.get(i,i).real()
+            *(dyn_var.q_aux[traj]->get(a, idof) - dyn_var.q_aux[traj]->get(i, idof)));
+           // *(dyn_var.q->get(idof, traj) - dyn_var.q_aux[traj]->get(i, idof)));
+        }
       }
     }
 
-    Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
-  }
+    // Add the XF-based decoherence correction
+    Ham_xf.set(-1, -1, complex<double>(0.0, 0.0));
+    for(int idof=0; idof<ndof; idof++){
+      // Set a diagonal matrix of nabla_phase for each dof
+      for(int i=0; i<nst; i++){
+        if(is_mixed[i]==1){
+          iphi.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
+        }
+      }
+
+      Ham_xf += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * iphi - iphi * RHO);
+    }
+    *dyn_var.ham_xf[traj] = Ham_xf;
+  } //traj
 }
 
 void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev){
@@ -1705,9 +1718,9 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   CMATRIX Coeff(nst, ntraj);
 
   // termporaries for nabla_phase and adiabatic force
-  vector<CMATRIX> F;
+  vector<CMATRIX> phi;
   for(int idof=0; idof<ndof; idof++){
-    F.push_back(CMATRIX(nst, nst));
+    phi.push_back(CMATRIX(nst, nst));
   }
   
   Coeff = *dyn_var.ampl_adi;
@@ -1726,41 +1739,32 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
     p_real = dyn_var.p->col(traj); 
     double Ekin = compute_kinetic_energy(p_real, invM);
 
-    // Compute F for each dof
+    // Compute phi for each dof
     vector<int>& is_mixed = dyn_var.is_mixed[traj];
     for(int idof=0; idof<ndof; idof++){
-      F[idof].set(-1,-1, complex<double> (0.0, 0.0));
+      phi[idof].set(-1,-1, complex<double> (0.0, 0.0));
       for(int i=0; i<nst; i++){
         if(is_mixed[i]==1){
-          F[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
+          phi[idof].set(i,i,complex<double> (dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
         }
       }
     }
 
     // Save vector potential (contribution from NAC is neglected)
     for(int idof=0; idof<ndof; idof++){
-      CMATRIX temp = C.H()*F[idof]*C;
+      CMATRIX temp = C.H()*phi[idof]*C;
       dyn_var.VP->set(idof, traj, temp.get(0,0).real());
     }
 
     // Original form of the decoherence force
     for(int idof=0; idof<ndof; idof++){
       for(int jdof=0; jdof<ndof; jdof++){
-        CMATRIX temp = (F[jdof]*C).H() * (F[idof]*C);
+        CMATRIX temp = (phi[jdof]*C).H() * (phi[idof]*C);
         dyn_var.f_xf->add(idof, traj, -2.0*invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)*
           (dyn_var.VP->get(jdof, traj)*dyn_var.VP->get(idof, traj) - temp.get(0,0).real() ) );
       }
     }
 
-    //// Energy-conserving treatment
-    //for(int idof=0; idof<ndof; idof++){
-    //  double temp = 0.0;
-    //  for(int jdof=0; jdof<ndof; jdof++){
-    //    temp +=invM.get(jdof,0)*dyn_var.p_quant->get(jdof, traj)* 
-    //    ( dyn_var.VP->get(jdof, traj)*Epot - (C.H()*F[jdof]*E*C).get(0,0).real() );
-    //  }
-    //  dyn_var.f_xf->set(idof, traj, temp / Ekin * dyn_var.p->get(idof, traj) );
-    //}
   } //traj
 
   // Add the XF contribution
@@ -1787,6 +1791,9 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
   CMATRIX Coeff(nst, ntraj);
   
   Coeff = *dyn_var.ampl_adi;
+  
+  CMATRIX Hxf(nadi, nadi);
+  CMATRIX D(nadi, nadi); // this is \exp[ -idt/2\hbar * Hxf( C(t) ) ]
 
   for(itraj=0; itraj<ntraj; itraj++){
 
@@ -1797,11 +1804,7 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     nHamiltonian* ham = Ham.children[traj1];
 
     // Generate the half-time exponential operator 
-    CMATRIX Hxf(nadi, nadi);
-    CMATRIX D(nadi, nadi); // this is \exp[ -idt/2\hbar * Hxf( C(t) ) ]
-
-    XF_correction(Hxf, dyn_var, C, itraj);
-
+    Hxf = *dyn_var.ham_xf[itraj];
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
 
     C = D * C;

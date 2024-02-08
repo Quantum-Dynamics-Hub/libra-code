@@ -398,6 +398,14 @@ class dyn_variables{
   vector<MATRIX*> nab_phase_old;
   
   /**
+    XF Hamiltonian
+
+    Options:
+     vector<ntraj, MATRIX(nadi, nadi)> 
+  */
+  vector<CMATRIX*> ham_xf;
+  
+  /**
     Wave packet widths based on the Gaussian approximation
 
     Options:

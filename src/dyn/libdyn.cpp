@@ -366,6 +366,10 @@ void export_dyn_decoherence_objects(){
   void (*expt_xf_hop_reset)
   (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &xf_hop_reset;
   def("xf_hop_reset", expt_xf_hop_reset);
+  
+  void (*expt_update_ham_xf)
+  (dyn_variables& dyn_var) = &update_ham_xf;
+  def("update_ham_xf", expt_update_ham_xf);
 
   void (*expt_shxf_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
