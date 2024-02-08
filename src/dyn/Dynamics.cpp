@@ -1267,14 +1267,14 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
-      propagate_half_xf(dyn_var, ham, prms, 0);
+      propagate_half_xf(dyn_var, ham, prms);
     }
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
       update_nab_phase(dyn_var, ham, prms);
-      propagate_half_xf(dyn_var, ham, prms, 0);
+      propagate_half_xf(dyn_var, ham, prms);
     }
   }
 

@@ -1650,7 +1650,7 @@ void update_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_par
 
 }
 
-void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, CMATRIX& T, int traj){
+void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, int traj){
 
   int ndof = dyn_var.ndof;
   int nst = dyn_var.nadi;
@@ -1660,7 +1660,7 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, CMATRIX& T,
 
   // Construct and transform the density matrix
   CMATRIX RHO(nst, nst);
-  RHO = T * C * C.H() * T.H();
+  RHO = C * C.H();
 
   // Compute quantum momenta
   int a = dyn_var.act_states[traj];
@@ -1686,7 +1686,6 @@ void XF_correction(CMATRIX& Ham, dyn_variables& dyn_var, CMATRIX& C, CMATRIX& T,
         F.set(i,i, complex<double>(0.0, dyn_var.nab_phase[traj]->get(i, idof)) );
       }
     }
-    F = T * F * T.H();
 
     Ham += -invM.get(idof,0) * dyn_var.p_quant->get(idof, traj)*(RHO * F - F * RHO);
   }
@@ -1768,7 +1767,7 @@ void update_forces_xf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& h
   *dyn_var.f += *dyn_var.f_xf;
 }
 
-void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, int rotation){
+void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
   int itraj, i, j;
 
   int num_el = prms.num_electronic_substeps;
@@ -1797,28 +1796,15 @@ void propagate_half_xf(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_pa
     
     nHamiltonian* ham = Ham.children[traj1];
 
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-    CMATRIX T_new(*dyn_var.proj_adi[itraj]);
-    if(prms.assume_always_consistent){ T_new.identity(); }
-
     // Generate the half-time exponential operator 
     CMATRIX Hxf(nadi, nadi);
-    CMATRIX D(nadi, nadi); /// this is \exp[-idt/4\hbar * ( T_new.H()*Hxf(t+dt)*T_new + Hxf(t) )]
+    CMATRIX D(nadi, nadi); // this is \exp[ -idt/2\hbar * Hxf( C(t) ) ]
 
-    XF_correction(Hxf, dyn_var, C, T, itraj);
-    //XF_correction(Hxf, dyn_var, C, T, itraj);
-
-    //Hxf = T_new.H() * Hxf * T_new;      
-    //Hxf += Hxf_old;
+    XF_correction(Hxf, dyn_var, C, itraj);
 
     D = libspecialfunctions::exp_(Hxf, complex<double>(0.0, -0.5*dt) );
-    if(rotation == 1){
-      D = T_new * D * T_new.H();      
-    }
 
     C = D * C;
-
-//  *dyn_var.proj_adi[itraj] = T_new;
 
     // Insert the propagated result back
     for(int st=0; st<nst; st++){  Coeff.set(st, itraj, C.get(st, 0));  }
