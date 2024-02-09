@@ -1108,56 +1108,6 @@ for(traj = 0; traj < ntraj; traj++){
   }// traj
 }
 
-void td_width_aux(dyn_variables& dyn_var){
-  int ntraj = dyn_var.ntraj;
-  int nadi = dyn_var.nadi;
-  int ndof = dyn_var.ndof; 
-
-  double width_temp;
-
-  dyn_var.wp_width->set(-1, -1, 0.0);
-  for(int traj=0; traj<ntraj; traj++){
-    vector<int>& is_mixed = dyn_var.is_mixed[traj];
-    vector<int>& is_first = dyn_var.is_first[traj];
-
-    // wp_width is computed by pairwise widths based on auxiliary trajectories
-    MATRIX sum_inv_w2(ndof, 1);
-    MATRIX w2_temp(ndof, 1);
-    
-    int check_mixing = 0;
-    for(int i=0; i<nadi; i++){
-      for(int j=0; j<nadi; j++){
-        if(i>=j){continue;}
-
-        if(is_mixed[i] == 0 or is_mixed[j] == 0){continue; }
-        check_mixing = 1;
-
-        if(is_first[i] == 1 or is_first[j] == 1){
-          w2_temp.set(-1, 1.0e+10); // At initial, an auxiliary pair does not contribute to wp_width
-        }
-        else{
-          for(int idof=0; idof<ndof; idof++){
-            w2_temp.set(idof, 0, fabs(dyn_var.q_aux[traj]->get(i, idof) - dyn_var.q_aux[traj]->get(j, idof))/
-              fabs(dyn_var.p_aux[traj]->get(i, idof) - dyn_var.p_aux[traj]->get(j, idof)) );
-          }
-        }
-
-        for(int idof=0; idof<ndof; idof++){
-          sum_inv_w2.add(idof, 0, 1.0/w2_temp.get(idof));
-        }
-
-      } //j
-    } //i
-    
-    if(check_mixing == 1){
-      for(int idof=0; idof<ndof; idof++){
-        dyn_var.wp_width->set(idof, traj, sqrt((nadi - 1)* 1.0/sum_inv_w2.get(idof, 0)) );
-      }
-    }
-
-  } // traj
-}
-
 void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms){
     /**
     \brief The generic framework of the SHXF (Surface Hopping based on eXact Factorization) method of
@@ -1322,9 +1272,6 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
       is_tp = 0;
     }
   }//traj
-
-  // Compute the td width based on auxiliary trajectories
-  if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
   // Propagate the spatial derivative of phases
   for(int traj=0; traj<ntraj; traj++){
@@ -1549,9 +1496,6 @@ void mqcxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dy
     }
 
   }//traj
-
-  // Compute the td width based on auxiliary trajectories
-  if(prms.use_td_width == 3){ td_width_aux(dyn_var);}
 
   // Propagate the spatial derivative of phases; the E-based approximation is used
   for(int traj=0; traj<ntraj; traj++){

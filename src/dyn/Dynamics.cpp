@@ -611,7 +611,52 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
     }
   }
   else if (prms.use_td_width == 3){
-    ;;
+    int nadi = dyn_var.nadi;
+
+    // wp_width is computed by pairwise widths based on auxiliary trajectories
+    dyn_var.wp_width->set(-1, -1, 0.0);
+    MATRIX sum_inv_w2(ndof, 1);
+    MATRIX w2_temp(ndof, 1);
+
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      
+      sum_inv_w2.set(-1, 0, 0.0);
+      w2_temp.set(-1, 0, 0.0);
+    
+      int check_mixing = 0;
+      for(int i=0; i<nadi; i++){
+        for(int j=0; j<nadi; j++){
+          if(i>=j){continue;}
+
+          if(is_mixed[i] == 0 or is_mixed[j] == 0){continue; }
+          check_mixing = 1;
+
+          if(is_first[i] == 1 or is_first[j] == 1){
+            w2_temp.set(-1, 0, 1.0e+10); // At initial, an auxiliary pair does not contribute to wp_width
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){
+              w2_temp.set(idof, 0, fabs(dyn_var.q_aux[traj]->get(i, idof) - dyn_var.q_aux[traj]->get(j, idof))/
+                fabs(dyn_var.p_aux[traj]->get(i, idof) - dyn_var.p_aux[traj]->get(j, idof)) );
+            }
+          }
+
+          for(int idof=0; idof<ndof; idof++){
+            sum_inv_w2.add(idof, 0, 1.0/w2_temp.get(idof));
+          }
+
+        } //j
+      } //i
+    
+      if(check_mixing == 1){
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.wp_width->set(idof, traj, sqrt((nadi - 1)* 1.0/sum_inv_w2.get(idof, 0)) );
+        }
+      }
+
+    } // traj
   }
 }
 
