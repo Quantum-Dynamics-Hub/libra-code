@@ -390,6 +390,22 @@ class dyn_variables{
   vector<MATRIX*> nab_phase;
   
   /**
+    Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
+
+    Options:
+     vector<ntraj, MATRIX(nadi, ndof)> 
+  */
+  vector<MATRIX*> nab_phase_old;
+  
+  /**
+    XF Hamiltonian
+
+    Options:
+     vector<ntraj, MATRIX(nadi, nadi)> 
+  */
+  vector<CMATRIX*> ham_xf;
+  
+  /**
     Wave packet widths based on the Gaussian approximation
 
     Options:
