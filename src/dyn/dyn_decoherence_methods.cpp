@@ -1540,7 +1540,7 @@ void rotate_nab_phase(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_par
           phi.set(i,i, complex<double>(dyn_var.nab_phase[traj]->get(i, idof), 0.0) );
         }
       }
-      phi = T_new.H() * phi * T_new;
+      phi = T_new * phi * T_new.H();
         
       for(int i=0; i<nst; i++){
         if(is_mixed[i]==1){
