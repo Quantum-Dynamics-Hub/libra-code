@@ -306,11 +306,16 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
             * **dyn_params["wp_width"]** ( MATRIX(ndof, 1) ): A width of a Gaussian function as an approximation to adiabatic wave packets.
-                This value is used for the initial conditions when the td Gaussian approximation is used, that is, use_td_width == 1
+                According to the choice of the Gaussian width approximation, this parameter has different meanings
+                - A constant width in the fixed-width approximation, that is, `use_td_width == 0`
+                - The initial width in the free-particle Gaussian wave packet approximation, that is, `use_td_width == 1`
+                - The interaction width in the Schwarz scheme, that is, `use_td_width == 2`
+                - No influence on the dynamics since the width will be determined by internal variables in the Subotnik scheme, that is, `use_td_width == 3`
+
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
 
-            * **dyn_params["wp_v"]** ( MATRIX(ndof,1) ): The velocity of Gaussian wave packet following potential-free td Gaussian
+            * **dyn_params["wp_v"]** ( MATRIX(ndof,1) ): The velocity of Gaussian wave packet in the free-particle Gaussian approximation, that is, `use_td_width == 1`
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
 
@@ -342,11 +347,13 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                - 3: keep auxiliary momenta of adiabatic states except for the active state
 
 
-            * **dyn_params["use_td_width"]** (int): Whether to use the td Gaussian width for the nuclear wave packet approximation [ default : 0 ]
-                This option can be considered when it comes to unbounded systems.
-                This approximation is based on a nuclear wave packet on a free surface:
-                  \sigma_x(t)=\sqrt[\sigma_x(0)^2 + (wp_v * t)^2] 
+            * **dyn_params["use_td_width"]** (int): Options for the td Gaussian width approximations [ default : 0 ]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+                
+                - 0: no td width; use the fixed-width Gaussian approximation
+                - 1: the td Gaussian width from a free particle Gaussian wave packet, \sigma(t)=\sqrt[\sigma(0)^2 + (wp_v * t)^2]
+                - 2: the Schwarz scheme where the width depends on the instantaneous de Broglie wavelength, \sigma(t)^(-2) = [\sigma(0)^2 * P/ (4 * PI) ]^2
+                - 3: the Subotnik schene where the width is given pairwise depending on the auxiliary variables, \sigma_ij(t)^2 = |R_i - R_j| / |P_i - P_j| 
 
 
             ///===============================================================================
