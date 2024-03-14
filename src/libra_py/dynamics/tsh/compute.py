@@ -353,7 +353,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 0: no td width; use the fixed-width Gaussian approximation
                 - 1: the td Gaussian width from a free particle Gaussian wave packet, \sigma(t)=\sqrt[\sigma(0)^2 + (wp_v * t)^2]
                 - 2: the Schwarz scheme where the width depends on the instantaneous de Broglie wavelength, \sigma(t)^(-2) = [\sigma(0)^2 * P/ (4 * PI) ]^2
-                - 3: the Subotnik schene where the width is given pairwise depending on the auxiliary variables, \sigma_ij(t)^2 = |R_i - R_j| / |P_i - P_j| 
+                - 3: the Subotnik scheme where the width is given as a sum of pairwise widths depending on the auxiliary variables, \sigma_ij(t)^2 = |R_i - R_j| / |P_i - P_j| 
 
 
             ///===============================================================================
