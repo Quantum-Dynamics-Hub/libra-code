@@ -181,9 +181,13 @@ void dyn_variables::allocate_shxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 
@@ -191,14 +195,19 @@ void dyn_variables::allocate_shxf(){
     p_aux = vector<MATRIX*>(ntraj);
     p_aux_old = vector<MATRIX*>(ntraj);
     nab_phase = vector<MATRIX*>(ntraj);
+    nab_phase_old = vector<MATRIX*>(ntraj);
+    ham_xf = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
       q_aux[itraj] = new MATRIX(nadi, ndof);
       p_aux[itraj] = new MATRIX(nadi, ndof);
       p_aux_old[itraj] = new MATRIX(nadi, ndof);
       nab_phase[itraj] = new MATRIX(nadi, ndof);
+      nab_phase_old[itraj] = new MATRIX(nadi, ndof);
+      ham_xf[itraj] = new CMATRIX(nadi, nadi);
     }
 
+    wp_width = new MATRIX(ndof, ntraj);
     p_quant = new MATRIX(ndof, ntraj);
     VP = new MATRIX(ndof, ntraj);
   
@@ -212,9 +221,13 @@ void dyn_variables::allocate_mqcxf(){
     for(int itraj=0; itraj<ntraj; itraj++){
       is_mixed.push_back(vector<int>());
       is_first.push_back(vector<int>());
+      is_fixed.push_back(vector<int>());
+      is_keep.push_back(vector<int>());
       for(int i=0; i<nadi; i++){
         is_mixed[itraj].push_back(0);
         is_first[itraj].push_back(0);
+        is_fixed[itraj].push_back(0);
+        is_keep[itraj].push_back(0);
       } // i
     } // itraj
 
@@ -222,14 +235,19 @@ void dyn_variables::allocate_mqcxf(){
     p_aux = vector<MATRIX*>(ntraj);
     p_aux_old = vector<MATRIX*>(ntraj);
     nab_phase = vector<MATRIX*>(ntraj);
+    //nab_phase_old = vector<MATRIX*>(ntraj);
+    ham_xf = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
       q_aux[itraj] = new MATRIX(nadi, ndof);
       p_aux[itraj] = new MATRIX(nadi, ndof);
       p_aux_old[itraj] = new MATRIX(nadi, ndof);
       nab_phase[itraj] = new MATRIX(nadi, ndof);
+      //nab_phase_old[itraj] = new MATRIX(nadi, ndof);
+      ham_xf[itraj] = new CMATRIX(nadi, nadi);
     }
 
+    wp_width = new MATRIX(ndof, ntraj);
     p_quant = new MATRIX(ndof, ntraj);
     VP = new MATRIX(ndof, ntraj);
     f_xf = new MATRIX(ndof, ntraj);
@@ -348,7 +366,10 @@ dyn_variables::dyn_variables(const dyn_variables& x){
         *p_aux[itraj] = *x.p_aux[itraj];
         *p_aux_old[itraj] = *x.p_aux_old[itraj];
         *nab_phase[itraj] = *x.nab_phase[itraj];
+        *nab_phase_old[itraj] = *x.nab_phase_old[itraj];
+        *ham_xf[itraj] = *x.ham_xf[itraj];
     }
+    *wp_width = *x.wp_width;
     *p_quant = *x.p_quant;
     *VP = *x.VP;
 
@@ -364,7 +385,10 @@ dyn_variables::dyn_variables(const dyn_variables& x){
         *p_aux[itraj] = *x.p_aux[itraj];
         *p_aux_old[itraj] = *x.p_aux_old[itraj];
         *nab_phase[itraj] = *x.nab_phase[itraj];
+        //*nab_phase_old[itraj] = *x.nab_phase_old[itraj];
+        *ham_xf[itraj] = *x.ham_xf[itraj];
     }
+    *wp_width = *x.wp_width;
     *p_quant = *x.p_quant;
     *VP = *x.VP;
     *f_xf = *x.f_xf;
@@ -468,6 +492,8 @@ dyn_variables::~dyn_variables(){
         delete p_aux[itraj];
         delete p_aux_old[itraj];
         delete nab_phase[itraj];
+        delete nab_phase_old[itraj];
+        delete ham_xf[itraj];
 
     }
 
@@ -475,7 +501,10 @@ dyn_variables::~dyn_variables(){
     p_aux.clear();
     p_aux_old.clear();
     nab_phase.clear();
+    nab_phase_old.clear();
+    ham_xf.clear();
 
+    delete wp_width;
     delete p_quant;
     delete VP;
 
@@ -498,6 +527,8 @@ dyn_variables::~dyn_variables(){
         delete p_aux[itraj];
         delete p_aux_old[itraj];
         delete nab_phase[itraj];
+        //delete nab_phase_old[itraj];
+        delete ham_xf[itraj];
 
     }
 
@@ -505,7 +536,10 @@ dyn_variables::~dyn_variables(){
     p_aux.clear();
     p_aux_old.clear();
     nab_phase.clear();
+    //nab_phase_old.clear();
+    ham_xf.clear();
 
+    delete wp_width;
     delete p_quant;
     delete VP;
     delete f_xf;

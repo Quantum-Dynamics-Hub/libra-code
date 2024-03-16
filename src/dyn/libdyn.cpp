@@ -103,8 +103,10 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("e_mask", &dyn_control_params::e_mask)
       .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
       .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
+      .def_readwrite("tp_algo", &dyn_control_params::tp_algo)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -122,6 +124,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("dt", &dyn_control_params::dt)
       .def_readwrite("num_electronic_substeps", &dyn_control_params::num_electronic_substeps)
       .def_readwrite("electronic_integrator", &dyn_control_params::electronic_integrator)
+      .def_readwrite("ampl_transformation_method", &dyn_control_params::ampl_transformation_method)
       .def_readwrite("assume_always_consistent", &dyn_control_params::assume_always_consistent)
       .def_readwrite("thermally_corrected_nbra", &dyn_control_params::thermally_corrected_nbra)
       .def_readwrite("total_energy", &dyn_control_params::total_energy)
@@ -191,6 +194,9 @@ void export_dyn_variables_objects(){
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
 
 
+  void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
+  void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
+
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
       .def("__copy__", &generic__copy__<dyn_variables>)
@@ -241,6 +247,7 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_wp_width", &dyn_variables::get_wp_width)
       .def("get_p_quant", &dyn_variables::get_p_quant)
       .def("get_VP", &dyn_variables::get_VP)
       .def("get_f_xf", &dyn_variables::get_f_xf)
@@ -267,7 +274,8 @@ void export_dyn_variables_objects(){
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
 
-      .def("update_active_states", &dyn_variables::update_active_states)
+      .def("update_active_states", expt_update_active_states_v1)
+      .def("update_active_states", expt_update_active_states_v2)
 
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
@@ -330,6 +338,10 @@ void export_dyn_decoherence_objects(){
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence", expt_instantaneous_decoherence_v1);
 
+  void (*expt_instantaneous_decoherence_dia_v1)(CMATRIX& Coeff, nHamiltonian& ham,
+  vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
+  int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
+  def("instantaneous_decoherence_dia", expt_instantaneous_decoherence_dia_v1);
 
 
   void (*expt_wp_reversal_events_v1)
@@ -354,6 +366,10 @@ void export_dyn_decoherence_objects(){
   void (*expt_xf_hop_reset)
   (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &xf_hop_reset;
   def("xf_hop_reset", expt_xf_hop_reset);
+  
+  void (*expt_update_ham_xf)
+  (dyn_variables& dyn_var) = &update_ham_xf;
+  def("update_ham_xf", expt_update_ham_xf);
 
   void (*expt_shxf_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;
@@ -705,6 +721,9 @@ void export_dyn_projectors_objects(){
   (dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v2);
 
+  CMATRIX (*expt_compute_projector_v1)
+  (dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St) = &compute_projector;
+  def("compute_projector", expt_compute_projector_v1);
 
   CMATRIX (*expt_raw_to_dynconsyst_v1)
   (CMATRIX& amplitudes, vector<CMATRIX>& projectors) = &raw_to_dynconsyst;

@@ -2132,13 +2132,16 @@ void nHamiltonian::transform_all(CMATRIX* T, int option){
 /**
  changes all the adiabatic properties of the Hamiltonian by the matrix T
 
-  option = 0 - use matrix U = T
-         = 1 - use matrix U = T.H()
+  option = 1 - use matrix U = T           |psi_adi_tilde> = |psi_adi> T
+         = -1 - use matrix U = T.H()       |psi_adi> = |psi_adi_tilde>T^+
    
 */
 
-  CMATRIX U(*T); // option == 0
-  if (option==1){  U = CMATRIX(T->H()); }
+  CMATRIX U(nadi, nadi);
+  if(option==1){ U = *T; }
+  else if(option==-1){  U = T->H(); }
+
+/*
   else if(option==2 || option==4){
 
     int nst = nadi;
@@ -2161,7 +2164,7 @@ void nHamiltonian::transform_all(CMATRIX* T, int option){
     FullPivLU_inverse(U, invU);
     U = invU;
   }
-  
+*/  
   //FullPivLU_inverse(t, U); // U = t^{-1}
 
 
@@ -2179,7 +2182,8 @@ void nHamiltonian::transform_all(CMATRIX* T, int option){
 
 
   // Time-overlaps
-  *time_overlap_adi = U.H() * (*time_overlap_adi) * U;
+//  *time_overlap_adi = U.H() * (*time_overlap_adi) * U;
+  *time_overlap_adi = (*time_overlap_adi) * U;
   
   // Derivatives
   for(int i=0; i<nnucl; i++){
@@ -2208,7 +2212,34 @@ void  nHamiltonian::transform_all(vector<CMATRIX*>& T, int option){
 }
 
 
+void nHamiltonian::transform_basis(CMATRIX* T, int option){
+/**
+  changes the diabatic-to-adiabatic basis transformation matrix by a matrix T
 
+  option = 1 - use matrix U = T           |psi_adi_tilde> = |psi_adi> T
+         = -1 - use matrix U = T.H()       |psi_adi> = |psi_adi_tilde>T^+
+
+*/
+
+  CMATRIX U(nadi, nadi);
+  if(option==1){ U = *T; }
+  else if(option==-1){  U = T->H(); }
+
+  // Basis transform
+  *basis_transform =  (*basis_transform) * U;
+
+} // transform_basis
+
+
+void  nHamiltonian::transform_basis(vector<CMATRIX*>& T, int option){
+/**
+ changes the basis of all the children Hamiltonians by the matrices in T
+*/
+
+ int ntraj = children.size();
+ for(int i=0; i<ntraj; i++){ children[i]->transform_basis(T[i], option); }
+
+}// transform_basis
 
 }// namespace libnhamiltonian
 }// liblibra

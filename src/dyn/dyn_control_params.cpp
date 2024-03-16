@@ -52,7 +52,7 @@ dyn_control_params::dyn_control_params(){
   do_ssy = 0;
   do_phase_correction = 1;
   phase_correction_tol = 1e-3; 
-  state_tracking_algo = 2;
+  state_tracking_algo = -1;
   MK_alpha = 0.0;
   MK_verbosity = 0;
   convergence = 0;
@@ -79,10 +79,14 @@ dyn_control_params::dyn_control_params(){
   collapse_option = 0;
   decoherence_rates = NULL;
   ave_gaps = NULL;
-  wp_width = 0.1;
+  wp_width = NULL;
+  wp_v = NULL;
   coherence_threshold = 0.01;
+  e_mask = 0.0001;
   use_xf_force = 0;
   project_out_aux = 0;
+  tp_algo = 1;
+  use_td_width = 0;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = 0;
@@ -104,6 +108,7 @@ dyn_control_params::dyn_control_params(){
   dt = 41.0;
   num_electronic_substeps = 1;
   electronic_integrator = 0;
+  ampl_transformation_method = 1; 
   assume_always_consistent = 0;
 
   thermally_corrected_nbra = 0;
@@ -158,10 +163,17 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   dephasing_informed = x.dephasing_informed;
   instantaneous_decoherence_variant = x.instantaneous_decoherence_variant; 
   collapse_option = x.collapse_option;
-  wp_width = x.wp_width;
+
+  wp_width = new MATRIX( x.wp_width->n_rows, x.wp_width->n_cols );
+  *wp_width = *x.wp_width;
+  wp_v = new MATRIX( x.wp_v->n_rows, x.wp_v->n_cols );
+  *wp_v = *x.wp_v;
   coherence_threshold = x.coherence_threshold;
+  e_mask = x.e_mask;
   use_xf_force = x.use_xf_force;
   project_out_aux = x.project_out_aux;
+  tp_algo = x.tp_algo;
+  use_td_width = x.use_td_width;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = x.entanglement_opt;
@@ -184,6 +196,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   dt = x.dt;
   num_electronic_substeps = x.num_electronic_substeps;
   electronic_integrator = x.electronic_integrator;
+  ampl_transformation_method = x.ampl_transformation_method;
   assume_always_consistent = x. assume_always_consistent;
 
   decoherence_rates = new MATRIX(x.decoherence_rates->n_rows, x.decoherence_rates->n_cols);  
@@ -206,6 +219,8 @@ dyn_control_params::~dyn_control_params() {
 
   //cout<<"dyn_control_params destructor\n";
 
+  delete wp_width;
+  delete wp_v;
   delete decoherence_rates;  
   delete ave_gaps;
   delete schwartz_decoherence_inv_alpha;
@@ -215,7 +230,8 @@ dyn_control_params::~dyn_control_params() {
 void dyn_control_params::sanity_check(){
 
   ///=================== Options for state tracking ======================
-  if(state_tracking_algo==0 || state_tracking_algo==1 ||
+  if(state_tracking_algo==-1 ||
+     state_tracking_algo==0 || state_tracking_algo==1 ||
      state_tracking_algo==2 || state_tracking_algo==3 ||
      state_tracking_algo==32 || state_tracking_algo==33){ ; ; }
   else{
@@ -343,10 +359,26 @@ void dyn_control_params::set_parameters(bp::dict params){
         for(int b=0;b<x.n_cols;b++){ ave_gaps->set(a, b, x.get(a,b));   }
       } 
     }
-    else if(key=="wp_width"){ wp_width = bp::extract<double>(params.values()[i]); }
+    else if(key=="wp_width"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      wp_width = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ wp_width->set(a, b, x.get(a,b));   }
+      } 
+    }
+    else if(key=="wp_v"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      wp_v = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ wp_v->set(a, b, x.get(a,b));   }
+      } 
+    }
     else if(key=="coherence_threshold"){ coherence_threshold = bp::extract<double>(params.values()[i]); }
+    else if(key=="e_mask"){ e_mask = bp::extract<double>(params.values()[i]); }
     else if(key=="use_xf_force"){ use_xf_force = bp::extract<int>(params.values()[i]); }
     else if(key=="project_out_aux"){ project_out_aux = bp::extract<int>(params.values()[i]); }
+    else if(key=="tp_algo"){ tp_algo = bp::extract<int>(params.values()[i]); }
+    else if(key=="use_td_width"){ use_td_width = bp::extract<int>(params.values()[i]); }
 
     ///================= Entanglement of trajectories ================================
     else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }
@@ -378,6 +410,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="dt") { dt = bp::extract<double>(params.values()[i]);  }
     else if(key=="num_electronic_substeps") { num_electronic_substeps = bp::extract<int>(params.values()[i]);  }
     else if(key=="electronic_integrator"){ electronic_integrator = bp::extract<int>(params.values()[i]); }
+    else if(key=="ampl_transformation_method"){ ampl_transformation_method = bp::extract<int>(params.values()[i]); }
     else if(key=="assume_always_consistent"){  assume_always_consistent = bp::extract<int>(params.values()[i]); }
 
     else if(key=="thermally_corrected_nbra"){ thermally_corrected_nbra = bp::extract<int>(params.values()[i]); }

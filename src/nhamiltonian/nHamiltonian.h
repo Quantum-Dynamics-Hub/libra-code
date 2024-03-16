@@ -422,6 +422,8 @@ public:
   void transform_all(CMATRIX* T, int option);
   void transform_all(vector<CMATRIX*>& T, int option);
 
+  void transform_basis(CMATRIX* T, int option);
+  void transform_basis(vector<CMATRIX*>& T, int option);
 
   ///< In nHamiltonian_compute_diabatic.cpp
 

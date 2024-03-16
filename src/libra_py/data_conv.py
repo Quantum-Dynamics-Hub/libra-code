@@ -578,3 +578,4 @@ def vasp_to_xyz(filename):
     f.close() 
 
 
+

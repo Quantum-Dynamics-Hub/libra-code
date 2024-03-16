@@ -129,6 +129,12 @@ def exact_init_hdf5(saver, hdf5_output_level, _nsteps, _ndof, _nstates, _ngrid):
 
         # Density matrix computed in adiabatic rep
         saver.add_dataset("denmat_adi", (_nsteps, _nstates, _nstates), "C") 
+        
+        # Density matrix computed in adiabatic rep
+        saver.add_dataset("coherence_dia", (_nsteps, _nstates, _nstates), "R") 
+        
+        # Density matrix computed in adiabatic rep
+        saver.add_dataset("coherence_adi", (_nsteps, _nstates, _nstates), "R") 
 
 
     if hdf5_output_level>=4:
@@ -201,6 +207,8 @@ def save_data_hdf5(step, wfc, saver, params):
     if hdf5_output_level>=3:                
         saver.save_matrix(step, "denmat_dia", wfc.get_den_mat(0) ) 
         saver.save_matrix(step, "denmat_adi", wfc.get_den_mat(1) ) 
+        saver.save_matrix(step, "coherence_dia", wfc.get_coherences(0) ) 
+        saver.save_matrix(step, "coherence_adi", wfc.get_coherences(1) ) 
         
         
     if hdf5_output_level>=4:                

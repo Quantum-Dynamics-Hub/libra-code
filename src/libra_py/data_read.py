@@ -434,4 +434,33 @@ def get_all_data(params):
 
     return Hadi, Hvib, nac, St, nstates
 
+
+def read_atom_coords(filename, step):
+    """
+    This function reads the trajectory xyz file and returns the atoms and coordiantes of step^th geometry.
+    Args:
+        filename (string): The path to the trajectory xyz file.
+        step (integer): The step to be extracted.
+    Returns:
+        atoms (list): A list that contains the atoms names.
+        coords (nparray): A numpy array that contains the X,Y, and Z coordinates of each atom.
+    """
+    f = open(filename, 'r')
+    lines = f.readlines()
+    f.close()
+    natoms = int(lines[0].split()[0])
+    coords = []
+    start = step*(natoms+2)+2
+    end = start+natoms
+    atoms = []
+    for i in range(start, end):
+        tmp = lines[i].split()
+        #print(lines[i])
+        atoms.append(tmp[0])
+        x = float(tmp[1])
+        y = float(tmp[2])
+        z = float(tmp[3])
+        coords.append([x,y,z])
+    return atoms, np.array(coords)
+
  

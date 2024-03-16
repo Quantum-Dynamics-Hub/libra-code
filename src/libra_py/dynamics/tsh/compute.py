@@ -305,12 +305,26 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 E_ij = <|E_i - E_j|>.  It is needed when dephasing_informed option is used
 
 
-            * **dyn_params["wp_width"]** ( double ): A width of a Gaussian function as an approximation to adiabatic wave packets. [ default: 0.3 Bohr ]
+            * **dyn_params["wp_width"]** ( MATRIX(ndof, 1) ): A width of a Gaussian function as an approximation to adiabatic wave packets.
+                According to the choice of the Gaussian width approximation, this parameter has different meanings
+                - A constant width in the fixed-width approximation, that is, `use_td_width == 0`
+                - The initial width in the free-particle Gaussian wave packet approximation, that is, `use_td_width == 1`
+                - The interaction width in the Schwarz scheme, that is, `use_td_width == 2`
+                - No influence on the dynamics since the width will be determined by internal variables in the Subotnik scheme, that is, `use_td_width == 3`
+
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["wp_v"]** ( MATRIX(ndof,1) ): The velocity of Gaussian wave packet in the free-particle Gaussian approximation, that is, `use_td_width == 1`
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
 
 
             * **dyn_params["coherence_threshold"]** ( double ): A population threshold for creating/destroying auxiliary trajectories. [ default: 0.01 ]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["e_mask"]** ( double ): The masking parameter for computing nabla phase vectors. [ default: 0.0001 Ha ]
+                Only used with the MQCXF method, that is, `decoherence_algo == 5`
 
 
             * **dyn_params["use_xf_force"]** (int): Whether to use the XF-based force.
@@ -319,8 +333,28 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 0: Only Ehrenfest-like force; EhXF [ default ]
                 - 1: The whole force including the XF-correction; MQCXF 
             
+
             * **dyn_params["project_out_aux"]** (int): Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden. [ default: 0]
                 Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+
+            * **dyn_params["tp_algo"]** (int): Turning-point algorithm for auxiliary trajectories
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+
+               - 0: no treatment of a turning point
+               - 1: collapse to the active state [default]
+               - 2: fix auxiliary positions of adiabatic states except for the active state
+               - 3: keep auxiliary momenta of adiabatic states except for the active state
+
+
+            * **dyn_params["use_td_width"]** (int): Options for the td Gaussian width approximations [ default : 0 ]
+                Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+                
+                - 0: no td width; use the fixed-width Gaussian approximation
+                - 1: the td Gaussian width from a free particle Gaussian wave packet, \sigma(t)=\sqrt[\sigma(0)^2 + (wp_v * t)^2]
+                - 2: the Schwarz scheme where the width depends on the instantaneous de Broglie wavelength, \sigma(t)^(-2) = [\sigma(0)^2 * P/ (4 * PI) ]^2
+                - 3: the Subotnik scheme where the width is given as a sum of pairwise widths depending on the auxiliary variables, \sigma_ij(t)^2 = |R_i - R_j| / |P_i - P_j| 
+
 
             ///===============================================================================
             ///================= Entanglement of trajectories ================================
@@ -514,7 +548,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "time_overlap_method":0, "nac_update_method":1, "nac_algo":0,
                              "hvib_update_method":1, "do_ssy":0, 
                              "do_phase_correction":1, "phase_correction_tol":1e-3,
-                             "state_tracking_algo":2, "MK_alpha":0.0, "MK_verbosity":0,
+                             "state_tracking_algo":-1, "MK_alpha":0.0, "MK_verbosity":0,
                              "convergence":0,  "max_number_attempts":100, "min_probability_reordering":0.0, 
                              "is_nbra":0, "icond":0, "nfiles":-1, "thermally_corrected_nbra":0, "total_energy":0.01,
                              "tcnbra_nu_therm":0.001, "tcnbra_nhc_size":1, "tcnbra_do_nac_scaling":1
@@ -534,8 +568,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
-                             "wp_width":0.3, "coherence_threshold":0.01, "use_xf_force": 0,
-                             "project_out_aux": 0
+                             "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
+                             "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
                            } )
 
     #================= Entanglement of trajectories ================================
