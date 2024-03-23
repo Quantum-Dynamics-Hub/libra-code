@@ -988,9 +988,11 @@ def read_ao_matrices(filename):
         if 0<len(tmp)<=4 and 'MATRIX' not in lines[i]:
             data_lines.append(i)
     data_lines = np.array(data_lines)
+    properties = []
     data = []
     for i in range(len(mat_lines)):
         print(lines[mat_lines[i]])
+        properties.append(lines[mat_lines[i]].split()[0])
         data_0 = []
         start_line = mat_lines[i]
         if i==len(mat_lines)-1:
@@ -1023,7 +1025,7 @@ def read_ao_matrices(filename):
                     pass
         data.append(np.array(data_0))
         
-    return data
+    return properties, data
 
 
 def extract_coordinates(trajectory_xyz_file_name: str, time_step: int):
@@ -2073,5 +2075,119 @@ def scf_timing(log_filename):
             convergence.append(float(tmp[4]))
     return ncycle, np.array(convergence), timing
 
+
+def resort_ao_matrices(l_vals):
+    """
+    This function returns the resotring indices for resoting the atomic orbital
+    matrices from Psi4 to CP2K order according to this order:
+    
+    AO matrices order (example for Cd atom):
+    2s, 3s | 3py, 3pz, 3px | 4py, 4pz, 4px | 4d-2, 4d-1, 4d0, 4d+1, 4d+2 | 5d-2, 5d-1, 5d0, 5d+1, 5d+2 | ...
+    However, the atomic orbital overla computed from the libint version of Psi4 is not ordered 
+    as above. The ordering is like this:
+    2s, 3s | 3pz, 3px, 3py | 4pz, 4px, 4py | 4d0, 4d+1, 4d-1, 4d+2, 4d-2 | 5d0, 5d+1, 5d-1, 5d+2, 5d-2 | ...
+    Therefore, we need to resort the eigenvectors to be able to use the code properly.
+    
+    Args:
+    
+        l_vals (list): A list containing the angular momentum values for atoms
+                       in the order of the MOLog files.
+                       
+    Returns:
+    
+        new_indices (numpy array): The new indices that needs to be used for reordering.
+    
+    """
+    # new indices
+    new_indices = []
+    # setting up the counter
+    c = 0
+    # loop over all the angular momentum values
+    for i in range(len(l_vals)):
+        l_val = l_vals[i]
+        # find the reorder indices needed for this l_val
+        reordered_indices = index_reorder_v2(l_val)
+        for j in range(len(reordered_indices)):
+            # now append it by plus the counter since
+            # we aim to do it for all the eigenvectors
+            # and l values
+            new_indices.append(c+reordered_indices[j])
+        # increase the counter with t
+        c += len(reordered_indices)
+    # Return the new indices
+    return new_indices
+    
+    
+def index_reorder_v2(l_val):
+    """
+    This function returns the new ordering of the angular momentum value based on the 
+    order used in Psi4. Detailed explanation was given for the resort_ao_matrices function.
+    
+    Args:
+    
+        l_val (integer): The angular momentum value.
+                       
+    Returns:
+    
+        new_order (numpy array): The new order of the indices for the l_val.
+    
+    """
+    
+    # for s orbital
+    if l_val == 0:
+        new_order = [1]
+    # for p orbital
+    elif l_val == 1:
+        new_order = [3,1,2]
+    # for d orbital
+    elif l_val == 2:
+        new_order = [5,3,1,2,4]
+    # for f orbital
+    elif l_val == 3:
+        new_order = [7,5,3,1,2,4,6]
+    # for g orbital
+    elif l_val == 4:
+        new_order = [9,7,5,3,1,2,4,6,8]
+
+    # The indeices
+    return np.array(new_order)-1
+
+
+
+def atom_components_cp2k(filename):
+    """
+    This function finds the components of the angular momentum of each atom
+    in the system and returns a list that can be used to find specific blocks
+    in the atomic orbital matrices such as Hamiltonians or overlaps.
+    Args:
+        filename (string): The name of the AO matrices file
+    Returns:
+        indices (list): The list of indices related to the angular momentum
+                        components of each atom in the system.
+    """
+    f = open(filename,'r')
+    lines = f.readlines()
+    f.close()
+    atoms = []
+    for i in range(len(lines)):
+        tmp = lines[i].split()
+        if len(tmp)>4:
+            try:
+                atom = int(tmp[1])
+                if len(atoms)==0:
+                    atoms.append(atom)
+                else:
+                    if atom>=atoms[-1]:
+                        atoms.append(atom)
+                    else:
+                        break
+            except:
+                pass
+    np.unique(atoms).shape
+    indices = []
+    for i in np.unique(atoms):
+        index = list(np.where(atoms==i)[0])
+        indices.append(index)
+    return indices
 
 
