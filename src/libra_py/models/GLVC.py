@@ -223,6 +223,20 @@ def get_GLVC_set1():
     Returns:
         dictionary: params, will contain the parameters:
 
+        * **nstates** (int): the number of electronic states
+
+        * **num_osc** (int): the number of oscillators per electronic state
+
+        * **spectral_density** (int): type of spectral density calculation - Debye
+
+        * **Omega** (double): characteristic frequency of bath [units: Ha]
+ 
+        * **lambda** (double): bath reorganization energy [units: Ha]
+
+        * **omega** (list of doubles): frequencies of the discretized spectral density [ units: Ha ]
+ 
+        * **coupl** (list of doubles): electron-nuclear couplings, same for all states, different for each oscillator [ units: Ha ]
+
     """
 
     params = {}
@@ -248,3 +262,93 @@ def get_GLVC_set1():
     return params
 
 
+def get_GLVC_set2(indx):
+    """
+    2-state spin-boson model
+
+    Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+    The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843.
+
+    Args:
+        indx (int): index of the parameters set:
+
+        - 0 : Figure 2a
+        - 1 : Figure 2b
+        - 2 : Figure 2c
+        - 3 : Figure 2d
+        - 4 : Figure 3a
+        - 5 : Figure 3b
+        - 6 : Figure 3c
+        - 7 : Figure 4a
+        - 8 : Figure 4b
+        - 9 : Figure 5a
+        - 10: Figure 5b
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+        * **nstates** (int): the number of electronic states
+
+        * **num_osc** (int): the number of oscillators per electronic state
+
+        * **spectral_density** (int): type of spectral density calculation - Debye
+
+        * **Omega** (double): characteristic frequency of bath [units: Ha]
+
+        * **lambda** (double): bath reorganization energy [units: Ha]
+
+        * **omega** (list of doubles): frequencies of the discretized spectral density [ units: Ha ]
+
+        * **coupl** (list of doubles): electron-nuclear couplings, same for all states, different for each oscillator [ units: Ha ]
+
+        * **beta** (double): inverse of thermal energy 1/kT [units: Ha^-1]
+
+    """
+
+    s = 208.5 * units.unv_cm2Ha # thermal energy at 300 K
+
+    params = {}
+    params["nstates"] = 2
+    params["num_osc"] = 100
+    params["spectral_density"] = 1
+
+    E, V, L, Om, T = 0.0, 0.0, 0.0, 0.0, 0.0
+
+    # Figure 2 - vary lambda
+    if indx == 0:
+        E, V, L, Om, T = 0.5, 0.5, 0.02, 0.1, 1.0
+    elif indx == 1:
+        E, V, L, Om, T = 0.5, 0.5, 0.1, 0.1, 1.0
+    elif indx == 2:
+        E, V, L, Om, T = 0.5, 0.5, 1.0, 0.1, 1.0
+    elif indx == 3:
+        E, V, L, Om, T = 0.5, 0.5, 5.0, 0.1, 1.0
+
+    # Figure 3 - vary V
+    elif indx == 4:
+        E, V, L, Om, T = 0.5, 1.0, 1.0, 0.1, 1.0
+    elif indx == 5:
+        E, V, L, Om, T = 0.5, 0.5, 1.0, 0.1, 1.0
+    elif indx == 6:
+        E, V, L, Om, T = 0.5, 0.1, 1.0, 0.1, 1.0
+
+    # Figure 4 - vary T, but preserve T * Om
+    elif indx == 7:
+        E, V, L, Om, T = 0.5, 0.5, 1.0, 0.1, 1.0
+    elif indx == 8:
+        E, V, L, Om, T = 0.5, 0.5, 1.0, 1.0, 0.1
+
+    # Figure 5 - vary E
+    elif indx == 9:
+        E, V, L, Om, T = 0.5, 0.5, 1.0, 0.1, 1.0    
+    elif indx == 10:
+        E, V, L, Om, T = 0.0, 0.5, 1.0, 0.1, 1.0
+
+
+    params["Omega"] = Om * s 
+    params["lambda"] = L * s
+    params["beta"] = 1.0/(T*s)
+    params["omega"], params["coupl"] = gen_bath_params(params)
+    params["Ham"] = [ [E, V], [V, -E] ]
+
+    return params
