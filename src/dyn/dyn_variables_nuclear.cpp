@@ -155,32 +155,40 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     exit(0);
   }
 
-  if(_Q.size() != _M.size()){
-    cout<<"ERROR in init_nuclear_dyn_var: \
-          the length of input Q is = "<<_Q.size()<<", \
-          the length of input M is = "<<_M.size()<<", but they should be equal to each other\n";
-    exit(0);
+  if(init_type==1 || init_type==2 || init_type==3){
+    if(_Q.size() != _M.size()){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+            the length of input Q is = "<<_Q.size()<<", \
+            the length of input M is = "<<_M.size()<<", but they should be equal to each other\n";
+      exit(0);
+    }
   }
 
-  if(_Q.size() != force_constant.size()){
-    cout<<"ERROR in init_nuclear_dyn_var: \
-          the length of input Q is = "<<_Q.size()<<", \
-          the length of input force_constant is = "<<force_constant.size()<<", but they should be equal to each other\n";
-    exit(0);
+  if(init_type==1 || init_type==2 || init_type==3){
+    if(_Q.size() != force_constant.size()){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+            the length of input Q is = "<<_Q.size()<<", \
+            the length of input force_constant is = "<<force_constant.size()<<", but they should be equal to each other\n";
+      exit(0);
+    }
   }
 
-  if(_Q.size() != q_width.size()){
-    cout<<"ERROR in init_nuclear_dyn_var: \
-           the length of input Q is = "<<_Q.size()<<", \
-           the length of input q_width is = "<<q_width.size()<<", but they should be equal to each other\n";
-    exit(0);
+  if(init_type==4){
+    if(_Q.size() != q_width.size()){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the length of input Q is = "<<_Q.size()<<", \
+             the length of input q_width is = "<<q_width.size()<<", but they should be equal to each other\n";
+      exit(0);
+    }
   }
 
-  if(_Q.size() != p_width.size()){
-    cout<<"ERROR in init_nuclear_dyn_var: \
-           the length of input Q is = "<<_Q.size()<<", \
-           the length of input p_width is = "<<p_width.size()<<", but they should be equal to each other\n";
-    exit(0);
+  if(init_type==4){
+    if(_Q.size() != p_width.size()){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the length of input Q is = "<<_Q.size()<<", \
+             the length of input p_width is = "<<p_width.size()<<", but they should be equal to each other\n";
+      exit(0);
+    }
   }
 
   /// At this point, it is safe to define ndof:

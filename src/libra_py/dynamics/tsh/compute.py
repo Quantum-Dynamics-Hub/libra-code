@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019-2022 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2024 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -53,7 +53,6 @@ import libra_py.tsh_stat as tsh_stat
 from . import save
 
 
-#def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, compute_model, _model_params, rnd):
 def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     """
     
@@ -624,21 +623,13 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     total_energy = dyn_params["total_energy"]
  
 
-    #q = MATRIX(_q)
-    #p = MATRIX(_p)
-    #iM = MATRIX(_iM)
-    #Cdia = CMATRIX(_Cdia)
-    #Cadi = CMATRIX(_Cadi)
     states = intList()
-    #projectors = CMATRIXList() 
 
     ndia = dyn_var.ndia #Cdia.num_of_rows
     nadi = dyn_var.nadi #Cadi.num_of_rows
     nnucl = dyn_var.ndof #q.num_of_rows
     ntraj = dyn_var.ntraj #q.num_of_cols
 
-
-    #sys.exit(0)
 
     if(dyn_params["quantum_dofs"]==None):
         dyn_params["quantum_dofs"] = list(range(nnucl))
@@ -675,15 +666,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
 
-    #sys.exit(0)
-
-    #U = []
-    #if is_nbra == 1:
-    #    U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
-    #else:
-    #    for tr in range(ntraj):
-    #        U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
-
     therm = ThermostatList();
     if ensemble==1:
         for traj in range(ntraj):
@@ -691,7 +673,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
-    #sys.exit(0)
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
     elif decoherence_algo==3: # BCSH
@@ -709,21 +690,10 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     if thermally_corrected_nbra==1:
         dyn_var.allocate_tcnbra()
 
-
-    #sys.exit(0)
     ham_aux = nHamiltonian(ham)
 
-
-    #sys.exit(0)
-
     # Do the propagation
-    for i in range(nsteps):
-
-        #print(F"========== step {i} ===============")
-        #========= Update variables, compute properties, and save ============    
-        #dyn_var.update_amplitudes(dyn_params, ham);
-        #dyn_var.update_density_matrix(dyn_params, ham, 1);
-         
+    for i in range(nsteps):         
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
@@ -824,40 +794,51 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     init_elec = dict(_init_elec)    
     init_nucl = dict(_init_nucl)
 
+    #========== Model params ==========
     comn.check_input( model_params, {  }, [ "model0" ] )
-    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "direct_init":0, "ntraj":1 }, [  ] )
-    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.01], "q_width":[1.0], "p_width":[1.0] }, [] )
+
+    #========== Nuclear params ==========
+    # First check the inputs for the initialization of nuclear variables
+    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], 
+                                  "force_constant":[0.01], "q_width":[1.0], "p_width":[1.0] }, [] )
+    ndof = len(init_nucl["mass"])
 
 
+    #========== Dynamics params ==========
+    # Now, we can use the information of ndof to define the default quantum_dofs
+    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "direct_init":0, "ntraj":1,
+                                    "quantum_dofs":list(range(ndof))
+                                  }, [  ] )
+
+    # Extract info from the updated dyn_params:
     is_nbra =  dyn_params["isNBRA"]
+    ntraj = dyn_params["ntraj"]
+    direct_init = dyn_params["direct_init"]
+
+    #========== Electronic params =========
+    # Setup the electronic variables
     init_elec.update({"is_nbra":is_nbra})
     comn.check_input( init_elec, {  "ndia":1, "nadi":1 }, [  ] )
 
-
-    # Internal parameters
+    # Extract information from the updated electronic variables
     ndia = init_elec["ndia"]
     nadi = init_elec["nadi"]
-    ndof = len(init_nucl["mass"])
-    ntraj = dyn_params["ntraj"]
-    direct_init = dyn_params["direct_init"]
+
+
 
 
     # Setup the dynamical variables object
     dyn_var = dyn_variables(ndia, nadi, ndof, ntraj)
 
-    #sys.exit(0)
-
     # Initialize nuclear variables 
     dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
 
-    #sys.exit(0)
 
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
     dyn_var.init_active_states(init_elec, rnd)
 
-    #sys.exit(0)
 
     # Setup the hierarchy of Hamiltonians 
     ham = nHamiltonian(ndia, nadi, ndof)
@@ -866,9 +847,6 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     else:
         ham.add_new_children(ndia, nadi, ndof, ntraj)
     ham.init_all(2,1)     
-
-
-    #sys.exit(0)
 
     # Compute internals of the Hamiltonian objects
     model_params1 = dict(model_params)
@@ -879,6 +857,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # the transformation matrices to convert amplitudes between the representations
     dyn_params1 = dict(dyn_params)        
 
+    #sys.exit(0)
     if(dyn_params["ham_update_method"]==2):        
         pass
         #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
@@ -886,7 +865,11 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     else:
         dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
         #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+        print( dyn_params1 )
+        print(model_params1)
+        #sys.exit()
         update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        #sys.exit(0)
         update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
 
     #sys.exit(0)

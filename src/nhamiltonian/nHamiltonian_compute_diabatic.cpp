@@ -137,11 +137,12 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
 
     // Temporary storage
 
-
-  
-    // Call the Python function with such arguments
+//    cout<<"nnucl = "<<nnucl<<endl;
+//    q.show_matrix();
+//exit(0);
+    // Call the Python function with such arguments 
     bp::object obj = py_funct(q, params, get_full_id() );  
-  
+//exit(0);
     // Extract all the computed properties
     int has_attr=0;
     has_attr = (int)hasattr(obj,"ham_dia");        
@@ -158,7 +159,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
       check_cmatrix(obj, "ovlp_dia", ndia, ndia);
       *ovlp_dia = extract<CMATRIX>(obj.attr("ovlp_dia"));   
     }
-
+//exit(0);
 
     has_attr=0;
     has_attr = (int)hasattr(obj,"nac_dia");        
@@ -200,7 +201,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
 
       for(int i=0;i<nnucl;i++){    *d1ham_dia[i] = _d1ham_dia[i];  }
     }
-
+//exit(0);
 
     has_attr=0;
     has_attr = (int)hasattr(obj,"d2ham_dia");        
@@ -223,7 +224,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
     }
 
 
-  
+  //exit(0); 
     
   }// if lvl == level
 

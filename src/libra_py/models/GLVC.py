@@ -130,21 +130,28 @@ def GLVC(q, _params, full_id=None):
     
     """
 
+#    sys.exit(0)
     params = dict(_params)
+#    sys.exit(0)
 
     # Define potential specific constants
     critical_params = [ "omega", "coupl" ] 
     default_params = { "Ham": [ [0.00, 0.00], [0.00, 0.00] ], "nstates":2, "num_osc":10 }
+#    q.show_matrix()
+    #sys.exit(0)
     comn.check_input(params, default_params, critical_params)
 
     w = params["omega"]
-    c = params["coupl"]
+#    print(len(w))
+    coupl = params["coupl"]
+#    print(len(coupl))
     nstates = params["nstates"]
     num_osc = params["num_osc"]
     Ham = params["Ham"]
-
+  
     ndof = q.num_of_rows  # the number of nuclear DOFs  
-
+#    print(params)
+    #sys.exit(0)
     if(ndof == nstates * num_osc):
         pass
     else:
@@ -158,7 +165,10 @@ def GLVC(q, _params, full_id=None):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in range(0,ndof):
+#    obj.ovlp_dia.show_matrix();
+    #sys.exit(0)
+
+    for i in range(ndof):
         obj.d1ham_dia.append( CMATRIX(nstates,nstates) )
         obj.dc1_dia.append( CMATRIX(nstates,nstates) )
 
@@ -167,27 +177,36 @@ def GLVC(q, _params, full_id=None):
         Id = Cpp2Py(full_id)
         indx = Id[-1]
 
+#    print(indx)
+
+#    sys.exit(0)
     #=========== Energies & Derivatives ===============
     for i in range(nstates):
         for j in range(nstates):
             obj.ham_dia.set(i,j, Ham[i][j]*(1.0+0.0j))
 
+     
     for n in range(nstates):
-
         x = 0.0
+        
         for f in range(num_osc):
             q_nf = q.get(n*num_osc+f, indx)
 
+        
             # energy
             x = x + 0.5 * w[f] * w[f]* q_nf * q_nf + coupl[f] * q_nf
-
+         
             y = w[f] * q_nf + coupl[f]
 
             # derivative w.r.t. q_nf:
             obj.d1ham_dia[n*num_osc + f].add(n,n, y*(1.0+0.0j))
-
-        obj.ham_dia.add(n,n, x * (1.0+0.0j))
         
+        obj.ham_dia.add(n,n, x * (1.0+0.0j))
+         
+    
+#    obj.ham_dia.show_matrix()
+#    sys.exit(0)
+
 
     return obj
 
@@ -220,11 +239,11 @@ def get_GLVC_set1():
     e2 = 12210.0*s
     v01 = -87.7*s
     v02 = 5.5*s
-    v12 = 30.8
+    v12 = 30.8*s
 
     params["Ham"] =[ [e0, v01, v02], 
-                     [v01, e2, v12],
-                     [v02, v12, e3] ]
+                     [v01, e1, v12],
+                     [v02, v12, e2] ]
     
     return params
 
