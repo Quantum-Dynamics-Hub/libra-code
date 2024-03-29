@@ -114,6 +114,7 @@ def GLVC(q, _params, full_id=None):
             * **params["num_osc"]** ( int ): the number of oscillators on each of the energy levels [ units: 10 ]
 
             * **params["Ham"]**   ( list of lists of double ): H_s values [ default:  [[0.00]*2]*2, units: Ha]
+            * **params["coupling_scaling"]** (list of N doubles): linear coupling scaling paramters for each state
 
     Notes:  
         * lenth of the "omega" and "coup" parameters should be equal to num_osc, but the q should have nstates x num_osc rows (dofs)
@@ -130,24 +131,19 @@ def GLVC(q, _params, full_id=None):
     
     """
 
-#    sys.exit(0)
     params = dict(_params)
-#    sys.exit(0)
 
     # Define potential specific constants
     critical_params = [ "omega", "coupl" ] 
-    default_params = { "Ham": [ [0.00, 0.00], [0.00, 0.00] ], "nstates":2, "num_osc":10 }
-#    q.show_matrix()
-    #sys.exit(0)
+    default_params = { "Ham": [ [0.00, 0.00], [0.00, 0.00] ], "nstates":2, "num_osc":10, "coupling_scaling":[1.0, -1.0] }
     comn.check_input(params, default_params, critical_params)
 
     w = params["omega"]
-#    print(len(w))
     coupl = params["coupl"]
-#    print(len(coupl))
     nstates = params["nstates"]
     num_osc = params["num_osc"]
     Ham = params["Ham"]
+    scl = params["coupling_scaling"]
   
     ndof = q.num_of_rows  # the number of nuclear DOFs  
 #    print(params)
@@ -195,8 +191,8 @@ def GLVC(q, _params, full_id=None):
         
             # energy
             w2 = w[f]**2
-            x = x + 0.5 * w2 * q_nf * q_nf + coupl[f] * q_nf         
-            y = w2 * q_nf + coupl[f]
+            x = x + 0.5 * w2 * q_nf * q_nf + coupl[f] * q_nf * scl[n]
+            y = w2 * q_nf + coupl[f] * scl[n]
 
             # derivative w.r.t. q_nf:
             obj.d1ham_dia[n*num_osc + f].add(n,n, y*(1.0+0.0j))
@@ -246,6 +242,7 @@ def get_GLVC_set1():
     params["Omega"] = 106.14 * units.inv_cm2Ha
     params["lambda"] = 35.0 * units.inv_cm2Ha
     params["omega"], params["coupl"] = gen_bath_params(params)
+    params["coupling_scaling"] = [1.0, 1.0, 1.0]
 
     s = units.inv_cm2Ha
     e0 = 12410.0*s
@@ -352,5 +349,6 @@ def get_GLVC_set2(indx):
     params["beta"] = 1.0/(T*s)
     params["omega"], params["coupl"] = gen_bath_params(params)
     params["Ham"] = [ [E, V], [V, -E] ]
+    params["coupling_scaling"] = [1.0, -1.0]
 
     return params
