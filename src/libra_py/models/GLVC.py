@@ -305,7 +305,7 @@ def get_GLVC_set2(indx):
 
     """
 
-    s = 208.5 * units.unv_cm2Ha # thermal energy at 300 K
+    s = 208.5 * units.inv_cm2Ha # thermal energy at 300 K
 
     params = {}
     params["nstates"] = 2
