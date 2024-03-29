@@ -833,6 +833,9 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Initialize nuclear variables 
     dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
 
+    #print("Initial coordinates")
+    #dyn_var.get_coords().show_matrix()
+    #sys.exit(0)
 
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
@@ -865,8 +868,8 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     else:
         dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
         #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
-        print( dyn_params1 )
-        print(model_params1)
+        #print( dyn_params1 )
+        #print(model_params1)
         #sys.exit()
         update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
         #sys.exit(0)

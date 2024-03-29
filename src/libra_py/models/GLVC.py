@@ -194,9 +194,9 @@ def GLVC(q, _params, full_id=None):
 
         
             # energy
-            x = x + 0.5 * w[f] * w[f]* q_nf * q_nf + coupl[f] * q_nf
-         
-            y = w[f] * q_nf + coupl[f]
+            w2 = w[f]**2
+            x = x + 0.5 * w2 * q_nf * q_nf + coupl[f] * q_nf         
+            y = w2 * q_nf + coupl[f]
 
             # derivative w.r.t. q_nf:
             obj.d1ham_dia[n*num_osc + f].add(n,n, y*(1.0+0.0j))
@@ -345,6 +345,8 @@ def get_GLVC_set2(indx):
         E, V, L, Om, T = 0.0, 0.5, 1.0, 0.1, 1.0
 
 
+    E = E * s
+    V = V * s
     params["Omega"] = Om * s 
     params["lambda"] = L * s
     params["beta"] = 1.0/(T*s)
