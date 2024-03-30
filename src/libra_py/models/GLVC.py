@@ -1,11 +1,11 @@
 #*********************************************************************************                     
-#* Copyright (C) 2018-2024 Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 2 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
+#* Copyright (C) 2024 Daeho Han and Alexey V. Akimov
+#*
+#* This file is distributed under the terms of the GNU General Public License
+#* as published by the Free Software Foundation, either version 3 of
+#* the License, or (at your option) any later version.
+#* See the file LICENSE in the root directory of this distribution
+#* or <http://www.gnu.org/licenses/>.
 #***********************************************************************************
 """
 .. module:: GLVC
@@ -93,15 +93,25 @@ def gen_bath_params(_params):
 
 def GLVC(q, _params, full_id=None):
     """
-    Generalized Linear Vibronic Coupling Hamiltonian, N-level, F-dim. for each of N levels problem:
+    Generalized Linear Vibronic Coupling Hamiltonian, N-levels, F-dim. (same nuclear DOFs are coupled to all states)
 
-    H = H_s + H_b + H_sb
+    H = H_s + H_b + H_{sb,1} 
 
     H_s = N x N matrix of numbers - diabatic energies and couplings
 
-    H_b  = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> (1/2 * p_{n,f}^2 + 1/2 * omega_f^2 * q_{n,f}^2 ) <n|  (the kinetic energy is not included here)
+    H_b  = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> (1/2 * p_f^2 + 1/2 * omega_{n,f}^2 * q_f^2 ) <n|  (the kinetic energy is not included here)
+                                                                                 frequencies may in general be different for all states
 
-    H_sb = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> coupl_{f} * q_{n,f}^2 <n| 
+    H_{sb,1} = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> coupl_{n,f} * q_{f}^2 <n|   - diagonal linear coupling terms, couplings may in general 
+                                                                                 be different for all states
+
+    To be added:
+
+    linear off-diagonal terms
+
+    bilinear diagonal terms
+
+    bilinear off-diagonal terms
     
 
     Args:
@@ -111,10 +121,16 @@ def GLVC(q, _params, full_id=None):
         params ( dictionary ): model parameters, should contain:
 
             * **params["nstates"]** ( int ): the number of electronic states [default: 2 ]
+
             * **params["num_osc"]** ( int ): the number of oscillators on each of the energy levels [ units: 10 ]
 
             * **params["Ham"]**   ( list of lists of double ): H_s values [ default:  [[0.00]*2]*2, units: Ha]
+
             * **params["coupling_scaling"]** (list of N doubles): linear coupling scaling paramters for each state
+
+            * **params["omega"]** (list of N lists of F doubles): frequencies for all states
+
+            * **params["coupl"]** (list of N lists of F doubles): diagonal linear couplings for all states
 
     Notes:  
         * lenth of the "omega" and "coup" parameters should be equal to num_osc, but the q should have nstates x num_osc rows (dofs)
@@ -146,12 +162,11 @@ def GLVC(q, _params, full_id=None):
     scl = params["coupling_scaling"]
   
     ndof = q.num_of_rows  # the number of nuclear DOFs  
-#    print(params)
-    #sys.exit(0)
-    if(ndof == nstates * num_osc):
+
+    if(ndof == num_osc):
         pass
     else:
-        print(F"The coordinates input should have {nstates} x {num_osc} = {nstates * num_osc} rows\nExiting now...\n")
+        print(F"The coordinates input should have {ndof} = {num_osc} rows\nExiting now...\n")
         sys.exit(0)
 
 
@@ -161,8 +176,6 @@ def GLVC(q, _params, full_id=None):
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-#    obj.ovlp_dia.show_matrix();
-    #sys.exit(0)
 
     for i in range(ndof):
         obj.d1ham_dia.append( CMATRIX(nstates,nstates) )
@@ -173,9 +186,7 @@ def GLVC(q, _params, full_id=None):
         Id = Cpp2Py(full_id)
         indx = Id[-1]
 
-#    print(indx)
 
-#    sys.exit(0)
     #=========== Energies & Derivatives ===============
     for i in range(nstates):
         for j in range(nstates):
@@ -186,23 +197,19 @@ def GLVC(q, _params, full_id=None):
         x = 0.0
         
         for f in range(num_osc):
-            q_nf = q.get(n*num_osc+f, indx)
-
+            q_f = q.get(f, indx)
         
             # energy
-            w2 = w[f]**2
-            x = x + 0.5 * w2 * q_nf * q_nf + coupl[f] * q_nf * scl[n]
-            y = w2 * q_nf + coupl[f] * scl[n]
+            w2 = w[n][f]**2
+
+            x = x + 0.5 * w2 * q_f**2 + coupl[n][f] * q_f * scl[n]
+            y = w2 * q_f + coupl[n][f] * scl[n]
 
             # derivative w.r.t. q_nf:
-            obj.d1ham_dia[n*num_osc + f].add(n,n, y*(1.0+0.0j))
+            obj.d1ham_dia[f].add(n,n, y*(1.0+0.0j))
         
         obj.ham_dia.add(n,n, x * (1.0+0.0j))
          
-    
-#    obj.ham_dia.show_matrix()
-#    sys.exit(0)
-
 
     return obj
 
@@ -241,7 +248,9 @@ def get_GLVC_set1():
     params["spectral_density"] = 1
     params["Omega"] = 106.14 * units.inv_cm2Ha
     params["lambda"] = 35.0 * units.inv_cm2Ha
-    params["omega"], params["coupl"] = gen_bath_params(params)
+    Om, Co = gen_bath_params(params)
+    params["omega"] = [ list(Om), list(Om), list(Om) ]
+    params["coupl"] = [ list(Co), list(Co), list(Co) ]
     params["coupling_scaling"] = [1.0, 1.0, 1.0]
 
     s = units.inv_cm2Ha
@@ -347,7 +356,10 @@ def get_GLVC_set2(indx):
     params["Omega"] = Om * s 
     params["lambda"] = L * s
     params["beta"] = 1.0/(T*s)
-    params["omega"], params["coupl"] = gen_bath_params(params)
+    OM, CO = gen_bath_params(params)
+    params["omega"] = [ list(OM), list(OM) ]
+    params["coupl"] = [ list(CO), list(CO) ]
+
     params["Ham"] = [ [E, V], [V, -E] ]
     params["coupling_scaling"] = [1.0, -1.0]
 
