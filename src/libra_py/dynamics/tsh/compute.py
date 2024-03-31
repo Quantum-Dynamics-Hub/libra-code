@@ -825,7 +825,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     nadi = init_elec["nadi"]
 
 
-
+    #sys.exit(0)
 
     # Setup the dynamical variables object
     dyn_var = dyn_variables(ndia, nadi, ndof, ntraj)
@@ -840,7 +840,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
-    dyn_var.init_active_states(init_elec, rnd)
+    #dyn_var.init_active_states(init_elec, rnd)
 
 
     # Setup the hierarchy of Hamiltonians 
@@ -882,7 +882,8 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # of electronic variables - this will convert the amplitudes to the proper representation
     dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
     dyn_var.update_density_matrix( dyn_params, ham, 1)
-
+    dyn_var.init_active_states(init_elec, rnd)
+    
     #print("Initial adiabatic amplitudes")
     #dyn_var.get_ampl_adi().show_matrix()
 
@@ -895,9 +896,16 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     #print("Initial diabatic DM")
     #dyn_var.get_dm_dia(0).show_matrix()
 
-    #print("Active states")
-    #print(Cpp2Py(dyn_var.act_states))
+    print("Active states (adiabatic)")
+    print(Cpp2Py(dyn_var.act_states))
 
+    print("Initial adiabatic populations")
+    pops_sh1 = dyn_var.compute_average_sh_pop(1)
+    print( Cpp2Py(pops_sh1))
+
+    print("Initial diabatic populations")
+    pops_sh0 = dyn_var.compute_average_sh_pop(0)
+    print( Cpp2Py(pops_sh0))
 
     # Finally, start the dynamics calculations
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)

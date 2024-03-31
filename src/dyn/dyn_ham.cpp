@@ -134,7 +134,10 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
         st = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
         ham.children[traj]->set_time_overlap_adi_by_val(st);
       }
-    }// 1 
+    }// 1
+
+    // Copy the transformation matrices to the dynamics variable
+    dyn_var.update_basis_transform(ham); 
 
 
   }// update_type == 0

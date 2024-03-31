@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021-2022 Alexey V. Akimov
+* Copyright (C) 2021-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -34,12 +34,14 @@ void dyn_variables::allocate_electronic_vars(){
     proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
+    basis_transform = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
       proj_adi[itraj] = new CMATRIX(nadi, nadi);
       proj_adi[itraj]->load_identity();
       dm_dia[itraj] = new CMATRIX(ndia, ndia);
       dm_adi[itraj] = new CMATRIX(nadi, nadi);
+      basis_transform[itraj] = new CMATRIX(ndia, nadi);
     }
 
     act_states = vector<int>(ntraj, 0);
@@ -296,6 +298,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
       *dm_adi[itraj] = *x.dm_adi[itraj];
+      *basis_transform[itraj] = *x.basis_transform[itraj];
     }
     act_states = x.act_states;
 
@@ -428,10 +431,12 @@ dyn_variables::~dyn_variables(){
       delete proj_adi[itraj];
       delete dm_dia[itraj];
       delete dm_adi[itraj];
+      delete basis_transform[itraj];
     }
     proj_adi.clear();
     dm_dia.clear();
     dm_adi.clear();
+    basis_transform.clear();
     
     delete ampl_dia;
     delete ampl_adi;
@@ -562,6 +567,8 @@ CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
   else if(prev_steps==1){ return *dm_dia_prev[i]; }
   else{ ;; }
 }
+
+
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

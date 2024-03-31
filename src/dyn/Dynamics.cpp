@@ -1295,6 +1295,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
 
+  // Copy diabatic-to-adiabatic basis transformation to the dynamical variable
+  //dyn_var.update_basis_transform(ham);
+
   // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
   // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
   update_proj_adi(prms, dyn_var, ham); 

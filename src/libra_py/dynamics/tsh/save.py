@@ -486,15 +486,22 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         nadi = dyn_var.nadi
         for ist in range(nadi):
             saver.save_multi_scalar(t, ist, "se_pop_adi", pops_se1[ist])
+
+    if "sh_pop_dia" in saver.keywords and "sh_pop_dia" in saver.np_data.keys():
+        # Average diabatic SH populations
+        # Format: saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R")
+        pops_sh0 = dyn_var.compute_average_sh_pop(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "sh_pop_dia", pops_sh0[ist])
     
     if "sh_pop_adi" in saver.keywords and "sh_pop_adi" in saver.np_data.keys():    
         # Average adiabatic SH populations 
         # Format: saver.add_dataset("sh_pop_adi", (_nsteps, _nadi), "R") 
-        pops_sh = dyn_var.compute_average_sh_pop()
+        pops_sh1 = dyn_var.compute_average_sh_pop(1)
         nadi = dyn_var.nadi
         for ist in range(nadi):
-            saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh[ist])
-        
+            saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
 
 
 

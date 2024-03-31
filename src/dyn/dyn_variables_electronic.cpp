@@ -141,7 +141,16 @@ void dyn_variables::update_amplitudes(bp::dict dyn_params, bp::object compute_mo
 
 }
 
+void dyn_variables::update_basis_transform(nHamiltonian& Ham){
+/**
 
+*/
+  for(int itraj=0; itraj<ntraj; itraj++){ 
+    nHamiltonian* ham = Ham.children[itraj];
+    *basis_transform[itraj] = *(ham->basis_transform);
+
+  }// for itraj
+}
 
 
 void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamiltonian& ham, int lvl){
@@ -717,8 +726,8 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   act_states.clear();  
 
   //# Dynamical variables
+  //================ For adiabatic - set up them directly =================
   for(traj=0; traj<ntraj; traj++){
-
     if(init_type==0 || init_type==1 || init_type==4){ 
       act_states.push_back(istate);
     }
@@ -726,10 +735,34 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
       ksi = rnd.uniform(0.0, 1.0);
       act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
     }
-
   }// for traj
 
-  //return params;
+  //============= For adiabatic: more complicated =========================
+  if(rep==0){
+    vector<int> dia_act_states(act_states);
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = dia_act_states[traj]; // active diabatic state
+      pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      pop_adi = (*basis_transform[traj]).H() * pop_dia * (*basis_transform[traj]);
+
+      vector<double> res(nadi, 0.0);
+      for(i=0; i<nadi;i++){ res[i] = pop_adi.get(i,i).real(); }
+
+      // Now select an adiabatic state according to the probabilities in the res
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
+                                         // the distribution of the diabatic populations
+
+
+    }// for traj
+
+  }// rep == 0
 
 }
 
@@ -910,29 +943,40 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
 }
   
 
-vector<double> dyn_variables::compute_average_sh_pop(){
+vector<double> dyn_variables::compute_average_sh_pop(int rep){
 
-  int sz = nadi; 
-
-  //cout<<"In compute_average_sh_pop...\n";
+  int sz, i, j, traj; 
+  if(rep==0){ sz = ndia; }
+  else if(rep==1){ sz = nadi; }
+  else{ 
+    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
+    exit(0);
+  }
 
   vector<double> res(sz, 0.0);
-//  vector<int> effective_states( update_active_states(act_states, proj_adi) );
   vector<int> effective_states( act_states );
 
-  for(int traj=0; traj<ntraj; traj++){
+  if(rep==0){
+    // ===== For diabatic SH populations, we just use the projections of the active adiabatic states ======
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
 
-    int i = effective_states[traj];
-    res[i] += 1.0;
-    //cout<<" traj = "<<traj<<" act_state = "<<act_states[traj]<<" eff state = "<<i<<endl;
-  }
-  
-//  cout<<" Populations : ";
-  for(int j=0; j<sz; j++){   
-    res[j] = res[j] / (float)ntraj; 
-  //  cout<<res[j]<<" ";
-  }
-  //cout<<endl;
+    for(traj=0; traj<ntraj; traj++){
+      i = effective_states[traj]; // active adiabatic state
+      pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H(); 
+      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
+    }
+  }// rep == 0
+
+  else if(rep==1){
+    //===== For adiabatic populations, we just use the active adiabatic states =======
+    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+  }// rep == 1
+
+  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
 
   return res;
 }

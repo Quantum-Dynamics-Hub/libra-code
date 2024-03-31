@@ -161,6 +161,15 @@ class dyn_variables{
   vector<int> act_states;
 
 
+  /**
+    Projections of adiabatic states onto the diabatic for all trajectories
+
+    Options:
+    vector<ntraj, CMATRIX(ndia, nadi)>
+  */
+  vector<CMATRIX*> basis_transform; // same as in the Hamiltonian class
+
+
   ///================= Nuclear variables, for OOP implementation ===================
   /**
     Status of the nuclear vars
@@ -503,6 +512,7 @@ class dyn_variables{
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
   CMATRIX get_dm_adi(int i, int prev_steps);
   CMATRIX get_dm_dia(int i, int prev_steps);
+  CMATRIX get_basis_transform(int itraj){ return *basis_transform[itraj]; }
   MATRIX get_imass(){ return *iM; }
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
@@ -552,6 +562,8 @@ class dyn_variables{
   void update_active_states(int direction, int property);
   void update_active_states();
 
+  void update_basis_transform(nHamiltonian& ham);
+
   void init_amplitudes(bp::dict params, Random& rnd);
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
@@ -560,7 +572,7 @@ class dyn_variables{
 
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
-  vector<double> compute_average_sh_pop();
+  vector<double> compute_average_sh_pop(int rep);
 
 
   double compute_tcnbra_ekin();
