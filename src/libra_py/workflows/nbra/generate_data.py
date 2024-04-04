@@ -81,7 +81,7 @@ def save_data(params, prefix, step, directory):
             if step==params["istep"]: 
                 # This is how we can get the sample molden, wfn, and Log files.
                 os.system("mkdir ../sample_files")
-                os.system("mv {prefix}_{step}* ../sample_files")
+                os.system(f"mv {prefix}_{step}* ../sample_files")
             if params["remove_raw_outputs"]: # and step>params["istep"]:
                 os.system(F"rm {prefix}_{step}-libra-*.Log {prefix}_{step}-RESTART.wfn* {prefix}_{step}*molden")
         except:
@@ -168,9 +168,11 @@ def distribute_jobs(params):
     # Now let's create the random numbers
     nsteps = params["fstep"]-params["istep"]
     ref_steps = params["reference_steps"]
+    if params["scratch"]==params["do_more"]:
+        raise("'scratch' and 'do_more' cannot get the same value at the same time!")
     if params["scratch"]:
         # Remove evrything including the data
-        os.system("rm -rf job*") # Removes the job folders
+        os.system("rm -rf job* shuffled_indices.npy") # Removes the job folders and the random indices
         #os.system('rm find . -name "*.npy" ') # This seems to be brutal! It removes everything :))
         shuffled_indices = np.arange(params["istep"], params["fstep"])
         params["steps"] = list(range(params["istep"], params["fstep"]))
@@ -180,26 +182,30 @@ def distribute_jobs(params):
         # Here we add the first and last geometries 
         # since this is an interpolation
         if params["istep"] not in params["reference_steps"]:
-            # This is how it is done in numpy
-            params["reference_steps"] = np.append(params["reference_steps"], params["istep"])
+            params["reference_steps"].append(params["istep"])
         if params["fstep"] not in params["reference_steps"]:
-            params["reference_steps"] = np.append(params["reference_steps"], params["fstep"])
+            params["reference_steps"].append(params["fstep"])
 
     elif params["do_more"]:
         # find how many steps were done in the reference_dir
         ref_files = glob.glob(f'{params["reference_dir"]}/*.npy')
         steps_done = find_steps(ref_files)
-        if steps_done==0:
+        #print(steps_done)
+        if len(steps_done)==0:
             raise("Doing more steps is requested but the reference directory is empty!")
-        ref_steps = steps_done
+        ref_steps = len(steps_done)
+        #print(ref_steps)
         more_steps = params["do_more_steps"]
         shuffled_indices = np.load("shuffled_indices.npy")
         params["reference_steps"] = shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
+        #print(params['reference_steps'])
         # For do_more, we don't need to add the first and last step since they are already computed in "scratch"
-        params["steps"] = shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
+        params["steps"] = np.sort(params["reference_steps"]).tolist() # shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
         
     # Create guess and reference directories
     os.system(f'mkdir {params["reference_dir"]} {params["guess_dir"]}')
+    if (len(params["steps"])/params["njobs"])<2:
+        raise("The division of steps/njobs is less than 2! Please select smaller number of jobs.")
     steps_split = np.array_split(params["steps"], params["njobs"])
     #os.system(F"mkdir {res_directory}")
     # Read the submit file
@@ -216,8 +222,9 @@ def distribute_jobs(params):
             os.system(F"mkdir job_more_{job}")
             os.chdir(F"job_more_{job}")
         this_job_steps = steps_split[job].tolist()
-        params["job_istep"] = int(this_job_steps[0])
-        params["job_fstep"] = int(this_job_steps[-1])
+        #params["job_istep"] = int(this_job_steps[0])
+        #params["job_fstep"] = int(this_job_steps[-1])
+        params["job_steps"] = this_job_steps
         # Now dump the params information
         with open("params.json", "w") as f:
         #    print(params)
@@ -238,10 +245,10 @@ def distribute_jobs(params):
 from libra_py.workflows.nbra.generate_data import *
 with open('params.json', 'r') as f:
     params = json.load(f)
-for step in range(params['job_istep'], params['job_fstep']):
+for step in params['job_steps']:
     gen_data(params, step)
         """)
         f.close()
-        os.system(F"{submit_exe} submit.slm")
+        os.system(F"{params['submit_exe']} submit.slm")
         os.chdir("../")
 
