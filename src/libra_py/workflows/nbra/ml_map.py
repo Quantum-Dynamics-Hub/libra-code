@@ -1,16 +1,17 @@
-"""
-This module performs ML calculations by mapping to be completed....
-"""
+
 import os
 import sys
+import glob
 import time
 import numpy as np
+import multiprocessing as mp
 import scipy.sparse as sp
-import pickle 
+import pickle
 import joblib
+# For future works!
 # import tensorflow as tf
 # from tensorflow.keras import layers, models
-
+import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import mean_squared_error, accuracy_score, mean_absolute_error, r2_score
@@ -21,19 +22,242 @@ from libra_py import units, molden_methods, data_conv
 
 
 
-def load_data(filename):
+def find_indices(params):
     """
+    This function finds the indices of a set of file in a directory
+    sorts them and return them in a list
     """
-    if ".npy" in filename:
-        data = np.load(filename)
-    elif ".npz" in filename:
-        data = np.array(sp.load_npz(filename).todense().real)
-    return data
+    # The indices are generated based on the output matrices
+    files = glob.glob(f'{params["path_to_output_mats"]}/*{params["output_property"]}*npy')
+    indices = []
+    for file in files:
+        # Generate the index in a file
+        index = file.split('/')[-1].split('_')[-1].replace('.npy','')
+        #print(index)
+        indices.append(int(index))
+
+    # Now sort the indices since they will be used
+    indices = np.sort(indices)
+    return indices
+
+
+def read_data(params, path):
+    """
+    This function is used to read the input and output (reference) matrices
+    from the path it is given to in the params variable
+    It is not a general function but rather an auxiliary one so it's not
+    suitable in data_read module in libra_py.
+    """
+    data = []
+    for i in params["train_indices"]:
+        tmp = np.load(F'{path}/{params["prefix"]}_{params["input_property"]}_{i}.npy')
+        data.append(tmp)
+    data = np.array(data)
+    return data 
+
+def partition_matrix(params, matrix):
+    """
+    This function is used to partition an input matrix
+    There are different partitioning approaches proposed in [Ref]
+    Here, we implement these methods:
+    1- 'eqaul': Equal splitting of the vectorized upper triangular part of the matrix
+    2- 'block': We find the blocks related to interaction of two atoms in the matrix
+                and then vectorize it. We first do this for off-diagonal blocks and
+                then for the diagonal blocks (interaction of each atom with itself)
+    3- 'atomwise': The section of a matrix which shows the interaction of each 
+                   atom with all other atoms
+    """
+    # =========== 1- 'equal' partitioning
+    if params["partitioning_method"]=="equal":
+        # generate the upper indices of the matrix
+        upper_indices = np.triu_indices(matrix.shape[0])
+        # Extract the upper matrix as a vector
+        upper_vector = matrix[upper_indices]
+        npartition = params["npartition"]
+        partition_points = np.linspace(0, upper_vector.shape[0], npartition+1, dtype=int, endpoint=True)
+        #print(partition_points, upper_vector.shape[0])
+        partitioned_matrix = []
+        for i in range(len(partition_points)-1):
+            start = partition_points[i]
+            #if i==len(partition_points)
+            end = partition_points[i+1]
+            partitioned_matrix.append(upper_vector[start:end])
+    # =========== 2- 'block' partitioning
+    elif params["partitioning_method"]=="block":
+        print("To be implemented")
+    # =========== 3- 'atomwise' partitioning
+    elif params["partitioning_method"]=="atomwise":
+        print("To be implemented")
+
+    return partitioned_matrix
+
+def partition_data(params, data):
+    """
+    This function uses the partition_matrix to partition a set of data
+    """
+    partitioned_data = []
+    #print(data.shape)
+    for i in range(len(data)):
+        tmp = partition_matrix(params, data[i])
+        partitioned_data.append(tmp)
+    #partitioned_data = np.array(partitioned_data)
+    #print(len(partitioned_data), len(partitioned_data[0]), len(partitioned_data[0][0]))
+    return partitioned_data
+
+def scale_partition(params, partition):
+    """
+    This function is used to scale the 'set' of a specific partition of
+    the matrix based on the scalers in scikit-learn package
+    It returns both the scaler and the scaled data
+    The scaler is needed for transforming back the data
+    """
+    if params["scaler"].lower()=="standard_scaler":
+        scaler = StandardScaler()     
+    elif params["scaler"].lower()=="minmax":
+        scaler = MinMaxScaler()
+    scaler.fit(partition)
+    scaled_data = scaler.transform(partition)
+    #print(partition.shape)
+    return (scaler, scaled_data)
+
+def scale_data(params, data):
+    """
+    This function is used to scale all the partitions in the inputs or outputs
+    """
+    scalers = []
+    scaled_data = []
+    for i in range(len(data[0])): # The number of partitioned and available vectors
+        p1 = []
+        for k in range(len(data)):
+            p1.append(data[k][i])
+        p1 = np.array(p1)
+        #print('In for loop of scale:', p1.shape)
+        res = scale_partition(params, p1)
+        scalers.append(res[0])
+        scaled_data.append(res[1])
+    return (scalers, np.array(scaled_data))
+
+def train_partition(params, input_data, output_data, output_scaler):
+    """
+    This function builds and trains a KRR model
+    using input_data and output_data
+    We will use the scaled input and output data to train the model
+    """
+    model = KernelRidge(kernel=params["kernel"], degree=params["degree"], 
+                        alpha=params["alpha"], gamma=params["gamma"])
+    model.fit(input_data, output_data)
+    # Computing the error of the model
+    prediction = model.predict(input_data)
+    prediction_scaled = output_scaler.inverse_transform(prediction)
+    target_output_data = output_scaler.inverse_transform(output_data)
+    # Mean absolute error
+    mae = mean_absolute_error(target_output_data, prediction_scaled)
+    # Mean square error
+    mse = mean_squared_error(target_output_data, prediction_scaled)
+    # R^2
+    r2 = r2_score(target_output_data, prediction_scaled)
+    print('Training R^2:', r2)
+    print('Training MSE:', mse, '  MAE:', mae)
+    print('===========================================')
+
+    return model, [mae, mse, r2]
+
+def train_serial(params):
+    """
+    This function is the main function that uses the previously defined 
+    function to generate and train the data
+    """
+    # Find the training indices
+    params["train_indices"] = find_indices(params)
+    # Read the outputs 
+    raw_output = read_data(params, params["path_to_output_mats"])
+    # Read the inputs
+    raw_input = read_data(params, params["path_to_input_mats"])
+    # Partition inputs
+    partitioned_input = partition_data(params, raw_input)
+    #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
+    # Partition outputs
+    partitioned_output = partition_data(params, raw_output)
+    # Scale input data
+    input_scalers, input_scaled = scale_data(params, partitioned_input)
+    #print(len(input_scalers))
+    # Scale output data
+    output_scalers, output_scaled = scale_data(params, partitioned_output)
+    # Train for each partition
+    # All models will be in this list
+    models = []
+    models_error = []
+    for i in range(len(input_scaled)):
+        model, model_error = train_partition(params, input_scaled[i], output_scaled[i], output_scalers[i])
+        models.append(model)
+        models_error.append(model_error)
+    models_error = np.array(models_error)
+    print("Average MAE for all models:", np.average(models_error[:,0]))
+    print("Average MSE for all models:", np.average(models_error[:,1]))
+    print("Average R^2 for all models:", np.average(models_error[:,2]))
+    print("Done with training!!")
+
+    # Remove the input and output data to reduce the memory
+    # del raw_input, raw_output, partitioned_input, partitioned_output
+    # We also need the scalers when we want to use them for new data
+    return models, models_error, input_scalers, output_scalers
+
+def train_parallel(params):
+    """
+    This function is the main function that uses the previously defined 
+    function to generate and train the data but uses a parallel approach for 
+    training each model for each partition
+    TODO: This function speed is slower than the serial one! :)
+    Need to create an auxiliary function for that and then use pool.map
+    """
+    # Find the training indices
+    params["train_indices"] = find_indices(params)
+    # Read the outputs 
+    raw_output = read_data(params, params["path_to_output_mats"])
+    # Read the inputs
+    raw_input = read_data(params, params["path_to_input_mats"])
+    # Partition inputs
+    partitioned_input = partition_data(raw_input)
+    #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
+    # Partition outputs
+    partitioned_output = partition_data(raw_output)
+    # Scale input data
+    input_scalers, input_scaled = scale_data(partitioned_input)
+    #print(len(input_scalers))
+    # Scale output data
+    output_scalers, output_scaled = scale_data(partitioned_output)
+    if params["memory_efficient"]:
+        del raw_input, raw_output, partitioned_input, partitioned_output
+    # Train for each partition
+    # All models will be in this list
+    """
+    The only different part is here where we first 
+    create a pool of processors and then use 
+    pool.starmap to do the calculations
+    We first create the set of arguments
+    """
+    arguments = []
+    for i in range(params["npartition"]):
+        arguments.append( (params, input_scaled[i], output_scaled[i], output_scalers[i]) )
+    
+    #with mp.Pool(processes=params["nprocs"]) as pool:
+    #    results = pool.starmap(train_partition, arguments)
+    pool = mp.Pool(processes=params["nprocs"])
+    print('Started pool!')
+    pool.starmap( train_partition, arguments )
+    pool.close()
+    pool.join()
+
+    # To be completed
+    print(results[0])
 
 
 def compute_atomic_orbital_overlap_matrix(params, step):
     """
-    This 
+    This function computes the atomic orbital overlap
+    matrix which will then be used to solve the generalized
+    Kohn-Sham equations and compute the eigenvalues and
+    eigenvectors.
     """
     sample_molden_file = params["sample_molden_file"]
     path_to_trajectory = params["path_to_trajectory_xyz_file"]
@@ -61,10 +285,14 @@ def compute_atomic_orbital_overlap_matrix(params, step):
     #new_indices = molden_methods.resort_eigenvectors(l_vals)
     return AO_S[:,new_indices][new_indices,:]
 
-
 def compute_mo_overlaps(params, eigenvectors_1, eigenvectors_2, step_1, step_2):
     """
-    This 
+    This function computes the overlap between two eigenvectors 
+    where their geometries are given by step_1 and step_2 in 
+    a molecular dynamics trajectory. This function can be used either 
+    for computing the molecular orbital overlap matrix for one geometry
+    or the time-overlap matrix of the molecular orbitals of two different
+    geometries.
     """
     sample_molden_file = params["sample_molden_file"]
     path_to_trajectory = params["path_to_trajectory_xyz_file"]
@@ -87,7 +315,8 @@ def compute_mo_overlaps(params, eigenvectors_1, eigenvectors_2, step_1, step_2):
         translational_vectors = params["translational_vectors"]
         for i1 in range(len(translational_vectors)):
             translational_vector = np.array(translational_vectors[i1])
-            shell_2p, l_vals = molden_methods.molden_file_to_libint_shell(molden_file_2, is_spherical, is_periodic, cell, translational_vector)
+            shell_2p, l_vals = molden_methods.molden_file_to_libint_shell(molden_file_2, is_spherical, is_periodic, 
+                                                                          cell, translational_vector)
             AO_S += compute_overlaps(shell_1,shell_2p, nprocs)
     AO_S = data_conv.MATRIX2nparray(AO_S)
     os.system(F'rm {molden_file_1}')
@@ -99,812 +328,129 @@ def compute_mo_overlaps(params, eigenvectors_1, eigenvectors_2, step_1, step_2):
     #print(np.diag(MO_overlap))
     return MO_overlap
 
-
-
-
-# I guess this function's name is not general and because of this I keep it in this module 
-# otherwise I would move it to libra_py.data_conv
-def upper_vector_to_symmetric_nparray(upper_vector, upper_indices, mat_shape):
+def find_indices_inputs(params):
     """
-    This function gets the upper triangular part of a matrix as a vector and retuns a symmetric matrix
-    Args:
-        upper_vector (nparray): The upper part of a matrix
-        upper_indices (nparray): The indices of the upper part of the matrix
-        mat_shape (tuple): The shape of the original numpy array
-    Returns:
-        matrix (nparray): The symmetric matix built based on the upper triangular matrix
+    The same as function find_indices_outputs, this function
+    also finds the indices of input matrices
+    This will gives us the initial step which will be a useful quantity 
+    in indexing e.g. indexing the correct geometry in the molecular
+    dynamics trajectory
     """
-    matrix = np.zeros(mat_shape)
-    matrix[upper_indices] = upper_vector
-    matrix = matrix + matrix.T - np.diag(matrix.diagonal())
+    # We first find all the input files in the path_to_input_mats directory
+    files = glob.glob(f'{params["path_to_input_mats"]}/*{params["input_property"]}*npy')
+    indices = []
+    for file in files:
+        # Generate the index in a file
+        index = file.split('/')[-1].split('_')[-1].replace('.npy','')
+        indices.append(int(index))
+
+    # Now sort the indices since they will be used
+    indices = np.sort(indices)
+    return indices
+
+
+def rebuild_matrix_from_partitions(params, partitions, output_shape):
+    """
+    This function is one of the most important here. It will
+    rebuild a matix from its partitions by figuring out how it
+    was originally partitioned.
+    """
+    # =========== 1- 'equal' partitioning
+    if params["partitioning_method"]=="equal":
+        upper_vector = np.concatenate(partitions, axis=0)
+        #print(upper_vector.shape)
+        # generate the upper indices of the matrix
+        upper_indices = np.triu_indices(output_shape[0])
+        matrix = np.zeros(output_shape)
+        matrix[upper_indices] = upper_vector
+        matrix = matrix + matrix.T - np.diag(matrix.diagonal())
+    # =========== 2- 'block' partitioning
+    elif params["partitioning_method"]=="block":
+        print("To be implemented")
+    # =========== 3- 'atomwise' partitioning
+    elif params["partitioning_method"]=="atomwise":
+        print("To be implemented")
+        
     return matrix
 
 
-def run_ml_map(params):
+def compute_properties(params, models, input_scalers, output_scalers):
     """
-    This function runs calculations for ml
+    This function computes the molecular orbitals and their energy levels
+    from the machine learned mapped Hamiltonian for each geometry.
+    It also computes the overlap and time-overlap matrices between
+    the computed molecular orbitals.
+    It can output CP2K readable binary wfn files which contain the 
+    basis set data and the molecular orbital coefficients, energies etc.
+    This function does not return anything but it writes output results 
+    to the params["res_dir"] which can then be used for computing the 
+    excited states basis.
     """
-    # ========================= Part 1: Extracting the data
-    print("Loading input matrices...")
-    input_mats = load_data(params["path_to_input_mat"])
-    print("Loading output matrices...")
-    output_mats = load_data(params["path_to_output_mat"])
-    print("Done with loading inputs and outputs...")
-
-    # ========================= Part 2: Preparation of the inputs and outputs for training
-    # Creating random shuffling of indices
-    shuffled_indices = np.arange(input_mats.shape[0])
-    np.random.shuffle(shuffled_indices)
-    print(shuffled_indices, shuffled_indices.shape)
-    # Saving the shuffled indices
-    np.save('shuffled_indices.npy', shuffled_indices)
-    # Reading the block indices of the input and output matrices
-    # In fact, here we read the data block related to two atoms
-    input_sample_angular_momentum_file = params["input_sample_angular_momentum_file"]
-    output_sample_angular_momentum_file = params["output_sample_angular_momentum_file"]
-    try:
-        input_block_indices = CP2K_methods.atom_components_cp2k(input_sample_angular_momentum_file)
-        print("Angular momentum components for input matrices extracted from CP2K calculations...")
-    except:
-        input_block_indices = DFTB_methods.atom_components_dftb(input_sample_angular_momentum_file)
-        print("Angular momentum components for input matrices extracted from DTFB+ calculations...")
-
-    try:
-        output_block_indices = CP2K_methods.atom_components_cp2k(output_sample_angular_momentum_file)
-        print("Angular momentum components for output matrices extracted from CP2K calculations...")
-    except:
-        output_block_indices = DFTB_methods.atom_components_dftb(output_sample_angular_momentum_file)
-        print("Angular momentum components for output matrices extracted from DTFB+ calculations...")
-
-    # The size of the training set
-    size = params["training_set_size"]
-    train_indices = shuffled_indices[0:size]
-    test_indices = shuffled_indices[size:]
-    # Append the first and last geometries for better predictions (this is an interpolation model)
-    if max(shuffled_indices) not in train_indices:
-        np.append(train_indices, max(shuffled_indices))
-    if min(shuffled_indices) not in train_indices:
-        np.append(train_indices, min(shuffled_indices))
-
-    # In this part we vectorize the inputs and outputs to feed to model
-    # The off-diagonal blocks
-    inputs_train = []
-    inputs_test = []
-    outputs_train = []
-    outputs_test = []
-    # The diagonal blocks
-    inputs_train_diag = []
-    inputs_test_diag = []
-    outputs_train_diag = []
-    outputs_test_diag = []
-    # Off-diagonal blocks: inputs
-    for i in range(len(input_block_indices)):
-        for j in range(len(input_block_indices)):
-            if j>i:
-                s1 = input_block_indices[i][0]
-                e1 = input_block_indices[i][-1]+1
-                s2 = input_block_indices[j][0]
-                e2 = input_block_indices[j][-1]+1
-                
-                tmp1 = input_mats[train_indices,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                inputs_train.append(tmp2)
-                
-                tmp1 = input_mats[test_indices,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                inputs_test.append(tmp2)
-    # Off-diagonal blocks: outputs
-    for i in range(len(output_block_indices)):
-        for j in range(len(output_block_indices)):
-            if j>i:
-                s1 = output_block_indices[i][0]
-                e1 = output_block_indices[i][-1]+1
-                s2 = output_block_indices[j][0]
-                e2 = output_block_indices[j][-1]+1
-                
-                tmp1 = output_mats[train_indices,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                outputs_train.append(tmp2)
-                
-                tmp1 = output_mats[test_indices,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                outputs_test.append(tmp2)
-                
-    print("Shape of the vectorized off-diagonal inputs and outputs:")
-    print(len(inputs_train), len(inputs_train[0]), len(inputs_train[0][0]))
-    print(len(outputs_train), len(outputs_train[0]), len(outputs_train[0][0]))
-    print(len(inputs_test), len(inputs_test[0]), len(inputs_test[0][0]))
-    print(len(outputs_test), len(outputs_test[0]), len(outputs_test[0][0]))
-
-    # Diagonal blocks: inputs
-    for i in range(len(input_block_indices)):
-        s1 = input_block_indices[i][0]
-        e1 = input_block_indices[i][-1]+1
-        tmp = input_mats[0][input_block_indices[i],:][:,input_block_indices[i]]
-        upper_indices = np.triu_indices(tmp.shape[0])
-        
-        tmp1 = input_mats[train_indices, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        inputs_train_diag.append(tmp2)
-        
-        tmp1 = input_mats[test_indices, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        inputs_test_diag.append(tmp2)
-        
-    # Diagonal blocks: outputs
-    for i in range(len(output_block_indices)):
-        s1 = output_block_indices[i][0]
-        e1 = output_block_indices[i][-1]+1
-        tmp = output_mats[0][input_block_indices[i],:][:,input_block_indices[i]]
-        upper_indices = np.triu_indices(tmp.shape[0])
-        
-        tmp1 = output_mats[train_indices, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        outputs_train_diag.append(tmp2)
-        
-        tmp1 = output_mats[test_indices, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        outputs_test_diag.append(tmp2)
-   
-    print("Shape of the vectorized diagonal inputs and outputs:")
-    print(len(inputs_train_diag), len(inputs_train_diag[0]), len(inputs_train_diag[0][0]))
-    print(len(outputs_train_diag), len(outputs_train_diag[0]), len(outputs_train_diag[0][0]))
-    print(len(inputs_test_diag), len(inputs_test_diag[0]), len(inputs_test_diag[0][0]))
-    print(len(outputs_test_diag), len(outputs_test_diag[0]), len(outputs_test_diag[0][0]))
-    
-    # Now, we are ready to scale the values
-    # The scalers for each block
-    input_scalers = []
-    output_scalers = []
-
-    scaler = params["scaler"]
-
-    inputs_train_scaled = []
-    inputs_test_scaled = []
-    outputs_train_scaled = []
-    outputs_test_scaled = []
-    for i in range(len(inputs_train)):
-        if scaler.lower()=="standard_scaler":
-            input_scaler = StandardScaler()
-            output_scaler = StandardScaler()
-        elif scaler.lower()=="min_max_scaler":
-            input_scaler = MinMaxScaler()
-            output_scaler = MinMaxScaler()
-        else:
-            raise("Scaler not recognized. Try standard_scaler or min_max_scaler.")
-        input_scaler.fit(inputs_train[i])
-        output_scaler.fit(outputs_train[i])
-        
-        # Scaling the training set
-        inputs_train_scaled.append(input_scaler.transform(inputs_train[i]))
-        outputs_train_scaled.append(output_scaler.transform(outputs_train[i]))
-        # Scaling the testing set
-        inputs_test_scaled.append(input_scaler.transform(inputs_test[i]))
-        outputs_test_scaled.append(output_scaler.transform(outputs_test[i]))
-        input_scalers.append(input_scaler)
-        output_scalers.append(output_scaler)
-
-
-    input_scalers_diag = []
-    output_scalers_diag = []
-    
-    inputs_train_diag_scaled = []
-    inputs_test_diag_scaled = []
-    outputs_train_diag_scaled = []
-    outputs_test_diag_scaled = []
-    for i in range(len(inputs_train_diag)):
-        if scaler.lower()=="standard_scaler":
-            input_scaler = StandardScaler()
-            output_scaler = StandardScaler()
-        elif scaler.lower()=="min_max_scaler":
-            input_scaler = MinMaxScaler()
-            output_scaler = MinMaxScaler()
-        else:
-            raise("Scaler not recognized. Try standard_scaler or min_max_scaler.")
-        input_scaler.fit(inputs_train_diag[i])
-        output_scaler.fit(outputs_train_diag[i])
-        
-        # Scaling the training set
-        inputs_train_diag_scaled.append(input_scaler.transform(inputs_train_diag[i]))
-        outputs_train_diag_scaled.append(output_scaler.transform(outputs_train_diag[i]))
-        # Scaling the testing set
-        inputs_test_diag_scaled.append(input_scaler.transform(inputs_test_diag[i]))
-        outputs_test_diag_scaled.append(output_scaler.transform(outputs_test_diag[i]))
-        input_scalers_diag.append(input_scaler)
-        output_scalers_diag.append(output_scaler)
-
-    # ========================= Part 3: Training with training data
-    # =========== Training off-diagonal blocks
-    # All models for each block
-    models = []
-    # The error of each model for training and testing sets
-    model_train_error = []
-    model_test_error = []
-    for i in range(len(inputs_train)):
-        # Creating the model
-        if params["method"].lower()=="krr":
-            model = KernelRidge(kernel=params["kernel"], degree=params["degree"], alpha=params["alpha"], gamma=params["gamma"]) 
-        else:
-            raise("Only KRR method is implemented for now!")
-        # Training the model
-        model.fit(inputs_train_scaled[i], outputs_train_scaled[i])
-        # Computing the error of the model
-        # === Training set
-        predictions_train = model.predict(inputs_train_scaled[i])
-        predictions_train_scaled = output_scalers[i].inverse_transform(predictions_train)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_train[i], predictions_train_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_train[i], predictions_train_scaled)
-        # R^2
-        r2 = r2_score(outputs_train[i], predictions_train_scaled)
-        model_train_error.append([mae, mse, r2])
-        print(F'Off-diagonal block model {i} ---> Training R2:', r2)
-        print(F'Off-diagonal block model {i} ---> Training    MSE:', mse, '  MAE:', mae)
-        # === Testing set
-        predictions_test = model.predict(inputs_test_scaled[i])
-        predictions_test_scaled = output_scalers[i].inverse_transform(predictions_test)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_test[i], predictions_test_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_test[i], predictions_test_scaled)
-        # R^2 
-        r2 = r2_score(outputs_test[i], predictions_test_scaled)
-        model_test_error.append([mae,mse,r2])
-        print(F'Off-diagonal block model {i} ---> Testing R2:', r2)
-        print(F'Off-diagonal block model {i} ---> Testing     MSE:', mse, '  MAE:', mae)
-        print('====================================================')
-        models.append(model)
-
-    # =========== Training diagonal blocks
-    # All models for each block
-    models_diag = []
-    # The error of each model for training and testing sets
-    model_train_diag_error = []
-    model_test_diag_error = []
-    for i in range(len(inputs_train_diag)):
-        # Creating the model
-        if params["method"].lower()=="krr":
-            model = KernelRidge(kernel=params["kernel"], degree=params["degree"], alpha=params["alpha"], gamma=params["gamma"]) 
-        else:
-            raise("Only KRR method is implemented for now!")
-        # Training the model
-        model.fit(inputs_train_diag_scaled[i], outputs_train_diag_scaled[i])
-        # Computing the error of the model
-        # === Training set
-        predictions_train = model.predict(inputs_train_diag_scaled[i])
-        predictions_train_scaled = output_scalers_diag[i].inverse_transform(predictions_train)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_train_diag[i], predictions_train_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_train_diag[i], predictions_train_scaled)
-        # R^2
-        r2 = r2_score(outputs_train_diag[i], predictions_train_scaled)
-        model_train_diag_error.append([mae, mse, r2])
-        print(F'Diagonal block model {i} ---> Training R2:', r2)
-        print(F'Diagonal block model {i} ---> Training    MSE:', mse, '  MAE:', mae)
-        # === Testing set
-        predictions_test = model.predict(inputs_test_diag_scaled[i])
-        predictions_test_scaled = output_scalers_diag[i].inverse_transform(predictions_test)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_test_diag[i], predictions_test_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_test_diag[i], predictions_test_scaled)
-        # R^2 
-        r2 = r2_score(outputs_test_diag[i], predictions_test_scaled)
-        model_test_diag_error.append([mae,mse,r2])
-        print(F'Diagonal block model {i} ---> Testing R2:', r2)
-        print(F'Diagonal block model {i} ---> Testing     MSE:', mse, '  MAE:', mae)
-        print('====================================================')
-        models_diag.append(model)
-    os.system(F"mkdir {params['path_to_save_model']}")
-    os.system(F"mkdir {params['path_to_save_wfn_files']}")
-    os.system(F"mkdir {params['res_dir']}")
-    if params["save_model"]:
-        # Saving the models
-        for i in range(len(models)):
-            joblib.dump(models[i], F'{params["path_to_save_model"]}/off_diag_model_{i}.pkl')
-        for i in range(len(models_diag)):
-            joblib.dump(models_diag[i], F'{params["path_to_save_model"]}/diag_model_{i}.pkl')
-
-
-    # ========================= Part 4: Using the model
+    # First find the indices of the input data
+    indices = find_indices_inputs(params)
+    params["istep"] = indices[0]
+    lowest_orbital = params["lowest_orbital"]
+    highest_orbital = params["highest_orbital"]
     if params["write_wfn_file"]:
         try:
             basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs = CP2K_methods.read_wfn_file(params["sample_wfn_file"])
+            os.system(f'mkdir {params["path_to_save_wfn_files"]}')
         except:
-            raise("Sample wfn file not found or could not be read!")
-    istep = params["istep"]
-    lowest_orbital = params["lowest_orbital"]
-    highest_orbital = params["highest_orbital"]
-    project = params["project"]
-    for step in range(0, len(input_mats)):
-        print(F"Calculating properties for step {step+istep}")
-        c = 0
-        ks_mat = np.zeros(output_mats[step].shape)
-        for i in range(len(input_block_indices)):
-            for j in range(len(input_block_indices)):
-                if j>i:
-                    s1 = input_block_indices[i][0]
-                    e1 = input_block_indices[i][-1]+1
-                    s2 = input_block_indices[j][0]
-                    e2 = input_block_indices[j][-1]+1
-                    block = input_mats[step, s1:e1, s2:e2]
-                    block_shape = block.shape
-                    block_ = block.reshape(1,block_shape[0]*block_shape[1])
-                    #print(block.shape)
-                    block_scaled = input_scalers[c].transform(block_)
-                    block_predict = models[c].predict(block_scaled)
-                    block_predict = output_scalers[c].inverse_transform(block_predict)
-                    block_predict = block_predict.reshape(block.shape)
-                    s1 = output_block_indices[i][0]
-                    e1 = output_block_indices[i][-1]+1
-                    s2 = output_block_indices[j][0]
-                    e2 = output_block_indices[j][-1]+1
-                    #print(block_predict)
-                    ks_mat[s1:e1, s2:e2] = block_predict
-                    c += 1
-        # print(ks_mat[0,:])
-        ks_mat = ks_mat + ks_mat.T
-        for i in range(len(input_block_indices)):
-            s1 = input_block_indices[i][0]
-            e1 = input_block_indices[i][-1]+1
-            block = input_mats[step, s1:e1, s1:e1]
-            upper_indices = np.triu_indices(block.shape[0])
-            tmp1 = input_mats[train_indices, s1:e1, s1:e1]
-            block_ = block[upper_indices[0], upper_indices[1]]
-            #print(block.shape, block_.shape)
-            #print(block.shape)
-            block_shape = block_.shape
-            block_ = block_.reshape(1,block_shape[0])
-            block_scaled = input_scalers_diag[i].transform(block_)
-            block_predict = models_diag[i].predict(block_scaled)
-            block_predict = output_scalers_diag[i].inverse_transform(block_predict)
-            block_predict = upper_vector_to_symmetric_nparray(block_predict, upper_indices, block.shape)
-            s1 = output_block_indices[i][0]
-            e1 = output_block_indices[i][-1]+1
-            ks_mat[s1:e1, s1:e1] = block_predict
-        # print(ks_mat)
-        # print(converged_ks_mats[0])
-        # ====== Computing the overlap matrix from the trajectory
-        atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step+istep)
-        eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_mat, atomic_overlap)
-        mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step+istep, step+istep)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-        # Making the double spin format
+            print("Sample wfn file not found or could not be read!")
+            print("Will continue without writing the wfn files")
+            params["write_wfn_file"] = False
+
+    # Now we loop over the indices which are already sorted
+    os.system(f'mkdir {params["res_dir"]}')
+    for i, step in enumerate(list(range(999,1100))):#indices):
+        print("======================== \n Performing calculations for step ", step)
+        input_mat = np.load(f'{params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
+        if i==0: 
+            output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_{params["output_property"]}_{step}.npy')
+        partitioned_input = partition_matrix(params, input_mat)
+        #print(np.array(partitioned_input[0]).shape)
+        #raise('  ')
+        # Now apply the models to each partition
+        outputs = []
+        for j in range(params["npartition"]):
+            #print(input_scaled[j].reshape(1,-1).shape)
+            input_scaled = input_scalers[j].transform(np.array(partitioned_input[j]).reshape(1,-1))
+            #tmp = input_scaled.reshape(1,-1)
+            #print(tmp.shape)
+            output_scaled = models[j].predict(input_scaled)#.reshape(1,-1))
+            output = output_scalers[j].inverse_transform(output_scaled)
+            outputs.append(np.squeeze(output))
+        #print(np.array(outputs).shape)
+        ks_ham_mat = rebuild_matrix_from_partitions(params, outputs, output_mat.shape)
+        #print(np.diag(tmp))
+        #print('------')
+        #print(np.diag(ks_ham_mat))
+        #raise('   ')
+        atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step)
+        eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_ham_mat, atomic_overlap)
+        # Compute the overlaps
+        mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step, 
+                                         step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+        # Compute the time-overlaps if we are at the next step
         zero_mat = np.zeros(mo_overlap.shape)
-        mo_overlap = data_conv.form_block_matrix(mo_overlap, zero_mat, zero_mat, mo_overlap)
-        if step>0:
-            mo_time_overlap = compute_mo_overlaps(params, eigenvectors_prev, eigenvectors, step+istep, step+istep+1)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+        if i>0:
+            mo_time_overlap = compute_mo_overlaps(params, eigenvectors_prev, eigenvectors, step, step+1)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
             mo_time_overlap = data_conv.form_block_matrix(mo_time_overlap, zero_mat, zero_mat, mo_time_overlap)
             mo_time_overlap_sparse = sp.csc_matrix(mo_time_overlap)
-            sp.save_npz(params["res_dir"]+F'/St_ks_{step-1+istep}.npz', mo_time_overlap_sparse)
+            sp.save_npz(params["res_dir"]+F'/St_ks_{step-1}.npz', mo_time_overlap_sparse)
         energy_mat = np.diag(eigenvalues)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+        #print(np.diag(energy_mat)*27.211385)
+        
         energy_mat = data_conv.form_block_matrix(energy_mat, zero_mat, zero_mat, energy_mat)
         #output_name = F'ml_c60_b3lyp_size_{size}_{step+istep}-RESTART.wfn' 
         if params["write_wfn_file"]:
-            output_name = F'{params["path_to_save_wfn_files"]}/ml_{project}-{step+istep}-RESTART.wfn' 
+            output_name = F'{params["path_to_save_wfn_files"]}/ml_{project}-{step}-RESTART.wfn'
             CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
         eigenvectors_prev = eigenvectors
         # Writing the energy, overlap, and time-overlap files as in .npz file for other steps
         energy_mat_sparse = sp.csc_matrix(energy_mat)
-        sp.save_npz(params["res_dir"]+F'/E_ks_{step+istep}.npz', energy_mat_sparse)
+        sp.save_npz(params["res_dir"]+F'/E_ks_{step}.npz', energy_mat_sparse)
         mo_overlap_sparse = sp.csc_matrix(mo_overlap)
-        sp.save_npz(params["res_dir"]+F'/S_ks_{step+istep}.npz', mo_overlap_sparse)
-
-
-
-
-def run_ml_map_v2(params):
-    """
-    This function runs calculations for ml
-    """
-    # ========================= Part 1: Extracting the data
-    #print("Loading input matrices...")
-    #input_mats = load_data(params["path_to_input_mat"])
-    #print("Loading output matrices...")
-    #output_mats = load_data(params["path_to_output_mat"])
-    #print("Done with loading inputs and outputs...")
-    train_indices = params["train_indices"]
-    all_indices = params["all_indices"]
-    print(train_indices)
-    print(all_indices)
-    train_inputs = []
-    train_outputs = []
-    all_inputs = []
-    prefix = params["prefix"]
-    input_property = params["input_property"]
-    output_property = params["output_property"] 
-    path_to_input_mats = params["path_to_input_mats"]
-    path_to_output_mats = params["path_to_output_mats"]
-    input_mats = []
-    all_input_mats = []
-    output_mats = []
-    for i in train_indices:
-        tmp = np.load(F'{path_to_input_mats}/{prefix}_{input_property}_{i}.npy')
-        input_mats.append(tmp)
-        tmp = np.load(F'{path_to_output_mats}/{prefix}_{output_property}_{i}.npy')
-        output_mats.append(tmp)
-    input_mats = np.array(input_mats)
-    print(input_mats.shape)
-    output_mats = np.array(output_mats)
-    print(output_mats.shape)
-    
-    for i in all_indices:
-        #if i not in train_indices:
-        tmp = np.load(F'{path_to_input_mats}/{prefix}_{input_property}_{i}.npy')
-        all_input_mats.append(tmp)
-    all_input_mats = np.array(all_input_mats)
-    print(all_input_mats.shape) 
-    # ========================= Part 2: Preparation of the inputs and outputs for training
-    # Creating random shuffling of indices
-    #shuffled_indices = np.arange(input_mats.shape[0])
-    #np.random.shuffle(shuffled_indices)
-    #print(shuffled_indices, shuffled_indices.shape)
-    # Saving the shuffled indices
-    #np.save('shuffled_indices.npy', shuffled_indices)
-    # Reading the block indices of the input and output matrices
-    # In fact, here we read the data block related to two atoms
-    input_sample_angular_momentum_file = params["input_sample_angular_momentum_file"]
-    output_sample_angular_momentum_file = params["output_sample_angular_momentum_file"]
-    try:
-        input_block_indices = CP2K_methods.atom_components_cp2k(input_sample_angular_momentum_file)
-        print("Angular momentum components for input matrices extracted from CP2K calculations...")
-    except:
-        input_block_indices = DFTB_methods.atom_components_dftb(input_sample_angular_momentum_file)
-        print("Angular momentum components for input matrices extracted from DTFB+ calculations...")
-
-    try:
-        output_block_indices = CP2K_methods.atom_components_cp2k(output_sample_angular_momentum_file)
-        print("Angular momentum components for output matrices extracted from CP2K calculations...")
-    except:
-        output_block_indices = DFTB_methods.atom_components_dftb(output_sample_angular_momentum_file)
-        print("Angular momentum components for output matrices extracted from DTFB+ calculations...")
-
-    # The size of the training set
-    #size = params["training_set_size"]
-    #train_indices = shuffled_indices[0:size]
-    #test_indices = shuffled_indices[size:]
-    # Append the first and last geometries for better predictions (this is an interpolation model)
-    #if max(shuffled_indices) not in train_indices:
-    #    np.append(train_indices, max(shuffled_indices))
-    #if min(shuffled_indices) not in train_indices:
-    #    np.append(train_indices, min(shuffled_indices))
-
-    # In this part we vectorize the inputs and outputs to feed to model
-    # The off-diagonal blocks
-    inputs_train = []
-    inputs_test = []
-    outputs_train = []
-    outputs_test = []
-    # The diagonal blocks
-    inputs_train_diag = []
-    inputs_test_diag = []
-    outputs_train_diag = []
-    outputs_test_diag = []
-    # Off-diagonal blocks: inputs
-    for i in range(len(input_block_indices)):
-        for j in range(len(input_block_indices)):
-            if j>i:
-                s1 = input_block_indices[i][0]
-                e1 = input_block_indices[i][-1]+1
-                s2 = input_block_indices[j][0]
-                e2 = input_block_indices[j][-1]+1
-                
-                tmp1 = input_mats[:,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                inputs_train.append(tmp2)
-                
-                tmp1 = all_input_mats[:,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                inputs_test.append(tmp2)
-
-    # Off-diagonal blocks: outputs
-    for i in range(len(output_block_indices)):
-        for j in range(len(output_block_indices)):
-            if j>i:
-                s1 = output_block_indices[i][0]
-                e1 = output_block_indices[i][-1]+1
-                s2 = output_block_indices[j][0]
-                e2 = output_block_indices[j][-1]+1
-                
-                tmp1 = output_mats[:,s1:e1,s2:e2]
-                tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                outputs_train.append(tmp2)
-                
-                #tmp1 = output_mats[test_indices,s1:e1,s2:e2]
-                #tmp2 = np.reshape(tmp1, (tmp1.shape[0], -1))
-                #outputs_test.append(tmp2)
-                
-    print("Shape of the vectorized off-diagonal inputs and outputs:")
-    print(len(inputs_train), len(inputs_train[0]), len(inputs_train[0][0]))
-    print(len(outputs_train), len(outputs_train[0]), len(outputs_train[0][0]))
-    print(len(inputs_test), len(inputs_test[0]), len(inputs_test[0][0]))
-    #print(len(outputs_test), len(outputs_test[0]), len(outputs_test[0][0]))
-
-    # Diagonal blocks: inputs
-    for i in range(len(input_block_indices)):
-        s1 = input_block_indices[i][0]
-        e1 = input_block_indices[i][-1]+1
-        tmp = input_mats[0][input_block_indices[i],:][:,input_block_indices[i]]
-        upper_indices = np.triu_indices(tmp.shape[0])
-        
-        tmp1 = input_mats[:, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        inputs_train_diag.append(tmp2)
-        
-        tmp1 = all_input_mats[:, s1:e1, s1:e1]
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        inputs_test_diag.append(tmp2)
-        
-    # Diagonal blocks: outputs
-    for i in range(len(output_block_indices)):
-        s1 = output_block_indices[i][0]
-        e1 = output_block_indices[i][-1]+1
-        tmp = output_mats[0][input_block_indices[i],:][:,input_block_indices[i]]
-        upper_indices = np.triu_indices(tmp.shape[0])
-        
-        tmp1 = output_mats[:, s1:e1, s1:e1] 
-        tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        outputs_train_diag.append(tmp2)
-        
-        #tmp1 = output_mats[test_indices, s1:e1, s1:e1]
-        #tmp2 = tmp1[:, upper_indices[0], upper_indices[1]]
-        #outputs_test_diag.append(tmp2)
-   
-    print("Shape of the vectorized diagonal inputs and outputs:")
-    print(len(inputs_train_diag), len(inputs_train_diag[0]), len(inputs_train_diag[0][0]))
-    print(len(outputs_train_diag), len(outputs_train_diag[0]), len(outputs_train_diag[0][0]))
-    print(len(inputs_test_diag), len(inputs_test_diag[0]), len(inputs_test_diag[0][0]))
-    #print(len(outputs_test_diag), len(outputs_test_diag[0]), len(outputs_test_diag[0][0]))
-    
-    # Now, we are ready to scale the values
-    # The scalers for each block
-    input_scalers = []
-    output_scalers = []
-
-    scaler = params["scaler"]
-
-    inputs_train_scaled = []
-    inputs_test_scaled = []
-    outputs_train_scaled = []
-    #outputs_test_scaled = []
-    for i in range(len(inputs_train)):
-        if scaler.lower()=="standard_scaler":
-            input_scaler = StandardScaler()
-            output_scaler = StandardScaler()
-        elif scaler.lower()=="min_max_scaler":
-            input_scaler = MinMaxScaler()
-            output_scaler = MinMaxScaler()
-        else:
-            raise("Scaler not recognized. Try standard_scaler or min_max_scaler.")
-        input_scaler.fit(inputs_train[i])
-        output_scaler.fit(outputs_train[i])
-        
-        # Scaling the training set
-        inputs_train_scaled.append(input_scaler.transform(inputs_train[i]))
-        outputs_train_scaled.append(output_scaler.transform(outputs_train[i]))
-        # Scaling the testing set
-        inputs_test_scaled.append(input_scaler.transform(inputs_test[i]))
-        #outputs_test_scaled.append(output_scaler.transform(outputs_test[i]))
-        input_scalers.append(input_scaler)
-        output_scalers.append(output_scaler)
-
-
-    input_scalers_diag = []
-    output_scalers_diag = []
-    
-    inputs_train_diag_scaled = []
-    inputs_test_diag_scaled = []
-    outputs_train_diag_scaled = []
-    #outputs_test_diag_scaled = []
-    for i in range(len(inputs_train_diag)):
-        if scaler.lower()=="standard_scaler":
-            input_scaler = StandardScaler()
-            output_scaler = StandardScaler()
-        elif scaler.lower()=="min_max_scaler":
-            input_scaler = MinMaxScaler()
-            output_scaler = MinMaxScaler()
-        else:
-            raise("Scaler not recognized. Try standard_scaler or min_max_scaler.")
-        input_scaler.fit(inputs_train_diag[i])
-        output_scaler.fit(outputs_train_diag[i])
-        
-        # Scaling the training set
-        inputs_train_diag_scaled.append(input_scaler.transform(inputs_train_diag[i]))
-        outputs_train_diag_scaled.append(output_scaler.transform(outputs_train_diag[i]))
-        # Scaling the testing set
-        inputs_test_diag_scaled.append(input_scaler.transform(inputs_test_diag[i]))
-        #outputs_test_diag_scaled.append(output_scaler.transform(outputs_test_diag[i]))
-        input_scalers_diag.append(input_scaler)
-        output_scalers_diag.append(output_scaler)
-
-    # ========================= Part 3: Training with training data
-    # =========== Training off-diagonal blocks
-    # All models for each block
-    models = []
-    # The error of each model for training and testing sets
-    model_train_error = []
-    #model_test_error = []
-    for i in range(len(inputs_train)):
-        # Creating the model
-        if params["method"].lower()=="krr":
-            model = KernelRidge(kernel=params["kernel"], degree=params["degree"], alpha=params["alpha"], gamma=params["gamma"]) 
-        else:
-            raise("Only KRR method is implemented for now!")
-        # Training the model
-        model.fit(inputs_train_scaled[i], outputs_train_scaled[i])
-        # Computing the error of the model
-        # === Training set
-        predictions_train = model.predict(inputs_train_scaled[i])
-        predictions_train_scaled = output_scalers[i].inverse_transform(predictions_train)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_train[i], predictions_train_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_train[i], predictions_train_scaled)
-        # R^2
-        r2 = r2_score(outputs_train[i], predictions_train_scaled)
-        model_train_error.append([mae, mse, r2])
-        print(F'Off-diagonal block model {i} ---> Training R2:', r2)
-        print(F'Off-diagonal block model {i} ---> Training    MSE:', mse, '  MAE:', mae)
-        # === Testing set
-        #predictions_test = model.predict(inputs_test_scaled[i])
-        #predictions_test_scaled = output_scalers[i].inverse_transform(predictions_test)
-        ## Mean absolute error
-        #mae = mean_absolute_error(outputs_test[i], predictions_test_scaled)
-        ## Mean square error
-        #mse = mean_squared_error(outputs_test[i], predictions_test_scaled)
-        ## R^2 
-        #r2 = r2_score(outputs_test[i], predictions_test_scaled)
-        #model_test_error.append([mae,mse,r2])
-        #print(F'Off-diagonal block model {i} ---> Testing R2:', r2)
-        #print(F'Off-diagonal block model {i} ---> Testing     MSE:', mse, '  MAE:', mae)
-        print('====================================================')
-        models.append(model)
-
-    # =========== Training diagonal blocks
-    # All models for each block
-    models_diag = []
-    # The error of each model for training and testing sets
-    model_train_diag_error = []
-    #model_test_diag_error = []
-    for i in range(len(inputs_train_diag)):
-        # Creating the model
-        if params["method"].lower()=="krr":
-            model = KernelRidge(kernel=params["kernel"], degree=params["degree"], alpha=params["alpha"], gamma=params["gamma"]) 
-        else:
-            raise("Only KRR method is implemented for now!")
-        # Training the model
-        model.fit(inputs_train_diag_scaled[i], outputs_train_diag_scaled[i])
-        # Computing the error of the model
-        # === Training set
-        predictions_train = model.predict(inputs_train_diag_scaled[i])
-        predictions_train_scaled = output_scalers_diag[i].inverse_transform(predictions_train)
-        # Mean absolute error
-        mae = mean_absolute_error(outputs_train_diag[i], predictions_train_scaled)
-        # Mean square error
-        mse = mean_squared_error(outputs_train_diag[i], predictions_train_scaled)
-        # R^2
-        r2 = r2_score(outputs_train_diag[i], predictions_train_scaled)
-        model_train_diag_error.append([mae, mse, r2])
-        print(F'Diagonal block model {i} ---> Training R2:', r2)
-        print(F'Diagonal block model {i} ---> Training    MSE:', mse, '  MAE:', mae)
-        # === Testing set
-        #predictions_test = model.predict(inputs_test_diag_scaled[i])
-        #predictions_test_scaled = output_scalers_diag[i].inverse_transform(predictions_test)
-        ## Mean absolute error
-        #mae = mean_absolute_error(outputs_test_diag[i], predictions_test_scaled)
-        ## Mean square error
-        #mse = mean_squared_error(outputs_test_diag[i], predictions_test_scaled)
-        ## R^2 
-        #r2 = r2_score(outputs_test_diag[i], predictions_test_scaled)
-        #model_test_diag_error.append([mae,mse,r2])
-        #print(F'Diagonal block model {i} ---> Testing R2:', r2)
-        #print(F'Diagonal block model {i} ---> Testing     MSE:', mse, '  MAE:', mae)
-        #print('====================================================')
-        models_diag.append(model)
-    os.system(F"mkdir {params['path_to_save_model']}")
-    os.system(F"mkdir {params['path_to_save_wfn_files']}")
-    os.system(F"mkdir {params['res_dir']}")
-    if params["save_model"]:
-        # Saving the models
-        for i in range(len(models)):
-            joblib.dump(models[i], F'{params["path_to_save_model"]}/off_diag_model_{i}.pkl')
-        for i in range(len(models_diag)):
-            joblib.dump(models_diag[i], F'{params["path_to_save_model"]}/diag_model_{i}.pkl')
-
-
-    # ========================= Part 4: Using the model
-    if params["write_wfn_file"]:
-        try:
-            basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs = CP2K_methods.read_wfn_file(params["sample_wfn_file"])
-        except:
-            raise("Sample wfn file not found or could not be read!")
-    istep = params["istep"]
-    lowest_orbital = params["lowest_orbital"]
-    highest_orbital = params["highest_orbital"]
-    project = params["project"]
-    for step in range(0, len(all_input_mats)):
-        print(F"Calculating properties for step {step+istep}")
-        c = 0
-        ks_mat = np.zeros(output_mats[0].shape)
-        for i in range(len(input_block_indices)):
-            for j in range(len(input_block_indices)):
-                if j>i:
-                    s1 = input_block_indices[i][0]
-                    e1 = input_block_indices[i][-1]+1
-                    s2 = input_block_indices[j][0]
-                    e2 = input_block_indices[j][-1]+1
-                    block = all_input_mats[step, s1:e1, s2:e2]
-                    block_shape = block.shape
-                    block_ = block.reshape(1,block_shape[0]*block_shape[1])
-                    #print(block.shape)
-                    block_scaled = input_scalers[c].transform(block_)
-                    block_predict = models[c].predict(block_scaled)
-                    block_predict = output_scalers[c].inverse_transform(block_predict)
-                    block_predict = block_predict.reshape(block.shape)
-                    s1 = output_block_indices[i][0]
-                    e1 = output_block_indices[i][-1]+1
-                    s2 = output_block_indices[j][0]
-                    e2 = output_block_indices[j][-1]+1
-                    #print(block_predict)
-                    ks_mat[s1:e1, s2:e2] = block_predict
-                    c += 1
-        # print(ks_mat[0,:])
-        ks_mat = ks_mat + ks_mat.T
-        for i in range(len(input_block_indices)):
-            s1 = input_block_indices[i][0]
-            e1 = input_block_indices[i][-1]+1
-            block = all_input_mats[step, s1:e1, s1:e1]
-            upper_indices = np.triu_indices(block.shape[0])
-            #tmp1 = all_input_mats[train_indices, s1:e1, s1:e1]
-            block_ = block[upper_indices[0], upper_indices[1]]
-            #print(block.shape, block_.shape)
-            #print(block.shape)
-            block_shape = block_.shape
-            block_ = block_.reshape(1,block_shape[0])
-            block_scaled = input_scalers_diag[i].transform(block_)
-            block_predict = models_diag[i].predict(block_scaled)
-            block_predict = output_scalers_diag[i].inverse_transform(block_predict)
-            block_predict = upper_vector_to_symmetric_nparray(block_predict, upper_indices, block.shape)
-            s1 = output_block_indices[i][0]
-            e1 = output_block_indices[i][-1]+1
-            ks_mat[s1:e1, s1:e1] = block_predict
-        # print(ks_mat)
-        # print(converged_ks_mats[0])
-        # ====== Computing the overlap matrix from the trajectory
-        atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step+istep)
-        eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_mat, atomic_overlap)
-        mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step+istep, step+istep)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-        # Making the double spin format
-        zero_mat = np.zeros(mo_overlap.shape)
-        mo_overlap = data_conv.form_block_matrix(mo_overlap, zero_mat, zero_mat, mo_overlap)
-        if step>0:
-            mo_time_overlap = compute_mo_overlaps(params, eigenvectors_prev, eigenvectors, step+istep, step+istep+1)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-            mo_time_overlap = data_conv.form_block_matrix(mo_time_overlap, zero_mat, zero_mat, mo_time_overlap)
-            mo_time_overlap_sparse = sp.csc_matrix(mo_time_overlap)
-            sp.save_npz(params["res_dir"]+F'/St_ks_{step-1+istep}.npz', mo_time_overlap_sparse)
-        energy_mat = np.diag(eigenvalues)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-        energy_mat = data_conv.form_block_matrix(energy_mat, zero_mat, zero_mat, energy_mat)
-        #output_name = F'ml_c60_b3lyp_size_{size}_{step+istep}-RESTART.wfn' 
-        if params["write_wfn_file"]:
-            output_name = F'{params["path_to_save_wfn_files"]}/ml_{project}-{step+istep}-RESTART.wfn' 
-            CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
-        eigenvectors_prev = eigenvectors
-        # Writing the energy, overlap, and time-overlap files as in .npz file for other steps
-        energy_mat_sparse = sp.csc_matrix(energy_mat)
-        sp.save_npz(params["res_dir"]+F'/E_ks_{step+istep}.npz', energy_mat_sparse)
-        mo_overlap_sparse = sp.csc_matrix(mo_overlap)
-        sp.save_npz(params["res_dir"]+F'/S_ks_{step+istep}.npz', mo_overlap_sparse)
-
-
-
-
-
-
-
-
-
-
-
+        sp.save_npz(params["res_dir"]+F'/S_ks_{step}.npz', mo_overlap_sparse)
 
 
