@@ -570,6 +570,96 @@ void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_co
 
 }
 
+void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
+/**
+  Updates the wave packet width in XF based on the Gaussian approximation
+*/
+  
+  //======= Parameters of the dyn variables ==========
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+
+  if (prms.use_td_width == 0){
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        dyn_var.wp_width->set(idof, itraj, prms.wp_width->get(idof, 0));
+      }
+    }
+  }
+  else if (prms.use_td_width == 1){
+    double elapsed_time, s2;
+    
+    elapsed_time = prms.dt*dyn_var.timestep;
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        s2 = pow(prms.wp_width->get(idof, 0), 2.0) + pow(prms.wp_v->get(idof, 0)*elapsed_time, 2.0);
+        dyn_var.wp_width->set(idof, itraj, sqrt(s2));
+      }
+    }
+  }
+  else if (prms.use_td_width == 2){
+    double elapsed_time, s2;
+
+    elapsed_time = prms.dt*dyn_var.timestep;
+    
+    for(int itraj=0; itraj<ntraj; itraj++){
+      for(int idof=0; idof<ndof; idof++){
+        s2 = pow(prms.wp_width->get(idof,0), 2.0);
+        dyn_var.wp_width->set(idof, itraj, 4*M_PI/(s2*dyn_var.p->get(idof, itraj)) );
+      }
+    }
+  }
+  else if (prms.use_td_width == 3){
+    int nadi = dyn_var.nadi;
+
+    // wp_width is computed by pairwise widths based on auxiliary trajectories
+    dyn_var.wp_width->set(-1, -1, 0.0);
+    MATRIX sum_inv_w2(ndof, 1);
+    MATRIX w2_temp(ndof, 1);
+
+    for(int traj=0; traj<ntraj; traj++){
+      vector<int>& is_mixed = dyn_var.is_mixed[traj];
+      vector<int>& is_first = dyn_var.is_first[traj];
+      
+      sum_inv_w2.set(-1, 0, 0.0);
+      w2_temp.set(-1, 0, 0.0);
+    
+      int check_mixing = 0;
+      for(int i=0; i<nadi; i++){
+        for(int j=0; j<nadi; j++){
+          if(i>=j){continue;}
+
+          if(is_mixed[i] == 0 or is_mixed[j] == 0){continue; }
+          check_mixing = 1;
+
+          if(is_first[i] == 1 or is_first[j] == 1){
+            w2_temp.set(-1, 0, 1.0e+10); // At initial, an auxiliary pair does not contribute to wp_width
+          }
+          else{
+            for(int idof=0; idof<ndof; idof++){
+              w2_temp.set(idof, 0, fabs(dyn_var.q_aux[traj]->get(i, idof) - dyn_var.q_aux[traj]->get(j, idof))/
+                fabs(dyn_var.p_aux[traj]->get(i, idof) - dyn_var.p_aux[traj]->get(j, idof)) );
+            }
+          }
+
+          for(int idof=0; idof<ndof; idof++){
+            sum_inv_w2.add(idof, 0, 1.0/w2_temp.get(idof));
+          }
+
+        } //j
+      } //i
+    
+      if(check_mixing == 1){
+        for(int idof=0; idof<ndof; idof++){
+          dyn_var.wp_width->set(idof, traj, sqrt((nadi - 1)* 1.0/sum_inv_w2.get(idof, 0)) );
+        }
+      }
+
+    } // traj
+  }
+}
+
 /*
 void update_proj_adi(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -1205,6 +1295,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
 
+  // Copy diabatic-to-adiabatic basis transformation to the dynamical variable
+  //dyn_var.update_basis_transform(ham);
+
   // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
   // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
   update_proj_adi(prms, dyn_var, ham); 
@@ -1212,26 +1305,32 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+  // Update wave packet width in XF algorithm
+  if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+    dyn_var.get_current_timestep(params);
+    update_wp_width(dyn_var, prms);  
+  }
 
   // Propagate electronic coefficients in the [t, t + dt] interval, this also updates the 
   // basis re-projection matrices 
   for(i=0; i<num_el; i++){
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      update_ham_xf(dyn_var);
       propagate_half_xf(dyn_var, ham, prms);
     }
 
     propagate_electronic(dyn_var, ham, ham_aux, prms);
 
     if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
+      rotate_nab_phase(dyn_var, ham, prms);
+      update_ham_xf(dyn_var);
       propagate_half_xf(dyn_var, ham, prms);
     }
   }
 
-
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_density_matrix(prms, ham, 1); 
-
  
   vector<int> old_states( dyn_var.act_states);
 
@@ -1354,38 +1453,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
   // SHXF
   else if(prms.decoherence_algo==5){
-    if(prms.rep_tdse==1){
-      shxf(dyn_var, ham, ham_aux, prms);
-  
-      if(prms.ensemble==1){
-        for(idof=0; idof<n_therm_dofs; idof++){
-          dof = prms.thermostat_dofs[idof];
-          for(traj=0; traj<ntraj; traj++){
-            for(i=0; i<nadi; i++){
-              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
-            }// i
-          }// traj 
-        }//idof
-      }
-    }
+    if(prms.rep_tdse==1){shxf(dyn_var, ham, ham_aux, prms);}
     else{ cout<<"ERROR: SHXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
   // MQCXF
   else if(prms.decoherence_algo==6){
-    if(prms.rep_tdse==1){
-      mqcxf(dyn_var, ham, ham_aux, prms);
-  
-      if(prms.ensemble==1){
-        for(idof=0; idof<n_therm_dofs; idof++){
-          dof = prms.thermostat_dofs[idof];
-          for(traj=0; traj<ntraj; traj++){
-            for(i=0; i<nadi; i++){
-              dyn_var.p_aux[traj]->scale(i, dof, therm[traj].vel_scale(1.0*prms.dt));
-            }// i
-          }// traj 
-        }//idof
-      }
-    }
+    if(prms.rep_tdse==1){mqcxf(dyn_var, ham, ham_aux, prms);}
     else{ cout<<"ERROR: MQCXF requires rep_tdse = 1\nExiting now...\n"; exit(0); }
   }
 

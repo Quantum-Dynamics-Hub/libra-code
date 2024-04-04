@@ -161,6 +161,15 @@ class dyn_variables{
   vector<int> act_states;
 
 
+  /**
+    Projections of adiabatic states onto the diabatic for all trajectories
+
+    Options:
+    vector<ntraj, CMATRIX(ndia, nadi)>
+  */
+  vector<CMATRIX*> basis_transform; // same as in the Hamiltonian class
+
+
   ///================= Nuclear variables, for OOP implementation ===================
   /**
     Status of the nuclear vars
@@ -340,6 +349,22 @@ class dyn_variables{
      vector< vector<int> > is_first(ntraj, nadi)
   */
   vector<vector<int>> is_first;
+  
+  /**
+    Whether to fix an auxiliary trajectory
+
+    Options:
+     vector< vector<int> > is_fixed(ntraj, nadi)
+  */
+  vector<vector<int>> is_fixed;
+  
+  /**
+    Whether to keep the auxiliary momenta
+
+    Options:
+     vector< vector<int> > is_keep(ntraj, nadi)
+  */
+  vector<vector<int>> is_keep;
 
   /**
     Nuclear coordinates of state-wise auxiliary trajectories
@@ -372,6 +397,30 @@ class dyn_variables{
      vector<ntraj, MATRIX(nadi, ndof)> 
   */
   vector<MATRIX*> nab_phase;
+  
+  /**
+    Spatial derivative of the phase of coefficients of state-wise auxiliary trajectories
+
+    Options:
+     vector<ntraj, MATRIX(nadi, ndof)> 
+  */
+  vector<MATRIX*> nab_phase_old;
+  
+  /**
+    XF Hamiltonian
+
+    Options:
+     vector<ntraj, MATRIX(nadi, nadi)> 
+  */
+  vector<CMATRIX*> ham_xf;
+  
+  /**
+    Wave packet widths based on the Gaussian approximation
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* wp_width;
 
   /**
     Quantum momenta defined as (-1) * \nabla_nuc |\chi| / |\chi|
@@ -425,6 +474,13 @@ class dyn_variables{
   vector<double> tcnbra_ekin;
 
 
+  ///================= Misc ===================
+  /**
+    The current MD time step
+  */
+  int timestep; 
+
+
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -456,10 +512,12 @@ class dyn_variables{
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
   CMATRIX get_dm_adi(int i, int prev_steps);
   CMATRIX get_dm_dia(int i, int prev_steps);
+  CMATRIX get_basis_transform(int itraj){ return *basis_transform[itraj]; }
   MATRIX get_imass(){ return *iM; }
   MATRIX get_coords(){ return *q; }
   MATRIX get_momenta(){ return *p; }
   MATRIX get_forces(){ return *f; }
+  MATRIX get_wp_width(){ return *wp_width; }
   MATRIX get_p_quant(){ return *p_quant; }
   MATRIX get_VP(){ return *VP; }
   MATRIX get_f_xf(){ return *f_xf; }
@@ -467,7 +525,14 @@ class dyn_variables{
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   
-
+  void get_current_timestep(bp::dict params){
+    std::string key;
+    for(int i=0;i<len(params.values());i++){
+      key = bp::extract<std::string>(params.keys()[i]);
+      if(key=="timestep") { timestep = bp::extract<int>(params.values()[i]); }
+      else {continue;}
+    }
+  }
   
 
 
@@ -497,6 +562,8 @@ class dyn_variables{
   void update_active_states(int direction, int property);
   void update_active_states();
 
+  void update_basis_transform(nHamiltonian& ham);
+
   void init_amplitudes(bp::dict params, Random& rnd);
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
@@ -505,7 +572,7 @@ class dyn_variables{
 
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
-  vector<double> compute_average_sh_pop();
+  vector<double> compute_average_sh_pop(int rep);
 
 
   double compute_tcnbra_ekin();

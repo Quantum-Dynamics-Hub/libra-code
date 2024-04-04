@@ -1,5 +1,5 @@
 #***********************************************************
-# * Copyright (C) 2019-2023 Alexey V. Akimov
+# * Copyright (C) 2019-2024 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -11,6 +11,7 @@ __all__ = ["Beswick_Jortner",
            "Esch_Levine",
            "Faist_Levine",
            "Ferretti",
+           "GLVC",
            "Granucci_Persico",
            "Henon_Heiles",
            "Holstein",

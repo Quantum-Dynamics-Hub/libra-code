@@ -503,10 +503,18 @@ class dyn_control_params{
 
 
   /**
-  The width of frozen Gaussian for the decoherence from SHXF & MQCXF
-  [ default : 0.1 ]
+  MATRIX(ndof, 1) of (initial) wave packet widths for the decoherence from SHXF & MQCXF
+  [ default : NULL ]
   */
-  double wp_width;
+  MATRIX* wp_width;
+
+
+  /**
+  MATRIX(ndof, 1) of wave packet velocities for the decoherence from SHXF & MQCXF
+  This value is applied when use_td_width = 1
+  [ default : NULL ]
+  */
+  MATRIX* wp_v;
 
 
   /**
@@ -514,7 +522,15 @@ class dyn_control_params{
   [ default : 0.01 ]
   */
   double coherence_threshold;
-  
+
+
+  /**
+  The masking parameter for computing nabla phase vectors in the MQCXF
+  [ default : 0.0001 ]
+  */
+  double e_mask;
+
+
   /**
   Whether to use the decoherence force in MQCXF
   The corresponding electronic propagation is adjusted for the energy conservation
@@ -522,11 +538,35 @@ class dyn_control_params{
   */
   int use_xf_force;
 
+
   /**
   Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden
   [ default : 0 ]
   */
   int project_out_aux;
+
+
+  /**
+  Turning-point algorithm for auxiliary trajectories
+
+  Options:
+      - 0: no treatment of a turning point
+      - 1: collapse to the active state [default]
+      - 2: fix auxiliary positions of adiabatic states except for the active state
+      - 3: keep auxiliary momenta of adiabatic states except for the active state
+  */
+  int tp_algo;
+  
+
+  /**
+  Whether to use the td Gaussian width for the nuclear wave packet approximation
+  This option can be considered when it comes to unbounded systems.
+  This approximation is based on a nuclear wave packet on a free surface:
+    \sigma_x(t)=\sqrt[\sigma_x(0)^2 + (wp_v * t)^2]
+  [ default : 0 ]
+  */
+  int use_td_width;
+
 
   /**
   A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories

@@ -103,8 +103,10 @@ void export_dyn_control_params_objects(){
       .def_readwrite("ave_gaps", &dyn_control_params::ave_gaps)
       .def_readwrite("wp_width", &dyn_control_params::wp_width)
       .def_readwrite("coherence_threshold", &dyn_control_params::coherence_threshold)
+      .def_readwrite("e_mask", &dyn_control_params::e_mask)
       .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
       .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
+      .def_readwrite("tp_algo", &dyn_control_params::tp_algo)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -245,6 +247,7 @@ void export_dyn_variables_objects(){
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
       .def("get_forces", &dyn_variables::get_forces)
+      .def("get_wp_width", &dyn_variables::get_wp_width)
       .def("get_p_quant", &dyn_variables::get_p_quant)
       .def("get_VP", &dyn_variables::get_VP)
       .def("get_f_xf", &dyn_variables::get_f_xf)
@@ -273,6 +276,8 @@ void export_dyn_variables_objects(){
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
+
+      .def("update_basis_transform", &dyn_variables::update_basis_transform)
 
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
@@ -363,6 +368,10 @@ void export_dyn_decoherence_objects(){
   void (*expt_xf_hop_reset)
   (dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states) = &xf_hop_reset;
   def("xf_hop_reset", expt_xf_hop_reset);
+  
+  void (*expt_update_ham_xf)
+  (dyn_variables& dyn_var) = &update_ham_xf;
+  def("update_ham_xf", expt_update_ham_xf);
 
   void (*expt_shxf_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &shxf;

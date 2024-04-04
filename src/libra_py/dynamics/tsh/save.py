@@ -182,6 +182,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved diabatic TD-SE amplitudes
         if "Cdia" in saver.keywords: # and "Cdia" in saver.np_data.keys():
             saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C") 
+        
+        # Trajectory-resolved quantum momenta
+        if "wp_width" in saver.keywords: # and "p_quant" in saver.np_data.keys():
+            saver.add_dataset("wp_width", (_nsteps, _ntraj, _ndof), "R") 
 
         # Trajectory-resolved quantum momenta
         if "p_quant" in saver.keywords: # and "p_quant" in saver.np_data.keys():
@@ -482,15 +486,22 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         nadi = dyn_var.nadi
         for ist in range(nadi):
             saver.save_multi_scalar(t, ist, "se_pop_adi", pops_se1[ist])
+
+    if "sh_pop_dia" in saver.keywords and "sh_pop_dia" in saver.np_data.keys():
+        # Average diabatic SH populations
+        # Format: saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R")
+        pops_sh0 = dyn_var.compute_average_sh_pop(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "sh_pop_dia", pops_sh0[ist])
     
     if "sh_pop_adi" in saver.keywords and "sh_pop_adi" in saver.np_data.keys():    
         # Average adiabatic SH populations 
         # Format: saver.add_dataset("sh_pop_adi", (_nsteps, _nadi), "R") 
-        pops_sh = dyn_var.compute_average_sh_pop()
+        pops_sh1 = dyn_var.compute_average_sh_pop(1)
         nadi = dyn_var.nadi
         for ist in range(nadi):
-            saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh[ist])
-        
+            saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
 
 
 
@@ -622,6 +633,12 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
         Cdia = dyn_var.get_ampl_dia()
         saver.save_matrix(t, "Cdia", Cdia.T()) 
+    
+    # Wavepacket width
+    # Format: saver.add_dataset("wp_width", (_nsteps, _ntraj, _dof), "R")
+    if "wp_width" in saver.keywords and "wp_width" in saver.np_data.keys():
+        wp_width = dyn_var.get_wp_width()
+        saver.save_matrix(t, "wp_width", wp_width.T())
 
     # Trajectory-resolved quantum momenta
     # Format: saver.add_dataset("p_quant", (_nsteps, _ntraj, _dof), "R")

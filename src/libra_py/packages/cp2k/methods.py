@@ -1691,6 +1691,49 @@ def gaussian_function_vector(a_vec, mu_vec, sigma, num_points, x_min, x_max):
     return x, sum_vec
 
 
+
+def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels):
+    """
+    c1 - index of the atom kinds
+    atoms - the 
+    pdos_files (list of strings): names of the files containing pdos data
+    shift (double): the amount of "padding" around the minimal and maximal values of the energy scale [units: eV]
+    homo_occ (double): occupancy of the HOMO: 2 - for non-polarized, 1 - for polarized
+    orbital_cols (list of lists of integers): integers that define which columns correspond to which types of orbitals
+    sigma (double): broadening of the pDOS
+    npoints (int): how many points to use to compte the convolved pDOS
+ 
+    """
+
+    pdos_ave = np.zeros(np.loadtxt(pdos_files[0]).shape)
+
+    cnt = len(pdos_files)
+    for c2, pdos_file in enumerate(pdos_files):
+        pdos_mat = np.loadtxt(pdos_file)
+        if c2==0:
+            pdos_ave = np.zeros(pdos_mat.shape)
+        pdos_ave += pdos_mat
+    pdos_ave /= cnt
+
+    pdos_ave[:,1] *= units.au2ev
+    e_min = np.min(pdos_ave[:,1]) - margin
+    e_max = np.max(pdos_ave[:,1]) + margin
+    homo_level = np.max(np.where(pdos_ave[:,2]==homo_occ))
+    homo_energy = pdos_ave[:,1][homo_level]
+
+    for c3, orbital_cols in enumerate(orbitals_cols):
+        try:
+            sum_pdos_ave = np.sum(pdos_ave[:,orbital_cols],axis=1)
+            ave_energy_grid, ave_pdos_convolved = gaussian_function_vector(sum_pdos_ave, pdos_ave[:,1], sigma,npoints, e_min, e_max)
+            ave_pdos_convolved_all.append(ave_pdos_convolved)
+            pdos_label = F"{atoms[1][c1]}, {orbitals[c3]}"
+            labels.append(pdos_label)
+        except:
+            pass
+
+    return ave_energy_grid, homo_energy, ave_pdos_convolved_all
+
+
 def pdos(params):
     """
     This function computes the weighted pdos for a set of CP2K pdos files.
@@ -1707,6 +1750,7 @@ def pdos(params):
             * npoints (integer): The number of grid points for convolution with Gaussian functions.
             * sigma (float): The standard deviation value
             * shift (float): The amount of shifting the grid from the minimum and maximum energy values.
+            * is_spin_polarized (int): 0 - non-spin-polarized, 1 - spin-polarized
     Returns:
         ave_energy_grid (nparray): The average energy grid for all pdos files
         homo_energy (float): The value of HOMO energy in eV
@@ -1718,7 +1762,10 @@ def pdos(params):
     # Critical parameters
     critical_params = [ "path_to_all_pdos", "atoms"]
     # Default parameters
-    default_params = { "orbitals_cols": [[3], range(4,7), range(7,12), range(12,19)], "orbitals": ['s', 'p', 'd', 'f'], "sigma": 0.05, "shift": 2.0, "npoints": 2000} 
+    default_params = { "orbitals_cols": [[3], range(4,7), range(7,12), range(12,19)], 
+                       "orbitals": ['s', 'p', 'd', 'f'], 
+                       "sigma": 0.05, "shift": 2.0, "npoints": 2000, "is_spin_polarized": 0
+                     } 
     # Check input
     comn.check_input(params, default_params, critical_params) 
 
@@ -1729,41 +1776,79 @@ def pdos(params):
     npoints = params['npoints']
     sigma = params['sigma']
     shift = params['shift']
+    is_spin_polarized = params["is_spin_polarized"]
 
-    labels = []
-    ave_pdos_convolved_all = []
 
-    for c1,i in enumerate(atoms[0]):
-        # Finding all the pdos files
-        pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
-        pdos_ave = np.zeros(np.loadtxt(pdos_files[0]).shape)
-        cnt = len(pdos_files)
-        for c2, pdos_file in enumerate(pdos_files):
-            pdos_mat = np.loadtxt(pdos_file)
-            if c2==0:
-                pdos_ave = np.zeros(pdos_mat.shape)
-            pdos_ave += pdos_mat
-        pdos_ave /= cnt
-        pdos_ave[:,1] *= units.au2ev
-        e_min = np.min(pdos_ave[:,1])-shift
-        e_max = np.max(pdos_ave[:,1])+shift
-        homo_level = np.max(np.where(pdos_ave[:,2]==2.0))
-        homo_energy = pdos_ave[:,1][homo_level]
-        for c3, orbital_cols in enumerate(orbitals_cols):
-            try:
-                sum_pdos_ave = np.sum(pdos_ave[:,orbital_cols],axis=1)
-                ave_energy_grid, ave_pdos_convolved = gaussian_function_vector(sum_pdos_ave, pdos_ave[:,1], sigma,
+    if is_spin_polarized == 0: # non-polarized case
+        homo_occ = 2.0
+        labels = []
+        ave_pdos_convolved_all = []
+
+        for c1,i in enumerate(atoms[0]):
+            # Finding all the pdos files
+            pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
+
+            ave_energy_grid, homo_energy, ave_pdos_convolved_all = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels)
+
+            """
+            # Finding all the pdos files
+            pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
+            pdos_ave = np.zeros(np.loadtxt(pdos_files[0]).shape)
+
+            cnt = len(pdos_files)
+            for c2, pdos_file in enumerate(pdos_files):
+                pdos_mat = np.loadtxt(pdos_file)
+                if c2==0:
+                    pdos_ave = np.zeros(pdos_mat.shape)
+                pdos_ave += pdos_mat
+            pdos_ave /= cnt
+            pdos_ave[:,1] *= units.au2ev
+            e_min = np.min(pdos_ave[:,1])-shift
+            e_max = np.max(pdos_ave[:,1])+shift
+            homo_level = np.max(np.where(pdos_ave[:,2]==2.0))
+            homo_energy = pdos_ave[:,1][homo_level]
+            for c3, orbital_cols in enumerate(orbitals_cols):
+                try:
+                    sum_pdos_ave = np.sum(pdos_ave[:,orbital_cols],axis=1)
+                    ave_energy_grid, ave_pdos_convolved = gaussian_function_vector(sum_pdos_ave, pdos_ave[:,1], sigma,
                                                                                    npoints, e_min, e_max)
-                ave_pdos_convolved_all.append(ave_pdos_convolved)
-                pdos_label = atoms[1][c1]+F', {orbitals[c3]}'
-                labels.append(pdos_label)
-            except:
-                pass
+                    ave_pdos_convolved_all.append(ave_pdos_convolved)
+                    pdos_label = atoms[1][c1]+F', {orbitals[c3]}'
+                    labels.append(pdos_label)
+                except:
+                    pass
+            """
 
-    ave_pdos_convolved_all = np.array(ave_pdos_convolved_all) 
-    ave_pdos_convolved_total = np.sum(ave_pdos_convolved_all, axis=0)
+        ave_pdos_convolved_all = np.array(ave_pdos_convolved_all) 
+        ave_pdos_convolved_total = np.sum(ave_pdos_convolved_all, axis=0)
 
-    return ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels, ave_pdos_convolved_total
+        return ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels, ave_pdos_convolved_total
+
+    else:  # spin-polarized case
+        homo_occ = 1.0
+
+        labels_alp, labels_bet = [], []
+        ave_pdos_convolved_all_alp, ave_pdos_convolved_all_bet = [], []
+
+        for c1,i in enumerate(atoms[0]):
+            # Finding all the pdos files
+            pdos_files_alp = glob.glob(path_to_all_pdos+F'/*ALPHA*k{i}*.pdos')
+            pdos_files_bet = glob.glob(path_to_all_pdos+F'/*BETA*k{i}*.pdos')
+
+            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp, labels_alp)
+
+            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet, labels_bet)
+
+
+        ave_pdos_convolved_all_alp = np.array(ave_pdos_convolved_all_alp)
+        ave_pdos_convolved_total_alp = np.sum(ave_pdos_convolved_all_alp, axis=0)
+
+        ave_pdos_convolved_all_bet = np.array(ave_pdos_convolved_all_bet)
+        ave_pdos_convolved_total_bet = np.sum(ave_pdos_convolved_all_bet, axis=0)
+
+        return ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp, labels_alp, ave_pdos_convolved_total_alp, \
+               ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet, labels_bet, ave_pdos_convolved_total_bet
+
 
 
 def exc_analysis(params):
