@@ -41,7 +41,7 @@ def find_indices(params):
     return indices
 
 
-def read_data(params, path):
+def read_data(params, path, prefix):
     """
     This function is used to read the input and output (reference) matrices
     from the path it is given to in the params variable
@@ -50,7 +50,7 @@ def read_data(params, path):
     """
     data = []
     for i in params["train_indices"]:
-        tmp = np.load(F'{path}/{params["prefix"]}_{params["input_property"]}_{i}.npy')
+        tmp = np.load(F'{path}/{prefix}_{params["input_property"]}_{i}.npy')
         data.append(tmp)
     data = np.array(data)
     return data 
@@ -162,7 +162,7 @@ def train_partition(params, input_data, output_data, output_scaler):
 
     return model, [mae, mse, r2]
 
-def train_serial(params):
+def train(params):
     """
     This function is the main function that uses the previously defined 
     function to generate and train the data
@@ -170,9 +170,9 @@ def train_serial(params):
     # Find the training indices
     params["train_indices"] = find_indices(params)
     # Read the outputs 
-    raw_output = read_data(params, params["path_to_output_mats"])
+    raw_output = read_data(params, params["path_to_output_mats"], params["prefix"]+"_ref")
     # Read the inputs
-    raw_input = read_data(params, params["path_to_input_mats"])
+    raw_input = read_data(params, params["path_to_input_mats"], params["prefix"])
     # Partition inputs
     partitioned_input = partition_data(params, raw_input)
     #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
@@ -184,22 +184,52 @@ def train_serial(params):
     # Scale output data
     output_scalers, output_scaled = scale_data(params, partitioned_output)
     # Train for each partition
+    if params["train_parallel"]:
+        raise("TODO!")
     # All models will be in this list
-    models = []
-    models_error = []
-    for i in range(len(input_scaled)):
-        model, model_error = train_partition(params, input_scaled[i], output_scaled[i], output_scalers[i])
-        models.append(model)
-        models_error.append(model_error)
-    models_error = np.array(models_error)
+    else:
+        models = []
+        models_error = []
+        for i in range(len(input_scaled)):
+            model, model_error = train_partition(params, input_scaled[i], output_scaled[i], output_scalers[i])
+            models.append(model)
+            models_error.append(model_error)
+        models_error = np.array(models_error)
     print("Average MAE for all models:", np.average(models_error[:,0]))
     print("Average MSE for all models:", np.average(models_error[:,1]))
     print("Average R^2 for all models:", np.average(models_error[:,2]))
     print("Done with training!!")
-
+    if params["save_models"]:
+        os.system(f"mkdir {params['path_to_save_models']}")
+        np.save(f"{params['path_to_save_models']}/{params['prefix']}_models_error.npy", models_error)
+        for i in range(len(models)):
+            joblib.dump(models[i], F"{params['path_to_save_models']}/{params['prefix']}_model_{i}.joblib") 
+        for i in range(len(output_scalers)):
+            joblib.dump(output_scalers[i], F"{params['path_to_save_models']}/{params['prefix']}_output_scaler_{i}.joblib")
+            joblib.dump(input_scalers[i], F"{params['path_to_save_models']}/{params['prefix']}_input_scaler_{i}.joblib")
     # Remove the input and output data to reduce the memory
     # del raw_input, raw_output, partitioned_input, partitioned_output
     # We also need the scalers when we want to use them for new data
+    return models, models_error, input_scalers, output_scalers
+
+def load_models(path_to_models, params):
+    """
+    This function loads the models that are already trained
+    and return them with the input and output scalers as well for each partition.
+    """
+    models_error = np.load(f"{path_to_models}/{params['prefix']}_models_error.npy")
+    models = []
+    input_scalers = []
+    output_scalers = []
+    print("Loading models...")
+    try:
+        for i in range(params["npartition"]):
+            models.append(joblib.load(f"{path_to_models}/{params['prefix']}_model_{i}.joblib"))
+            input_scalers.append(joblib.load(f"{path_to_models}/{params['prefix']}_input_scaler_{i}.joblib"))
+            output_scalers.append(joblib.load(f"{path_to_models}/{params['prefix']}_output_scaler_{i}.joblib"))
+    except:
+        raise("Could not load models!...")
+    print("Done with loading models!...")
     return models, models_error, input_scalers, output_scalers
 
 def train_parallel(params):
@@ -213,9 +243,9 @@ def train_parallel(params):
     # Find the training indices
     params["train_indices"] = find_indices(params)
     # Read the outputs 
-    raw_output = read_data(params, params["path_to_output_mats"])
+    raw_output = read_data(params, params["path_to_output_mats"], params["prefix"])
     # Read the inputs
-    raw_input = read_data(params, params["path_to_input_mats"])
+    raw_input = read_data(params, params["path_to_input_mats"], params["prefix"]+"_ref")
     # Partition inputs
     partitioned_input = partition_data(raw_input)
     #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
@@ -257,8 +287,9 @@ def compute_atomic_orbital_overlap_matrix(params, step):
     This function computes the atomic orbital overlap
     matrix which will then be used to solve the generalized
     Kohn-Sham equations and compute the eigenvalues and
-    eigenvectors.
+    eigenvectors. This is doen in the basis of the output data.
     """
+    params["sample_molden_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*molden")[0]
     sample_molden_file = params["sample_molden_file"]
     path_to_trajectory = params["path_to_trajectory_xyz_file"]
     nprocs = params["nprocs"]
@@ -294,6 +325,7 @@ def compute_mo_overlaps(params, eigenvectors_1, eigenvectors_2, step_1, step_2):
     or the time-overlap matrix of the molecular orbitals of two different
     geometries.
     """
+    params["sample_molden_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*molden")[0]
     sample_molden_file = params["sample_molden_file"]
     path_to_trajectory = params["path_to_trajectory_xyz_file"]
     nprocs = params["nprocs"]
@@ -346,7 +378,7 @@ def find_indices_inputs(params):
 
     # Now sort the indices since they will be used
     indices = np.sort(indices)
-    return indices
+    return list(indices)
 
 
 def rebuild_matrix_from_partitions(params, partitions, output_shape):
@@ -393,20 +425,20 @@ def compute_properties(params, models, input_scalers, output_scalers):
     highest_orbital = params["highest_orbital"]
     if params["write_wfn_file"]:
         try:
+            params["sample_wfn_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*wfn")[0]
             basis_data, spin_data, eigen_vals_and_occ_nums, mo_coeffs = CP2K_methods.read_wfn_file(params["sample_wfn_file"])
             os.system(f'mkdir {params["path_to_save_wfn_files"]}')
         except:
             print("Sample wfn file not found or could not be read!")
             print("Will continue without writing the wfn files")
             params["write_wfn_file"] = False
-
     # Now we loop over the indices which are already sorted
     os.system(f'mkdir {params["res_dir"]}')
-    for i, step in enumerate(list(range(999,1100))):#indices):
+    for i, step in enumerate(indices):
         print("======================== \n Performing calculations for step ", step)
         input_mat = np.load(f'{params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
         if i==0: 
-            output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_{params["output_property"]}_{step}.npy')
+            output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
         partitioned_input = partition_matrix(params, input_mat)
         #print(np.array(partitioned_input[0]).shape)
         #raise('  ')
@@ -444,7 +476,7 @@ def compute_properties(params, models, input_scalers, output_scalers):
         energy_mat = data_conv.form_block_matrix(energy_mat, zero_mat, zero_mat, energy_mat)
         #output_name = F'ml_c60_b3lyp_size_{size}_{step+istep}-RESTART.wfn' 
         if params["write_wfn_file"]:
-            output_name = F'{params["path_to_save_wfn_files"]}/ml_{project}-{step}-RESTART.wfn'
+            output_name = F'{params["path_to_save_wfn_files"]}/ml_{params["prefix"]}-{step}-RESTART.wfn'
             CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
         eigenvectors_prev = eigenvectors
         # Writing the energy, overlap, and time-overlap files as in .npz file for other steps

@@ -44,7 +44,7 @@ def make_input(prefix, input_template, software, trajectory_xyz_file, step):
         for i in range(len(lines_input)):
             if "COORD_FILE_NAME".lower() in lines_input[i].lower():
                 f.write(F"     COORD_FILE_NAME  coord-{step}.xyz \n")
-            elif "project" in lines_input[i].lower() or "project_name" in lines_input[i].lower():
+            elif "project " in lines_input[i].lower() or "project_name" in lines_input[i].lower():
                 f.write(F"  PROJECT {prefix}_{step}\n")
             elif "filename" in lines_input[i].lower() and "!" not in lines_input[i]:
                 f.write("     FILENAME libra\n")
@@ -70,8 +70,16 @@ def make_input(prefix, input_template, software, trajectory_xyz_file, step):
             f.write(lines_input[i])
         f.close()
 
-def save_data(params, prefix, step, directory):
-    if params["software"].lower()=="cp2k":
+def save_data(params, prefix, step, directory, guess):
+    """
+    This is an auxiliary function to extract and save the output matrices data
+    """
+    if guess:
+        software = params["guess_software"]
+    else:
+        software = params["reference_software"]
+
+    if software.lower()=="cp2k":
         try:
             filename = F"{prefix}_{step}-libra-1_0.Log"
             properties, data = CP2K_methods.read_ao_matrices(filename)
@@ -83,11 +91,11 @@ def save_data(params, prefix, step, directory):
                 os.system("mkdir ../sample_files")
                 os.system(f"mv {prefix}_{step}* ../sample_files")
             if params["remove_raw_outputs"]: # and step>params["istep"]:
-                os.system(F"rm {prefix}_{step}-libra-*.Log {prefix}_{step}-RESTART.wfn* {prefix}_{step}*molden")
+                os.system(F"rm {prefix}_{step}*Log {prefix}_{step}*.wfn* {prefix}_{step}*molden")
         except:
             raise("Could not read the data from CP2K .Log files!")
 
-    elif params["software"].lower()=="dftb+":
+    elif software.lower()=="dftb+":
         try:
             filename = "hamsqrd1.dat"
             if os.path.exists(filename):
@@ -98,13 +106,23 @@ def save_data(params, prefix, step, directory):
         except:
             raise("Could not read data from DFTB+ .dat files!")
 
-def run_single_point(params, prefix, step):
+
+def run_single_point(params, prefix, step, guess):
     """
     This function runs the software on the Linux environment
     """
-    if params["software"].lower()=="cp2k":
-        os.system(F"mpirun -np {params['nprocs']} {params['software_exe']} -i input_{prefix}_{step}.inp -o output_{prefix}_{step}.log")
-    elif params["software"].lower()=="dftb+":
+    if guess:
+        software = params["guess_software"]
+        software_exe = params["guess_software_exe"]
+        mpi_exe = params["guess_mpi_exe"]
+    else:
+        software = params["reference_software"]
+        software_exe = params["reference_software_exe"]
+        mpi_exe = params["reference_mpi_exe"]
+
+    if software.lower()=="cp2k":
+        os.system(F"{mpi_exe} -np {params['nprocs']} {software_exe} -i input_{prefix}_{step}.inp -o output_{prefix}_{step}.log")
+    elif software.lower()=="dftb+":
         os.system(F"export OMP_NUM_THREADS={nprocs}") 
         os.system(F"mv dftb_in_{prefix}_{step}.hsd dftb_in.hsd") 
         os.system(F"{software_exe} dftb_in.hsd > output_{prefix}_{i}.log") 
@@ -117,13 +135,13 @@ def gen_data(params, step):
     """
     # Generate the step^th geometry from the trajectory file
     # and create an input file for that
-    make_input(params["prefix"], params["guess_input_template"], params["software"], params["trajectory_xyz_file"], step)
+    make_input(params["prefix"], params["guess_input_template"], params["guess_software"], params["trajectory_xyz_file"], step)
     # Run the calculations for this input file
     t1 = time.time()
     print("Guess calculations for step", step)
-    run_single_point(params, params["prefix"], step)
+    run_single_point(params, params["prefix"], step, True)
 
-    save_data(params, params["prefix"], step, params["guess_dir"])
+    save_data(params, params["prefix"], step, params["guess_dir"], True)
     #else:
     #    print("to be implemented!")
     print(f"Elapsed time for guess calculations: ", time.time()-t1)
@@ -132,12 +150,12 @@ def gen_data(params, step):
     if step in params["reference_steps"]:
         print("Reference calculations for step", step)
         t1 = time.time()
-        make_input(params["prefix"]+"_ref", params["reference_input_template"], params["software"], params["trajectory_xyz_file"], step)
+        make_input(params["prefix"]+"_ref", params["reference_input_template"], params["reference_software"], params["trajectory_xyz_file"], step)
         # And run the calculations for this step again
         #if params["software"].lower()=="cp2k":
-        run_single_point(params, params["prefix"]+"_ref", step)
+        run_single_point(params, params["prefix"]+"_ref", step, False)
         #os.system(F"mpirun -np {params['nprocs']} {params['software_exe']} -i input_{params['prefix']+'_ref'}_{step}.inp -o output_{params['prefix']+'_ref'}_{step}.log")
-        save_data(params, params["prefix"]+'_ref', step, params["reference_dir"])
+        save_data(params, params["prefix"]+'_ref', step, params["reference_dir"], False)
         print(f"Elapsed time for reference calculations: ", time.time()-t1)
     print(f"Done with step {step}!")
 
