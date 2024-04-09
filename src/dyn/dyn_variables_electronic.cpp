@@ -957,13 +957,18 @@ vector<double> dyn_variables::compute_average_sh_pop(int rep){
   vector<int> effective_states( act_states );
 
   if(rep==0){
-    // ===== For diabatic SH populations, we just use the projections of the active adiabatic states ======
+    // ===== For diabatic SH populations: use the prescription of ======
+    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+
     CMATRIX pop_adi(nadi, nadi);
     CMATRIX pop_dia(ndia, ndia);
 
     for(traj=0; traj<ntraj; traj++){
       i = effective_states[traj]; // active adiabatic state
-      pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+      pop_adi = *dm_adi[traj];
+      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
 
       // The following transformation is correct only for S_dia = 1
       pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H(); 
