@@ -467,6 +467,7 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
   CMATRIX df(nst, nst);
+//  CMATRIX U(nst, nst); // proj_adi;
 
 //  cout<<"In accept_hops with algo = "<<prms.hop_acceptance_algo<<endl;
 //  cout<<"ntraj_active = "<<ntraj_active<<endl;
@@ -590,6 +591,8 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
         for(idof = 0; idof < ndof_active; idof++){
           dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
+//          U = *dyn_var.proj_adi[traj];
+//          nac = U.H() * nac * U;
           //nac = projectors[traj].H() * nac * projectors[traj];
 
           dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
@@ -929,6 +932,7 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
   CMATRIX df(nst, nst);
+//  CMATRIX U(nst, nst);
 
 
   if(prms.momenta_rescaling_algo==0){  // Don't rescale at all
@@ -1045,6 +1049,9 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
         for(idof = 0; idof < n_active_dof; idof++){
           dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
+
+//          U = *dyn_var.proj_adi[traj];
+//          nac = U.H() * nac * U;
           //nac = projectors[traj].H() * nac * projectors[traj];
           dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
         }
