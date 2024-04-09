@@ -167,22 +167,26 @@ void export_dyn_variables_objects(){
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
 
   void (dyn_variables::*expt_update_amplitudes_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v2)
-  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  void (dyn_variables::*expt_update_amplitudes_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
 
 
   void (dyn_variables::*expt_update_density_matrix_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v2)
-  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  void (dyn_variables::*expt_update_density_matrix_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
 
 
@@ -268,11 +272,13 @@ void export_dyn_variables_objects(){
       .def("update_amplitudes", expt_update_amplitudes_v2)
       .def("update_amplitudes", expt_update_amplitudes_v3)
       .def("update_amplitudes", expt_update_amplitudes_v4)
+      .def("update_amplitudes", expt_update_amplitudes_v5)
 
       .def("update_density_matrix", expt_update_density_matrix_v1)
       .def("update_density_matrix", expt_update_density_matrix_v2)
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
+      .def("update_density_matrix", expt_update_density_matrix_v5)
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
