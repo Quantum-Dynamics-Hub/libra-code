@@ -309,6 +309,7 @@ class dyn_control_params{
       - 5: DISH
       - 6: MASH
       - 7: FSSH2
+      - 8: FSSH3 - experimental
   */
   int tsh_method;
 

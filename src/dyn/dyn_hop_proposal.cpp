@@ -19,12 +19,16 @@
 ///#include "Dynamics.h"
 //#include "../hamiltonian/libhamiltonian.h"
 //#include "../io/libio.h"
+#include "../math_meigen/mEigen.h"
 
 ///#include "dyn_control_params.h"
 #include "dyn_hop_proposal.h"
 
 /// liblibra namespace
 namespace liblibra{
+
+
+using namespace libmeigen;
 
 /// libdyn namespace
 namespace libdyn{
@@ -468,6 +472,13 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
 
   See more details in: TBD
 
+
+  P_{m->n}(t,t+dt) = min{ P_{m,out}(t,t+dt), (rho_{nn}(t+dt) - rho_{nn}(t))/rho_{mm}(t) }, 
+
+  where 
+
+  P_{m, out}(t, t+dt) = sum_{n=0, n\neqm}^{nstates} (  (rho_{nn}(t+dt) - rho{nn}(t)) /rho_{mm}(t) )
+
   \param[in] key parameters needed for this type of calculations
     - dt - integration timestep [a.u.]
     - Temperature - temperature [ K ]
@@ -525,6 +536,86 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
 }// fssh2
 
 
+vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx){
+/**
+  \brief This function computes the surface hopping probabilities according to new experimental idea
+
+  See more details in: TBD
+
+  \param[in] key parameters needed for this type of calculations
+    - dt - integration timestep [a.u.]
+    - Temperature - temperature [ K ]
+    - use_boltz_factor - whether to scale the computed probabilities by a Boltzmann factor
+  \param[in] denmat - [nstates x nstates] - current density matrix
+  \param[in] denmat_old - [nstates x nstates] - previous density matrix
+  \param[in] act_state_indx - index of the initial state
+
+  Returns: A nstates-vector of hopping probabilities to all states from the current active state
+*/
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+  double dt = prms.dt;
+  double T = prms.Temperature;
+  int use_boltz_factor = prms.use_boltz_factor;
+
+  int nstates = denmat.n_rows;
+  vector<double> g(nstates, 0.0);
+
+
+  // Now calculate the hopping probabilities
+  i = act_state_indx;
+
+  MATRIX rho_old(nstates, 1);
+  MATRIX rho(nstates,1);
+  //MATRIX drhodt(nstates, 1);
+
+  MATRIX J(nstates, nstates);
+  MATRIX rhorho(nstates, nstates);
+  MATRIX inv_rhorho(nstates, nstates);
+
+
+
+  for(j=0;j<nstates;j++){
+    rho_old.set(j, 0, denmat_old.get(j,j).real());
+    rho.set(j, 0, denmat.get(j,j).real());
+  }// for i
+
+  // Derivative of the density matrix
+  //drhodt = (1.0/dt)*(rho - rho_old);
+
+  rhorho = rho_old * rho_old.T();
+  FullPivLU_inverse(rhorho, inv_rhorho);
+
+  // The formula for fluxes
+  //J = (drhodt*rho.T()) * inv_rhorho;
+  J = (rho * rho_old.T()) * inv_rhorho;
+
+
+  // Now convert them the fluxes that go from node j to all other nodes to probabilities:
+  // if the flux is positive - the hop happens to the state j itself, so we don't consider them
+  // if the flux is negative, we count it
+  double total_flux = 0.0; 
+  for(j=0; j<nstates;j++){ 
+    g[j] = J.get(j, i);
+
+    if(g[j]>0.0){ total_flux += g[j]; }
+    else{ g[j] = 0.0; }
+  } 
+
+  // Now normalize to get the probabilities:
+  if( fabs(total_flux) > 1e-14){
+    for(j=0; j<nstates; j++){ g[j] /= total_flux; g[j] = fabs(g[j]);  }
+  }
+  else{  for(j=0; j<nstates; j++){ g[j] = 0.0; }  g[i] = 1.0;   } 
+
+
+  return g;
+
+
+}// fssh3
 
 
 
@@ -1155,10 +1246,20 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
 
       g[traj] = hopping_probabilities_fssh2(prms, dm, dm_prev, dyn_var.act_states[traj]);
     }
+    else if(prms.tsh_method == 8){ // FSSH3
 
+      CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
+      if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
+
+      //CMATRIX& U = *dyn_var.proj_adi[traj];
+      //CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
+      //dm_prev_trans = U.H() * dm_prev_trans * U;
+
+      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev, dyn_var.act_states[traj]);
+    }
 
     else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, or 7. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, 7, or 8. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }
