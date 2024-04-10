@@ -65,7 +65,7 @@ def gen_bath_params(_params):
     params = dict(_params)
 
     critical_params = [ ]
-    default_params = {"nstates":2, "num_osc":10, "spectral_density":0, "Omega":0.001, "lambda":0.001 }
+    default_params = {"nstates":2, "num_osc":2, "spectral_density":1, "Omega":0.001, "lambda":0.001 }
     comn.check_input(params, default_params, critical_params)
 
     nstates = params["nstates"]
@@ -74,7 +74,7 @@ def gen_bath_params(_params):
     Omega = params["Omega"]
     Lambda = params["lambda"]
 
-    omega, coupl = [], []
+    omega, coupl, mass = [], [], []
 
     if spectral_density == 0: # user-specified frequencies
         pass
@@ -82,12 +82,13 @@ def gen_bath_params(_params):
         pref = math.sqrt(2.0*Lambda/num_osc)
         omega = [ Omega * math.tan( (k + 0.5)/(2*num_osc) * math.pi ) for k in range(num_osc) ] # frequencies
         coupl = [ omega[k] * pref for k in range(num_osc) ] # coupling strengths
+        mass = [ 1.0 for k in range(num_osc) ] # masses
 
     else:
         print("Only spectral_density = 0 or 1 are allowed. Exiting now...")
         sys.exit(0)
 
-    return omega, coupl
+    return omega, coupl, mass
 
 
 
@@ -99,7 +100,7 @@ def GLVC(q, _params, full_id=None):
 
     H_s = N x N matrix of numbers - diabatic energies and couplings
 
-    H_b  = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> (1/2 * p_f^2 + 1/2 * omega_{n,f}^2 * q_f^2 ) <n|  (the kinetic energy is not included here)
+    H_b  = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> (p_f^2/(2*m_f) + 1/2 * m_f * omega_{n,f}^2 * q_f^2 ) <n|  (the kinetic energy is not included here)
                                                                                  frequencies may in general be different for all states
 
     H_{sb,1} = sum_{n=0}^{N-1} sum_{f=0}^{F-1} |n> coupl_{n,f} * q_{f}^2 <n|   - diagonal linear coupling terms, couplings may in general 
@@ -122,7 +123,7 @@ def GLVC(q, _params, full_id=None):
 
             * **params["nstates"]** ( int ): the number of electronic states [default: 2 ]
 
-            * **params["num_osc"]** ( int ): the number of oscillators on each of the energy levels [ units: 10 ]
+            * **params["num_osc"]** ( int ): the number of oscillators on each of the energy levels [ units: 2 ]
 
             * **params["Ham"]**   ( list of lists of double ): H_s values [ default:  [[0.00]*2]*2, units: Ha]
 
@@ -131,6 +132,8 @@ def GLVC(q, _params, full_id=None):
             * **params["omega"]** (list of N lists of F doubles): frequencies for all states
 
             * **params["coupl"]** (list of N lists of F doubles): diagonal linear couplings for all states
+ 
+            * **params["mass"]** (list of F doubles): masses of nuclear DOFS [ default: [1.0, 1.0], units: a.u.]
 
     Notes:  
         * lenth of the "omega" and "coup" parameters should be equal to num_osc, but the q should have nstates x num_osc rows (dofs)
@@ -151,7 +154,7 @@ def GLVC(q, _params, full_id=None):
 
     # Define potential specific constants
     critical_params = [ "omega", "coupl" ] 
-    default_params = { "Ham": [ [0.00, 0.00], [0.00, 0.00] ], "nstates":2, "num_osc":10, "coupling_scaling":[1.0, -1.0] }
+    default_params = { "Ham": [ [0.00, 0.00], [0.00, 0.00] ], "nstates":2, "num_osc":2, "coupling_scaling":[1.0, -1.0], "mass":[1.0, 1.0] }
     comn.check_input(params, default_params, critical_params)
 
     w = params["omega"]
@@ -160,6 +163,7 @@ def GLVC(q, _params, full_id=None):
     num_osc = params["num_osc"]
     Ham = params["Ham"]
     scl = params["coupling_scaling"]
+    mass = params["mass"]
   
     ndof = q.num_of_rows  # the number of nuclear DOFs  
 
@@ -200,7 +204,7 @@ def GLVC(q, _params, full_id=None):
             q_f = q.get(f, indx)
         
             # energy
-            w2 = w[n][f]**2
+            w2 = mass[f] * w[n][f]**2
 
             x = x + 0.5 * w2 * q_f**2 + coupl[n][f] * q_f * scl[n]
             y = w2 * q_f + coupl[n][f] * scl[n]
@@ -248,9 +252,10 @@ def get_GLVC_set1():
     params["spectral_density"] = 1
     params["Omega"] = 106.14 * units.inv_cm2Ha
     params["lambda"] = 35.0 * units.inv_cm2Ha
-    Om, Co = gen_bath_params(params)
+    Om, Co, mass = gen_bath_params(params)
     params["omega"] = [ list(Om), list(Om), list(Om) ]
     params["coupl"] = [ list(Co), list(Co), list(Co) ]
+    params["mass"] = list( mass )
     params["coupling_scaling"] = [1.0, 1.0, 1.0]
 
     s = units.inv_cm2Ha
@@ -356,11 +361,86 @@ def get_GLVC_set2(indx):
     params["Omega"] = Om * s 
     params["lambda"] = L * s
     params["beta"] = 1.0/(T*s)
-    OM, CO = gen_bath_params(params)
+    OM, CO, mass = gen_bath_params(params)
     params["omega"] = [ list(OM), list(OM) ]
     params["coupl"] = [ list(CO), list(CO) ]
+    params["mass"] = list(mass)
 
     params["Ham"] = [ [E, V], [V, -E] ]
     params["coupling_scaling"] = [1.0, -1.0]
+
+    return params
+
+
+def get_GLVC_set3():
+    """
+    5-state, 5 nuclear DOFS chain of coupled oscillators
+
+    General:
+    Wang, L.; Prezhdo, O. V. A Simple Solution to the Trivial Crossing Problem in Surface Hopping. 
+    J. Phys. Chem. Lett. 2014, 5 (4), 713–719. https://doi.org/10.1021/jz500025c.
+
+    with N = 5
+    Jain, A.; Alguire, E.; Subotnik, J. E. An Efficient, Augmented Surface Hopping Algorithm That 
+    Includes Decoherence for Use in Large-Scale Simulations. J. Chem. Theory Comput. 2016, 12 (11), 
+    5256–5268. https://doi.org/10.1021/acs.jctc.6b00673.
+
+    Args:
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+        * **nstates** (int): the number of electronic states
+
+        * **num_osc** (int): the number of oscillators per electronic state
+
+        * **spectral_density** (int): type of spectral density calculation - Debye
+
+        * **Omega** (double): characteristic frequency of bath [units: Ha]
+
+        * **lambda** (double): bath reorganization energy [units: Ha]
+
+        * **omega** (list of doubles): frequencies of the discretized spectral density [ units: Ha ]
+
+        * **coupl** (list of doubles): electron-nuclear couplings, same for all states, different for each oscillator [ units: Ha ]
+
+        * **beta** (double): inverse of thermal energy 1/kT [units: Ha^-1]
+
+    """
+
+
+    s = 208.5 * units.inv_cm2Ha # thermal energy at 300 K
+
+    params = {}
+    params["nstates"] = 5
+    params["num_osc"] = 5
+    params["spectral_density"] = 0
+
+    Om = 200.0 * units.inv_cm2Ha
+    OM = [ Om, Om, Om, Om, Om]
+    V = 50.0 * units.inv_cm2Ha
+    g = 3091.8 * units.inv_cm2Ha
+
+    # mass should be 1836
+
+    params["Omega"] = Om
+    params["lambda"] = 0.0 # doesn't matter
+
+    params["beta"] = 1.0/(575.5 * units.kB)
+
+    params["omega"] = [ list(OM), list(OM), list(OM), list(OM), list(OM)]
+    params["coupl"] = [ [g,   0.0, 0.0, 0.0, 0.0],
+                        [0.0,   g, 0.0, 0.0, 0.0],
+                        [0.0, 0.0,   g, 0.0, 0.0],
+                        [0.0, 0.0, 0.0,   g, 0.0],
+                        [0.0, 0.0, 0.0, 0.0,   g]  ]
+
+    params["Ham"] = [ [0.0,   V, 0.0, 0.0, 0.0], 
+                      [  V, 0.0,   V, 0.0, 0.0],
+                      [0.0,   V, 0.0,   V, 0.0],
+                      [0.0, 0.0,   V, 0.0,   V],
+                      [0.0, 0.0, 0.0,   V, 0.0] ]
+
+    params["coupling_scaling"] = [1.0, 1.0, 1.0, 1.0, 1.0 ]
 
     return params
