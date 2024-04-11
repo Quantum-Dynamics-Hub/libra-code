@@ -377,7 +377,8 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, MATRIX&
      prms.electronic_integrator==2 ||  prms.electronic_integrator==10 ||
      prms.electronic_integrator==11 || prms.electronic_integrator==12 
     ){ option = 1; }
-
+  
+  option = 0;
   F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1, option).real();
 
   for(int i=0;i<nstates; i++){
