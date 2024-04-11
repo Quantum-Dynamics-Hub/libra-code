@@ -1411,6 +1411,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     decoherence_rates = schwartz_2(prms, ham, *prms.schwartz_decoherence_inv_alpha); 
   }
 
+  else if(prms.decoherence_times_type==4){
+    decoherence_rates = schwartz_1(prms, *dyn_var.ampl_adi, *dyn_var.p, ham, *prms.schwartz_interaction_width); 
+  }
+
   ///== Optionally, apply the dephasing-informed correction ==
   if(prms.dephasing_informed==1){
     Eadi = get_Eadi(ham); 

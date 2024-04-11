@@ -94,6 +94,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("schwartz_decoherence_inv_alpha", &dyn_control_params::schwartz_decoherence_inv_alpha)
+      .def_readwrite("schwartz_interaction_width", &dyn_control_params::schwartz_interaction_width)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
@@ -438,9 +439,15 @@ void export_dyn_decoherence_objects(){
 
   vector<MATRIX> (*expt_schwartz_1_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v1);
+  
+  vector<MATRIX> (*expt_schwartz_1_v2)
+  (dyn_control_params& prms, CMATRIX& amplitudes, MATRIX& p, nHamiltonian& ham, MATRIX& w) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v2);
 
   vector<MATRIX> (*expt_schwartz_2_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
+  def("schwartz_2", expt_schwartz_2_v1);
 
 
 

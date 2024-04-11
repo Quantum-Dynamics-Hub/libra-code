@@ -343,6 +343,68 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamilt
   return res;
 }
 
+vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, MATRIX& p, nHamiltonian& ham, MATRIX& w){
+/**
+  Compute decoherence rates 1/tau_i for all states and all trajectories according to Schwartz prescription 
+  
+  amplitudes  - CMATRIX(nstates, ntraj)
+  p  - MATRIX(ndof, ntraj)
+  w - MATRIX(ndof, 1)
+
+  Return:
+
+  MATRIX(nstates, ntraj) - 1/tau - decoherence rates for all states and trajectories
+*/
+
+  int ndof = ham.nnucl;
+  int nstates = ham.nadi; 
+  int ntraj = ham.children.size();
+
+  double w2;
+
+  MATRIX F_mf(ndof, ntraj);
+  MATRIX F_st(ndof, ntraj);
+  MATRIX tmp(ndof, ntraj);
+
+  vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
+
+  vector<int> act_states(ntraj, 0);
+  /// AVA - commented for now, 12/7/2022
+  ///F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1).real();  //aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+
+  int option = 0; // default value for NAC-based integrators
+  if(prms.electronic_integrator==0 ||  prms.electronic_integrator==1 ||
+     prms.electronic_integrator==2 ||  prms.electronic_integrator==10 ||
+     prms.electronic_integrator==11 || prms.electronic_integrator==12 
+    ){ option = 1; }
+
+  F_mf = ham.Ehrenfest_forces_adi(amplitudes, 1, option).real();
+
+  for(int i=0;i<nstates; i++){
+    vector<int> act_states(ntraj, i);
+    
+    F_st = ham.forces_adi(act_states).real();  // aux_get_forces(prms_mf, amplitudes, projectors, act_states, ham);
+
+    for(int itraj=0; itraj<ntraj; itraj++){
+
+      double tau_inv2 = 0.0;
+      for(int idof=0; idof<ndof; idof++){
+        double dF = F_mf.get(idof, itraj) - F_st.get(idof, itraj);
+        
+        w2 = pow(w.get(idof,0), 2.0); 
+        tau_inv2 += 0.25 * pow(4*M_PI/(w2*p.get(idof, itraj)), 2.0) * dF * dF; 
+      }
+
+      double tau_inv = sqrt(tau_inv2);
+
+      res[itraj].set(i, i, tau_inv);
+
+    }// for itraj
+    
+  }// for i
+
+  return res;
+}
 
 
 

@@ -72,6 +72,7 @@ dyn_control_params::dyn_control_params(){
   dish_decoherence_event_option = 1;
   decoherence_times_type = -1;
   schwartz_decoherence_inv_alpha = NULL;
+  schwartz_interaction_width = NULL;
   decoherence_C_param = 1.0;
   decoherence_eps_param = 0.1;
   dephasing_informed = 0;
@@ -207,6 +208,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   schwartz_decoherence_inv_alpha = new MATRIX( x.schwartz_decoherence_inv_alpha->n_rows, x.schwartz_decoherence_inv_alpha->n_cols );
   *schwartz_decoherence_inv_alpha = *x.schwartz_decoherence_inv_alpha;
+  
+  schwartz_interaction_width = new MATRIX( x.schwartz_interaction_width->n_rows, x.schwartz_interaction_width->n_cols );
+  *schwartz_interaction_width = *x.schwartz_interaction_width;
 
   thermally_corrected_nbra = x.thermally_corrected_nbra;
   total_energy = x.total_energy;
@@ -224,6 +228,7 @@ dyn_control_params::~dyn_control_params() {
   delete decoherence_rates;  
   delete ave_gaps;
   delete schwartz_decoherence_inv_alpha;
+  delete schwartz_interaction_width;
 }
 
 
@@ -338,6 +343,13 @@ void dyn_control_params::set_parameters(bp::dict params){
       schwartz_decoherence_inv_alpha = new MATRIX(x.n_rows, x.n_cols);      
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){ schwartz_decoherence_inv_alpha->set(a, b, x.get(a,b));   }
+      } 
+    }
+    else if(key=="schwartz_interaction_width"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      schwartz_interaction_width = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ schwartz_interaction_width->set(a, b, x.get(a,b));   }
       } 
     }
     else if(key=="decoherence_C_param"){ decoherence_C_param = bp::extract<double>(params.values()[i]); }
