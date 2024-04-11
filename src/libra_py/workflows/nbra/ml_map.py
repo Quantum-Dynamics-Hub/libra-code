@@ -50,7 +50,8 @@ def read_data(params, path, prefix):
     """
     data = []
     for i in params["train_indices"]:
-        tmp = np.load(F'{path}/{prefix}_{params["input_property"]}_{i}.npy')
+        #tmp = np.load(F'{path}/{prefix}_{params["input_property"]}_{i}.npy')
+        tmp = np.load(F'{path}/{prefix}_{i}.npy')
         data.append(tmp)
     data = np.array(data)
     return data 
@@ -64,7 +65,7 @@ def partition_matrix(params, matrix):
     2- 'block': We find the blocks related to interaction of two atoms in the matrix
                 and then vectorize it. We first do this for off-diagonal blocks and
                 then for the diagonal blocks (interaction of each atom with itself)
-    3- 'atomwise': The section of a matrix which shows the interaction of each 
+    3- 'atomic': The section of a matrix which shows the interaction of each 
                    atom with all other atoms
     """
     # =========== 1- 'equal' partitioning
@@ -85,9 +86,32 @@ def partition_matrix(params, matrix):
     # =========== 2- 'block' partitioning
     elif params["partitioning_method"]=="block":
         print("To be implemented")
-    # =========== 3- 'atomwise' partitioning
-    elif params["partitioning_method"]=="atomwise":
-        print("To be implemented")
+    # =========== 3- 'atomic' partitioning
+    elif params["partitioning_method"]=="atomic":
+        #print("To be implemented")
+        # Find the Log files where the AO matrices are stored
+        # From these files, one can recognize the indices 
+        # corresponding to each atom in the matrix 
+        AO_Log_files = glob.glob(f"{params['path_to_sample_files']}/{params['prefix']}*.Log")
+        if params["input_partition"]:
+            for i in range(len(AO_Log_files)):
+                if not "_ref" in AO_Log_files[i]:
+                    ao_file = AO_Log_files[i]
+                    break
+        else:
+             for i in range(len(AO_Log_files)):
+                if "_ref" in AO_Log_files[i]:
+                    ao_file = AO_Log_files[i]
+                    break
+        ao_indices = CP2K_methods.atom_components_cp2k(ao_file)
+        mat_size = matrix.shape[0]
+        partitioned_matrix = []
+        for i in range(len(ao_indices)):
+            partition = []
+            for indx1 in ao_indices[i]:
+                for indx2 in range(indx1, mat_size):
+                    partition.append(matrix[indx1, indx2])
+            partitioned_matrix.append(partition)
 
     return partitioned_matrix
 
@@ -135,7 +159,8 @@ def scale_data(params, data):
         res = scale_partition(params, p1)
         scalers.append(res[0])
         scaled_data.append(res[1])
-    return (scalers, np.array(scaled_data))
+    #return scalers, np.array(scaled_data)
+    return (scalers, scaled_data)
 
 def train_partition(params, input_data, output_data, output_scaler):
     """
@@ -170,13 +195,15 @@ def train(params):
     # Find the training indices
     params["train_indices"] = find_indices(params)
     # Read the outputs 
-    raw_output = read_data(params, params["path_to_output_mats"], params["prefix"]+"_ref")
+    raw_output = read_data(params, params["path_to_output_mats"], params["prefix"]+"_ref_"+params["output_property"])
     # Read the inputs
-    raw_input = read_data(params, params["path_to_input_mats"], params["prefix"])
+    raw_input = read_data(params, params["path_to_input_mats"], params["prefix"]+"_"+params["input_property"])
     # Partition inputs
+    params["input_partition"] = True # This auxiliary param is for correct partitioning using atomic partitioning
     partitioned_input = partition_data(params, raw_input)
     #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
     # Partition outputs
+    params["input_partition"] = False
     partitioned_output = partition_data(params, raw_output)
     # Scale input data
     input_scalers, input_scaled = scale_data(params, partitioned_input)
@@ -387,8 +414,8 @@ def rebuild_matrix_from_partitions(params, partitions, output_shape):
     rebuild a matix from its partitions by figuring out how it
     was originally partitioned.
     """
-    # =========== 1- 'equal' partitioning
-    if params["partitioning_method"]=="equal":
+    # =========== 1- 'equal' or 'atomic' partitioning
+    if params["partitioning_method"]=="equal" or params["partitioning_method"]=="atomic":
         upper_vector = np.concatenate(partitions, axis=0)
         #print(upper_vector.shape)
         # generate the upper indices of the matrix
@@ -399,9 +426,7 @@ def rebuild_matrix_from_partitions(params, partitions, output_shape):
     # =========== 2- 'block' partitioning
     elif params["partitioning_method"]=="block":
         print("To be implemented")
-    # =========== 3- 'atomwise' partitioning
-    elif params["partitioning_method"]=="atomwise":
-        print("To be implemented")
+
         
     return matrix
 
@@ -444,7 +469,7 @@ def compute_properties(params, models, input_scalers, output_scalers):
         #raise('  ')
         # Now apply the models to each partition
         outputs = []
-        for j in range(params["npartition"]):
+        for j in range(len(input_scalers)):
             #print(input_scaled[j].reshape(1,-1).shape)
             input_scaled = input_scalers[j].transform(np.array(partitioned_input[j]).reshape(1,-1))
             #tmp = input_scaled.reshape(1,-1)
@@ -460,6 +485,19 @@ def compute_properties(params, models, input_scalers, output_scalers):
         #raise('   ')
         atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step)
         eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_ham_mat, atomic_overlap)
+        if params["save_ml_ham"]:
+            if not os.path.exists("ml_hams"):
+                os.system(f"mkdir ml_hams")
+            np.save(f"ml_hams/Ham_{step}.npy", ks_ham_mat)
+        if params["save_ao_overlap"]:
+            if not os.path.exists("ao_overlaps"):
+                os.system(f"mkdir ao_overlaps")
+            np.save(f"ao_overlaps/AO_S_{step}.npy", atomic_overlap)
+        if params["save_ml_mos"]:
+            if not os.path.exists("ml_mos"):
+                os.system(f"mkdir ml_mos")
+            np.save(f"ml_mos/eigenvectors_{step}.npy", eigenvectors) 
+            np.save(f"ml_mos/eigenvalues_{step}.npy", eigenvalues) 
         # Compute the overlaps
         mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step, 
                                          step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]

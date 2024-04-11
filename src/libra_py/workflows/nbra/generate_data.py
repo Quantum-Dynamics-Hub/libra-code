@@ -133,30 +133,32 @@ def gen_data(params, step):
     """
     This function takes multiple parameters to run electronic structure calculations
     """
-    # Generate the step^th geometry from the trajectory file
-    # and create an input file for that
-    make_input(params["prefix"], params["guess_input_template"], params["guess_software"], params["trajectory_xyz_file"], step)
-    # Run the calculations for this input file
-    t1 = time.time()
-    print("Guess calculations for step", step)
-    run_single_point(params, params["prefix"], step, True)
-
-    save_data(params, params["prefix"], step, params["guess_dir"], True)
-    #else:
-    #    print("to be implemented!")
-    print(f"Elapsed time for guess calculations: ", time.time()-t1)
-    # After the calculation is done for the guess geometry
-    # if the step is in the reference steps, create another input file
-    if step in params["reference_steps"]:
-        print("Reference calculations for step", step)
+    if params["do_guess"]:
+        # Generate the step^th geometry from the trajectory file
+        # and create an input file for that
+        make_input(params["prefix"], params["guess_input_template"], params["guess_software"], params["trajectory_xyz_file"], step)
+        # Run the calculations for this input file
         t1 = time.time()
-        make_input(params["prefix"]+"_ref", params["reference_input_template"], params["reference_software"], params["trajectory_xyz_file"], step)
-        # And run the calculations for this step again
-        #if params["software"].lower()=="cp2k":
-        run_single_point(params, params["prefix"]+"_ref", step, False)
-        #os.system(F"mpirun -np {params['nprocs']} {params['software_exe']} -i input_{params['prefix']+'_ref'}_{step}.inp -o output_{params['prefix']+'_ref'}_{step}.log")
-        save_data(params, params["prefix"]+'_ref', step, params["reference_dir"], False)
-        print(f"Elapsed time for reference calculations: ", time.time()-t1)
+        print("Guess calculations for step", step)
+        run_single_point(params, params["prefix"], step, True)
+    
+        save_data(params, params["prefix"], step, params["guess_dir"], True)
+        #else:
+        #    print("to be implemented!")
+        print(f"Elapsed time for guess calculations: ", time.time()-t1)
+        # After the calculation is done for the guess geometry
+        # if the step is in the reference steps, create another input file
+    if params["do_ref"]:
+        if step in params["reference_steps"]:
+            print("Reference calculations for step", step)
+            t1 = time.time()
+            make_input(params["prefix"]+"_ref", params["reference_input_template"], params["reference_software"], params["trajectory_xyz_file"], step)
+            # And run the calculations for this step again
+            #if params["software"].lower()=="cp2k":
+            run_single_point(params, params["prefix"]+"_ref", step, False)
+            #os.system(F"mpirun -np {params['nprocs']} {params['software_exe']} -i input_{params['prefix']+'_ref'}_{step}.inp -o output_{params['prefix']+'_ref'}_{step}.log")
+            save_data(params, params["prefix"]+'_ref', step, params["reference_dir"], False)
+            print(f"Elapsed time for reference calculations: ", time.time()-t1)
     print(f"Done with step {step}!")
 
 
@@ -188,9 +190,11 @@ def distribute_jobs(params):
     ref_steps = params["reference_steps"]
     if params["scratch"]==params["do_more"]:
         raise("'scratch' and 'do_more' cannot get the same value at the same time!")
+    if params["do_guess"]==False and params["do_ref"]==False:
+        raise("do_guess and do_ref cannot get False value at the same time!")
     if params["scratch"]:
         # Remove evrything including the data
-        os.system("rm -rf job* shuffled_indices.npy") # Removes the job folders and the random indices
+        os.system("rm -rf job* sample_files shuffled_indices.npy") # Removes the job folders and the random indices
         #os.system('rm find . -name "*.npy" ') # This seems to be brutal! It removes everything :))
         shuffled_indices = np.arange(params["istep"], params["fstep"])
         params["steps"] = list(range(params["istep"], params["fstep"]))
