@@ -26,6 +26,11 @@ def find_indices(params):
     """
     This function finds the indices of a set of file in a directory
     sorts them and return them in a list
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the
+                       train function.
+    Returns:
+        indices (list): The list of indices of the reference calculation
     """
     # The indices are generated based on the output matrices
     files = glob.glob(f'{params["path_to_output_mats"]}/*{params["output_property"]}*npy')
@@ -47,6 +52,13 @@ def read_data(params, path, prefix):
     from the path it is given to in the params variable
     It is not a general function but rather an auxiliary one so it's not
     suitable in data_read module in libra_py.
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the
+                       train function.
+        path (string): The path to data
+        prefix (string): The prefix used to save the data
+    Returns:
+        data (nparray): The read data in the path
     """
     data = []
     for i in params["train_indices"]:
@@ -67,6 +79,11 @@ def partition_matrix(params, matrix):
                 then for the diagonal blocks (interaction of each atom with itself)
     3- 'atomic': The section of a matrix which shows the interaction of each 
                    atom with all other atoms
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        matrix (nparray): The matrix to be partitioned
+    Returns:
+        partitioned_matrix (list): A list containing the partitions of the matrix
     """
     # =========== 1- 'equal' partitioning
     if params["partitioning_method"]=="equal":
@@ -118,6 +135,11 @@ def partition_matrix(params, matrix):
 def partition_data(params, data):
     """
     This function uses the partition_matrix to partition a set of data
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        data (list): A list of numpy arrays of matrices
+    Returns:
+        partitioned_data (list): A list containing the partitioned matrices
     """
     partitioned_data = []
     #print(data.shape)
@@ -134,6 +156,12 @@ def scale_partition(params, partition):
     the matrix based on the scalers in scikit-learn package
     It returns both the scaler and the scaled data
     The scaler is needed for transforming back the data
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        partition (list): The partition of a matrix
+    Returns:
+        scaler (scikit-learn scaler): The scaler function of scikit-learn
+        scaled_data (nparra): The scaled partition
     """
     if params["scaler"].lower()=="standard_scaler":
         scaler = StandardScaler()     
@@ -147,6 +175,12 @@ def scale_partition(params, partition):
 def scale_data(params, data):
     """
     This function is used to scale all the partitions in the inputs or outputs
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        scaled_data (list): The list of data to be partitioned
+    Returns:
+        scalers (list): A list of scalers
+        scaled_data (list): A list of scaled data 
     """
     scalers = []
     scaled_data = []
@@ -167,6 +201,14 @@ def train_partition(params, input_data, output_data, output_scaler):
     This function builds and trains a KRR model
     using input_data and output_data
     We will use the scaled input and output data to train the model
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        input_data (list): The input data vectors for one partition
+        output_data (list): The output data vectors for the corresponding partition in the input
+        output_scaler (scikit-learn scaler): The output data scaler
+    Returns:
+        model (scikit-learn model): The trained model
+        [mae, mse, r2] (list of floats): The mean absolute error, mean square error, and the R^2 of the model
     """
     model = KernelRidge(kernel=params["kernel"], degree=params["degree"], 
                         alpha=params["alpha"], gamma=params["gamma"])
@@ -191,6 +233,56 @@ def train(params):
     """
     This function is the main function that uses the previously defined 
     function to generate and train the data
+    Args:
+        params (dictionary):
+            prefix: The prefix used to save the files.
+            path_to_input_mats: The full path to input matrices files.
+            path_to_output_mats: The full path to output matrices files.
+            path_to_trajectory_xyz_file: The full path to trajectory xyz file. This is required for computation of the overlap
+                                         matrix and solving generalized Kohn-Sham equations. Also, it will be required for computation of the molecular orbitals 
+                                         overlap and time-overlap matrices.
+            path_to_sample_files: The full path to sample files 
+            input_property: The input property which appears in the middle of the name of the input files. It can take values of `kohn_sham`, `density`, `overlap`, and `hamiltonian` for xTB calculations.
+            output_property: The output property which appears in the middle of the name of the output files. It can take values of `kohn_sham`, `density`, `overlap`, and `hamiltonian` for xTB calculations. 
+            kernel: The KRR method kernels: `linear`, `poly` for polynomial kernels, and `rbf` for radial basis function kernel.
+            degree: The degree of the kernel function in case of a `poly` kernel.
+            alpha: This parameter represents the regularization strength in ridge regression. It controls the complexity of the model: a higher alpha value increases 
+                   the amount of regularization, which in turn reduces the model's variance but might increase its bias. Specifically, it multiplies the identity matrix 
+                   that is added to the kernel matrix in the ridge regression formula. This parameter helps to prevent overfitting by ensuring that the coefficients do not grow too large.
+            gamma: This parameter is specific to certain types of kernels such as the radial basis function, sigmoid, or polynomial kernels. 
+                   Gamma defines how much influence a single training input has. The larger the gamma, the closer other inputs must be to be affected.
+            scaler: The scaler to scale the input and data. It can take `standard_scaler` and `minmax_scaler` values. The `standard_scaler` is recommended.
+            save_models: A boolean flag for saving the trained model 
+            path_to_save_models: The full path to save the model
+            save_ml_ham: A boolean flag for saving the predicted Hamiltonian matrices 
+            save_ao_overlap: A boolean flag for saving the atomic orbital overlap matrices
+            save_ml_mos: A boolean flag for saving the molecular orbitals eigenvalues and eigenvectors
+            partitioning_method: The partitioning of the Hamiltonian matrix. It can take values of `equal` and `atomic`. In the 
+                                 equal partitioning, the upper triangular part of the Hamiltonian matrix is partitioned into `npartition` equal segments. 
+                                 A separate model maps each input partition to its corresponding partition in the output matrix.
+                                 The atomic partitioning method partitions the matrix based on the atomic angular momentum components of the matrix for each basis set.
+            npartition: The number of partition in the `equal` partitioning method.
+            memory_efficient: A boolean flag for memory efficiency of the calculations. This will remove the raw data and will remove them 
+            from the memory after they are processed.
+            nprocs: The number of processors for computing the overlap matrices.
+            write_wfn_file: A boolean flag for writing `wfn` files readable by CP2K.
+            path_to_save_wfn_files: The full path to save the `wfn` files.
+            is_periodic: The flag for periodicity of he system for computing the overlaps.
+            A_cell_vector: A list containing the A cell vector.
+            B_cell_vector: A list containing the B cell vector.
+            C_cell_vector: A list containing the C cell vector.
+            periodicity_type: The periodicity type for each direction of the periodic cell.
+            lowest_orbital: The lowest orbital index to be saved.
+            highest_orbital: The highest orbital index to be saved.
+            res_dir: The full path to save the overlap, time-overlap, and energies 
+            #TODO:
+            train_parallel: A boolean flag for training models in parallel
+
+    Returns: 
+        models (list of models): A list of all trained models for each partition
+        models_error (list of list of floats): Error data for each model including MAE, MSE, and R^2
+        input_scalers (list of scalers): The list of all input scalers
+        output_scalers (list of scalers): The list of all output scalers
     """
     # Find the training indices
     params["train_indices"] = find_indices(params)
@@ -243,6 +335,14 @@ def load_models(path_to_models, params):
     """
     This function loads the models that are already trained
     and return them with the input and output scalers as well for each partition.
+    Args:
+        path_to_models (string): The full path to saved models
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+    Returns:
+        models (list of models): A list of all trained models for each partition
+        models_error (list of list of floats): Error data for each model including MAE, MSE, and R^2
+        input_scalers (list of scalers): The list of all input scalers
+        output_scalers (list of scalers): The list of all output scalers
     """
     models_error = np.load(f"{path_to_models}/{params['prefix']}_models_error.npy")
     models = []
@@ -259,54 +359,6 @@ def load_models(path_to_models, params):
     print("Done with loading models!...")
     return models, models_error, input_scalers, output_scalers
 
-def train_parallel(params):
-    """
-    This function is the main function that uses the previously defined 
-    function to generate and train the data but uses a parallel approach for 
-    training each model for each partition
-    TODO: This function speed is slower than the serial one! :)
-    Need to create an auxiliary function for that and then use pool.map
-    """
-    # Find the training indices
-    params["train_indices"] = find_indices(params)
-    # Read the outputs 
-    raw_output = read_data(params, params["path_to_output_mats"], params["prefix"])
-    # Read the inputs
-    raw_input = read_data(params, params["path_to_input_mats"], params["prefix"]+"_ref")
-    # Partition inputs
-    partitioned_input = partition_data(raw_input)
-    #print(len(partitioned_input), len(partitioned_input[0]), len(partitioned_input[0][0]))
-    # Partition outputs
-    partitioned_output = partition_data(raw_output)
-    # Scale input data
-    input_scalers, input_scaled = scale_data(partitioned_input)
-    #print(len(input_scalers))
-    # Scale output data
-    output_scalers, output_scaled = scale_data(partitioned_output)
-    if params["memory_efficient"]:
-        del raw_input, raw_output, partitioned_input, partitioned_output
-    # Train for each partition
-    # All models will be in this list
-    """
-    The only different part is here where we first 
-    create a pool of processors and then use 
-    pool.starmap to do the calculations
-    We first create the set of arguments
-    """
-    arguments = []
-    for i in range(params["npartition"]):
-        arguments.append( (params, input_scaled[i], output_scaled[i], output_scalers[i]) )
-    
-    #with mp.Pool(processes=params["nprocs"]) as pool:
-    #    results = pool.starmap(train_partition, arguments)
-    pool = mp.Pool(processes=params["nprocs"])
-    print('Started pool!')
-    pool.starmap( train_partition, arguments )
-    pool.close()
-    pool.join()
-
-    # To be completed
-    print(results[0])
 
 
 def compute_atomic_orbital_overlap_matrix(params, step):
@@ -315,6 +367,11 @@ def compute_atomic_orbital_overlap_matrix(params, step):
     matrix which will then be used to solve the generalized
     Kohn-Sham equations and compute the eigenvalues and
     eigenvectors. This is doen in the basis of the output data.
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        step (int): The step in the molecular dynamics trjectory
+    Returns:
+        AO_S (nparray): The atomic orbital overlap matrix
     """
     params["sample_molden_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*molden")[0]
     sample_molden_file = params["sample_molden_file"]
@@ -351,6 +408,14 @@ def compute_mo_overlaps(params, eigenvectors_1, eigenvectors_2, step_1, step_2):
     for computing the molecular orbital overlap matrix for one geometry
     or the time-overlap matrix of the molecular orbitals of two different
     geometries.
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        eigenvectors_1 (nparray): The first set of eigenvectors
+        eigenvectors_2 (nparray): The second set of eigenvectors
+        step_1 (int): The corresponding step in the molecular dynamics trajectory of eigenvectors_1
+        step_2 (int): The corresponding step in the molecular dynamics trajectory of eigenvectors_2
+    Returns:
+        MO_overlap (nparray): The molecular orbital overlap matrix
     """
     params["sample_molden_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*molden")[0]
     sample_molden_file = params["sample_molden_file"]
@@ -394,6 +459,10 @@ def find_indices_inputs(params):
     This will gives us the initial step which will be a useful quantity 
     in indexing e.g. indexing the correct geometry in the molecular
     dynamics trajectory
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+    Returns:
+        indices (list): The completed steps in the input directory
     """
     # We first find all the input files in the path_to_input_mats directory
     files = glob.glob(f'{params["path_to_input_mats"]}/*{params["input_property"]}*npy')
@@ -413,6 +482,12 @@ def rebuild_matrix_from_partitions(params, partitions, output_shape):
     This function is one of the most important here. It will
     rebuild a matix from its partitions by figuring out how it
     was originally partitioned.
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        partitions (list): The list of partitions of the upper triangular part of the Hamiltonian matrix
+        output_shape (tuple): The shape of the output KS Ham matrix
+    Returns:
+        matrix (nparray): The rebuilt KS Ham matrix form partitions
     """
     # =========== 1- 'equal' or 'atomic' partitioning
     if params["partitioning_method"]=="equal" or params["partitioning_method"]=="atomic":
@@ -442,6 +517,13 @@ def compute_properties(params, models, input_scalers, output_scalers):
     This function does not return anything but it writes output results 
     to the params["res_dir"] which can then be used for computing the 
     excited states basis.
+    Args:
+        params (dict): The details of the parameters in the dictionary are given in the train function.
+        models (list): The list that contains the trained models
+        input_scalers (list): The list of all input scalers
+        output_scalers (list): The list of all output scalers
+    Returns:
+        None
     """
     # First find the indices of the input data
     indices = find_indices_inputs(params)
