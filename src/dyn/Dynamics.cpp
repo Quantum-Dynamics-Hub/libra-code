@@ -1447,7 +1447,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     if(prms.rep_tdse==1){
       p = *dyn_var.p;
       //cout<<"p before mfsd\n"; dyn_var.p->show_matrix();
-      *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+      *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, dyn_var.act_states, decoherence_rates, ham, rnd, prms.isNBRA);
       *dyn_var.p = p;
       //cout<<"p after mfsd\n"; dyn_var.p->show_matrix();
        
