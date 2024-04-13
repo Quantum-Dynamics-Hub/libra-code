@@ -1,3 +1,22 @@
+#***********************************************************
+# * Copyright (C) 2024 Mohammad Shakiba and Alexey V. Akimov
+# * This file is distributed under the terms of the
+# * GNU General Public License as published by the
+# * Free Software Foundation; either version 3 of the
+# * License, or (at your option) any later version.
+# * http://www.gnu.org/copyleft/gpl.txt
+#***********************************************************/
+
+"""
+.. module:: ml_map
+   :platform: Unix
+   :synopsis: This module creates models to map KS Hamiltonian matrices from
+              one level of theory to another and compute the properties of the
+              ML generated KS Hamiltonian.
+
+.. moduleauthor:: Mohammad Shakiba and Alexey V. Akimov
+
+"""
 
 import os
 import sys
@@ -263,7 +282,7 @@ def train(params):
                                  The atomic partitioning method partitions the matrix based on the atomic angular momentum components of the matrix for each basis set.
             npartition: The number of partition in the `equal` partitioning method.
             memory_efficient: A boolean flag for memory efficiency of the calculations. This will remove the raw data and will remove them 
-            from the memory after they are processed.
+                              from the memory after they are processed.
             nprocs: The number of processors for computing the overlap matrices.
             write_wfn_file: A boolean flag for writing `wfn` files readable by CP2K.
             path_to_save_wfn_files: The full path to save the `wfn` files.
@@ -272,8 +291,8 @@ def train(params):
             B_cell_vector: A list containing the B cell vector.
             C_cell_vector: A list containing the C cell vector.
             periodicity_type: The periodicity type for each direction of the periodic cell.
-            lowest_orbital: The lowest orbital index to be saved.
-            highest_orbital: The highest orbital index to be saved.
+            lowest_orbital: The lowest orbital index to be saved. STARTS FROM 1
+            highest_orbital: The highest orbital index to be saved. STARTS FROM 1
             res_dir: The full path to save the overlap, time-overlap, and energies 
             #TODO:
             train_parallel: A boolean flag for training models in parallel
@@ -284,6 +303,18 @@ def train(params):
         input_scalers (list of scalers): The list of all input scalers
         output_scalers (list of scalers): The list of all output scalers
     """
+    critical_params = ['path_to_input_mats', 'path_to_output_mats', 'path_to_trajectory_xyz_file', 'path_to_sample_files']
+    default_params = {'prefix': 'libra', 'input_property': 'kohn_sham', 'output_property': 'kohn_sham',
+                      'kernel': 'linear', 'degree': 1, 'alpha': 1.0, 'gamma': 1.0, 'scaler': 'standard_scaler',
+                      'save_models': True, 'path_to_save_models': './models', 'save_ml_ham': False, 'save_ao_overlap': False,
+                      'save_ml_mos': False, 'partitioning_method': 'equal', 'npartition': 30, 'memory_efficient': True,
+                      'nprocs': 2, 'write_wfn_file': False, 'path_to_save_wfn_files': './wfn_files', 'is_periodic': False,
+                      'A_cell_vector': [25.0,0.0,0.0], 'B_cell_vector': [0.0,25.0,0.0], 'C_cell_vector': [0.0,0.0,25.0],
+                      'periodicity_type': 'XYZ', 'lowest_orbital': 1, 'highest_orbital': 5, 'res_dir': './res', 'train_parallel': False
+                     }
+    # First load the default parameters etc
+    comn.check_input(params, default_params, critical_params)
+   
     # Find the training indices
     params["train_indices"] = find_indices(params)
     # Read the outputs 

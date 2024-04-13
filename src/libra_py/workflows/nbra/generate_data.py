@@ -32,6 +32,15 @@ def make_input(prefix, input_template, software, trajectory_xyz_file, step):
     """
     This function makes an input for a step 
     based on the input template and the trajectory xyz file
+    Args:
+        prefix (string): The prefix with which the inputs names are saved
+        input_template (string): The full path to input template
+        software (string): The software name for which the calculations should be done
+        trajectory_xyz_file (string): The full path to the trajectory xyz file
+        step (integer): The step^th geometry in the molecular dynamics trajectory 
+                        for which the calculations should be done
+    Returns:
+        None
     """
     f = open(input_template,'r')
     lines_input = f.readlines()
@@ -73,6 +82,14 @@ def make_input(prefix, input_template, software, trajectory_xyz_file, step):
 def save_data(params, prefix, step, directory, guess):
     """
     This is an auxiliary function to extract and save the output matrices data
+    Args:
+        params (dict): The detailed explanation of the parameters are given in the distribute_jobs function.
+        prefix (string): The prefix with which the data should be saved.
+        step (integer): The step^th geometry in the molecular dynamics trajectory.
+        directory (string): The full path to which the data will be saved.
+        guess (bool): An internal boolean flag showing whether the guess or reference calculations should be saved.
+    Returns:
+        None
     """
     if guess:
         software = params["guess_software"]
@@ -110,6 +127,13 @@ def save_data(params, prefix, step, directory, guess):
 def run_single_point(params, prefix, step, guess):
     """
     This function runs the software on the Linux environment
+    Args:
+        params (dict): The detailed explanation of the parameters are given in the distribute_jobs function.
+        prefix (string): The prefix showing for which input the data should be run.
+        step (integer): THe step^th geometry in the molecular dynamics trajectory.
+        guess (bool): An internal boolean flag showing whether the guess or reference calculations should be saved.
+    Returns:
+        None
     """
     if guess:
         software = params["guess_software"]
@@ -132,6 +156,11 @@ def run_single_point(params, prefix, step, guess):
 def gen_data(params, step):
     """
     This function takes multiple parameters to run electronic structure calculations
+    Args:
+        params (dict): The detailed explanation of the parameters are given in the distribute_jobs function.
+        step (integer): The step^th geometry of the molecular dynamics trajectory
+    Returns:
+        None
     """
     if params["do_guess"]:
         # Generate the step^th geometry from the trajectory file
@@ -166,6 +195,10 @@ def find_steps(files):
     """
     This is an auxiliary function that finds how many steps were done
     in a directory by extracting the indices of the *.npy files
+    Args:
+        files (list): A list containing files in a give path - usually generated from glob library
+    Returns:
+        steps (list): The steps for which the calculations are complete and the data are present in a directory
     """
     steps = []
     for file in files:
@@ -179,12 +212,47 @@ def distribute_jobs(params):
     This function runs single-point electronic stucture calculations for 
     geometries over a precomputed trajectory and distributes them over 
     different ndoes
+    Args:
+        params (dictionary):
+            prefix: The prefix used to names of the files when saved.
+            trajectory_xyz_file: The full path to the precomputed trajectory `xyz` file.
+            scratch: This flag is used to compute all the data, including both guess and reference data, from scratch.
+            do_more: This flag is used to perform additional reference calculations. This may be needed when more data are required to train the ML model. This and `scratch` flags cannot have the same logical values at the same time.
+            do_more_steps: The number of additional reference steps while the `do_more` flag is set to `True`.
+            guess_dir: The full path to save the guess calculations.
+            do_guess: A boolean flag for doing the guess calculations.
+            do_ref: A boolean flag for doing only the reference calculations.
+            reference_dir: The full path to save the reference calculations.
+            guess_input_template: The input template used for perfroming guess calculations.
+            reference_input_template: The input template required for performing reference calculations.
+            guess_software: The software used to perform guess calculations. Current values are `cp2k` and `dftb+`
+            guess_software_exe: The executable or the full executable path to the software required to compute the guess calculations.
+            guess_mpi_exe: The `mpi` executable for running the `guess_software`.
+            reference_software: The software to perform reference calculations. Current values are `cp2k` and `dftb+`.
+            reference_software_exe: The executable or the full executable path to the software required to compute the reference calculations.
+            reference_mpi_exe: The `mpi` executable for running the `reference_software`.
+            reference_steps: The number of reference steps.
+            njobs: The number of jobs for distributing the calculations.
+            istep: The initial step in the precomputed molecular dynamics trajectory.
+            fstep: The final step in the precomputed molecular dynamics trajectory.
+            nprocs: The number of processors to be used for calculations in each job.
+            remove_raw_outputs: This falg removes large raw files which are read by Libra and saved.
+            submit_template: The full path to the submission file.
+            submit_exe: The submission executable - for some HPC environments, it is `sbatch` and for some others, it is `qsub`. Currently, only slurm environment is tested.
+            software_load_instructions: The loading instructions that are needed to load Python, guess and reference software, and any other thing required to run calculations.
+    Returns:
+        None
     """
-#    critical_params = ['lowest_orbital','highest_orbital']
-#    default_params = {
-#                     }
+    critical_params = ['guess_input_template', 'trajectory_xyz_file', 'reference_input_template', 'istep', 
+                        'fstep', 'submit_template', 'software_load_instructions']
+    default_params = {'prefix': 'libra', 'scratch': True, 'do_more': False, 'do_more_steps': 10,
+                      'guess_dir': './guess', 'do_guess': True, 'reference_dir': './ref', 'do_ref': True,
+                      'guess_software': 'cp2k', 'guess_software_exe': 'cp2k.psmp', 'guess_mpi_exe': 'mpirun',
+                      'reference_software': 'cp2k', 'reference_software_exe': 'cp2k.psmp', 'reference_mpi_exe': 'mpirun',
+                      'reference_steps': 10, 'njobs': 2, 'nprocs': 2, 'remove_raw_outputs': True, 'submit_exe': 'sbatch'
+                     }
     # First load the default parameters etc
-#    comn.check_input(params, default_params, critical_params)
+    comn.check_input(params, default_params, critical_params)
     # Now let's create the random numbers
     nsteps = params["fstep"]-params["istep"]
     ref_steps = params["reference_steps"]
