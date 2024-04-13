@@ -566,7 +566,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "collapse_option":0,  
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
-                             "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
+                             "schwartz_decoherence_inv_alpha": MATRIX(dyn_var.ndof, 1), "schwartz_interaction_width": MATRIX(dyn_var.ndof, 1),
                              "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
                              "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
                            } )
@@ -683,7 +683,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_mqcxf()
     if tsh_method==5 or decoherence_algo==7: # DISH or DISH_rev2023
         dyn_var.allocate_dish()
-    if tsh_method==7: #  FSSH2
+    if tsh_method==7 or tsh_method==8: #  FSSH2 or FSSH3
         dyn_var.allocate_fssh2()
         dyn_var.save_curr_dm_into_prev()
 
@@ -880,6 +880,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
     # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
     # of electronic variables - this will convert the amplitudes to the proper representation
+    dyn_var.update_basis_transform(ham);
     dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
     dyn_var.update_density_matrix( dyn_params, ham, 1)
     dyn_var.init_active_states(init_elec, rnd)

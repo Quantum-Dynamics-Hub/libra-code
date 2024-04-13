@@ -549,11 +549,13 @@ class dyn_variables{
 
   ///====================== In dyn_variables_electronic.cpp =====================
 
+  void update_amplitudes(dyn_control_params& dyn_params);
   void update_amplitudes(dyn_control_params& dyn_params, nHamiltonian& ham);
   void update_amplitudes(bp::dict dyn_params, nHamiltonian& ham);
   void update_amplitudes(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params);
   void update_amplitudes(bp::dict dyn_params, bp::object compute_model, bp::dict model_params);
 
+  void update_density_matrix(dyn_control_params& dyn_params);
   void update_density_matrix(dyn_control_params& dyn_params, nHamiltonian& ham, int lvl);
   void update_density_matrix(bp::dict dyn_params, nHamiltonian& ham, int lvl);
   void update_density_matrix(dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl);

@@ -94,6 +94,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("schwartz_decoherence_inv_alpha", &dyn_control_params::schwartz_decoherence_inv_alpha)
+      .def_readwrite("schwartz_interaction_width", &dyn_control_params::schwartz_interaction_width)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
@@ -167,22 +168,26 @@ void export_dyn_variables_objects(){
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
 
   void (dyn_variables::*expt_update_amplitudes_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v2)
-  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  void (dyn_variables::*expt_update_amplitudes_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
 
 
   void (dyn_variables::*expt_update_density_matrix_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v2)
-  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  void (dyn_variables::*expt_update_density_matrix_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
 
 
@@ -268,11 +273,13 @@ void export_dyn_variables_objects(){
       .def("update_amplitudes", expt_update_amplitudes_v2)
       .def("update_amplitudes", expt_update_amplitudes_v3)
       .def("update_amplitudes", expt_update_amplitudes_v4)
+      .def("update_amplitudes", expt_update_amplitudes_v5)
 
       .def("update_density_matrix", expt_update_density_matrix_v1)
       .def("update_density_matrix", expt_update_density_matrix_v2)
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
+      .def("update_density_matrix", expt_update_density_matrix_v5)
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
@@ -432,9 +439,15 @@ void export_dyn_decoherence_objects(){
 
   vector<MATRIX> (*expt_schwartz_1_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v1);
+  
+  vector<MATRIX> (*expt_schwartz_1_v2)
+  (dyn_control_params& prms, CMATRIX& amplitudes, MATRIX& p, nHamiltonian& ham, MATRIX& w) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v2);
 
   vector<MATRIX> (*expt_schwartz_2_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
+  def("schwartz_2", expt_schwartz_2_v1);
 
 
 

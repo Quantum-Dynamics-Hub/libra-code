@@ -309,6 +309,7 @@ class dyn_control_params{
       - 5: DISH
       - 6: MASH
       - 7: FSSH2
+      - 8: FSSH3 - experimental
   */
   int tsh_method;
 
@@ -437,6 +438,12 @@ class dyn_control_params{
     computing decoherence rates [ default: NULL ]
   */
   MATRIX* schwartz_decoherence_inv_alpha;
+  
+  /**
+    MATRIX(ndof, 1) - the parameters for the spatial extent of NAC in
+    computing decoherence rates [ default: NULL ]
+  */
+  MATRIX* schwartz_interaction_width;
 
 
   /**
