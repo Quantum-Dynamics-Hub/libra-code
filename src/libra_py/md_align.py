@@ -119,7 +119,7 @@ def compute_rotation_mtx(R):
     F = MATRIX(4,4)
     F.set(0,0, R.get(0,0) + R.get(1,1) + R.get(2,2))
     F.set(1,0, R.get(1,2) - R.get(2,1));  F.set(0,1, F.get(1,0))
-    F.set(2,0, R.get(3,0) - R.get(0,2));  F.set(0,2, F.get(2,0)) 
+    F.set(2,0, R.get(2,0) - R.get(0,2));  F.set(0,2, F.get(2,0)) 
     F.set(3,0, R.get(0,1) - R.get(1,0));  F.set(0,3, F.get(3,0))
     F.set(1,1, R.get(0,0) - R.get(1,1) - R.get(2,2));
     F.set(2,1, R.get(0,1) + R.get(1,0));  F.set(1,2, F.get(2,1))
@@ -187,7 +187,7 @@ def remove_rotation(R, U):
 
         R_rotated.set( 3*i+0, 0, r.get(0, 0) )
         R_rotated.set( 3*i+1, 0, r.get(1, 0) )
-        R_rotated.add( 3*i+2, 0, r.get(2, 0) )
+        R_rotated.set( 3*i+2, 0, r.get(2, 0) )
 
     return R_rotated
 
