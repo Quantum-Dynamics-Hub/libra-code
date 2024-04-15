@@ -47,10 +47,11 @@ def gen_bath_params(_params):
             * **params["spectral_density"]** ( int ) : the type of the bath spectral density to consider:
               - 0: user-specified [default: 0 ]
               - 1: Debye density:  J(w) = (lambda/2)  omega * omega_c/(omega**2 + omega_c**2) [ default: 1]
-              - 2: Ohmic density (not implemented yet)
+              - 2: Ohmic density:  J(w) = pi *hbar / 2 * ksi * omega * exp(-omega/omega_c), ksi - Kondo parameter
 
             * **params["Omega"]** ( double ): the bath characteristic frequency, used with spectral_density == 0 [ units: Ha, default: 0.001 ]
             * **params["lambda"]** ( double ): bath reorganization energy,  used with spectral_density == 0 [ units: Ha, default: 0.001 ]
+            * **params["Kondo_ksi"]** (double): Kondo parameter [ default: 1.0 ]
 
     Notes: 
         * the length of the "omega" and "coupl" parameters should be equal to num_osc 
@@ -66,7 +67,7 @@ def gen_bath_params(_params):
     params = dict(_params)
 
     critical_params = [ ]
-    default_params = {"nstates":2, "num_osc":2, "spectral_density":1, "Omega":0.001, "lambda":0.001 }
+    default_params = {"nstates":2, "num_osc":2, "spectral_density":1, "Omega":0.001, "lambda":0.001, "Kondo_ksi":1.0 }
     comn.check_input(params, default_params, critical_params)
 
     nstates = params["nstates"]
@@ -74,14 +75,26 @@ def gen_bath_params(_params):
     spectral_density = params["spectral_density"]
     Omega = params["Omega"]
     Lambda = params["lambda"]
+    ksi = params["Kondo_ksi"]
 
     omega, coupl, mass = [], [], []
+
+    # Debye and Ohmic bath discretizations are according to:
+    # Wu, D.; Hu, Z.; Li, J.; Sun, X. Forecasting Nonadiabatic Dynamics Using Hybrid Convolutional 
+    # Neural Network/Long Short-Term Memory Network. The Journal of Chemical Physics 2021, 155 (22), 224104. https://doi.org/10.1063/5.0073689.
 
     if spectral_density == 0: # user-specified frequencies
         pass
     elif spectral_density == 1: # Debye spectral density
-        pref = math.sqrt(2.0*Lambda/num_osc)
-        omega = [ Omega * math.tan( (k + 0.5)/(2*num_osc) * math.pi ) for k in range(num_osc) ] # frequencies
+        pref = -1.0*math.sqrt(2.0*Lambda/(num_osc+1.0))
+#        omega = [ Omega * math.tan( (k + 0.5)/(2*num_osc) * math.pi ) for k in range(num_osc) ] # frequencies         
+        omega = [ Omega * math.tan( 0.5 * math.pi * ( 1.0 - (k/(num_osc+1)) ) ) for k in range(1, num_osc+1) ] # frequencies
+#        coupl = [ omega[k] * pref for k in range(num_osc) ] # coupling strengths
+        coupl = [ omega[k] * pref for k in range(num_osc) ] # coupling strengths
+        mass = [ 1.0 for k in range(num_osc) ] # masses
+    elif spectral_density == 2: # Ohmic density
+        pref = -1.0*math.sqrt(Omega * ksi/(num_osc+1.0))
+        omega = [ -Omega * math.log(  1.0 - (k/(num_osc+1))  ) for k in range(1, num_osc+1) ] # frequencies
         coupl = [ omega[k] * pref for k in range(num_osc) ] # coupling strengths
         mass = [ 1.0 for k in range(num_osc) ] # masses
 
@@ -534,3 +547,89 @@ def get_GLVC_set4():
 
     return params
 
+
+def get_GLVC_set5(indx):
+    """
+    3-state spin-boson model
+
+    Bondarenko, A. S.; Tempelaar, R. Overcoming Positivity Violations for Density Matrices in Surface Hopping. 
+    The Journal of Chemical Physics 2023, 158 (5), 054117. https://doi.org/10.1063/5.0135456.
+
+    Args:
+        indx (int): index of the parameters set:
+
+        - 0 : Figure 2a
+        - 1 : Figure 2b
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+        * **nstates** (int): the number of electronic states
+
+        * **num_osc** (int): the number of oscillators per electronic state
+
+        * **spectral_density** (int): type of spectral density calculation - Debye
+
+        * **Omega** (double): characteristic frequency of bath [units: Ha]
+
+        * **lambda** (double): bath reorganization energy [units: Ha]
+
+        * **omega** (list of doubles): frequencies of the discretized spectral density [ units: Ha ]
+
+        * **coupl** (list of doubles): electron-nuclear couplings, same for all states, different for each oscillator [ units: Ha ]
+
+        * **mass** (list of doubles): masses of nuclear DOFs [ units: a.u. ]
+
+        * **coupling_scaling** (list of `nstates` doubles): the scaling applied to the overall linear coupling terms for each state [ unitS: N/A ]
+
+        * **beta** (double): inverse temperature, 1/(kB*T) [ units: Ha^-1 ]
+
+        * **Ham** (list of `nstates` lists of `nstates` doubles): diabatic state energies and couplings [ units: Ha ]
+
+
+    """
+
+    s = 208.5 * units.inv_cm2Ha # thermal energy at 300 K
+
+    params = {}
+    params["nstates"] = 3
+    params["num_osc"] = 100  # not described in the paper, but let's assume it is the same as in their 2-state model
+    params["spectral_density"] = 1
+
+    E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+
+    if indx == 0: # Figure 1 - homogeneous trimer, adiabatic regime at low T
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 1.0,  0.005, 1.0, 0.1
+    elif indx == 1: # Figre 2 - biased trimer
+        E1, E2, E3, V, L, Om, T = 0.0,-0.5,-1.0, 1.0,  0.005, 0.1, 1.0
+    elif indx == 2: # Figure 6 - homogeneous trimer, adiabatic regime at low T, larger reorg. energy
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 1.0,  0.025, 1.0, 0.1
+    elif indx == 3: # top figure first column on page S4 of SI
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 1.0,  0.005, 0.1, 1.0
+    elif indx == 4: # top figure third column on page S4 of SI
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 1.0,  0.025, 0.1, 1.0  # temporary change
+    elif indx == 5: # bottom figure first column on page S4 of SI
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 0.1,  0.005, 0.1, 1.0
+    elif indx == 6: # bottom figure third column on page S4 of SI
+        E1, E2, E3, V, L, Om, T = 0.0, 0.0, 0.0, 0.1,  0.25, 0.1, 1.0
+
+
+
+    E1 = E1 * s
+    E2 = E2 * s
+    E3 = E3 * s
+    V = V * s
+    params["Omega"] = Om * s
+    params["lambda"] = L * s
+    params["beta"] = 1.0/(T*s)
+    OM, CO, mass = gen_bath_params(params)
+    params["omega"] = [ list(OM), list(OM), list(OM) ]
+    params["coupl"] = [ list(CO), list(CO), list(CO) ]
+    params["mass"] = list(mass)
+
+    params["Ham"] = [ [E1,  V, 0.0], 
+                      [ V, E2, V  ],
+                      [0.0, V, E3 ] ]
+    params["coupling_scaling"] = [1.0, 1.0, 1.0]
+
+    return params
