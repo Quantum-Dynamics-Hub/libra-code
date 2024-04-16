@@ -99,7 +99,7 @@ def gen_bath_params(_params):
         mass = [ 1.0 for k in range(num_osc) ] # masses
 
     else:
-        print("Only spectral_density = 0 or 1 are allowed. Exiting now...")
+        print("Only spectral_density = 0, 1, or 2 are allowed for now. Exiting now...")
         sys.exit(0)
 
     return omega, coupl, mass
@@ -558,8 +558,6 @@ def get_GLVC_set5(indx):
     Args:
         indx (int): index of the parameters set:
 
-        - 0 : Figure 2a
-        - 1 : Figure 2b
 
     Returns:
         dictionary: params, will contain the parameters:
@@ -631,5 +629,87 @@ def get_GLVC_set5(indx):
                       [ V, E2, V  ],
                       [0.0, V, E3 ] ]
     params["coupling_scaling"] = [1.0, 1.0, 1.0]
+
+    return params
+
+
+
+def get_GLVC_set6(indx, scl=1.0):
+    """
+    2-state spin-boson model
+
+    Mannouch, J. R.; Richardson, J. O. A Mapping Approach to Surface Hopping. The Journal of Chemical Physics 2023, 
+    158 (10), 104111. https://doi.org/10.1063/5.0139734.
+
+    Args:
+        indx (int): index of the parameters set:
+
+        - 0 : Figure 10a
+        - 1 : Figure 10b
+        - 2 : Figure 10c
+
+        scl (double): model scaling, value of 1 is chosen so that
+           t * \Delta = 20 corresponds to t = 2000 a.u. that is \Delta = 0.01 a.u.
+
+
+    Returns:
+        dictionary: params, will contain the parameters:
+
+        * **nstates** (int): the number of electronic states
+
+        * **num_osc** (int): the number of oscillators per electronic state
+
+        * **spectral_density** (int): type of spectral density calculation - Debye
+
+        * **Omega** (double): characteristic frequency of bath [units: Ha]
+
+        * **lambda** (double): bath reorganization energy [units: Ha]
+
+        * **omega** (list of doubles): frequencies of the discretized spectral density [ units: Ha ]
+
+        * **coupl** (list of doubles): electron-nuclear couplings, same for all states, different for each oscillator [ units: Ha ]
+
+        * **mass** (list of doubles): masses of nuclear DOFs [ units: a.u. ]
+
+        * **coupling_scaling** (list of `nstates` doubles): the scaling applied to the overall linear coupling terms for each state [ unitS: N/A ]
+
+        * **beta** (double): inverse temperature, 1/(kB*T) [ units: Ha^-1 ]
+
+        * **Ham** (list of `nstates` lists of `nstates` doubles): diabatic state energies and couplings [ units: Ha ]
+
+
+    """
+
+    s = scl # scaling of the energy units
+    delta = 0.01 * s
+
+    params = {}
+    params["nstates"] = 2
+    params["num_osc"] = 100
+    params["spectral_density"] = 1
+
+    E = delta
+    L = 0.5 * delta
+    V = delta
+    beta = 1.0
+    Om = 0.0
+    # Figure 10 - vary temperature and Omega 
+    if indx == 0:
+        Om, beta = 0.2*delta, 0.25/delta
+    elif indx == 1:
+        Om, beta = delta, 0.25/delta
+    elif indx == 2:
+        Om, beta = delta, 5.0/delta
+
+    params["Omega"] = Om 
+    params["lambda"] = L
+    params["beta"] = beta
+    OM, CO, mass = gen_bath_params(params)
+    params["omega"] = [ list(OM), list(OM) ]
+    params["coupl"] = [ list(CO), list(CO) ]
+    params["mass"] = list(mass)
+
+    params["Ham"] = [ [E, V], [V, -E] ]
+    params["coupling_scaling"] = [1.0, -1.0]
 
     return params
