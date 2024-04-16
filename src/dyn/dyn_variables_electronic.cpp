@@ -900,6 +900,7 @@ void dyn_variables:: update_active_states(int direction, int property){
   int i;
   int nst = nadi;
   CMATRIX coeff(nst, 1);
+  MATRIX rho_tmp(nst,nst);
   complex<double> max_val;
 
   for(int itraj=0; itraj<ntraj; itraj++){
@@ -912,7 +913,15 @@ void dyn_variables:: update_active_states(int direction, int property){
       if(direction==1){    coeff = proj_adi[itraj]->H() * coeff; }
       else if(direction==-1){  coeff = (*proj_adi[itraj]) * coeff; }
 
-      coeff.max_col_elt(0, max_val, act_states[itraj]);
+      //coeff.max_col_elt(0, max_val, act_states[itraj]);
+      rho_tmp = (coeff * coeff.H()).real();
+      double max_val = fabs(rho_tmp.get(0,0)); 
+      int max_val_indx = 0;
+      for(int j=1;j<nst;j++){ 
+        // >= is important !!! not just >
+        if( fabs(rho_tmp.get(j,j)) > max_val){  max_val_indx = j; max_val = fabs(rho_tmp.get(j,j)); } 
+      }
+      act_states[itraj] = max_val_indx;
     }
 
     //============ Amplitudes of states ===================
