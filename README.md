@@ -138,6 +138,11 @@ Next, all what we actually need:
     conda install -y -c psi4/label/dev libint2=2.7.1
     conda install -y -c anaconda h5py gmp
 
+
+Installation instruction of Scikit-learn from its official website:
+
+    pip install -U scikit-learn
+
  
     >
     >  YES - IT GOT SMALLER AND MORE COMPACT !
