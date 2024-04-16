@@ -363,12 +363,12 @@ void export_dyn_decoherence_objects(){
 
 
   CMATRIX (*expt_mfsd_v1)
-  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd, int isNBRA) = &mfsd;
   def("mfsd", expt_mfsd_v1);
 
   CMATRIX (*expt_mfsd_v2)
-  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd) = &mfsd;
   def("mfsd", expt_mfsd_v2);
   

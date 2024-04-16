@@ -787,7 +787,7 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 
 
 
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA){
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA){
     /**
     \brief Mean field with stochastic decoherence
   
@@ -915,10 +915,11 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
           collapse(C, itraj, decohered_state, 0);
 
           //cout<<"Ampl (after) = \n"; C.show_matrix();
+          act_states[itraj] = decohered_state;
         }// can rescale
-
       }// possible collapse: summ_prob > 0.0
-        
+
+      //cout << act_states[itraj] <<endl;
     }// for itraj
 
     return C;
@@ -927,10 +928,10 @@ CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>&
 
 
 
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd){
 
  int is_nbra = 0;
- return mfsd(p, Coeff, invM, dt, decoherence_rates, ham, rnd, is_nbra);
+ return mfsd(p, Coeff, invM, dt, act_states, decoherence_rates, ham, rnd, is_nbra);
 
 }
 

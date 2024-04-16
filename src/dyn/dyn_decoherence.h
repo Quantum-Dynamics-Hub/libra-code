@@ -70,8 +70,8 @@ CMATRIX bcsh(CMATRIX& Coeff, double dt, vector<int>& act_states, MATRIX& reversa
 
 
 // For MF-SD of Schwartz
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA);
-CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd, int isNBRA);
+CMATRIX mfsd(MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_st, vector<MATRIX>& decoherence_rates, nHamiltonian& ham, Random& rnd);
 
 // Independent-trajectory XF methods
 void xf_hop_reset(dyn_variables& dyn_var, vector<int>& accepted_states, vector<int>& initial_states);
