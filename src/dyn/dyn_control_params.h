@@ -359,6 +359,23 @@ class dyn_control_params{
   */
   int momenta_rescaling_algo;
 
+
+  /**
+    A flag to turn on/off the Jasper-Truhlar criterion for reversal of velocities on frustrated hops.
+    According to: Jasper, A. W.; Truhlar, D. G. Chem. Phys. Lett. 2003, 369, 60− 67
+
+    Options:
+    
+      - 0: don't use this criterion (naive handling)
+      - 1: use it [ default ] - the velocities are reversed along the direction d_{a,j} if
+        a) (F_a * d_{a,j}) * (F_j * d_{a,j}) < 0 and b) (v * d_{a,j}) * (F_j * d_{a,j}) < 0 
+        where a - is the active state index;  Only in effect, if `momenta_rescaling_algo == 201`
+        
+
+  */
+  int use_Jasper_Truhlar_criterion;
+
+
   /**
     A flag to scale the proposed hopping probabilities by the
     Boltzmann factor. This is needed for the libra_py/workflows/nbra calculations, where the hop proposal 

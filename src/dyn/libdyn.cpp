@@ -86,6 +86,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
       .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
       .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
+      .def_readwrite("use_Jasper_Truhlar_criterion", &dyn_control_params::use_Jasper_Truhlar_criterion)
       .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
 
       ///================= Decoherence options =========================================

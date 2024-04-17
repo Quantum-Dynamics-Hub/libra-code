@@ -555,6 +555,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     #================= Surface hopping: proposal, acceptance =======================
     default_params.update( { "tsh_method":-1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0,
+                             "use_Jasper_Truhlar_criterion":1,
                              "use_boltz_factor":0
                            } )
 

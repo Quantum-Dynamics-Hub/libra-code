@@ -681,7 +681,7 @@ def get_GLVC_set6(indx, scl=1.0):
     """
 
     s = scl # scaling of the energy units
-    delta = 0.01 * s
+    delta = 0.0005 * s
 
     params = {}
     params["nstates"] = 2

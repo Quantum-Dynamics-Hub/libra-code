@@ -1064,11 +1064,12 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
         for(dof = 0; dof<ndof; dof++){ vel.set(dof, 0,   p_tr.get(dof, 0) * invM.get(dof, 0) ); }
 
         int do_reverse_actual = do_reverse;
-        
-        if( (F_old.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){
-          if( (vel.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){ ;; }
-          else{ do_reverse_actual *= 0; }
-        }else{  do_reverse_actual *= 0; }
+        if(prms.use_Jasper_Truhlar_criterion==1){
+          if( (F_old.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){
+            if( (vel.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){ ;; }
+            else{ do_reverse_actual *= 0; }
+          }else{  do_reverse_actual *= 0; }
+        }
         
         rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse_actual, which_dofs); 
 

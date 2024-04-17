@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2022 Alexey V. Akimov
+* Copyright (C) 2019-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -64,6 +64,7 @@ dyn_control_params::dyn_control_params(){
   tsh_method = 0;
   hop_acceptance_algo = 0;
   momenta_rescaling_algo = 0;
+  use_Jasper_Truhlar_criterion = 1;
   use_boltz_factor = 0;
 
   ///================= Decoherence options =========================================
@@ -152,6 +153,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   tsh_method = x.tsh_method;
   hop_acceptance_algo = x.hop_acceptance_algo;
   momenta_rescaling_algo = x.momenta_rescaling_algo;
+  use_Jasper_Truhlar_criterion = x.use_Jasper_Truhlar_criterion;
   use_boltz_factor = x.use_boltz_factor;
 
   ///================= Decoherence options =========================================
@@ -331,6 +333,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="hop_acceptance_algo") { hop_acceptance_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
+    else if(key=="use_Jasper_Truhlar_criterion"){ use_Jasper_Truhlar_criterion = bp::extract<int>(params.values()[i]); }
     else if(key=="use_boltz_factor"){ use_boltz_factor = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
