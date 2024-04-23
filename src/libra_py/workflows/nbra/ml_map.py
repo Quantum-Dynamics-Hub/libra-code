@@ -26,17 +26,19 @@ import numpy as np
 import multiprocessing as mp
 import scipy.sparse as sp
 import pickle
+import json
 import joblib
 # For future works!
 # import tensorflow as tf
 # from tensorflow.keras import layers, models
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.kernel_ridge import KernelRidge
 from sklearn.metrics import mean_squared_error, accuracy_score, mean_absolute_error, r2_score
 from liblibra_core import *
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.packages.dftbplus.methods as DFTB_methods
+from . import generate_data
 from libra_py import units, molden_methods, data_conv
 import util.libutil as comn
 
@@ -62,7 +64,7 @@ def find_indices(params):
 
     # Now sort the indices since they will be used
     indices = np.sort(indices)
-    return indices
+    return indices.astype(int).tolist()
 
 
 def read_data(params, path, prefix):
@@ -184,7 +186,7 @@ def scale_partition(params, partition):
     """
     if params["scaler"].lower()=="standard_scaler":
         scaler = StandardScaler()     
-    elif params["scaler"].lower()=="minmax":
+    elif params["scaler"].lower()=="minmax_scaler":
         scaler = MinMaxScaler()
     scaler.fit(partition)
     scaled_data = scaler.transform(partition)
@@ -360,6 +362,10 @@ def train(params):
     # Remove the input and output data to reduce the memory
     # del raw_input, raw_output, partitioned_input, partitioned_output
     # We also need the scalers when we want to use them for new data
+    # Save the train params
+    with open("train_params.json", "w") as f:
+        json.dump(params, f) 
+
     return models, models_error, input_scalers, output_scalers
 
 def load_models(path_to_models, params):
@@ -557,10 +563,24 @@ def compute_properties(params, models, input_scalers, output_scalers):
         None
     """
     # First find the indices of the input data
-    indices = find_indices_inputs(params)
-    params["istep"] = indices[0]
+    #indices = find_indices_inputs(params)
+    istep = params["istep"]
+    fstep = params["fstep"]
+    indices = list(range(istep, fstep+1))
+    #params["istep"] = indices
     lowest_orbital = params["lowest_orbital"]
     highest_orbital = params["highest_orbital"]
+    # Here we load the generate_data params to compute the guess Hamiltonians
+    # from the guess_software that was used
+    with open(f"{params['path_to_sample_files']}/params.json", "r") as f:
+        data_gen_params = json.load(f)
+    # Only guess calculations
+    data_gen_params["do_ref"] = False
+    data_gen_params["do_guess"] = True
+    data_gen_params["reference_steps"] = indices
+    #os.system(f"mkdir tmp_guess_ham_{params['job']}")
+    data_gen_params["guess_dir"] = os.getcwd() #+f"/tmp_guess_ham_{params['job']}"
+    params["path_to_input_mats"] = os.getcwd() #+f"/tmp_guess_ham_{params['job']}"
     if params["write_wfn_file"]:
         try:
             params["sample_wfn_file"] = glob.glob(f"{params['path_to_sample_files']}/*ref*wfn")[0]
@@ -574,28 +594,23 @@ def compute_properties(params, models, input_scalers, output_scalers):
     os.system(f'mkdir {params["res_dir"]}')
     for i, step in enumerate(indices):
         print("======================== \n Performing calculations for step ", step)
+        print("*** Generating guess Hamiltonian for step ", step)
+        generate_data.gen_data(data_gen_params, step) 
         input_mat = np.load(f'{params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
         if i==0: 
-            output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
+            ref_mat_files = glob.glob(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_*.npy')
+            #output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
+            output_mat = np.load(ref_mat_files[0])
+        params["input_partition"] = True
         partitioned_input = partition_matrix(params, input_mat)
-        #print(np.array(partitioned_input[0]).shape)
-        #raise('  ')
         # Now apply the models to each partition
         outputs = []
         for j in range(len(input_scalers)):
-            #print(input_scaled[j].reshape(1,-1).shape)
             input_scaled = input_scalers[j].transform(np.array(partitioned_input[j]).reshape(1,-1))
-            #tmp = input_scaled.reshape(1,-1)
-            #print(tmp.shape)
             output_scaled = models[j].predict(input_scaled)#.reshape(1,-1))
             output = output_scalers[j].inverse_transform(output_scaled)
-            outputs.append(np.squeeze(output))
-        #print(np.array(outputs).shape)
+            outputs.append(output.reshape(output.shape[1]))
         ks_ham_mat = rebuild_matrix_from_partitions(params, outputs, output_mat.shape)
-        #print(np.diag(tmp))
-        #print('------')
-        #print(np.diag(ks_ham_mat))
-        #raise('   ')
         atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step)
         eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_ham_mat, atomic_overlap)
         if params["save_ml_ham"]:
@@ -628,12 +643,74 @@ def compute_properties(params, models, input_scalers, output_scalers):
         #output_name = F'ml_c60_b3lyp_size_{size}_{step+istep}-RESTART.wfn' 
         if params["write_wfn_file"]:
             output_name = F'{params["path_to_save_wfn_files"]}/ml_{params["prefix"]}-{step}-RESTART.wfn'
-            CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
+            #print('flag', eigenvectors.shape)
+            #CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
+            CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors.real])
         eigenvectors_prev = eigenvectors
         # Writing the energy, overlap, and time-overlap files as in .npz file for other steps
         energy_mat_sparse = sp.csc_matrix(energy_mat)
         sp.save_npz(params["res_dir"]+F'/E_ks_{step}.npz', energy_mat_sparse)
         mo_overlap_sparse = sp.csc_matrix(mo_overlap)
         sp.save_npz(params["res_dir"]+F'/S_ks_{step}.npz', mo_overlap_sparse)
+        os.system(f'rm {params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
+    #os.system(f"rm -rf tmp_guess_ham_{params['job']}")
 
+def distribute_jobs(params):
+    """
+    This function distrbute the calculations in compute_properties function 
+    over multiple nodes
+    Args:
+        params (dict):
+            njobs (integer): The number of jobs
+            steps (list): A list of integers containing the steps
+            submit_template (string): The full path to a submit_tempalte file
+    Returns:
+        None
+    """
+    # Split the steps
+    steps_split = np.array_split(params["steps"], params["njobs"])
+    # Read the submit file
+    f = open(params["submit_template"], "r")
+    lines_submit = f.readlines()
+    f.close()
+    # Now, distribute the jobs
+    for job in range(params["njobs"]):
+        print("Submitting calculations for job", job)
+        os.system(f"mkdir tmp_guess_ham_{job}")
+        os.chdir(f"tmp_guess_ham_{job}")
+        params["job"] = job
+        params["istep"] = int(steps_split[job][0])
+        params["fstep"] = int(steps_split[job][-1])
+        # The update train parameters with istep and fstep
+        with open(f"params.json", "w") as f:
+            json.dump(params, f)
+        # The generate_data parameter such as software_load_instructions, submit_exe, etc
+        with open(f"{params['path_to_sample_files']}/params.json", "r") as f:
+            data_gen_params = json.load(f)
+        # Create the submit file in this folder
+        f = open(F"submit.slm","w")
+        for i in range(len(lines_submit)):
+            if "#" in lines_submit[i]:
+                f.write(lines_submit[i])
+        f.write("\n\n\n")
+        f.write(data_gen_params["software_load_instructions"])
+        f.write("\n")
+        f.write("python run.py \n\n")
+        f.close()
+        # Now the python file: run.py
+        f = open(f"run.py","w")
+        f.write("""import json
+from libra_py.workflows.nbra.ml_map import compute_properties, load_models
+with open('params.json', 'r') as f:
+    params = json.load(f)
+# Load the models
+models, models_error, input_scalers, output_scalers = load_models(params["path_to_save_models"], params)
+compute_properties(params, models, input_scalers, output_scalers) 
+        """)
+        f.close()
+        os.system(F"{data_gen_params['submit_exe']} submit.slm") 
+        os.chdir('../') 
+
+
+    
 

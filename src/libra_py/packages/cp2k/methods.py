@@ -2075,6 +2075,7 @@ def write_wfn_file(filename, basis_data, spin_data, eigen_vals_and_occ_nums, mo_
         #zero_eig_occ = np.zeros(eigen_vals_and_occ_nums[spin].shape)
         #wfn_file.write_record(zero_eig_occ)#, dtype=np.float32)
         for mo in range(nmo):
+            #print('spin', spin, 'mo', mo, 'coeffs', mo_coeffs[spin][mo])
             wfn_file.write_record(mo_coeffs[spin][mo])
             #zero_coeffs = np.random.random(mo_coeffs[spin][mo].shape)
             #wfn_file.write_record(zero_coeffs)
