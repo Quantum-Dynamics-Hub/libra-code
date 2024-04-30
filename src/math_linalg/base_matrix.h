@@ -177,6 +177,46 @@ public:
   ///< Returns the matrix element accessed by its row and coloumn indices
   T1 get(int i, int j){  return M[i*n_cols+j];  }
 
+  base_matrix<T1> vec(){
+  /** Matrix vectorization: The vector formed by concatenating all the columns of
+   http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/property.html
+  */  
+    base_matrix<T1> res(n_rows * n_cols, 1);
+  
+    int indx = 0;
+    for(int j=0;j<n_cols;j++){
+      for(int i=0;i<n_rows;i++){
+        res.set(indx, 0, this->get(i,j));
+        indx++;
+      }
+    }
+    return res;
+  }
+
+  ivec(base_matrix<T1>& x){
+  /** Matrix vectorization: The vector formed by concatenating all the columns of
+   http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/property.html
+
+  This function performs an inverse vectorization - setting up the matrix from
+  its vectorized form
+  */
+    if(n_rows * n_cols != x.n_rows){ 
+      std::cout<<"Error in ivec function: The vectorized input has "<<x.n_rows<<" rows";
+      std::cout<<" but shouw have the number consistent with the dimensions of the target";
+      std::cout<<" matrix ("<<n_rows<<" , "<<n_cols<<"), that is "<<n_rows * n_cols<<" elements\n";
+      std::cout<<"Exiting...\n";
+    }
+
+    int indx = 0;
+    for(int j=0;j<n_cols;j++){
+      for(int i=0;i<n_rows;i++){
+        this->set(i, j, x.get(indx,0));
+        indx++;
+      }
+    }
+  }
+
+
 /**
   ///==================== Extractions ==============================
   base_matrix<T1> col(int i){ 
@@ -344,10 +384,70 @@ public:
   }// product
 
 
+
+  void kron(const base_matrix<T1>& B,const base_matrix<T1>& C){
+  /** Compute the Kronecker (tensor) product of the input matrices and store the
+  result in the calling matrix:  A = B (x) C  , where A is *this
+  This function does not allocate new memory, so the memory in the calling matrix
+  must be pre-allocated
+  If the dimensions of the operands B and C do not match the dimensions of the target matrix
+   - produce the error message and exits
+
+  See more on Kronecker product here: http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/relation.html#Kronecker
+  */
+
+    int _M,_N, _P,_Q; // dimensions of the input matrices
+    _M = B.n_rows;
+    _N = B.n_cols;
+    _P = C.n_rows;
+    _Q = C.n_cols;
+  
+    if(n_rows != _M*_P){
+      std::cout<<"Kronecker product error: The target matrix should have "<<n_rows<<" rows";
+      std::cout<<" but the Kronecker product of matrices with "<<_M<<" and "<<_P<<" rows would";
+      std::cout<<" produce a matrix with "<<_M*_P<<" rows\nExiting...\n";
+      exit(0);
+    }
+
+    if(n_cols != _N*_Q){ 
+      std::cout<<"Kronecker product error: The target matrix should have "<<n_cols<<" columns";
+      std::cout<<" but the Kronecker product of matrices with "<<_N<<" and "<<_Q<<" columns would";
+      std::cout<<" produce a matrix with "<<_N*_Q<<" columns\nExiting...\n";
+      exit(0);
+    }
+
+    for(int i=0;i<n_elts;i++){  M[i] = (T1)0.0;   }
+
+
+    for(int m=0; m<_M; m++){
+      for(int n=0; n<_N; n++){
+
+        T1 Bmn = B.get(m,n);
+
+        for(int p=0; p<_P; p++){
+          for(int q=0; q<_Q; q++){
+
+            int i = m * _P + p;
+            int j = n * _Q + q;
+
+            this->set(i,j, Bmn * C.get(p,q) );
+
+          }// for q
+        }// for p
+      }// for n
+    }// for m
+
+  }// Kronecker product
+
+
+
   void dot_product(const base_matrix<T1>& ob1,const base_matrix<T1>& ob2){
   /** Direct product of two matrices - element-wise multiplication
   Dimensions of ob1 and ob2 must be equal - that is both the number of rows
   and the number of columns in the two matrices must match.
+
+  Also known as Hadamard or Schur product:
+  http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/relation.html#Kronecker
   */
 
     if(ob1.n_cols!=ob2.n_cols){

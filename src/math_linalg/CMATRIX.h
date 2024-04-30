@@ -110,6 +110,9 @@ public:
     set(row, col, complex<double>(value1,value2));
   }
 
+  using base_matrix<complex<double> >::vec;
+  using base_matrix<complex<double> >::ivec;
+
 
   ///=========== Extractions ======================
 //  using base_matrix<complex<double> >::col;
@@ -130,6 +133,7 @@ public:
   using base_matrix<complex<double> >::add;
   using base_matrix<complex<double> >::scale;
   using base_matrix<complex<double> >::product;
+  using base_matrix<complex<double> >::kron;
   using base_matrix<complex<double> >::dot_product;
 
 
