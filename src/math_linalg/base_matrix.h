@@ -544,7 +544,7 @@ public:
 
   T1 sum_col(int icol){          ///< Compute the sum of matrix elements in a given column
     T1 res = 0.0;
-    for(int irow=0; irow<n_rows; irow++){   res += M[irow * n_rows + icol];   }
+    for(int irow=0; irow<n_rows; irow++){   res += M[irow * n_cols + icol];   }
     return res;
   }
 
@@ -553,7 +553,7 @@ public:
     for(int irow=0; irow<n_rows; irow++){   
 
       T1 tn = (T1)1.0;
-      T1 t1 = M[irow * n_rows + icol];
+      T1 t1 = M[irow * n_cols + icol];
       for(int n=0;n<power;n++){   tn *= t1;   }
       res += tn;  
 
@@ -564,7 +564,7 @@ public:
 
   T1 sum_row(int irow){          ///< Compute the sum of matrix elements in a given row
     T1 res = 0.0;
-    for(int icol=0; icol<n_cols; icol++){   res += M[irow * n_rows + icol];   }
+    for(int icol=0; icol<n_cols; icol++){   res += M[irow * n_cols + icol];   }
     return res;
   }
 
@@ -573,7 +573,7 @@ public:
     for(int icol=0; icol<n_cols; icol++){   
 
       T1 tn = (T1)1.0;
-      T1 t1 = M[irow * n_rows + icol];
+      T1 t1 = M[irow * n_cols + icol];
       for(int n=0;n<power;n++){   tn *= t1;   }
       res += tn;  
 
@@ -585,13 +585,13 @@ public:
 
   T1 prod_col(int icol){          ///< Compute the product of matrix elements in a given column
     T1 res = (T1)1.0;
-    for(int irow=0; irow<n_rows; irow++){   res *= M[irow * n_rows + icol];   }
+    for(int irow=0; irow<n_rows; irow++){   res *= M[irow * n_cols + icol];   }
     return res;
   }
 
   T1 prod_row(int irow){          ///< Compute the product of matrix elements in a given row
     T1 res = (T1)1.0;
-    for(int icol=0; icol<n_cols; icol++){   res *= M[irow * n_rows + icol];   }
+    for(int icol=0; icol<n_cols; icol++){   res *= M[irow * n_cols + icol];   }
     return res;
   }
 
