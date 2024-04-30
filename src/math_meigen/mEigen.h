@@ -127,6 +127,7 @@ void LLT_decomposition(MATRIX& A, MATRIX& L);
 
 ///=========== Look in: mEigen_linsolve.cpp ==================
 ///< Solver for a system of linear equations (iterative schemes)
+void least_squares_solve(MATRIX& A, MATRIX& X, MATRIX& B, int option);
 bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold);
 void solve_linsys(MATRIX&,MATRIX&, MATRIX&,double,int);
 

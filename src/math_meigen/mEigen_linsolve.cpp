@@ -26,7 +26,47 @@ using namespace liblinalg;
 /// libmeigen namespace
 namespace libmeigen{
 
+void least_squares_solve(MATRIX& A, MATRIX& X, MATRIX& B, int option){
+/**
+   Solving Ax = b for x using the BDCSVD decomposition
 
+   A = N x M
+   x = M x K
+   b = N x K
+
+*/
+
+  int N = A.n_rows;
+  int M = A.n_cols;
+  int K = B.n_cols;
+  int i,j;
+
+
+  Eigen::MatrixXd a(N,M);
+  Eigen::MatrixXd x(M,K);
+  Eigen::MatrixXd b(N,K);
+
+  for(i=0;i<N;i++){  for(j=0;j<M;j++){ a(i,j) = A.M[i*M+j]; }  }
+  for(i=0;i<N;i++){  for(j=0;j<K;j++){ b(i,j) = B.M[i*K+j]; }  }
+
+  if(option==0){
+  //  x = a.template bdcSvd<Eigen::ComputeThinU | Eigen::ComputeThinV>().solve(b);
+  // x = BDCSVD(a).solve(b);
+   x = a.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+  }
+  else if(option==1){
+   x = a.fullPivLu().solve(b);
+  }
+  else if(option==2){
+   x = a.fullPivHouseholderQr().solve(b);
+  }
+  else if(option==3){
+   x = a.completeOrthogonalDecomposition().solve(b);
+  }
+
+  for(i=0;i<M;i++){  for(j=0;j<K;j++){ X.M[i*K+j] = x(i,j); }  }
+
+}
 
 bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold){
 /**
