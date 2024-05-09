@@ -306,10 +306,10 @@ def train(params):
         output_scalers (list of scalers): The list of all output scalers
     """
     critical_params = ['path_to_input_mats', 'path_to_output_mats', 'path_to_trajectory_xyz_file', 'path_to_sample_files']
-    default_params = {'prefix': 'libra', 'input_property': 'kohn_sham', 'output_property': 'kohn_sham',
+    default_params = {'prefix': 'libra', 'input_property': 'kohn_sham', 'output_property': 'kohn_sham', 'user_train_indices': [],
                       'kernel': 'linear', 'degree': 1, 'alpha': 1.0, 'gamma': 1.0, 'scaler': 'standard_scaler',
                       'save_models': True, 'path_to_save_models': './models', 'save_ml_ham': False, 'save_ao_overlap': False,
-                      'save_ml_mos': False, 'partitioning_method': 'equal', 'npartition': 30, 'memory_efficient': True,
+                      'save_ml_mos': False, 'partitioning_method': 'equal', 'npartition': 30, 'memory_efficient': True, 'do_error_analysis': False,
                       'nprocs': 2, 'write_wfn_file': False, 'path_to_save_wfn_files': './wfn_files', 'is_periodic': False,
                       'A_cell_vector': [25.0,0.0,0.0], 'B_cell_vector': [0.0,25.0,0.0], 'C_cell_vector': [0.0,0.0,25.0],
                       'periodicity_type': 'XYZ', 'lowest_orbital': 1, 'highest_orbital': 5, 'res_dir': './res', 'train_parallel': False
@@ -318,7 +318,10 @@ def train(params):
     comn.check_input(params, default_params, critical_params)
    
     # Find the training indices
-    params["train_indices"] = find_indices(params)
+    if len(params["user_train_indices"])>0:
+        params["train_indices"] = params["user_train_indices"]
+    else:
+        params["train_indices"] = find_indices(params)
     # Read the outputs 
     raw_output = read_data(params, params["path_to_output_mats"], params["prefix"]+"_ref_"+params["output_property"])
     # Read the inputs
@@ -613,46 +616,90 @@ def compute_properties(params, models, input_scalers, output_scalers):
         ks_ham_mat = rebuild_matrix_from_partitions(params, outputs, output_mat.shape)
         atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step)
         eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_ham_mat, atomic_overlap)
+        if params["do_error_analysis"]:
+            if not os.path.exists("../error_data"):
+                os.system(f"mkdir ../error_data")
+            # Do the error analysis only for case the output is Kohn-Sham Hamiltonian matrix 
+            #if params["output_property"]!="kohn_sham" or params["output_property"]!="hamiltonian":
+            #    raise("Error analysis can be done only for the case 'output_property' is set to the Hamiltonian 'kohn_sham' or 'hamiltonian'...")
+            ks_ham_mat_ref = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
+            eigenvalues_ref, eigenvectors_ref = CP2K_methods.compute_energies_coeffs(ks_ham_mat_ref, atomic_overlap)
+            # We only save the eigenvalues but not the eigenvectors of the reference calculations
+            # The first reason is because we want to plot them and then we'll do the error analysis of all
+            # molecular orbitals. The second reason is that we compute the \epsilon_i=<\psi_{i_{ref}}|\psi_{i_{ml}}> for
+            # eigenvectors and that property will be saved. If we're about to save the eigenvectors, it will occupy 
+            # a lot of disk space
+            np.save(f"../error_data/E_ref_{step}.npy", eigenvalues_ref[lowest_orbital-1:highest_orbital])
+            ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+            np.save(f"../error_data/epsilon_{step}.npy", np.diag(ml_ref_overlap)) # Only the diagonal elements
+            # The other error measurement is the absolute value of the Hamiltonian matrices difference
+            ham_diff = np.abs(ks_ham_mat-ks_ham_mat_ref)
+            np.save(f"../error_data/Ham_diff_ave_{step}.npy", np.average(ham_diff))
         if params["save_ml_ham"]:
-            if not os.path.exists("ml_hams"):
-                os.system(f"mkdir ml_hams")
-            np.save(f"ml_hams/Ham_{step}.npy", ks_ham_mat)
+            if not os.path.exists("../ml_hams"):
+                os.system(f"mkdir ../ml_hams")
+            np.save(f"../ml_hams/Ham_{step}.npy", ks_ham_mat)
         if params["save_ao_overlap"]:
-            if not os.path.exists("ao_overlaps"):
-                os.system(f"mkdir ao_overlaps")
-            np.save(f"ao_overlaps/AO_S_{step}.npy", atomic_overlap)
+            if not os.path.exists("../ao_overlaps"):
+                os.system(f"mkdir ../ao_overlaps")
+            np.save(f"../ao_overlaps/AO_S_{step}.npy", atomic_overlap)
         if params["save_ml_mos"]:
-            if not os.path.exists("ml_mos"):
-                os.system(f"mkdir ml_mos")
-            np.save(f"ml_mos/eigenvectors_{step}.npy", eigenvectors) 
-            np.save(f"ml_mos/eigenvalues_{step}.npy", eigenvalues) 
+            if not os.path.exists("../ml_mos"):
+                os.system(f"mkdir ../ml_mos")
+            np.save(f"../ml_mos/eigenvectors_{step}.npy", eigenvectors) 
+            np.save(f"../ml_mos/eigenvalues_{step}.npy", eigenvalues) 
         # Compute the overlaps
-        mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step, 
-                                         step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-        # Compute the time-overlaps if we are at the next step
-        zero_mat = np.zeros(mo_overlap.shape)
-        if i>0:
-            mo_time_overlap = compute_mo_overlaps(params, eigenvectors_prev, eigenvectors, step, step+1)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-            mo_time_overlap = data_conv.form_block_matrix(mo_time_overlap, zero_mat, zero_mat, mo_time_overlap)
-            mo_time_overlap_sparse = sp.csc_matrix(mo_time_overlap)
-            sp.save_npz(params["res_dir"]+F'/St_ks_{step-1}.npz', mo_time_overlap_sparse)
+        if params["compute_overlap"]:
+            mo_overlap = compute_mo_overlaps(params, eigenvectors, eigenvectors, step, 
+                                             step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+            # Compute the time-overlaps if we are at the next step
+            zero_mat = np.zeros(mo_overlap.shape)
+            if i>0:
+                mo_time_overlap = compute_mo_overlaps(params, eigenvectors_prev, eigenvectors, step, step+1)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+                mo_time_overlap = data_conv.form_block_matrix(mo_time_overlap, zero_mat, zero_mat, mo_time_overlap)
+                mo_time_overlap_sparse = sp.csc_matrix(mo_time_overlap)
+                sp.save_npz(params["res_dir"]+F'/St_ks_{step-1}.npz', mo_time_overlap_sparse)
+            eigenvectors_prev = eigenvectors
+            # Writing overlap, and time-overlap files as in .npz file for other steps
+            mo_overlap_sparse = sp.csc_matrix(mo_overlap)
+            sp.save_npz(params["res_dir"]+F'/S_ks_{step}.npz', mo_overlap_sparse)
+            os.system(f'rm {params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
+        # Writing the energy files into the res directory
         energy_mat = np.diag(eigenvalues)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+        zero_mat = np.zeros(energy_mat.shape)
+        energy_mat = data_conv.form_block_matrix(energy_mat, zero_mat, zero_mat, energy_mat)
+        energy_mat_sparse = sp.csc_matrix(energy_mat)
+        sp.save_npz(params["res_dir"]+F'/E_ks_{step}.npz', energy_mat_sparse)
         #print(np.diag(energy_mat)*27.211385)
         
-        energy_mat = data_conv.form_block_matrix(energy_mat, zero_mat, zero_mat, energy_mat)
         #output_name = F'ml_c60_b3lyp_size_{size}_{step+istep}-RESTART.wfn' 
         if params["write_wfn_file"]:
             output_name = F'{params["path_to_save_wfn_files"]}/ml_{params["prefix"]}-{step}-RESTART.wfn'
             #print('flag', eigenvectors.shape)
             #CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors[:,:]])
             CP2K_methods.write_wfn_file(output_name, basis_data, spin_data, eigen_vals_and_occ_nums, [eigenvectors.real])
-        eigenvectors_prev = eigenvectors
-        # Writing the energy, overlap, and time-overlap files as in .npz file for other steps
-        energy_mat_sparse = sp.csc_matrix(energy_mat)
-        sp.save_npz(params["res_dir"]+F'/E_ks_{step}.npz', energy_mat_sparse)
-        mo_overlap_sparse = sp.csc_matrix(mo_overlap)
-        sp.save_npz(params["res_dir"]+F'/S_ks_{step}.npz', mo_overlap_sparse)
-        os.system(f'rm {params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
+            if params["compute_ml_total_energy"]:
+                # We need the data generation parameters that we used to generate data
+                if i==0:
+                    with open(f"{params['path_to_sample_files']}/params.json", "r") as f:
+                        data_gen_params_1 = json.load(f)
+                # Now, let's create an input for that
+                tmp_prefix = params["prefix"]+"_ml"
+                generate_data.make_input(tmp_prefix, params["cp2k_ml_input_template"], data_gen_params_1["reference_software"], params["path_to_trajectory_xyz_file"], step)
+                # We need to modify three parts in this input: 
+                # 1- path to the ML wfn file 
+                os.system(F"sed -i '/WFN_RESTART/c\   WFN_RESTART_FILE_NAME {output_name}' input_{tmp_prefix}_{step}.inp")
+                # 2- set the MAX_SCF to 1 so that only one iteration is performed
+                os.system(F"sed -i '/MAX_SCF/c\   MAX_SCF  1' input_{tmp_prefix}_{step}.inp")
+                # 3- set the SCF_GUESS to RESTART
+                os.system(F"sed -i '/SCF_GUESS/c\   SCF_GUESS  RESTART' input_{tmp_prefix}_{step}.inp")
+                # Now let's run the calculations --- We only need the Total energy so I can simply grep it to 
+                # not to use a lot of disk space but for now, I keep it this way
+                os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp -o output_{tmp_prefix}_{step}.log")
+            # The algorithm for running the calculations
+            #if params["compute_total_energy"]:
+            # we have to make a cp2k input file based on the reference input
+            # and then run it. Then since the files are large we need to remove them
     #os.system(f"rm -rf tmp_guess_ham_{params['job']}")
 
 def distribute_jobs(params):
