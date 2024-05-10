@@ -107,6 +107,7 @@ def save_data(params, prefix, step, directory, guess):
                 # This is how we can get the sample molden, wfn, and Log files.
                 os.system("mkdir ../sample_files")
                 os.system(f"mv {prefix}_{step}* ../sample_files")
+                os.system("cp params.json ../sample_files")
             if params["remove_raw_outputs"]: # and step>params["istep"]:
                 os.system(F"rm {prefix}_{step}*Log {prefix}_{step}*.wfn* {prefix}_{step}*molden")
         except:
@@ -163,20 +164,22 @@ def gen_data(params, step):
         None
     """
     if params["do_guess"]:
-        # Generate the step^th geometry from the trajectory file
-        # and create an input file for that
-        make_input(params["prefix"], params["guess_input_template"], params["guess_software"], params["trajectory_xyz_file"], step)
-        # Run the calculations for this input file
-        t1 = time.time()
-        print("Guess calculations for step", step)
-        run_single_point(params, params["prefix"], step, True)
-    
-        save_data(params, params["prefix"], step, params["guess_dir"], True)
-        #else:
-        #    print("to be implemented!")
-        print(f"Elapsed time for guess calculations: ", time.time()-t1)
-        # After the calculation is done for the guess geometry
-        # if the step is in the reference steps, create another input file
+        # Addition on 4/23/2024: Saving the guess Hams for a full trajectory is not wise since 
+        # for some systems this might overflow the disk. Instead, we will recompute these cheap
+        # guesses when we want to compute the properties after the model is trained in the ml_map module
+        if step in params["reference_steps"]:
+            # Generate the step^th geometry from the trajectory file
+            # and create an input file for that
+            make_input(params["prefix"], params["guess_input_template"], params["guess_software"], params["trajectory_xyz_file"], step)
+            # Run the calculations for this input file
+            t1 = time.time()
+            print("Guess calculations for step", step)
+            run_single_point(params, params["prefix"], step, True)
+        
+            save_data(params, params["prefix"], step, params["guess_dir"], True)
+            #else:
+            #    print("to be implemented!")
+            print(f"Elapsed time for guess calculations: ", time.time()-t1)
     if params["do_ref"]:
         if step in params["reference_steps"]:
             print("Reference calculations for step", step)
@@ -235,6 +238,7 @@ def distribute_jobs(params):
             njobs: The number of jobs for distributing the calculations.
             istep: The initial step in the precomputed molecular dynamics trajectory.
             fstep: The final step in the precomputed molecular dynamics trajectory.
+            random_selection: A boolean flag for random shuffling of the istep to fstep.
             nprocs: The number of processors to be used for calculations in each job.
             remove_raw_outputs: This falg removes large raw files which are read by Libra and saved.
             submit_template: The full path to the submission file.
@@ -245,8 +249,8 @@ def distribute_jobs(params):
     """
     critical_params = ['guess_input_template', 'trajectory_xyz_file', 'reference_input_template', 'istep', 
                         'fstep', 'submit_template', 'software_load_instructions']
-    default_params = {'prefix': 'libra', 'scratch': True, 'do_more': False, 'do_more_steps': 10,
-                      'guess_dir': './guess', 'do_guess': True, 'reference_dir': './ref', 'do_ref': True,
+    default_params = {'prefix': 'libra', 'scratch': True, 'do_more': False, 'do_more_steps': 10, 'random_selection': True,
+                      'guess_dir': './guess', 'do_guess': True, 'reference_dir': './ref', 'do_ref': True, 'user_steps': [],
                       'guess_software': 'cp2k', 'guess_software_exe': 'cp2k.psmp', 'guess_mpi_exe': 'mpirun',
                       'reference_software': 'cp2k', 'reference_software_exe': 'cp2k.psmp', 'reference_mpi_exe': 'mpirun',
                       'reference_steps': 10, 'njobs': 2, 'nprocs': 2, 'remove_raw_outputs': True, 'submit_exe': 'sbatch'
@@ -266,7 +270,8 @@ def distribute_jobs(params):
         #os.system('rm find . -name "*.npy" ') # This seems to be brutal! It removes everything :))
         shuffled_indices = np.arange(params["istep"], params["fstep"])
         params["steps"] = list(range(params["istep"], params["fstep"]))
-        np.random.shuffle(shuffled_indices)
+        if params["random_selection"]:
+            np.random.shuffle(shuffled_indices)
         np.save('shuffled_indices.npy', shuffled_indices)
         params["reference_steps"] = shuffled_indices[0:ref_steps].tolist()
         # Here we add the first and last geometries 
@@ -296,6 +301,9 @@ def distribute_jobs(params):
     os.system(f'mkdir {params["reference_dir"]} {params["guess_dir"]}')
     if (len(params["steps"])/params["njobs"])<2:
         raise("The division of steps/njobs is less than 2! Please select smaller number of jobs.")
+    if len(params["user_steps"])>0:
+        params["steps"] = params["user_steps"]
+        params["reference_steps"] = params["user_steps"]
     steps_split = np.array_split(params["steps"], params["njobs"])
     #os.system(F"mkdir {res_directory}")
     # Read the submit file

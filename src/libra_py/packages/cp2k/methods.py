@@ -222,7 +222,7 @@ def read_cp2k_tddfpt_log_file( params ):
     # Critical parameters
     critical_params = [ "logfile_name", "number_of_states" ]
     # Default parameters
-    default_params = { "tolerance":0.05, "isUKS": 0}
+    default_params = { "tolerance":0.05, "isUKS": 0, "lowest_orbital": 1, "highest_orbital": int(1e10)}
     # Check input
     comn.check_input(params, default_params, critical_params)
     
@@ -320,19 +320,21 @@ def read_cp2k_tddfpt_log_file( params ):
 
                 ci_coefficient = float( tmp_splitted_line[4] )
                 if ci_coefficient**2 > tolerance:
-                    # We need to remove the paranthesis from the 2nd element of the temporary splitted line
-                    tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
-                    tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
-                    tmp_state_coefficients.append( ci_coefficient  )
+                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[1])<=params["highest_orbital"]:
+                        # We need to remove the paranthesis from the 2nd element of the temporary splitted line
+                        tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
+                        tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
+                        tmp_state_coefficients.append( ci_coefficient  ) 
 
             # Here, we have the spin-unpolarize Kohn-Sham basis
             # For this case, spin-components will just return all alpha
             else:
                 ci_coefficient = float( tmp_splitted_line[2] )
                 if ci_coefficient**2 > tolerance:
-                    tmp_spin.append( "alp" )
-                    tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[1] ) ]  )
-                    tmp_state_coefficients.append( ci_coefficient  )
+                    if int(tmp_splitted_line[0])>params["lowest_orbital"] and int(tmp_splitted_line[1])<params["highest_orbital"]:
+                        tmp_spin.append( "alp" )
+                        tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[1] ) ]  )
+                        tmp_state_coefficients.append( ci_coefficient  )
 
         # Append the CI-basis and and their coefficients for
         # this state into the ci_basis and ci_coefficients lists
