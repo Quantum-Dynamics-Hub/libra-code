@@ -88,7 +88,8 @@ class MATRIX : public base_matrix<double>{
 
   using base_matrix<double>::set;
   using base_matrix<double>::get;
-
+  using base_matrix<double>::vec;
+  using base_matrix<double>::ivec;
 
   ///=========== Extractions ======================
 //  using base_matrix<double >::col;
@@ -111,6 +112,7 @@ class MATRIX : public base_matrix<double>{
   using base_matrix<double>::add;
   using base_matrix<double>::scale;
   using base_matrix<double>::product;
+  using base_matrix<double>::kron;
   using base_matrix<double>::dot_product;
 
   ///========= Transformation =====================
