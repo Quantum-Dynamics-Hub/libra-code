@@ -89,6 +89,14 @@ void export_dyn_control_params_objects(){
       .def_readwrite("use_Jasper_Truhlar_criterion", &dyn_control_params::use_Jasper_Truhlar_criterion)
       .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
 
+      ///================= FSSH3 specific ====================
+      .def_readwrite("fssh3_size_option", &dyn_control_params::fssh3_size_option)
+      .def_readwrite("fssh3_approach_option", &dyn_control_params::fssh3_approach_option)
+      .def_readwrite("fssh3_decomp_option", &dyn_control_params::fssh3_decomp_option)
+      .def_readwrite("fssh3_dt", &dyn_control_params::fssh3_dt)
+      .def_readwrite("fssh3_max_steps", &dyn_control_params::fssh3_max_steps)
+      .def_readwrite("fssh3_err_tol", &dyn_control_params::fssh3_err_tol)
+
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
@@ -249,6 +257,8 @@ void export_dyn_variables_objects(){
       .def("get_dm_adi", expt_get_dm_adi_v2)
       .def("get_dm_dia", expt_get_dm_dia_v1)
       .def("get_dm_dia", expt_get_dm_dia_v2)
+      .def("get_fssh3_errors", &dyn_variables::get_fssh3_errors)
+      .def("get_fssh3_average_errors", &dyn_variables::get_fssh3_average_errors)
       .def("get_imass", &dyn_variables::get_imass)
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)

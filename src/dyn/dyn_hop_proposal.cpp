@@ -38,6 +38,697 @@ namespace bp = boost::python;
 
 
 
+void normalize_transition_matrix(MATRIX& flux, MATRIX& num_coeff, MATRIX& denom_coeff){
+/**
+   J_ij = num_coeff_ij * flux_ij / sum_k {  denom_coeff_kj * flux_kj }
+
+*/
+
+  int i,j,n,m;
+  n = flux.n_rows; 
+  m = flux.n_cols;
+
+  for(j=0;j<m;j++){  
+
+    double sum = 0.0;
+
+    for(i=0;i<n;i++){  sum += denom_coeff.get(i,j)*flux.get(i,j);   }
+    if( fabs(sum)>0.0){ 
+      for(i=0;i<n;i++){ flux.scale(i, j, num_coeff.get(i,j)/sum ); }
+    }
+  }// for j
+
+}
+/*
+void normalize_transition_matrix(MATRIX& flux, int opt){
+  normalize_transition_matrix(flux, opt, 0);
+}
+
+void normalize_transition_matrix(MATRIX& flux){
+  normalize_transition_matrix(flux, 1, 0);
+}
+*/
+void hyperbolic(double x, double alpha, double& val, double& deriv){
+/**
+*/
+
+  double arg = alpha*x;
+  if(arg<-50.0){ val = 0.0; deriv = 1.0; }
+  else if(arg>50.0){ val = x; deriv = 1.0; }
+  else{
+    double ex = exp(-arg);
+    double den = (1.0 + ex);
+    val = x/den;
+    deriv = (1.0 + (1.0 + arg) * ex )/(den*den);
+  }
+
+}
+
+MATRIX transform_to_hyperbolic(MATRIX& A, double alp){
+  int i,j;
+  int n = A.n_cols;
+  MATRIX res(n,n);
+
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+      double aij = A.get(i,j);
+      double val, deriv;
+      hyperbolic(aij, alp, val, deriv);
+      res.set(i,j, val);
+    }
+  }
+  return res;
+}
+
+
+double derivs0(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA){
+/**
+  L0 = |y - Ax|^2 
+
+  dL0/dA = 2(Ax-y)x^T 
+
+*/
+  int n = x.n_rows;
+  MATRIX dx(n,1);
+  dx = A*x - y;
+  double Lagrangian = (dx.T() * dx).get(0,0);
+  gradA = 2.0 * dx * x.T();
+
+  return Lagrangian;
+}
+
+double derivs1(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA, double& L, double& gradL, int opt, int opt2){
+/**
+
+   opt2 = 0
+
+   L1 = lambda * sum_{i,j, i \neq j} A_ij^2  <-- linear          (opt = 0)
+ 
+   L1 = lambda^2 * sum_{i,j, i \neq j} A_ij^2  <-- quadratic     (opt = 1)
+
+   dL1/dA = 2[A - diag(A)]^T * lambda ( or lambda^2)
+
+   dL1/dlambda =  sum_{i,j, i \neq j} A_ij^2 or                  (opt = 0)
+
+                 2*lambda   sum_{i,j, i \neq j} A_ij^2           (opt = 1)
+
+
+   opt2 = 1
+
+   L1 = lambda * sum_{i,j} A_ij^2  <-- linear          (opt = 0)
+
+   L1 = lambda^2 * sum_{i,j} A_ij^2  <-- quadratic     (opt = 1)
+
+   dL1/dA = 2A^T  * lambda ( or lambda^2)
+
+   dL1/dlambda =  sum_{i,j} A_ij^2 or                  (opt = 0)
+
+                 2*lambda   sum_{i,j} A_ij^2           (opt = 1)
+   
+
+*/
+
+  int i, j, k;
+  int n = A.n_cols;
+  double Lagrangian;
+
+  MATRIX diagA(n,n);
+  double sum = 0.0;
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){ if (i!=j){  sum += A.get(i,j)* A.get(i,j); }   }
+
+    diagA.set(i,i, A.get(i,i)); 
+    if(opt2==1){   for(i=0;i<n;i++){ sum += A.get(i,i)* A.get(i,i); }   }
+  }
+
+  if(opt2==0){   gradA = 2.0*(A - diagA).T(); }
+  else if(opt2==1){    gradA = 2.0*A.T();  }
+
+  if(opt==0){   Lagrangian = L * sum;  gradL = sum;  gradA *= L; }
+  else if(opt==1){   Lagrangian = L*L * sum; gradL = 2.0*L*sum; gradA *= L*L; }
+
+  return Lagrangian;
+
+}
+
+double derivs1_new(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA, double& L, double& gradL, MATRIX& num_coeff, MATRIX& denom_coeff, int opt){
+/**
+
+   L1 = lambda * sum_ij { J_ij^2}         (opt = 0)
+   L1 = lambda^2 * sum_ij { J_ij^2 }      (opt = 1)
+
+
+   J_ij = a_ij * f(A_ij) / sum_k { b_kj * f(A_kj) }
+
+
+   where a_ij and b_ij are the num_coeff and denom_coeff respectively
+
+
+
+   (dL3/dA)_{b,a} = 2 * lambda * f'(A_ab)/N_b^2 * Delta_ab    (opt = 0)
+
+   (dL3/dA)_{b,a} = 2 * lambda^2 f'(A_ab)/N_b^2 * Delta_ab    (opt = 1)
+
+
+   dL3/dlambda =  sum_ij { J_ij^2  }                         (opt = 0)
+
+               = 2*lambda * sum_ij { J_ij^2 }                (opt = 1)
+
+
+  Delta_ab = sum_i { ( J_ab * a_ab * b_ib - J_ib * a_ib * b_ab )  * f(A_ib) }
+
+*/
+
+  int i, j, k, a, b;
+  int n = A.n_cols;
+  double Lagrangian = 0.0;
+
+  double alp = 10.0;
+
+  MATRIX f(n,n);
+  MATRIX df(n,n);
+
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+      double aij = A.get(i,j);
+      double val, deriv;
+      hyperbolic(aij, alp, val, deriv);
+      f.set(i,j, val);
+      df.set(i,j, deriv);
+    }
+  }
+
+  MATRIX J(f);
+  normalize_transition_matrix(J, num_coeff, denom_coeff);
+
+  double sum = 0.0;
+  for(i=0;i<n;i++){ for(j=0;j<n;j++){  sum += J.get(i,j)*J.get(i,j);  }   }
+
+  vector<double> N(n, 0.0);
+  MATRIX Delta(n,n);
+
+  for(b=0;b<n;b++){
+    for(a=0;a<n;a++){ N[b] +=  denom_coeff.get(a, b) * f.get(a, b);  }
+  }// for b
+
+  for(a=0; a<n; a++){ 
+    for(b=0;b<n;b++){
+
+      double val = 0.0;
+      for(i=0;i<n;i++){
+        double val1 = J.get(a,b)*num_coeff.get(a,b)*denom_coeff.get(i,b);
+        double val2 = J.get(i,b)*num_coeff.get(i,b)*denom_coeff.get(a,b);
+
+        val += ( val1 - val2 )*f.get(i,b);
+      }// for k
+
+      Delta.set(a,b, val);
+    }// for j
+  }// for i
+
+
+  gradA = 0.0;
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+
+      double val = Delta.get(i,j) * df.get(i,j) / (N[j] * N[j]);
+
+      if(opt==0){ gradA.set(j,i, val*L); }
+      else if(opt==1){ gradA.set(j,i, val*L*L); }
+
+    }
+  }
+
+
+  if(opt==0){
+    Lagrangian = L * sum;
+    gradL = sum;
+  }
+  else if(opt==1){
+    Lagrangian = L * L * sum;
+    gradL = 2.0*L*sum;
+  }
+
+  return Lagrangian;
+
+}
+
+double derivs2(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA, MATRIX& mu, MATRIX& gradmu, int opt, int opt2){
+/**
+
+   opt2 = 0 - constraint on columns
+   opt2 = 1 - constraint on rows (just use the transposed A)
+
+
+   L2 = sum_j { mu_i * (\sum_i{A_ij} - 1)^2 }   <--- linear      (opt = 0)
+
+   L2 = sum_j { mu_i^2 * (\sum_i{A_ij} - 1)^2 }   <--- quadratic  (opt = 1)
+
+   (dL2/dA)_{b,a} =  2 *mu_i^2 B_{b}; (for quadratic)
+   dL2/dmu_i = 2 mu_i * B_i^2 (for quadratic)
+
+*/
+    int i, j, k;
+    int n = A.n_cols;
+    double Lagrangian = 0.0;
+
+    MATRIX a(n,n);
+
+    if(opt2==0){  a = A; }
+    else if(opt2==1){  a = A.T(); }
+
+    vector<double> b(n, 0.0);
+    for(i=0;i<n;i++){  b[i] =  a.sum_col(i) - 1.0; }
+
+    gradmu = 0.0; 
+    gradA = 0.0;
+
+    for(i=0;i<n;i++){
+      double b2 =  b[i] * b[i];
+      double mu2 = mu.get(i, 0) *  mu.get(i, 0);
+
+      if(opt==0){  
+        Lagrangian += mu.get(i, 0) * b2; 
+        gradmu.set(i,0, b2); 
+
+        for(j=0;j<n;j++){ gradA.set(i,j, 2.0* mu.get(i, 0) * b[i]); }
+
+      }
+      else if(opt==1){  
+        Lagrangian +=  mu2 * b2; 
+        gradmu.set(i,0, 2.0*mu.get(i, 0)*b2);
+
+        for(j=0;j<n;j++){ gradA.set(i,j, 2.0* mu2 * b[i]); }
+      }
+    }// for i
+
+  return Lagrangian;
+
+}
+
+
+double derivs3(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA, double& L, double& gradL, int opt, int opt2, MATRIX& s){
+/**
+   opt = 0 -linear in lambda,
+   opt = 1 - quadratic in lambda
+
+
+   opt2 = 0 - no off-diagonal elements
+
+
+   L3 = lambda * sum_{i,j, i \neq j} s_ij^2 * J_ij^2  <-- linear          (opt = 0)
+
+   L3 = lambda^2 * sum_{i,j, i \neq j} s_ij^2 * J_ij^2  <-- quadratic     (opt = 1)
+
+
+   J_ij = s_ij * f(A_ij) / N_j  where N_j = sum_{k} { f(A_kj) }
+
+   f(x) = x/(1 + exp(-alpha*x)) 
+
+
+
+   (dL3/dA)_{b,a} = 2 * lambda * s_ab^2 * f'(A_ab)/N_b * Delta_ab    (opt = 0)
+
+   (dL3/dA)_{b,a} = 2 * lambda^2 * s_ab^2 * f'(A_ab)/N_b * Delta_ab  (opt = 1)
+
+   where I_b = sum_{i\neq b} { J_ib^2 }
+
+   dL3/dlambda =  sum_{i,j, i \neq j} s_ij^2 * J_ij^2 or                  (opt = 0)
+
+               = 2*lambda * sum_{i,j, i \neq j} s_ij^2 * J_ij^2           (opt = 1)
+
+
+  Delta_ab = sum_i { ( s_ab^2 * (1 - delta_ab) * J_ab - s_ib^2 * (1 - delta_ib) * J_ib  )  * J_ib} 
+
+
+   opt2 = 1 - with diagonal elements (not yet developed)
+
+*/
+
+  int i, j, k;
+  int n = A.n_cols;
+  double Lagrangian = 0.0;
+
+  double alp = 10.0;
+
+  MATRIX f(n,n);
+  MATRIX df(n,n);
+
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+      double aij = A.get(i,j);
+      double val, deriv;
+      hyperbolic(aij, alp, val, deriv);
+      f.set(i,j, val);
+      df.set(i,j, deriv);
+    }
+  }
+
+  MATRIX J(f);
+//  normalize_transition_matrix(J,1); SHOULD NORMALIZE IT!
+
+  double sum = 0.0;
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+      double sij = s.get(i,j);
+      if(opt2==0){ 
+        if(i!=j){ sum += J.get(i,j)*J.get(i,j) * sij * sij; }
+      }
+      else{ sum += J.get(i,j)*J.get(i,j) * sij * sij; }
+    }
+  }
+
+  vector<double> I(n, 0.0);
+  vector<double> N(n, 0.0);
+  MATRIX Delta(n,n);
+
+  for(i=0;i<n;i++){
+      N[i] = f.sum_col(i);
+//      I[i] = J.sum_col(i, 2) - J.get(i,i)*J.get(i,i);
+
+    for(j=0;j<n;j++){ 
+      double val = 0.0;
+      for(k=0;k<n;k++){
+        double sij = s.get(i,j);
+        double skj = s.get(k,j);
+        double val1, val2;
+        if(opt2==0){
+          val1 = 0.0;  if(i==j){ val1 = 0.0; }else{ val1 = J.get(i,j) * sij * sij; }
+          val2 = 0.0;  if(k==j){ val2 = 0.0; }else{ val2 = J.get(k,j) * skj * skj; }
+        }
+        else{  
+          val1 = J.get(i,j) * sij * sij; 
+          val2 = J.get(k,j) * skj * skj;
+        }
+        val += (val1 - val2)*J.get(k,j);
+ 
+      }// for k 
+
+      Delta.set(i,j, val);
+    }// for j
+  }// for i
+
+  gradA = 0.0;
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+
+      double val = Delta.get(i,j) * df.get(i,j) / N[j];
+
+      if(opt==0){ gradA.set(j,i, val*L); }
+      else if(opt==1){ gradA.set(j,i, val*L*L); }
+
+    }
+  }
+
+  if(opt==0){  
+    Lagrangian += L * sum;
+    gradL = sum;
+  }
+  else if(opt==1){ 
+    Lagrangian += L*L * sum; 
+    gradL = 2.0*L*sum;
+  }
+
+  return Lagrangian;
+}
+
+
+double derivs4(MATRIX& x, MATRIX& y, MATRIX& A, MATRIX& gradA, MATRIX& mu, MATRIX& gradmu, int opt){
+/**
+
+
+   L4 = sum_i { mu_i * (\sum_j{J_ij} - 1)^2 }   <--- linear      (opt = 0)
+
+   L4 = sum_i { mu_i^2 * (\sum_j{J_ij} - 1)^2 }   <--- quadratic  (opt = 1)
+   
+
+   b_i = sum_j {J_ij} - 1
+
+   (dL4/dA)_{b,a} =  2 f'(A_ab)/N_b * sum_i { ( mu_a * b_a - mu_i * b_i ) * J_ib } ( opt = 0)
+
+   dL4/dmu_i = b_i^2 (opt = 0)
+
+
+   (dL4/dA)_{b,a} =  2 f'(A_ab)/N_b * sum_i { ( mu_a**2 * b_a - mu_i**2 * b_i ) * J_ib } ( opt = 1)
+
+   dL4/dmu_i = 2.0 * mu_i * b_i^2 (opt = 1)
+
+*/
+  int i, j, k;
+  int n = A.n_cols;
+
+  MATRIX f(n,n);
+  MATRIX df(n,n);
+
+  double alp = 10.0; 
+
+  for(i=0;i<n;i++){
+    for(j=0;j<n;j++){
+      double aij = A.get(i,j);
+      double val, deriv;
+      hyperbolic(aij, alp, val, deriv);
+      f.set(i,j, val);
+      df.set(i,j, deriv);
+    }
+  }
+
+  MATRIX J(f);
+//  normalize_transition_matrix(J,1); SHOULD NORMALIZE
+
+  vector<double> b(n, 0.0);
+  for(i=0;i<n;i++){  b[i] =  J.sum_row(i) - 1.0; }
+
+  gradmu = 0.0;
+  gradA = 0.0;
+  double Lagrangian = 0.0;
+
+  for(i=0;i<n;i++){
+    double b2 =  b[i] * b[i];
+    double mu2 = mu.get(i, 0) *  mu.get(i, 0);
+
+    if(opt==0){
+      Lagrangian += mu.get(i, 0) * b2;
+      gradmu.set(i,0, b2);
+
+      for(j=0;j<n;j++){ 
+        double val = 0.0;
+
+        for(k=0;k<n;k++){ val += (mu.get(i,0) * b[i] - mu.get(k,0) * b[k]) * J.get(k,j);  }
+
+        gradA.set(j, i, val);
+      }// for j
+    }// opt = 0
+
+    else if(opt==1){
+      Lagrangian +=  mu2 * b2;
+      gradmu.set(i,0, 2.0*mu.get(i, 0)*b2);
+
+      for(j=0;j<n;j++){ 
+        double val = 0.0;
+
+        for(k=0;k<n;k++){ val += (mu.get(i,0) * mu.get(i,0) * b[i] - mu.get(k,0) * mu.get(k,0) * b[k]) * J.get(k,j);  }
+
+        gradA.set(j, i, val); 
+      }// for j
+    }// opt = 1
+  }// for i
+
+  return Lagrangian;
+  
+}
+
+void grad_step(MATRIX& A, MATRIX& x, MATRIX& x_new, double dt, double& L, MATRIX& mu, int opt,
+               double& Lag, double& L0, double& L1, double& L2, double& L3, double dT, int approach_option){
+    /**
+    Optimization of |Ax - y|^2 subject to constraints
+                                                                                       Evolve:
+    opt = 0 - unconstrained optimization  L0 term                                      A
+    opt = 1 - 
+
+
+    opt = 1 - add only lambda-constraint  L0, L1 terms                                 A, L
+    opt = 2 - add only mu-constraint      L0, L2 terms                                 A, mu
+    opt = 3 - add both constraints        L0, L1, L2 terms                             A, L, mu
+    opt = 4 - the constraint on the corrected fluxes            L0, L3                 A, L
+    opt = 5 - same as 4 + sum of row should be close to 1       L0, L3, L4             A, L, mu
+    opt = 6 - same as 4, but scale fluxes by J_out (see below)  L0, L3 (scaled)        A, L
+
+
+    */
+    int i, j, k;
+    int n = A.n_cols;
+
+    //*****************************************
+    int opt2 = 0; // 0 - linear, 1 - quadratic
+    //*****************************************
+
+    MATRIX y(n, 1);
+    MATRIX num_coeff(n,n); 
+    MATRIX denom_coeff(n,n);
+
+    if(approach_option==0){ y = x_new; }
+
+    vector<double> J_out(n, 0.0); // total outfluxes from all states
+    if(approach_option==1 or approach_option==2){
+      y = (x_new-x)/dT;
+       
+      for(j=0;j<n;j++){  
+        double prob = 0.0;
+        if(x.get(j,0)>0.0){ prob = -dT*y.get(j,0)/x.get(j,0); }
+        else{ prob = 0.0; }
+
+        if(prob<0.0){ prob = 0.0; }
+        if(prob>1.0){ prob = 1.0; }
+        J_out[j] = prob;
+
+        for(i=0;i<n;i++){  
+          if(i==j){  num_coeff.set(i, j, 0.0);  denom_coeff.set(i,j, 0.0); } 
+          else{  num_coeff.set(i, j, prob);  denom_coeff.set(i,j, 1.0);} 
+        }
+      }
+    }    
+
+//    exit(0);
+
+    MATRIX id(n,n); id.identity();
+
+    // Total ones
+    Lag = 0.0;
+    MATRIX gradA(n,n);   gradA = 0.0;
+    MATRIX gradmu(n,1);  gradmu = 0.0;
+    double gradL;        gradL = 0.0;
+
+    // Temporary ones
+    MATRIX _gradA(n,n);
+    MATRIX _gradmu(n,1);
+    double _gradL;
+
+    L0 = 0.0; L1 = 0.0; L2 = 0.0; L3 = 0.0;
+
+    // For all methods, we have the |Ax - y|^2 -> min condition
+    if(opt>=0){ 
+      _gradA = 0.0;
+      L0 = derivs0(x, y, A, _gradA);
+      gradA += _gradA; 
+      Lag += L0;
+    }
+
+    if(opt==1){
+      L1 = derivs1_new(x, y, A, _gradA, L, _gradL, num_coeff, denom_coeff, 0);
+      gradA += _gradA; gradL+= _gradL; Lag += L1;
+    }
+    if(opt==101){
+      L1 = derivs1_new(x, y, A, _gradA, L, _gradL, num_coeff, denom_coeff, 1);
+      gradA += _gradA; gradL+= _gradL; Lag += L1;
+    }
+/*
+    if(opt==1 or opt==3){
+      _gradA = 0.0; _gradL = 0.0;
+      L1 = derivs1(x, y, A, _gradA, L, _gradL, opt2, 0); // Last argument: 0 - no diagonal elements, 1 - with diagonal elts.
+      gradA += _gradA; gradL += _gradL;
+      Lag += L1;
+    }
+*/
+    if(opt==2 or opt==3){
+      _gradA = 0.0; _gradmu = 0.0;
+      L2 = derivs2(x, y, A, _gradA, mu, _gradmu, opt2, 0); // Last argument: 0 - constraint on columns, 1 - constraint on rows
+      gradA += _gradA; gradmu += _gradmu;
+      Lag += L2;
+    }
+
+    if(opt==4 or opt==5 or opt==6){
+
+      MATRIX s(n,n);
+      if(opt==4){   for(i=0;i<n;i++){  for(j=0;j<n;j++){  s.set(i,j, 1.0); }  }      }
+      else if(opt==6){
+        
+        for(i=0;i<n;i++){  for(j=0;j<n;j++){  s.set(i,j, 1.0); }  }
+
+        if(approach_option==1 or approach_option==2){
+          for(i=0;i<n;i++){
+            double prob = 0.0; // total outflux from the state i
+            if(x.get(i,0)>0.0){ prob = -dT*y.get(i,0)/x.get(i,0); }
+            if(prob<0.0){ prob = 0.0; }
+            if(prob>1.0){ prob = 1.0; }
+            
+            for(j=0;j<n;j++){ 
+              if(j==i){ s.set(j, j, 0.0); }
+              else{  s.set(j, i, prob); }
+            }// for j
+          }// for i          
+        }// if 
+      }
+
+      _gradA = 0.0; _gradL = 0.0;
+      L3 = derivs3(x, y, A, _gradA, L, _gradL, opt2, 1, s); // second to the last argument: 0 - no diagonal elements, 1 - with diagonal elts.
+      gradA += _gradA; gradL += _gradL;
+      Lag += L3;
+    }
+    
+    if(opt==5){
+      _gradA = 0.0; _gradmu = 0.0;
+      L2 = derivs4(x, y, A, _gradA, mu, _gradmu, opt2); // 
+      gradA += _gradA; gradmu += _gradmu;
+      Lag += L2;
+
+    }// opt == 5
+
+    //exit(0);
+
+  A = A - dt * gradA;
+  if(opt==0 or opt==1 or opt==101 or opt==3 or opt==4 or opt==5 or opt==6){
+    L = L - dt * gradL;
+  }else{ L = 0.0; }
+  
+  if(opt==2 or opt==3 or opt==5){
+    mu = mu - dt* gradmu;
+  }else{ mu = 0.0; }
+
+}
+
+MATRIX run_opt(MATRIX& x, MATRIX& y, double dt, double nsteps, double err_tol, int opt, vector<double>& err, double dT, int approach_option){
+
+    int i,j;
+    int n = x.n_rows;
+    MATRIX A(n,n);  A = 0.0;
+    if(approach_option==0){  A.identity(); }
+    else if(approach_option==1 or approach_option==2){   
+      for(i=0;i<n;i++){ 
+        //for(j=0;j<n;j++){  if(j!=i){ A.set(i,j, 1.0 ); }else{ A.set(i,i, 0.0); }  }
+        for(j=0;j<n;j++){  A.set(i,j, 0.0 ); }  
+      }
+    }
+
+    double Lag, L0, L1, L2, L3;
+    double L = 1.0;
+    MATRIX mu(n,1);
+    for(i=0; i<n; i++){ mu.set(i, 0, 1.0); }
+    
+    Lag = 2.0*err_tol;
+    while(i<nsteps and fabs(Lag) > err_tol){
+      grad_step(A, x, y, dt, L, mu, opt, Lag, L0, L1, L2, L3, dT, approach_option);   
+      i++;
+    }
+
+    if( fabs(Lag) > 1.0){ cout<<"WARNING: run_opt did not converge. Error: "<<fabs(Lag)<<"\n";  }
+
+   
+    err[0] = Lag;
+    err[1] = L0;
+    err[2] = L1;
+    err[3] = L2;
+    err[4] = L3;
+
+//    cout<<"Lag = "<<Lag<<" L0= "<<L0<<" L1= "<<L1<<" L2= "<<L2<<" L3= "<<L3<<endl;
+//   A.show_matrix();
+
+   return A;
+
+}// run_opt
+
+
+
+
 
 MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib){
 /**
@@ -536,7 +1227,90 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
 }// fssh2
 
 
-vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx){
+MATRIX adjust_signs(MATRIX& J){
+  MATRIX res(J);
+  int sz = J.n_cols;
+
+  for(int i=1; i<sz; i++){
+    double scl = SIGN( J.get(i,0) * J.get(0,i) );
+    if(scl==0){ scl = 1.0; }
+    res.scale(-1, i, -scl);
+  }
+
+  return res;
+}
+
+MATRIX find_best_matrix(MATRIX& c_new, MATRIX& c_old, MATRIX& J){
+
+/**
+ sum_col is bugged - need to fix
+*/
+
+  MATRIX j(J);
+  j = adjust_signs(J);
+  MATRIX j1(j);
+  double err1 = (c_new - j * c_old).T().sum_row(0, 2);
+  //cout<<"Original sign\n";
+//  (c_new - j * c_old).show_matrix();
+//  j.show_matrix();
+
+
+//  cout<<"Changed sign\n";
+  j = MATRIX(J);
+  j.scale(-1,0,-1.0);
+  j = adjust_signs(j);
+  MATRIX j2(j);
+  double err2 = (c_new - j * c_old).T().sum_row(0, 2);
+//  (c_new - j * c_old).show_matrix();
+//  j.show_matrix();
+
+  MATRIX J2(J);
+  J2.scale(0, -1, -1.0);
+
+  j = adjust_signs(J2);
+  MATRIX j3(j);
+  double err3 = (c_new - j * c_old).T().sum_row(0, 2);
+//  cout<<"Original sign + row adjustment\n";
+//  (c_new - j * c_old).show_matrix();
+//  j.show_matrix();
+
+//  cout<<"Changed sign + row adjustment\n";
+  j = MATRIX(J2);
+  j.scale(-1,0,-1.0);
+  j = adjust_signs(j);
+  MATRIX j4(j);
+  double err4 = (c_new - j * c_old).T().sum_row(0, 2);
+//  (c_new - j * c_old).show_matrix();
+//  j.show_matrix();
+
+//  cout<<"Errors: "<<err1<<" "<<err2<<" "<<err3<<" "<<err4<<endl;
+  int choice = 1;
+  double err = err1; j = j1; 
+  if(err2<err) { j = j2; err = err2; choice = 2; }
+  if(err3<err) { j = j3; err = err3; choice = 3; }
+  if(err4<err) { j = j4; err = err4; choice = 4; }
+//  cout<<"Choice: "<<choice<<endl;
+  
+
+  return j;
+}
+
+/*
+MATRIX find_best_matrix2(MATRIX& c_new, MATRIX& c_old, MATRIX& J){
+  int a, b; 
+  a = b = 0; 
+
+  //j = MATRIX(J);
+//  double err = (c_new - j * c_old).T().sum_row(0, 2);
+
+//  for()
+
+}
+
+*/
+
+vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, 
+               int act_state_indx, vector<double>& errors){
 /**
   \brief This function computes the surface hopping probabilities according to new experimental idea
 
@@ -554,8 +1328,8 @@ vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& de
 */
 
   const double kb = 3.166811429e-6; // Hartree/K
-  int i,j,k;
-  double sum,g_ij,argg;
+  int i,j,k, cnt;
+  double sum,g_ij,argg, nrm;
 
   double dt = prms.dt;
   double T = prms.Temperature;
@@ -565,52 +1339,407 @@ vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& de
   vector<double> g(nstates, 0.0);
 
 
-  // Now calculate the hopping probabilities
-  i = act_state_indx;
+  //====== Testing options =========
 
-  MATRIX rho_old(nstates, 1);
-  MATRIX rho(nstates,1);
-  //MATRIX drhodt(nstates, 1);
+  int size_option = prms.fssh3_size_option; // 0 - N elements, only populations; 1 - N^2 elements - also coherences
+  int approach_option = prms.fssh3_approach_option; // 0 - master equation (J contains hopping probabilities); 1 - kinetic approach (J contains fluxes)
+  int decomp_option = prms.fssh3_decomp_option; // 0 - bdcSvd; 1 - fullPivLu; 2 - fullPivHouseholderQr; 3 - completeOrthogonalDecomposition
 
-  MATRIX J(nstates, nstates);
-  MATRIX rhorho(nstates, nstates);
-  MATRIX inv_rhorho(nstates, nstates);
+  int do_adjustment =  0;
+  
+  //=========================== Step 1: definition of vectorized densities ==================================
+
+  int nst2;
+  if(size_option==0){ nst2 = nstates; }
+  else  if(size_option==1){ nst2 = nstates * nstates; }
+
+  MATRIX rho_old(nst2, 2);
+  MATRIX rho(nst2, 2);
+  MATRIX drhodt(nst2, 2);
+
+  MATRIX PP(nstates, nstates);
+  MATRIX PP_old(nstates, nstates);
+  MATRIX J2(nstates, nstates);
+  MATRIX P_old(nstates, 1);
+  MATRIX P_new(nstates, 1);
+  MATRIX dPdt(nstates, 1);
 
 
+  for(i=0;i<nstates;i++){
+    for(j=0;j<nstates;j++){
+      complex<double> rho_ij = denmat.get(i,j);
+      double val = (rho_ij * std::conj(rho_ij)).real();
+      PP.set(i,j, val);      
+      if(j==i){ P_new.set(i, 0, rho_ij.real()); }
 
-  for(j=0;j<nstates;j++){
-    rho_old.set(j, 0, denmat_old.get(j,j).real());
-    rho.set(j, 0, denmat.get(j,j).real());
+      rho_ij = denmat_old.get(i,j);
+      val = (rho_ij * std::conj(rho_ij)).real();
+      PP_old.set(i,j, val);
+      if(j==i){ P_old.set(i, 0, rho_ij.real()); }
+
+    }// for j
   }// for i
 
+  // Use only populations
+  if(size_option==0){
+    for(i=0;i<nstates;i++){
+      rho_old.set(i, 0, denmat_old.get(i,i).real());
+      rho.set(i, 0, denmat.get(i,i).real());
+      rho_old.set(i, 1, 1.0);
+      rho.set(i, 1, 1.0);
+    }// for i
+
+  }// size_option = 0 
+
+  else if(size_option==1){  // Use the full density matrix - also coherences
+    for(i=0;i<nstates;i++){
+      rho_old.set(i, 0, denmat_old.get(i,i).real());
+      rho.set(i, 0, denmat.get(i,i).real());
+      rho_old.set(i, 1, 1.0);
+      rho.set(i, 1, 1.0);
+    }// for i
+
+    int shift = int(nstates * (nstates-1) /2); // how many coherences
+    cnt = nstates;
+    for(i=0;i<nstates;i++){
+      for(j=i+1;j<nstates;j++){
+        rho_old.set(cnt, 0, denmat_old.get(i,j).real());
+        rho_old.set(cnt+shift, 0, denmat_old.get(i,j).imag());
+        rho.set(cnt, 0, denmat.get(i,j).real());
+        rho.set(cnt+shift, 0, denmat.get(i,j).imag());
+        cnt++;
+      }// for j>i
+    }// for i
+
+  }// size_option = 1
+
+  //=========================== Step 2: least squares solving ==================================
+
   // Derivative of the density matrix
-  //drhodt = (1.0/dt)*(rho - rho_old);
+  drhodt = (1.0/dt)*(rho - rho_old);
+  dPdt = (1.0/dt)*(P_new - P_old);
 
-  rhorho = rho_old * rho_old.T();
-  FullPivLU_inverse(rhorho, inv_rhorho);
+  // LHS matrix = A
+  MATRIX A(nst2, nst2);
 
-  // The formula for fluxes
-  //J = (drhodt*rho.T()) * inv_rhorho;
-  J = (rho * rho_old.T()) * inv_rhorho;
+  // RHS matrix = b
+  MATRIX b(nst2, nst2);
+
+  if(approach_option==0){  
+    A = rho_old * rho_old.T();
+    b = rho_old * rho.T();  
+  }
+  else if(approach_option==1){  
+//    A = rho_old * rho_old.T();
+//    b = rho_old * drhodt.T(); 
+  }
+  else if(approach_option==2){
+    A = rho_old * rho_old.T();
+    b = drhodt * rho_old.T();
+/*
+    MATRIX x(rho); x = 0.5*(rho_old + rho);
+    A = x * x.T();
+    b = x * drhodt.T();
+*/
+    
+  }
+
+  // Least squares solution:
+  MATRIX J(nst2, nst2);
+  //vector<double> err(5,0.0);
+
+  if(approach_option==0){
+    J = run_opt(P_old, P_new, prms.fssh3_dt, prms.fssh3_max_steps, prms.fssh3_err_tol, decomp_option, errors, dt, approach_option);
+    J =  transform_to_hyperbolic(J, 10.0);
+    //normalize_transition_matrix(J, 1);  SHOULD NORMALIZE!
+  }
+  else if(approach_option==1 || approach_option==2){
+    J = run_opt(P_old, P_new, prms.fssh3_dt, prms.fssh3_max_steps, prms.fssh3_err_tol, decomp_option, errors, dt, approach_option);
+
+    int n = P_old.n_rows;
+    MATRIX num_coeff(n,n);
+    MATRIX denom_coeff(n,n);
+
+    for(j=0;j<n;j++){
+      double prob = 0.0;
+      if(P_old.get(j,0)>0.0){ prob = -dt*dPdt.get(j,0)/P_old.get(j,0); }
+      else{ prob = 0.0; }
+      if(prob<0.0){ prob = 0.0; }
+      if(prob>1.0){ prob = 1.0; }
+     
+      for(i=0;i<n;i++){
+        if(j==i){  num_coeff.set(i, j, 0.0);  denom_coeff.set(i,j, 0.0); }
+        else{  num_coeff.set(i, j, prob);  denom_coeff.set(i,j, 1.0);}
+      } 
+
+    }// for i
+
+//    cout<<"P_old = \n"; P_old.show_matrix();
+//    cout<<"P_new = \n"; P_new.show_matrix();
+//    cout<<"Optimized A = \n";
+//    J.show_matrix(); 
+
+    J = transform_to_hyperbolic(J, 10.0);
+
+//    cout<<"Hyperbbolic J = \n";
+//    J.show_matrix();
+    MATRIX Jnorm(J);
+    normalize_transition_matrix(Jnorm, num_coeff, denom_coeff);
+//    cout<<"num_coeff = \n"; num_coeff.show_matrix();
+//    cout<<"denom_coeff = \n"; denom_coeff.show_matrix();
+//    cout<<"Hopping probabilities = \n";
+//    Jnorm.show_matrix();
 
 
+
+
+    //normalize_transition_matrix(J);
+  }
+
+/*
+//  if(decomp_option==-2){
+    MATRIX a(3*nstates, nstates*nstates);
+    MATRIX B(3*nstates, 1);
+    MATRIX x(nstates*nstates, 1);
+
+    for(i=0;i<nstates;i++){
+      for(j=0; j<nstates; j++){
+        a.set(i, i*nstates + j, denmat_old.get(j,j).real() ); 
+        a.set(i+nstates, i*nstates + j, 1.0);
+        a.set(i+2*nstates, j*nstates + i, 1.0);
+      }
+      B.set(i, 0, denmat.get(i,i).real());
+      B.set(i+nstates, 0, 1.0);
+      B.set(i+2*nstates, 0, 1.0);
+    }    
+*/
+/*
+// Based on fluxes
+    int sz = nstates*nstates-nstates;
+    int shft = nstates - 1;
+    MATRIX a(nstates, sz);
+    MATRIX B(nstates, 1);
+    MATRIX x(sz, 1);
+
+    for(i=0;i<nstates;i++){
+      cnt = 0;
+      for(j=0; j<nstates; j++){        
+        if(j==i){ ;; }
+        else{
+          a.set(i, i*shft + cnt, 0.5*(denmat_old.get(j,j).real() + denmat.get(j,j).real() )  );
+          cnt++;
+        }
+      }// for i
+      B.set(i, 0, drhodt.get(i,0));
+
+   }// for i
+
+
+    least_squares_solve(a, x, B, decomp_option);
+*/
+    //a = a * a.T();
+    //cout<<det(a)<<endl;
+
+/*
+    int rank;
+    int is_inver;
+    FullPivLU_rank_invertible(A, rank, is_inver);
+
+    if(is_inver){ ;; }
+    else{ 
+     cout<<"Matrix A is not invertible\n Old matrices = \n";
+     rho_old.show_matrix();
+     
+     MATRIX tmp(rho_old); 
+     nrm = 0.0;
+     for(i=0;i<nstates-1; i++){  
+       if( fabs(tmp.get(i,0) - tmp.get(i+1,0))<0.01 ){  
+         tmp.add(i,   0, 0.0); 
+         tmp.add(i+1, 0, 0.1); 
+       }
+       nrm += tmp.get(i,0);
+     }
+     nrm += tmp.get(nstates-1,0);
+     // Renormalize:
+     for(i=0;i<nstates; i++){  tmp.set(i, 0, tmp.get(i,0)/nrm); }
+     
+
+     A = tmp * tmp.T(); 
+     FullPivLU_rank_invertible(A, rank, is_inver);
+     if(is_inver==0){ cout<<"Matrix A is still not invertible at this point\n";
+       A.show_matrix();
+       cout<<"Matrix det = "<<det(A)<<endl;
+     }
+    }
+
+    FullPivLU_inverse(A, J);  J = b * J; 
+
+*/
+
+/*
+    MATRIX E_new(nstates, nstates);
+    MATRIX E_old(nstates, nstates);
+    MATRIX U_new(nstates, nstates);
+    MATRIX U_old(nstates, nstates);
+
+    solve_eigen(PP, E_new, U_new, 0);
+    solve_eigen(PP_old, E_old, U_old, 0);
+
+    J = U_new * U_old.T();
+
+//    cout<<"P_old=\n"; P_old.show_matrix();
+//    cout<<"P_new=\n"; P_new.show_matrix();    
+//    cout<<"Original J=\n"; J.show_matrix();
+//    cout<<"J * P_old = \n"; (J*P_old).show_matrix();
+    J = find_best_matrix(P_new, P_old, J);
+
+    double err = (P_new - J * P_old).T().sum_row(0, 2);
+    if(err>0.05){  
+      cout<<"Error: "<<err<<endl; 
+      cout<<"P_old=\n"; P_old.show_matrix();
+      cout<<"P_new=\n"; P_new.show_matrix();
+      cout<<"Original J=\n"; J.show_matrix();
+      cout<<"J * P_old = \n"; (J*P_old).show_matrix();
+      cout<<"Active state index = "<<act_state_indx<<endl;
+      cout<<"improved J =\n"; J.show_matrix();
+      cout<<"J * P_old = \n"; (J*P_old).show_matrix();
+
+    }
+
+    MATRIX id(nstates, nstates); id.identity();
+    err = (J*J.T() - id).tr();
+    if(err > 0.01){    cout<<"error = "<<err<<endl; }
+
+*/
+
+/*  // Worked but wrong conceptually
+    least_squares_solve(PP, J2, PP_old, decomp_option);
+    J2 = J2.T();
+
+    MATRIX imJ2(nstates, nstates); imJ2 = 0.0;
+    CMATRIX cJ2(J2, imJ2);
+    CMATRIX J2_half(nstates, nstates);
+    CMATRIX J2_ihalf(nstates, nstates);
+
+    sqrt_matrix(cJ2, J2_half, J2_ihalf); 
+    J = J2_half.real();
+*/
+
+
+/* // for populations
+    cnt = 0;
+    for(i=0;i<nstates;i++){
+      for(j=0; j<nstates; j++){
+        J.set(i,j, x.get(cnt,0));
+        cnt++;
+      }
+    }
+*/
+
+/*
+// for fluxes:
+    cnt = 0;
+    for(i=0;i<nstates;i++){
+      for(j=0; j<nstates; j++){
+
+        if(i==j){ J.set(i,j, 0.0); }
+        else{
+          J.set(i,j, x.get(cnt,0));
+          cnt++;
+        }
+      }
+    }
+*/
+//    cout<<"J = \n"; J.show_matrix(); 
+
+/*
+  }
+  else if(decomp_option==-1){
+    int rank;
+    int is_inver;
+    FullPivLU_rank_invertible(A, rank, is_inver);
+
+    if(is_inver){    FullPivLU_inverse(A, J);  J = b.T() * J;  }
+    else { J.identity(); }
+  }
+  else{
+    least_squares_solve(A, J, b, decomp_option);
+    J = J.T();
+  }
+*/
+  MATRIX adj(nst2, 1); adj = 0.0;
+  MATRIX rho_old_adj(rho_old);
+  if(do_adjustment==1){        
+    for(i=0;i<nstates;i++){ rho_old_adj.set(i, 0, 0.0); }
+    adj = J *  rho_old_adj;
+  }
+
+
+  //=========================== Step 3: probabilities ==========================================
   // Now convert them the fluxes that go from node j to all other nodes to probabilities:
   // if the flux is positive - the hop happens to the state j itself, so we don't consider them
   // if the flux is negative, we count it
-  double total_flux = 0.0; 
-  for(j=0; j<nstates;j++){ 
-    g[j] = J.get(j, i);
+  i = act_state_indx;
 
-    if(g[j]>0.0){ total_flux += g[j]; }
-    else{ g[j] = 0.0; }
-  } 
+  double P_out = 0.0;  // total probability of leaving state i
+  double Pii = rho_old.get(i,0); //0.5*(rho_old.get(i,0) + rho.get(i,0));
+//  cout<<"Pii = "<<Pii<<endl;
+  if(Pii > 0.0){
+    P_out = -(dt*drhodt.get(i,0) - adj.get(i,0))/Pii;
+    if(P_out<0.0){ P_out = 0.0; }
+    if(P_out>1.0){ P_out = 1.0; }
+  }else { P_out = 0.0; }
 
-  // Now normalize to get the probabilities:
-  if( fabs(total_flux) > 1e-14){
-    for(j=0; j<nstates; j++){ g[j] /= total_flux; g[j] = fabs(g[j]);  }
-  }
-  else{  for(j=0; j<nstates; j++){ g[j] = 0.0; }  g[i] = 1.0;   } 
+//  cout<<"P_out = "<<P_out<<endl;
+  
+  nrm = 0.0;
+  for(j=0; j<nstates;j++){
+    if(approach_option==-1){ //GFSH
+      if(j!=i){
+        g[j] = drhodt.get(j,0);
+        if(g[j] > 0.0) { nrm += g[j]; }
+        else{ g[j] = 0.0; }
+      }
+    }  
+    else if(approach_option==0){   // Option for transition probabilities    
+      g[j] = J.get(j,i);
+      if(g[j] > 0.0) { nrm += g[j]; }
+      else{ g[j] = 0.0; }
+    }
+    else if(approach_option==1 || approach_option==2){ // Option for fluxes
+      g[j] = J.get(j,i);
+//      cout<<"g["<<j<<"] = "<<g[j]<<" ";
+      if(j!=i){
+        if(g[j] > 0) { nrm += g[j]; }
+        else{ g[j] = 0.0; }
+      }
+//      cout<<"g_corr["<<j<<"] = "<<g[j]<<" ";
+    }
+//    cout<<endl;
+  }// for j - all states
 
+//  if(fabs(nrm)<1e-10) { nrm = 1.0; }
+
+  // Normalize  
+  for(j=0; j<nstates;j++){
+    if(approach_option==0){  
+      // For the populations approach, we already have probabilities
+      // but let's normalize still
+      g[j] = fabs(g[j]/nrm);  
+    }
+    else if(approach_option==1 || approach_option==2 || approach_option==-1){
+      // For the fluxes approach, the staying probability is defined based on the 
+      // total outflow probability and the hopping probabilities are proportional to 
+      // fluxes
+  
+      if(j==i){  g[j] = 1.0 - P_out; }
+      else{      g[j] = fabs(g[j]/nrm)*P_out;   }
+      
+    }
+  }// for all states
+
+//  cout<<"Final hopping probabilities\n";
+//  for(i=0;i<nstates;i++){ cout<<g[i]<<" "; } cout<<endl;
 
   return g;
 
@@ -1251,11 +2380,19 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
       if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
 
-      //CMATRIX& U = *dyn_var.proj_adi[traj];
-      //CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
-      //dm_prev_trans = U.H() * dm_prev_trans * U;
+      //cout<<"Coordinates\n";    dyn_var.q->show_matrix();
 
-      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev, dyn_var.act_states[traj]);
+      CMATRIX& U = *dyn_var.proj_adi[traj];
+      CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
+  
+      // |psi'> = |psi> T =>  Hvib' = <psi'|H\hat|psi'> = T_new.H() * Hvib * T_new;
+      // |Psi> = |psi> C = |psi'> C' = |psi> T C', so C = T C', C' = T^+ C => rho' = C' C'^+ = T^+ C C^+ T = T^+ rho T
+      //  dm_adi_prev is the DM computed before the current step basis update, so it would transform as
+      //  dm_adi_prev -> T^+ dm_adi_prev * T
+      //dm_prev_trans = U.H() * dm_prev_trans * U;// transformation of the previousely-computed density matrix according to 
+                                                // new ordering found at the current time-step (which is already reflected in the current DM).
+      // However, for the GFSH option to work properly, we should not be using the transformation of the DM here      
+      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
     }
 
     else{

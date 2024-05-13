@@ -131,6 +131,9 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "sh_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R") 
 
+        # Average errors from FSSH3
+        if "fssh3_average_errors" in saver.keywords: # and "fssh3_average_errors" in saver.np_data.keys():
+            saver.add_dataset("fssh3_average_errors", (_nsteps, 5), "R")
 
 
     if output_level>=3:
@@ -502,6 +505,14 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         nadi = dyn_var.nadi
         for ist in range(nadi):
             saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
+
+
+    if "fssh3_average_errors" in saver.keywords and "fssh3_average_errors" in saver.np_data.keys():
+        # Average errors in FSSH3
+        # Format: saver.add_dataset("fssh3_average_errors", (_nsteps, 5), "R")
+        fssh3_average_errors = dyn_var.get_fssh3_average_errors()
+        for k in range(5):
+            saver.save_multi_scalar(t, k, "fssh3_average_errors", fssh3_average_errors[k])
 
 
 

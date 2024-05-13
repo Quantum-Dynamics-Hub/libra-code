@@ -1338,8 +1338,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
-    dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
+  if(prms.tsh_method == 3 or prms.tsh_method == 4 ){  
+  // Don't update states based on amplitudes, in the LZ method
+    ;;
+  }
+  else{  dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
   }
 
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution

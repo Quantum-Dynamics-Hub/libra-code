@@ -389,6 +389,60 @@ class dyn_control_params{
    int use_boltz_factor;
 
 
+  //=========== FSSH3 options ==========
+  /**
+    The size of the vectorized density matrix in equations to determine hopping probabilites/fluxes
+
+    Options:
+
+      - 0: N elements - only populations; the matrices are overdetermined
+      - 1: N^2 elements - first N elements are populations, then Re and Im parts of upper-triangular coherences
+                         that is rho_{0,1}, rho_{0,2}, ... rho_{0,N-1}, rho_{1,2}, ... rho_{1,N-1}, ... rho_{N-2,N-1}  [ default ]
+  */
+  int fssh3_size_option;
+
+  /**
+    The approach to determine the hopping probabilities:
+
+    Options:
+
+      - 0: based on master equation, rho(t+dt) = J * rho(t);  J matrix contains hopping probabilities directly  [ defualt ]
+      - 1: based on kinetic approach, drho/dt = J * rho; J matrix contains fluxes
+  */
+  int fssh3_approach_option;
+
+  /** 
+    The matrix decomposition method for solving the least-squares problem
+
+    Options:
+      - 0: bdcSvd
+      - 1: fullPivLu
+      - 2: fullPivHouseholderQr
+      - 3: completeOrthogonalDecomposition [ default ]
+  */
+  int fssh3_decomp_option;
+
+  
+  /**
+    The time-step of the optimization procedure in the FSSH3 calculations
+    Default: 0.001
+  */
+  double fssh3_dt;
+
+
+  /**
+    The maximal number of steps in the FSSH3 optimization step
+    Default: 1000
+  */
+  int fssh3_max_steps;
+
+
+  /**
+    FSSH3 error tolerance
+    Default: 1e-7
+  */
+  double fssh3_err_tol;
+
   
   ///===============================================================================
   ///================= Decoherence options =========================================

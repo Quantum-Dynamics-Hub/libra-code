@@ -173,6 +173,9 @@ void dyn_variables::allocate_fssh2(){
       dm_dia_prev[itraj] = new CMATRIX(ndia, ndia);
       dm_adi_prev[itraj] = new CMATRIX(nadi, nadi);
     }
+
+    fssh3_errors = vector< vector<double> >(ntraj, vector<double>(5, 0.0) );
+
     fssh2_vars_status = 1;
   }
 }
@@ -356,6 +359,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *dm_dia_prev[itraj] = *x.dm_dia_prev[itraj];
       *dm_adi_prev[itraj] = *x.dm_adi_prev[itraj];
     }
+    fssh3_errors = x.fssh3_errors;
 
   }// if FSSH2 vars
  
@@ -483,9 +487,11 @@ dyn_variables::~dyn_variables(){
     for(int itraj=0; itraj<ntraj; itraj++){
       delete dm_dia_prev[itraj];
       delete dm_adi_prev[itraj];
+      fssh3_errors[itraj].clear();
     }
     dm_dia_prev.clear();
     dm_adi_prev.clear();
+    fssh3_errors.clear();
 
     fssh2_vars_status = 0;
   }
@@ -568,6 +574,20 @@ CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
   else{ ;; }
 }
 
+vector< vector<double> > dyn_variables::get_fssh3_errors(){
+  return fssh3_errors;
+}
+
+vector<double> dyn_variables::get_fssh3_average_errors(){
+  int itraj, k;
+  vector<double> res(5,0.0);
+  for(itraj;itraj<ntraj;itraj++){
+    for(k=0;k<5;k++){  res[k] += fssh3_errors[itraj][k];   }
+  }
+  for(k=0;k<5;k++){ res[k] /= ntraj; }
+
+  return res;
+}
 
 
 void dyn_variables::set_parameters(bp::dict params){

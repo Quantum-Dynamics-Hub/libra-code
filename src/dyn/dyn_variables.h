@@ -317,6 +317,13 @@ class dyn_variables{
   vector<CMATRIX*> dm_adi_prev;
 
 
+  /**
+    Various kinds of errors in FSSH3 approach
+    Dimensions: ntraj vectors of needed maximal size (e.g. 5 is enough for now)
+  */
+  vector< vector<double> > fssh3_errors;
+
+
   ///============ For independent-trajectory XF method such as SHXF ============
   /**
     Status of the SHXF vars
@@ -512,6 +519,8 @@ class dyn_variables{
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }
   CMATRIX get_dm_adi(int i, int prev_steps);
   CMATRIX get_dm_dia(int i, int prev_steps);
+  vector< vector<double> > get_fssh3_errors();
+  vector<double> get_fssh3_average_errors();
   CMATRIX get_basis_transform(int itraj){ return *basis_transform[itraj]; }
   MATRIX get_imass(){ return *iM; }
   MATRIX get_coords(){ return *q; }
