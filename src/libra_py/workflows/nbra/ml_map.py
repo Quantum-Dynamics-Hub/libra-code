@@ -354,9 +354,9 @@ def train(params):
     print("Average MSE for all models:", np.average(models_error[:,1]))
     print("Average R^2 for all models:", np.average(models_error[:,2]))
     print("Done with training!!")
+    os.system(f"mkdir {params['path_to_save_models']}")
+    np.save(f"{params['path_to_save_models']}/{params['prefix']}_models_error.npy", models_error)
     if params["save_models"]:
-        os.system(f"mkdir {params['path_to_save_models']}")
-        np.save(f"{params['path_to_save_models']}/{params['prefix']}_models_error.npy", models_error)
         for i in range(len(models)):
             joblib.dump(models[i], F"{params['path_to_save_models']}/{params['prefix']}_model_{i}.joblib") 
         for i in range(len(output_scalers)):
@@ -629,8 +629,14 @@ def compute_properties(params, models, input_scalers, output_scalers):
             # molecular orbitals. The second reason is that we compute the \epsilon_i=<\psi_{i_{ref}}|\psi_{i_{ml}}> for
             # eigenvectors and that property will be saved. If we're about to save the eigenvectors, it will occupy 
             # a lot of disk space
-            np.save(f"../error_data/E_ref_{step}.npy", eigenvalues_ref[lowest_orbital-1:highest_orbital])
-            ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step)[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+            if params["save_ref_eigenvalues"] or params["save_ref_eigenvectors"]:
+                if not os.path.exists(f"{params['path_to_save_ref_mos']}"):
+                    os.system(f"mkdir {params['path_to_save_ref_mos']}")
+            if params["save_ref_eigenvalues"]:
+                np.save(f"{params['path_to_save_ref_mos']}/E_ref_{step}.npy", eigenvalues_ref) # [lowest_orbital-1:highest_orbital])
+            if params["save_ref_eigenvectors"]:
+                np.save(f"{params['path_to_save_ref_mos']}/mos_ref_{step}.npy", eigenvectors_ref) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital])
+            ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
             np.save(f"../error_data/epsilon_{step}.npy", np.diag(ml_ref_overlap)) # Only the diagonal elements
             # The other error measurement is the absolute value of the Hamiltonian matrices difference
             ham_diff = np.abs(ks_ham_mat-ks_ham_mat_ref)
@@ -695,11 +701,20 @@ def compute_properties(params, models, input_scalers, output_scalers):
                 os.system(F"sed -i '/SCF_GUESS/c\   SCF_GUESS  RESTART' input_{tmp_prefix}_{step}.inp")
                 # Now let's run the calculations --- We only need the Total energy so I can simply grep it to 
                 # not to use a lot of disk space but for now, I keep it this way
-                os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp -o output_{tmp_prefix}_{step}.log")
+                # ================= Only for ML assessment project I grep the output files so that the log file size is small
+                #os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp -o output_{tmp_prefix}_{step}.log")
+                os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp | grep -A 30 'SCF WAVEFUNCTION OPTIMIZATION' > output_{tmp_prefix}_{step}.out")
+                # ================= These files can be large... we can setup a flag to remove them but for ML assessment I remove them
+                os.system(f"rm {output_name}")
             # The algorithm for running the calculations
             #if params["compute_total_energy"]:
             # we have to make a cp2k input file based on the reference input
             # and then run it. Then since the files are large we need to remove them
+    os.system("rm *.log *.npy *.wfn* *.inp *.xyz")
+    os.system("mkdir ../ml_total_energy")
+    os.system("mv output*.out ../ml_total_energy/.")
+    os.system("rm *.out")
+    #os.chdir("../")
     #os.system(f"rm -rf tmp_guess_ham_{params['job']}")
 
 def distribute_jobs(params):
