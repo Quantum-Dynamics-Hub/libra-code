@@ -22,7 +22,7 @@
 import os
 import sys
 import math
-
+import numpy as np
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform=="cygwin":
     from cyglibra_core import *
@@ -220,13 +220,16 @@ def energy_arb(SD, e):
 
     """
 
-    nbasis = e.num_of_rows
+    #nbasis = e.num_of_rows
+    nbasis = e.shape[0]
 
     sd = sd2indx(SD,nbasis)
-    res = 0.0+0.0j
+    #res = 0.0+0.0j
+    res = 0.0
 
     for i in sd:
-        res = res + e.get(i,i) 
+        #res = res + e.get(i,i) 
+        res = res + e[i,i]
    
     return res 
 
@@ -251,11 +254,13 @@ def energy_mat_arb(SD, e, dE):
     """
 
     n = len(SD)
-    E = CMATRIX(n,n)
+    #E = CMATRIX(n,n)
+    E = np.zeros((n,n))
   
     E0 = 0.0 #energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
     for i in range(0,n):
-        E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
+        #E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
+        E[i,i] = energy_arb(SD[i], e) + dE[i] - E0
 
     return E
 
@@ -327,7 +332,8 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
 
     """
 
-    nbasis = S.num_of_rows
+    #nbasis = S.num_of_rows
+    nbasis = S.shape[0] #num_of_rows
 
     if use_minimal == True:
         SD1, SD2 = reduce_determinants(SD1, SD2)
@@ -351,20 +357,29 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     res = 0.0+0j
     if len(sd1)>0 and len(sd2)>0:
       if len(sd1)==len(sd2):
-    
-          # Now apply the determinant formula
-          s = CMATRIX(len(sd1),len(sd2))
-          # Forming the overlap of the SDs
-          for i in range(0,len(sd1)):
-              for j in range(0,len(sd2)):
-                  # The overlap is non-zero only if the orbitals
-                  # are occupied with the same-spin electrons. 
-                  if (SD1[i] * SD2[j]) > 0:          
-                      s.set(i,j,S.get(sd1[i],sd2[j]))
-                  else:
-                      s.set(i,j,0.0,0.0)
-
-          res = det(s) * phase
+          # It is a numpy translation of the code below
+          # much faster and more accurate than MO approach
+          # Checked with the code commented below and the result match
+          # This will also remove the bottleneck we had before for computing
+          # the overlap of many SDs
+          tmp = np.sign(np.tensordot(SD1,SD2,axes=0))
+          indices = np.where(tmp<0)
+          s = S[sd1,:][:,sd2]
+          s[indices] = 0.0
+          res = np.linalg.det(s)*phase
+#          # Now apply the determinant formula
+#          s = CMATRIX(len(sd1),len(sd2))
+#          # Forming the overlap of the SDs
+#          for i in range(0,len(sd1)):
+#              for j in range(0,len(sd2)):
+#                  # The overlap is non-zero only if the orbitals
+#                  # are occupied with the same-spin electrons. 
+#                  if (SD1[i] * SD2[j]) > 0:          
+#                      s.set(i,j,S.get(sd1[i],sd2[j]))
+#                  else:
+#                      s.set(i,j,0.0,0.0)
+#
+#          res = det(s) * phase
       else:
           # Checking if the matrix is square
           print("\nWARNING: the matrix of Kohn-Sham orbitial overlaps is not a square matrix") 
@@ -416,9 +431,10 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
     if res[0]==1:
         s = S.get( res[1], res[2])  
 
-
     # For similar SDs
     if sd1==sd2:
+        #print("flag sd1==sd2:", sd1)
+        #print("flag sd1==sd2:", SD1)
         #         TEST on June 16, 2022 - AVA
         # Forming the overlap of the SDs
         x = CMATRIX(len(sd1),len(sd2))
@@ -472,9 +488,11 @@ def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False, user_nota
     """
 
     N, M = len(SD1), len(SD2)
-    res = CMATRIX(N,M)
-
+    #res = CMATRIX(N,M)
+    res = np.zeros((N,M))
+    #print(N)
     for n in range(0,N):
+        #print(n)
         for m in range(0,M):
             val = 0.0
             if use_mo_approach==True:
@@ -482,7 +500,8 @@ def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False, user_nota
             else: 
                 val = ovlp_arb(SD1[n], SD2[m], S, use_minimal, user_notation)
 
-            res.set(n,m, val)
+            #res.set(n,m, val)
+            res[n,m] = val
 
     return res
 
