@@ -131,13 +131,106 @@ vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& de
 
   See more details in: TBD
 
-  \param[in] key parameters needed for this type of calculations
-    - dt - integration timestep [a.u.]
-    - Temperature - temperature [ K ]
-    - use_boltz_factor - whether to scale the computed probabilities by a Boltzmann factor
+  \param[in] prms - key parameters needed for this type of calculations
   \param[in] denmat - [nstates x nstates] - current density matrix
   \param[in] denmat_old - [nstates x nstates] - previous density matrix
   \param[in] act_state_indx - index of the initial state
+  \param[out] errors - a 5-elements vector containing errors of the Lagrangian optimization
+
+  Returns: A nstates-vector of hopping probabilities to all states from the current active state
+*/
+
+  int i,j,k, cnt;
+  double sum,g_ij,argg, nrm;
+
+  double dt = prms.dt;
+
+  int nstates = denmat.n_rows;
+  vector<double> g(nstates, 0.0);
+
+
+  //====== Testing options =========
+
+  int size_option = 0; // not used here, = prms.fssh3_size_option; // 0 - N elements, only populations; 1 - N^2 elements - also coherences
+  int approach_option = 1; //  = prms.fssh3_approach_option; // 0 - master equation (J contains hopping probabilities); 1 - kinetic approach (J contains fluxes)
+  int decomp_option = 0; // not used here, = prms.fssh3_decomp_option; // in this version, it selects the 
+
+  //=========================== Step 1: definition of vectorized densities ==================================
+
+  MATRIX J(nstates, nstates);
+  MATRIX P_old(nstates, 1);
+  MATRIX P_new(nstates, 1);
+  MATRIX dPdt(nstates, 1);
+
+  // Extract populations
+  for(i=0;i<nstates;i++){
+    P_old.set(i, 0, denmat_old.get(i,i).real() );
+    P_new.set(i, 0, denmat.get(i,i).real() );
+  }// for i
+
+  //=========================== Step 2: least squares solving ==================================
+
+  // Derivative of the density matrix
+  dPdt = (1.0/dt)*(P_new - P_old);
+   
+  // Least squares solution - rate constants matrix
+  J = run_opt(P_old, P_new, prms.fssh3_dt, prms.fssh3_max_steps, prms.fssh3_err_tol, decomp_option, errors, dt, approach_option);
+
+  //=========================== Step 3: probabilities ==========================================
+  // Now convert them the fluxes that go from node j to all other nodes to probabilities:
+  // if the flux is positive - the hop happens to the state j itself, so we don't consider them
+  // if the flux is negative, we count it
+  i = act_state_indx;
+
+  double P_out = 0.0;  // total probability of leaving state i
+  double Pii = P_old.get(i,0); //0.5*(rho_old.get(i,0) + rho.get(i,0));
+  if(Pii > 0.0){
+    P_out = -dt*dPdt.get(i,0)/Pii;
+    if(P_out<0.0){ P_out = 0.0; }
+    if(P_out>1.0){ P_out = 1.0; }
+  }else { P_out = 0.0; } // if the starting population is zero - there is no outflux hopping probability
+
+  nrm = 0.0;
+  for(j=0; j<nstates;j++){
+    g[j] = J.get(j,i);
+    if(j!=i){
+      if(g[j] > 0) { nrm += g[j]; }
+      else{ g[j] = 0.0; }
+    }
+  }// for j - all states
+
+  // Normalize  
+  for(j=0; j<nstates;j++){
+    // For the fluxes approach, the staying probability is defined based on the 
+    // total outflow probability and the hopping probabilities are proportional to 
+    // fluxes  
+    if(j==i){  g[j] = 1.0 - P_out; }
+    else{      g[j] = fabs(g[j]/nrm)*P_out;   }
+  }// for all states
+  return g;
+
+}// fssh3
+
+
+
+
+
+vector<double> hopping_probabilities_fssh3_dev(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, 
+               int act_state_indx, vector<double>& errors){
+/**
+  \brief This function computes the surface hopping probabilities according to new experimental idea, 
+  this version contains some older ideas too - just so they are sitting here, handy. The version above 
+  is a "clean" version of this, with a lot of experimental stuff removed.
+
+  This function is not exposed to the headers or Python yet.
+
+  See more details in: TBD
+
+  \param[in] prms - key parameters needed for this type of calculations
+  \param[in] denmat - [nstates x nstates] - current density matrix
+  \param[in] denmat_old - [nstates x nstates] - previous density matrix
+  \param[in] act_state_indx - index of the initial state
+  \param[out] errors - a 5-elements vector containing errors of the Lagrangian optimization
 
   Returns: A nstates-vector of hopping probabilities to all states from the current active state
 */
@@ -559,7 +652,7 @@ vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& de
   return g;
 
 
-}// fssh3
+}// fssh3-dev
 
 
 
