@@ -389,6 +389,18 @@ class dyn_control_params{
    int use_boltz_factor;
 
 
+  //=========== FSSH2 options ==========
+  /**
+    Whether to use the revised FSSH2
+
+    Options:
+
+      - 0: use the FSSH2 as it was formulated in the original paper [ default ]
+      - 1: apply the revised version 
+  */
+  int fssh2_revision;
+
+
   //=========== FSSH3 options ==========
   /**
     The size of the vectorized density matrix in equations to determine hopping probabilites/fluxes

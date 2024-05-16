@@ -67,6 +67,9 @@ dyn_control_params::dyn_control_params(){
   use_Jasper_Truhlar_criterion = 1;
   use_boltz_factor = 0;
 
+  ///================= FSSH2 specific ====================
+  fssh2_revision = 0;
+
   ///================= FSSH3 specific ====================
   fssh3_size_option = 1;
   fssh3_approach_option = 0;
@@ -164,6 +167,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   use_Jasper_Truhlar_criterion = x.use_Jasper_Truhlar_criterion;
   use_boltz_factor = x.use_boltz_factor;
 
+  ///================= FSSH2 specific ====================
+  fssh2_revision = x.fssh2_revision;
+ 
   ///================= FSSH3 specific ====================
   fssh3_size_option = x.fssh3_size_option;
   fssh3_approach_option = x.fssh3_approach_option;
@@ -351,6 +357,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="use_Jasper_Truhlar_criterion"){ use_Jasper_Truhlar_criterion = bp::extract<int>(params.values()[i]); }
     else if(key=="use_boltz_factor"){ use_boltz_factor = bp::extract<int>(params.values()[i]);  }
+
+    ///================= FSSH2 specific ====================
+    else if(key=="fssh2_revision"){ fssh2_revision = bp::extract<int>(params.values()[i]);  }
 
     ///================= FSSH3 specific ====================
     else if(key=="fssh3_size_option"){ fssh3_size_option = bp::extract<int>(params.values()[i]);  }

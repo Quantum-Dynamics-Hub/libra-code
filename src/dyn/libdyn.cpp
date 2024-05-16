@@ -89,6 +89,9 @@ void export_dyn_control_params_objects(){
       .def_readwrite("use_Jasper_Truhlar_criterion", &dyn_control_params::use_Jasper_Truhlar_criterion)
       .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
 
+      ///================= FSSH2 revision ====================
+      .def_readwrite("fssh2_revision", &dyn_control_params::fssh2_revision)
+
       ///================= FSSH3 specific ====================
       .def_readwrite("fssh3_size_option", &dyn_control_params::fssh3_size_option)
       .def_readwrite("fssh3_approach_option", &dyn_control_params::fssh3_approach_option)
