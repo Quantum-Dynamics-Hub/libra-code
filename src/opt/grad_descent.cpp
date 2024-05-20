@@ -249,9 +249,18 @@ MATRIX run_opt(MATRIX& x, MATRIX& y, double dt, double nsteps, double err_tol, i
     int n = x.n_rows;
     MATRIX A(n,n);  A = 0.0;
     if(approach_option==0){  A.identity(); }
-    else if(approach_option==1 or approach_option==2){
+    else if(approach_option==1){
       for(i=0;i<n;i++){
         for(j=0;j<n;j++){  A.set(i,j, 0.0 ); }
+      }
+    }
+    else if(approach_option==2){
+      for(i=0;i<n;i++){
+        for(j=0;j<n;j++){  
+          if(j-i==1){  A.set(i,j, 1.0); }
+          else if(j-i==-1){ A.set(i,j, -1.0); }
+          else{         A.set(i,j, 0.0 );  }
+        }
       }
     }
 

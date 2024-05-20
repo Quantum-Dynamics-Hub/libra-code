@@ -152,7 +152,12 @@ vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& de
   //====== Testing options =========
 
   int size_option = 0; // not used here, = prms.fssh3_size_option; // 0 - N elements, only populations; 1 - N^2 elements - also coherences
-  int approach_option = 1; //  = prms.fssh3_approach_option; // 0 - master equation (J contains hopping probabilities); 1 - kinetic approach (J contains fluxes)
+  int approach_option = prms.fssh3_approach_option; 
+  // 0 - master equation (J contains hopping probabilities); 
+  // 1 - kinetic approach (J contains fluxes), initialize J to be all zeroes
+  // 2 - kinetic approach (J contains fluxes), initialize J to J_{i,i+1} = 1.0 and J_{i-1,i} = -1.0, and 0.0 otherwise
+
+
   int decomp_option = 0; // not used here, = prms.fssh3_decomp_option; // in this version, it selects the 
 
   //=========================== Step 1: definition of vectorized densities ==================================
