@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2022 Alexey V. Akimov
+* Copyright (C) 2019-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -64,7 +64,19 @@ dyn_control_params::dyn_control_params(){
   tsh_method = 0;
   hop_acceptance_algo = 0;
   momenta_rescaling_algo = 0;
+  use_Jasper_Truhlar_criterion = 1;
   use_boltz_factor = 0;
+
+  ///================= FSSH2 specific ====================
+  fssh2_revision = 0;
+
+  ///================= FSSH3 specific ====================
+  fssh3_size_option = 1;
+  fssh3_approach_option = 0;
+  fssh3_decomp_option = 3;
+  fssh3_dt = 0.001;
+  fssh3_max_steps = 1000;
+  fssh3_err_tol = 1e-7;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -72,6 +84,7 @@ dyn_control_params::dyn_control_params(){
   dish_decoherence_event_option = 1;
   decoherence_times_type = -1;
   schwartz_decoherence_inv_alpha = NULL;
+  schwartz_interaction_width = NULL;
   decoherence_C_param = 1.0;
   decoherence_eps_param = 0.1;
   dephasing_informed = 0;
@@ -151,7 +164,19 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   tsh_method = x.tsh_method;
   hop_acceptance_algo = x.hop_acceptance_algo;
   momenta_rescaling_algo = x.momenta_rescaling_algo;
+  use_Jasper_Truhlar_criterion = x.use_Jasper_Truhlar_criterion;
   use_boltz_factor = x.use_boltz_factor;
+
+  ///================= FSSH2 specific ====================
+  fssh2_revision = x.fssh2_revision;
+ 
+  ///================= FSSH3 specific ====================
+  fssh3_size_option = x.fssh3_size_option;
+  fssh3_approach_option = x.fssh3_approach_option;
+  fssh3_decomp_option = x.fssh3_decomp_option;
+  fssh3_dt = x.fssh3_dt;
+  fssh3_max_steps = x.fssh3_max_steps;
+  fssh3_err_tol = x.fssh3_err_tol;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -207,6 +232,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   schwartz_decoherence_inv_alpha = new MATRIX( x.schwartz_decoherence_inv_alpha->n_rows, x.schwartz_decoherence_inv_alpha->n_cols );
   *schwartz_decoherence_inv_alpha = *x.schwartz_decoherence_inv_alpha;
+  
+  schwartz_interaction_width = new MATRIX( x.schwartz_interaction_width->n_rows, x.schwartz_interaction_width->n_cols );
+  *schwartz_interaction_width = *x.schwartz_interaction_width;
 
   thermally_corrected_nbra = x.thermally_corrected_nbra;
   total_energy = x.total_energy;
@@ -224,6 +252,7 @@ dyn_control_params::~dyn_control_params() {
   delete decoherence_rates;  
   delete ave_gaps;
   delete schwartz_decoherence_inv_alpha;
+  delete schwartz_interaction_width;
 }
 
 
@@ -326,7 +355,19 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="tsh_method") { tsh_method = bp::extract<int>(params.values()[i]);  }
     else if(key=="hop_acceptance_algo") { hop_acceptance_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
+    else if(key=="use_Jasper_Truhlar_criterion"){ use_Jasper_Truhlar_criterion = bp::extract<int>(params.values()[i]); }
     else if(key=="use_boltz_factor"){ use_boltz_factor = bp::extract<int>(params.values()[i]);  }
+
+    ///================= FSSH2 specific ====================
+    else if(key=="fssh2_revision"){ fssh2_revision = bp::extract<int>(params.values()[i]);  }
+
+    ///================= FSSH3 specific ====================
+    else if(key=="fssh3_size_option"){ fssh3_size_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_approach_option"){ fssh3_approach_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_decomp_option"){ fssh3_decomp_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_dt"){ fssh3_dt = bp::extract<double>(params.values()[i]);  }
+    else if(key=="fssh3_max_steps"){ fssh3_max_steps = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_err_tol"){ fssh3_err_tol = bp::extract<double>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
@@ -338,6 +379,13 @@ void dyn_control_params::set_parameters(bp::dict params){
       schwartz_decoherence_inv_alpha = new MATRIX(x.n_rows, x.n_cols);      
       for(int a=0;a<x.n_rows;a++){
         for(int b=0;b<x.n_cols;b++){ schwartz_decoherence_inv_alpha->set(a, b, x.get(a,b));   }
+      } 
+    }
+    else if(key=="schwartz_interaction_width"){ 
+      MATRIX x( bp::extract<MATRIX>(params.values()[i]) );
+      schwartz_interaction_width = new MATRIX(x.n_rows, x.n_cols);      
+      for(int a=0;a<x.n_rows;a++){
+        for(int b=0;b<x.n_cols;b++){ schwartz_interaction_width->set(a, b, x.get(a,b));   }
       } 
     }
     else if(key=="decoherence_C_param"){ decoherence_C_param = bp::extract<double>(params.values()[i]); }

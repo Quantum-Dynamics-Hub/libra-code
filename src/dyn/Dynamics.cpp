@@ -1295,6 +1295,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Recompute diabatic/adiabatic states, time-overlaps, NAC, Hvib, etc. in response to change of q
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 0);
 
+  // Copy diabatic-to-adiabatic basis transformation to the dynamical variable
+  dyn_var.update_basis_transform(ham);
+
   // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
   // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
   update_proj_adi(prms, dyn_var, ham); 
@@ -1326,15 +1329,20 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   // Recompute density matrices in response to the updated amplitudes  
-  dyn_var.update_amplitudes(prms, ham);
-  dyn_var.update_density_matrix(prms, ham, 1); 
+//  dyn_var.update_amplitudes(prms, ham);
+  dyn_var.update_amplitudes(prms);
+//  dyn_var.update_density_matrix(prms, ham, 1); 
+  dyn_var.update_density_matrix(prms);
  
   vector<int> old_states( dyn_var.act_states);
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  if(prms.tsh_method != 3 && prms.tsh_method != 4 ){  // Don't update states based on amplitudes, in the LZ method
-    dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
+  if(prms.tsh_method == 3 or prms.tsh_method == 4 ){  
+  // Don't update states based on amplitudes, in the LZ method
+    ;;
+  }
+  else{  dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
   }
 
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
@@ -1406,6 +1414,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     decoherence_rates = schwartz_2(prms, ham, *prms.schwartz_decoherence_inv_alpha); 
   }
 
+  else if(prms.decoherence_times_type==4){
+    decoherence_rates = schwartz_1(prms, *dyn_var.ampl_adi, *dyn_var.p, ham, *prms.schwartz_interaction_width); 
+  }
+
   ///== Optionally, apply the dephasing-informed correction ==
   if(prms.dephasing_informed==1){
     Eadi = get_Eadi(ham); 
@@ -1438,7 +1450,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     if(prms.rep_tdse==1){
       p = *dyn_var.p;
       //cout<<"p before mfsd\n"; dyn_var.p->show_matrix();
-      *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, decoherence_rates, ham, rnd, prms.isNBRA);
+      *dyn_var.ampl_adi = mfsd(p, *dyn_var.ampl_adi, *dyn_var.iM, prms.dt, dyn_var.act_states, decoherence_rates, ham, rnd, prms.isNBRA);
       *dyn_var.p = p;
       //cout<<"p after mfsd\n"; dyn_var.p->show_matrix();
        
@@ -1464,25 +1476,28 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Update amplitudes and density matrices in response to decoherence corrections
-  dyn_var.update_amplitudes(prms, ham);
-  dyn_var.update_density_matrix(prms, ham, 1);
+//  dyn_var.update_amplitudes(prms, ham);
+  dyn_var.update_amplitudes(prms);
+//  dyn_var.update_density_matrix(prms, ham, 1);
+  dyn_var.update_density_matrix(prms);
 
 
   //************************************ TSH options ****************************************
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2
+  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2, FSSH3
   else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 
-       || prms.tsh_method == 4 || prms.tsh_method == 5 || prms.tsh_method == 6 || prms.tsh_method == 7){
+       || prms.tsh_method == 4 || prms.tsh_method == 5 || prms.tsh_method == 6 || prms.tsh_method == 7
+       || prms.tsh_method == 8 ){
 
 
     vector<int> old_states(dyn_var.act_states); 
     //========================== Hop proposal and acceptance ================================
 
-    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7)
+    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8)
     if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  
-    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 ){
+    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 || prms.tsh_method == 8){
 
       /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
       /// of that trajectory
@@ -1549,15 +1564,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
         
-  }// tsh_method == 0, 1, 2, 3, 4, 5
+  }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 
 
   // Update the amplitudes and DM, in response to state hopping and other changes in the TSH part
   // so that we have them consistent in the output
-  dyn_var.update_amplitudes(prms, ham); 
-  dyn_var.update_density_matrix(prms, ham, 1);
+//  dyn_var.update_amplitudes(prms, ham); 
+  dyn_var.update_amplitudes(prms);
+//  dyn_var.update_density_matrix(prms, ham, 1);
+  dyn_var.update_density_matrix(prms);
 
 
   // Saves the current density matrix into the previous - needed for FSSH2

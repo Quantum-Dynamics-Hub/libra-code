@@ -463,4 +463,13 @@ def read_atom_coords(filename, step):
         coords.append([x,y,z])
     return atoms, np.array(coords)
 
- 
+def load_numpy_scipy_data(filename):
+    """
+    This function loads the data in npy and npz format
+    """
+    if ".npy" in filename:
+        data = np.load(filename)
+    elif ".npz" in filename:
+        data = np.array(sp.load_npz(filename).todense().real)
+    return data
+

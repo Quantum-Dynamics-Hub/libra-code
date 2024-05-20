@@ -145,6 +145,9 @@ void export_mEigen_objects(){
   def("LLT_decomposition", expt_LLT_decomposition_v1);
 
 
+  void (*expt_least_squares_solve_v1)(MATRIX& A, MATRIX& X, MATRIX& B, int option) = least_squares_solve;
+  def("least_squares_solve", expt_least_squares_solve_v1);
+
   bool (*expt_linsys_solver_v1)(const MATRIX& A, MATRIX& X, const MATRIX& B, const double NormThreshold) = &linsys_solver;
   def("linsys_solver", expt_linsys_solver_v1);
 

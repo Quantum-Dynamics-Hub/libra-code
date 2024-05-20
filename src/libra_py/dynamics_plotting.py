@@ -418,9 +418,13 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             * **plot_params["fontsize"]** (int): size of the fonts [default: 36]
             * **plot_params["xticksize"]** (int): size of the x-ticks [default: 28]
             * **plot_params["yticksize"]** (int): size of the y-ticks [default: 28]
-            * **plot_params[""show_nac_abs]** (int): when plotting derivative NACs, this will also add plotting of the modulus of NACs:
+            * **plot_params["show_nac_abs"]** (int): when plotting derivative NACs, this will also add plotting of the modulus of NACs:
                - 0 : do not show [default]
                - 1 : do show it
+            * **plot_params["margin_left"]** (double): left margin [ default: 0.2]
+            * **plot_params["margin_right"]** (double): right margin [ default: 0.95]
+            * **plot_params["margin_bottom"]** (double): bottom margin [ default: 0.13]
+            * **plot_params["margin_top"]** (double): top margin [ default: 0.88]
         
         _ndof ( int ): the dimensionality of the PES [ default: 1 ]
         _active_dof ( int ): the index of the DOF used to construct the PES [ default: 0 ]
@@ -458,6 +462,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                         "save_figures":1, "prefix":"out", "dpi":300, "nac_idof":0,
                         "plotting_option":0, "figsize":[36, 18], "titlesize":38, "labelsize":38,
                         "fontsize": 36, "xticksize":28, "yticksize":28, "show_nac_abs":0,
+                        "margin_left": 0.2, "margin_right":0.95, "margin_bottom":0.13, "margin_top":0.88,
+                        "linewidth":7
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
@@ -479,6 +485,11 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     _xticksize = plot_params["xticksize"]
     _yticksize = plot_params["yticksize"]
     show_nac_abs = plot_params["show_nac_abs"]
+    margin_left = plot_params["margin_left"]
+    margin_right = plot_params["margin_right"]
+    margin_top = plot_params["margin_top"]
+    margin_bottom = plot_params["margin_bottom"]
+    _linewidth = plot_params["linewidth"]
 
     fig_size = (_figsize[0], _figsize[1])
 
@@ -496,10 +507,10 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     plt.rc('xtick', labelsize=_xticksize)     # fontsize of the tick labels
     plt.rc('ytick', labelsize=_yticksize)     # fontsize of the tick labels
 
-    plt.rc('figure.subplot', left=0.2)
-    plt.rc('figure.subplot', right=0.95)
-    plt.rc('figure.subplot', bottom=0.13)
-    plt.rc('figure.subplot', top=0.88)
+    plt.rc('figure.subplot', left=margin_left)
+    plt.rc('figure.subplot', right=margin_right)
+    plt.rc('figure.subplot', bottom=margin_bottom)
+    plt.rc('figure.subplot', top=margin_top)
     
 
     sz = len(_param_sets)
@@ -561,7 +572,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 
         if plotting_option==0:  # Plot diabatic and adiabatic surfaces separately, plot projections too
                     
-            plt.figure(2*iset, figsize=fig_size ) # dpi=300, frameon=False)
+            #plt.figure(2*iset, figsize=fig_size ) # dpi=300, frameon=False)
+            plt.figure(figsize=fig_size ) # dpi=300, frameon=False)
                 
             plt.subplot(1, 2, 1)    
             plt.ylim(ylim[0], ylim[1])
@@ -571,7 +583,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.xlabel('Coordinate, a.u.')
             plt.ylabel('Energy, a.u.')
             for k1 in states_of_interest:
-                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, color = colors[clrs_index[k1]])     
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=_linewidth, color = colors[clrs_index[k1]])     
             plt.legend()    
     
             plt.subplot(1, 2, 2)
@@ -579,9 +591,10 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.xlim(xlim[0], xlim[1])
             #plt.title('Params set %i: Ham_adi' % (iset))
             plt.xlabel('Coordinate, a.u.')
-            plt.ylabel('Energy, a.u.')
+            #plt.ylabel('Energy, a.u.')
+            plt.yticks([])
             for k1 in states_of_interest:
-                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])     
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=_linewidth, color = colors[clrs_index[k1]])     
             plt.legend()    
 
             if save_figures:
@@ -590,7 +603,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                 plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
             
                   
-            plt.figure(2*iset+1, figsize=fig_size ) # dpi=300, frameon=False)            
+            #plt.figure(2*iset+1, figsize=fig_size ) # dpi=300, frameon=False)            
+            plt.figure(figsize=fig_size ) # dpi=300, frameon=False)
             sz1 = len(states_of_interest)
     
             for k2 in states_of_interest:
@@ -606,8 +620,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     
                 for k1 in range(nstates):
                     #plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
-                    plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
-                plt.legend()               
+                    plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=_linewidth, color = colors[clrs_index[k1]])         
+            plt.legend()               
 
             if save_figures:
                 if not os.path.exists(F"{prefix}"):
@@ -633,8 +647,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.ylabel('Energy, a.u.')
 
             for k1 in states_of_interest:
-                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, ls="--", color = colors[clrs_index[k1]])
-                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=_linewidth, ls="--", color = colors[clrs_index[k1]])
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=_linewidth, color = colors[clrs_index[k1]])
             plt.legend()
 
 
@@ -648,9 +662,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             for k1 in states_of_interest:
                 for k2 in states_of_interest:
                     if k2>k1:                        
-                        plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, color = colors[clrs_index[cnt]])
+                        plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=_linewidth, color = colors[clrs_index[cnt]])
                         if show_nac_abs:
-                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, ls="--", color = colors[clrs_index[cnt+1]])
+                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=_linewidth, ls="--", color = colors[clrs_index[cnt+1]])
                         cnt = cnt + 1
             plt.legend()
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2022 Alexey V. Akimov
+* Copyright (C) 2022-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -141,7 +141,117 @@ void dyn_variables::update_amplitudes(bp::dict dyn_params, bp::object compute_mo
 
 }
 
+void dyn_variables::update_basis_transform(nHamiltonian& Ham){
+/**
 
+*/
+  for(int itraj=0; itraj<ntraj; itraj++){ 
+    nHamiltonian* ham = Ham.children[itraj];
+    *basis_transform[itraj] = *(ham->basis_transform);
+
+  }// for itraj
+}
+
+
+void dyn_variables::update_amplitudes(dyn_control_params& dyn_params){
+/**
+           |\psi_adi > = | \psi_dia > U
+
+   |\Psi> = |\psi_adi > C_adi = |\psi_dia> U C_adi = |\psi_dia> C_dia, so:
+
+   C_dia = U C_adi
+
+   C_adi = U.H() C_dia
+*/
+  int i,j;
+  CMATRIX cd(ndia, 1);
+  CMATRIX ca(nadi, 1);
+
+  for(int traj=0; traj<ntraj; traj++){
+
+    CMATRIX& U = (*basis_transform[traj]);
+
+    /// Diabatic wfc representation
+    if(dyn_params.rep_tdse==0){
+      cd = ampl_dia->col(traj);
+      ca = U.H() * cd;
+      for(i=0;i<nadi;i++){ ampl_adi->set(i, traj, ca.get(i,0) ); }
+    }
+    /// Adiabatic wfc representation
+    else if(dyn_params.rep_tdse==1){
+      ca = ampl_adi->col(traj);
+      cd = U * ca; 
+      for(i=0;i<ndia;i++){ ampl_dia->set(i, traj, cd.get(i,0) ); }
+    }
+
+  }// for traj
+
+}
+
+
+void dyn_variables::update_density_matrix(dyn_control_params& dyn_params){
+/**
+    """
+
+    Update the density matrices in diabatic and adiabatic representations
+
+    Args:
+        * **dyn_params** - contains the parameters of transformation
+
+        rep ( int ): a selector of which representation is considered main (being propagated)
+            E.g. if rep = 0 - that means we propagate the diabatic coefficients, that is the calculation
+            of the diabatic density matrix is straightforward, but we need to involve some transformations
+            to compute the adiabatic density matrix and vice versa, if rep = 1, the propagation is done according
+            to the adiabatic properties and we'd need to convert to the diabatic representation in the end
+
+            - 0: diabatic
+            - 1: adiabatic
+
+    Notes:
+           Since the basis_transform corresponding to the transformation of the diabatic-to-raw-adiabatic states: 
+           |\psi_adi (t) > = | \psi_dia (t)> U
+           |\psi\tilde_adi (t) > = |\psi_adi (t) > T =  | \psi_dia (t)> U * T, so the effective U is U_eff = U * T
+          
+           T is the basis re-projection matrix
+
+    This function should be used only after the proj_adi = T has been computed and the basis_transform has been set
+
+    """
+*/
+
+  CMATRIX cd(ndia, 1);
+  CMATRIX ca(nadi, 1);
+
+  // Assuming that in the diabatic representation, the overlap 
+  // matrix is identity S = I
+  for(int traj=0; traj<ntraj; traj++){
+
+    CMATRIX& U = (*basis_transform[traj]); // * (*proj_adi[indx]); // U_eff - let's wait with this
+
+    /// Diabatic wfc representation
+    if(dyn_params.rep_tdse==0){
+      cd = ampl_dia->col(traj);
+      *dm_dia[traj] = (cd * cd.H());
+      *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
+    }
+    /// Adiabatic wfc representation
+    else if(dyn_params.rep_tdse==1){
+      ca = ampl_adi->col(traj);
+      *dm_adi[traj] = ca * ca.H();
+      *dm_dia[traj] =  U * (*dm_adi[traj]) * U.H();
+    }
+    /// Diabatic DM representation
+    else if(dyn_params.rep_tdse==2){
+      *dm_adi[traj] = U.H() * (*dm_dia[traj]) * U;
+    }
+    /// Adiabatic DM representation
+    else if(dyn_params.rep_tdse==3){
+      *dm_dia[traj] =  U * (*dm_adi[traj]) * U.H();
+    }
+
+  }// for traj
+
+}
 
 
 void dyn_variables::update_density_matrix(dyn_control_params& dyn_params, nHamiltonian& ham, int lvl){
@@ -717,8 +827,8 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   act_states.clear();  
 
   //# Dynamical variables
+  //================ For adiabatic - set up them directly =================
   for(traj=0; traj<ntraj; traj++){
-
     if(init_type==0 || init_type==1 || init_type==4){ 
       act_states.push_back(istate);
     }
@@ -726,10 +836,34 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
       ksi = rnd.uniform(0.0, 1.0);
       act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
     }
-
   }// for traj
 
-  //return params;
+  //============= For adiabatic: more complicated =========================
+  if(rep==0){
+    vector<int> dia_act_states(act_states);
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = dia_act_states[traj]; // active diabatic state
+      pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      pop_adi = (*basis_transform[traj]).H() * pop_dia * (*basis_transform[traj]);
+
+      vector<double> res(nadi, 0.0);
+      for(i=0; i<nadi;i++){ res[i] = pop_adi.get(i,i).real(); }
+
+      // Now select an adiabatic state according to the probabilities in the res
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
+                                         // the distribution of the diabatic populations
+
+
+    }// for traj
+
+  }// rep == 0
 
 }
 
@@ -766,6 +900,7 @@ void dyn_variables:: update_active_states(int direction, int property){
   int i;
   int nst = nadi;
   CMATRIX coeff(nst, 1);
+  MATRIX rho_tmp(nst,nst);
   complex<double> max_val;
 
   for(int itraj=0; itraj<ntraj; itraj++){
@@ -778,7 +913,15 @@ void dyn_variables:: update_active_states(int direction, int property){
       if(direction==1){    coeff = proj_adi[itraj]->H() * coeff; }
       else if(direction==-1){  coeff = (*proj_adi[itraj]) * coeff; }
 
-      coeff.max_col_elt(0, max_val, act_states[itraj]);
+      //coeff.max_col_elt(0, max_val, act_states[itraj]);
+      rho_tmp = (coeff * coeff.H()).real();
+      double max_val = fabs(rho_tmp.get(0,0)); 
+      int max_val_indx = 0;
+      for(int j=1;j<nst;j++){ 
+        // >= is important !!! not just >
+        if( fabs(rho_tmp.get(j,j)) > max_val){  max_val_indx = j; max_val = fabs(rho_tmp.get(j,j)); } 
+      }
+      act_states[itraj] = max_val_indx;
     }
 
     //============ Amplitudes of states ===================
@@ -910,29 +1053,48 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
 }
   
 
-vector<double> dyn_variables::compute_average_sh_pop(){
+vector<double> dyn_variables::compute_average_sh_pop(int rep){
 
-  int sz = nadi; 
-
-  //cout<<"In compute_average_sh_pop...\n";
+  int sz, i, j, traj; 
+  if(rep==0){ sz = ndia; }
+  else if(rep==1){ sz = nadi; }
+  else{ 
+    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
+    exit(0);
+  }
 
   vector<double> res(sz, 0.0);
-//  vector<int> effective_states( update_active_states(act_states, proj_adi) );
   vector<int> effective_states( act_states );
 
-  for(int traj=0; traj<ntraj; traj++){
+  if(rep==0){
+    // ===== For diabatic SH populations: use the prescription of ======
+    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
 
-    int i = effective_states[traj];
-    res[i] += 1.0;
-    //cout<<" traj = "<<traj<<" act_state = "<<act_states[traj]<<" eff state = "<<i<<endl;
-  }
-  
-//  cout<<" Populations : ";
-  for(int j=0; j<sz; j++){   
-    res[j] = res[j] / (float)ntraj; 
-  //  cout<<res[j]<<" ";
-  }
-  //cout<<endl;
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+    CMATRIX U(ndia, nadi);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = effective_states[traj]; // active adiabatic state
+      pop_adi = *dm_adi[traj];
+      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_dia = U * pop_adi * U.H(); 
+      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
+    }
+  }// rep == 0
+
+  else if(rep==1){
+    //===== For adiabatic populations, we just use the active adiabatic states =======
+    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+  }// rep == 1
+
+  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
 
   return res;
 }

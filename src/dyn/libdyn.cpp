@@ -86,7 +86,19 @@ void export_dyn_control_params_objects(){
       .def_readwrite("tsh_method", &dyn_control_params::tsh_method)
       .def_readwrite("hop_acceptance_algo", &dyn_control_params::hop_acceptance_algo)
       .def_readwrite("momenta_rescaling_algo", &dyn_control_params::momenta_rescaling_algo)
+      .def_readwrite("use_Jasper_Truhlar_criterion", &dyn_control_params::use_Jasper_Truhlar_criterion)
       .def_readwrite("use_boltz_factor", &dyn_control_params::use_boltz_factor)
+
+      ///================= FSSH2 revision ====================
+      .def_readwrite("fssh2_revision", &dyn_control_params::fssh2_revision)
+
+      ///================= FSSH3 specific ====================
+      .def_readwrite("fssh3_size_option", &dyn_control_params::fssh3_size_option)
+      .def_readwrite("fssh3_approach_option", &dyn_control_params::fssh3_approach_option)
+      .def_readwrite("fssh3_decomp_option", &dyn_control_params::fssh3_decomp_option)
+      .def_readwrite("fssh3_dt", &dyn_control_params::fssh3_dt)
+      .def_readwrite("fssh3_max_steps", &dyn_control_params::fssh3_max_steps)
+      .def_readwrite("fssh3_err_tol", &dyn_control_params::fssh3_err_tol)
 
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
@@ -94,6 +106,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("dish_decoherence_event_option", &dyn_control_params::dish_decoherence_event_option)
       .def_readwrite("decoherence_times_type", &dyn_control_params::decoherence_times_type)
       .def_readwrite("schwartz_decoherence_inv_alpha", &dyn_control_params::schwartz_decoherence_inv_alpha)
+      .def_readwrite("schwartz_interaction_width", &dyn_control_params::schwartz_interaction_width)
       .def_readwrite("decoherence_C_param", &dyn_control_params::decoherence_C_param)
       .def_readwrite("decoherence_eps_param", &dyn_control_params::decoherence_eps_param)
       .def_readwrite("dephasing_informed", &dyn_control_params::dephasing_informed)
@@ -167,22 +180,26 @@ void export_dyn_variables_objects(){
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
 
   void (dyn_variables::*expt_update_amplitudes_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v2)
-  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
+  (dyn_control_params& dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  (bp::dict dyn_params, nHamiltonian& ham) = &dyn_variables::update_amplitudes;
   void (dyn_variables::*expt_update_amplitudes_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
+  void (dyn_variables::*expt_update_amplitudes_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params) = &dyn_variables::update_amplitudes;
 
 
   void (dyn_variables::*expt_update_density_matrix_v1)
-  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v2)
-  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
+  (dyn_control_params& dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v3)
-  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  (bp::dict dyn_params, nHamiltonian& ham, int lvl) = &dyn_variables::update_density_matrix;
   void (dyn_variables::*expt_update_density_matrix_v4)
+  (dyn_control_params& dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
+  void (dyn_variables::*expt_update_density_matrix_v5)
   (bp::dict dyn_params, bp::object compute_model, bp::dict model_params, int lvl) = &dyn_variables::update_density_matrix;
 
 
@@ -243,6 +260,8 @@ void export_dyn_variables_objects(){
       .def("get_dm_adi", expt_get_dm_adi_v2)
       .def("get_dm_dia", expt_get_dm_dia_v1)
       .def("get_dm_dia", expt_get_dm_dia_v2)
+      .def("get_fssh3_errors", &dyn_variables::get_fssh3_errors)
+      .def("get_fssh3_average_errors", &dyn_variables::get_fssh3_average_errors)
       .def("get_imass", &dyn_variables::get_imass)
       .def("get_coords", &dyn_variables::get_coords)
       .def("get_momenta", &dyn_variables::get_momenta)
@@ -268,14 +287,18 @@ void export_dyn_variables_objects(){
       .def("update_amplitudes", expt_update_amplitudes_v2)
       .def("update_amplitudes", expt_update_amplitudes_v3)
       .def("update_amplitudes", expt_update_amplitudes_v4)
+      .def("update_amplitudes", expt_update_amplitudes_v5)
 
       .def("update_density_matrix", expt_update_density_matrix_v1)
       .def("update_density_matrix", expt_update_density_matrix_v2)
       .def("update_density_matrix", expt_update_density_matrix_v3)
       .def("update_density_matrix", expt_update_density_matrix_v4)
+      .def("update_density_matrix", expt_update_density_matrix_v5)
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
+
+      .def("update_basis_transform", &dyn_variables::update_basis_transform)
 
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
@@ -354,12 +377,12 @@ void export_dyn_decoherence_objects(){
 
 
   CMATRIX (*expt_mfsd_v1)
-  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd, int isNBRA) = &mfsd;
   def("mfsd", expt_mfsd_v1);
 
   CMATRIX (*expt_mfsd_v2)
-  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<MATRIX>& decoherence_rates, 
+  (MATRIX& p, CMATRIX& Coeff, MATRIX& invM, double dt, vector<int>& act_states, vector<MATRIX>& decoherence_rates, 
    nHamiltonian& ham, Random& rnd) = &mfsd;
   def("mfsd", expt_mfsd_v2);
   
@@ -430,9 +453,15 @@ void export_dyn_decoherence_objects(){
 
   vector<MATRIX> (*expt_schwartz_1_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v1);
+  
+  vector<MATRIX> (*expt_schwartz_1_v2)
+  (dyn_control_params& prms, CMATRIX& amplitudes, MATRIX& p, nHamiltonian& ham, MATRIX& w) = &schwartz_1;
+  def("schwartz_1", expt_schwartz_1_v2);
 
   vector<MATRIX> (*expt_schwartz_2_v1)
   (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
+  def("schwartz_2", expt_schwartz_2_v1);
 
 
 
@@ -594,6 +623,11 @@ void export_dyn_hop_proposal_objects(){
   vector<double> (*expt_hopping_probabilities_fssh2_v1)
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_fssh2;
   def("hopping_probabilities_fssh2", expt_hopping_probabilities_fssh2_v1);
+
+  vector<double> (*expt_hopping_probabilities_fssh3_v1)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old,
+  int act_state_indx, vector<double>& errors) = &hopping_probabilities_fssh3;
+  def("hopping_probabilities_fssh3", expt_hopping_probabilities_fssh3_v1);
 
 
   MATRIX (*expt_hopping_probabilities_mssh_v1)

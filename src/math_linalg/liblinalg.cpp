@@ -109,6 +109,8 @@ void export_base_matrix(){
       .def("get", expt_get_v1)
       .def("get", expt_get_v2)
 
+      .def("vec", &base_matrix<T1>::vec)
+      .def("ivec", &base_matrix<T1>::ivec)
 //      .def("col", &base_matrix<T1>::col )
 //      .def("row", &base_matrix<T1>::row )
 
@@ -126,6 +128,7 @@ void export_base_matrix(){
       .def("scale", expt_scale_v1)
 //      .def("scale", expt_scale_v2)
       .def("product", &base_matrix<T1>::product )
+      .def("kron", &base_matrix<T1>::kron )
       .def("dot_product", &base_matrix<T1>::dot_product )
 
       /// Generic matrix modifiers

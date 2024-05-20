@@ -309,6 +309,7 @@ class dyn_control_params{
       - 5: DISH
       - 6: MASH
       - 7: FSSH2
+      - 8: FSSH3 - experimental
   */
   int tsh_method;
 
@@ -358,6 +359,23 @@ class dyn_control_params{
   */
   int momenta_rescaling_algo;
 
+
+  /**
+    A flag to turn on/off the Jasper-Truhlar criterion for reversal of velocities on frustrated hops.
+    According to: Jasper, A. W.; Truhlar, D. G. Chem. Phys. Lett. 2003, 369, 60− 67
+
+    Options:
+    
+      - 0: don't use this criterion (naive handling)
+      - 1: use it [ default ] - the velocities are reversed along the direction d_{a,j} if
+        a) (F_a * d_{a,j}) * (F_j * d_{a,j}) < 0 and b) (v * d_{a,j}) * (F_j * d_{a,j}) < 0 
+        where a - is the active state index;  Only in effect, if `momenta_rescaling_algo == 201`
+        
+
+  */
+  int use_Jasper_Truhlar_criterion;
+
+
   /**
     A flag to scale the proposed hopping probabilities by the
     Boltzmann factor. This is needed for the libra_py/workflows/nbra calculations, where the hop proposal 
@@ -370,6 +388,72 @@ class dyn_control_params{
   */
    int use_boltz_factor;
 
+
+  //=========== FSSH2 options ==========
+  /**
+    Whether to use the revised FSSH2
+
+    Options:
+
+      - 0: use the FSSH2 as it was formulated in the original paper [ default ]
+      - 1: apply the revised version 
+  */
+  int fssh2_revision;
+
+
+  //=========== FSSH3 options ==========
+  /**
+    The size of the vectorized density matrix in equations to determine hopping probabilites/fluxes
+
+    Options:
+
+      - 0: N elements - only populations; the matrices are overdetermined
+      - 1: N^2 elements - first N elements are populations, then Re and Im parts of upper-triangular coherences
+                         that is rho_{0,1}, rho_{0,2}, ... rho_{0,N-1}, rho_{1,2}, ... rho_{1,N-1}, ... rho_{N-2,N-1}  [ default ]
+  */
+  int fssh3_size_option;
+
+  /**
+    The approach to determine the hopping probabilities:
+
+    Options:
+
+      - 0: based on master equation, rho(t+dt) = J * rho(t);  J matrix contains hopping probabilities directly  [ defualt ]
+      - 1: based on kinetic approach, drho/dt = J * rho; J matrix contains fluxes
+  */
+  int fssh3_approach_option;
+
+  /** 
+    The matrix decomposition method for solving the least-squares problem
+
+    Options:
+      - 0: bdcSvd
+      - 1: fullPivLu
+      - 2: fullPivHouseholderQr
+      - 3: completeOrthogonalDecomposition [ default ]
+  */
+  int fssh3_decomp_option;
+
+  
+  /**
+    The time-step of the optimization procedure in the FSSH3 calculations
+    Default: 0.001
+  */
+  double fssh3_dt;
+
+
+  /**
+    The maximal number of steps in the FSSH3 optimization step
+    Default: 1000
+  */
+  int fssh3_max_steps;
+
+
+  /**
+    FSSH3 error tolerance
+    Default: 1e-7
+  */
+  double fssh3_err_tol;
 
   
   ///===============================================================================
@@ -437,6 +521,12 @@ class dyn_control_params{
     computing decoherence rates [ default: NULL ]
   */
   MATRIX* schwartz_decoherence_inv_alpha;
+  
+  /**
+    MATRIX(ndof, 1) - the parameters for the spatial extent of NAC in
+    computing decoherence rates [ default: NULL ]
+  */
+  MATRIX* schwartz_interaction_width;
 
 
   /**

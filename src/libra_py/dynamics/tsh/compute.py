@@ -1,5 +1,5 @@
 #*********************************************************************************                     
-#* Copyright (C) 2019-2022 Alexey V. Akimov                                                   
+#* Copyright (C) 2019-2024 Alexey V. Akimov                                                   
 #*                                                                                                     
 #* This file is distributed under the terms of the GNU General Public License                          
 #* as published by the Free Software Foundation, either version 3 of                                   
@@ -53,7 +53,6 @@ import libra_py.tsh_stat as tsh_stat
 from . import save
 
 
-#def run_dynamics(_q, _p, _iM, _Cdia, _Cadi, _projectors, _states, _dyn_params, compute_model, _model_params, rnd):
 def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     """
     
@@ -556,7 +555,16 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     #================= Surface hopping: proposal, acceptance =======================
     default_params.update( { "tsh_method":-1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0,
+                             "use_Jasper_Truhlar_criterion":1,
                              "use_boltz_factor":0
+                           } )
+
+    #================= FSSH2 specific ====================
+    default_params.update( {"fssh2_revision":0 } )
+
+    #================= FSSH3 specific ====================
+    default_params.update( {"fssh3_size_option":1, "fssh3_approach_option":0, "fssh3_decomp_option":3,
+                            "fssh3_dt":0.001, "fssh3_max_steps":1000, "fssh3_err_tol":1e-7
                            } )
 
     #================= Decoherence options =========================================
@@ -567,7 +575,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "collapse_option":0,  
                              "decoherence_rates":MATRIX(nstates, nstates),
                              "ave_gaps":MATRIX(nstates,nstates),
-                             "schwartz_decoherence_inv_alpha": MATRIX(nstates, 1),
+                             "schwartz_decoherence_inv_alpha": MATRIX(dyn_var.ndof, 1), "schwartz_interaction_width": MATRIX(dyn_var.ndof, 1),
                              "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
                              "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
                            } )
@@ -624,21 +632,13 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     total_energy = dyn_params["total_energy"]
  
 
-    #q = MATRIX(_q)
-    #p = MATRIX(_p)
-    #iM = MATRIX(_iM)
-    #Cdia = CMATRIX(_Cdia)
-    #Cadi = CMATRIX(_Cadi)
     states = intList()
-    #projectors = CMATRIXList() 
 
     ndia = dyn_var.ndia #Cdia.num_of_rows
     nadi = dyn_var.nadi #Cadi.num_of_rows
     nnucl = dyn_var.ndof #q.num_of_rows
     ntraj = dyn_var.ntraj #q.num_of_cols
 
-
-    #sys.exit(0)
 
     if(dyn_params["quantum_dofs"]==None):
         dyn_params["quantum_dofs"] = list(range(nnucl))
@@ -675,15 +675,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
 
-    #sys.exit(0)
-
-    #U = []
-    #if is_nbra == 1:
-    #    U.append(ham.get_basis_transform(Py2Cpp_int([0, 0]) ))
-    #else:
-    #    for tr in range(ntraj):
-    #        U.append(ham.get_basis_transform(Py2Cpp_int([0, tr]) ))
-
     therm = ThermostatList();
     if ensemble==1:
         for traj in range(ntraj):
@@ -691,7 +682,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             therm[traj].set_Nf_t( len(dyn_params["thermostat_dofs"]) )
             therm[traj].init_nhc()
 
-    #sys.exit(0)
     if decoherence_algo==2:
         dyn_var.allocate_afssh()
     elif decoherence_algo==3: # BCSH
@@ -702,28 +692,17 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_mqcxf()
     if tsh_method==5 or decoherence_algo==7: # DISH or DISH_rev2023
         dyn_var.allocate_dish()
-    if tsh_method==7: #  FSSH2
+    if tsh_method==7 or tsh_method==8: #  FSSH2 or FSSH3
         dyn_var.allocate_fssh2()
         dyn_var.save_curr_dm_into_prev()
 
     if thermally_corrected_nbra==1:
         dyn_var.allocate_tcnbra()
 
-
-    #sys.exit(0)
     ham_aux = nHamiltonian(ham)
 
-
-    #sys.exit(0)
-
     # Do the propagation
-    for i in range(nsteps):
-
-        #print(F"========== step {i} ===============")
-        #========= Update variables, compute properties, and save ============    
-        #dyn_var.update_amplitudes(dyn_params, ham);
-        #dyn_var.update_density_matrix(dyn_params, ham, 1);
-         
+    for i in range(nsteps):         
         # Energies 
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0,  0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
@@ -824,40 +803,54 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     init_elec = dict(_init_elec)    
     init_nucl = dict(_init_nucl)
 
+    #========== Model params ==========
     comn.check_input( model_params, {  }, [ "model0" ] )
-    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "direct_init":0, "ntraj":1 }, [  ] )
-    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.01], "q_width":[1.0], "p_width":[1.0] }, [] )
 
-
-    is_nbra =  dyn_params["isNBRA"]
-    init_elec.update({"is_nbra":is_nbra})
-    comn.check_input( init_elec, {  "ndia":1, "nadi":1 }, [  ] )
-
-
-    # Internal parameters
-    ndia = init_elec["ndia"]
-    nadi = init_elec["nadi"]
+    #========== Nuclear params ==========
+    # First check the inputs for the initialization of nuclear variables
+    comn.check_input( init_nucl, {"init_type":3, "ndof":1, "q":[0.0], "p":[0.0], "mass":[2000.0], 
+                                  "force_constant":[0.01], "q_width":[1.0], "p_width":[1.0] }, [] )
     ndof = len(init_nucl["mass"])
+
+
+    #========== Dynamics params ==========
+    # Now, we can use the information of ndof to define the default quantum_dofs
+    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "direct_init":0, "ntraj":1,
+                                    "quantum_dofs":list(range(ndof))
+                                  }, [  ] )
+
+    # Extract info from the updated dyn_params:
+    is_nbra =  dyn_params["isNBRA"]
     ntraj = dyn_params["ntraj"]
     direct_init = dyn_params["direct_init"]
 
+    #========== Electronic params =========
+    # Setup the electronic variables
+    init_elec.update({"is_nbra":is_nbra})
+    comn.check_input( init_elec, {  "ndia":1, "nadi":1 }, [  ] )
+
+    # Extract information from the updated electronic variables
+    ndia = init_elec["ndia"]
+    nadi = init_elec["nadi"]
+
+
+    #sys.exit(0)
 
     # Setup the dynamical variables object
     dyn_var = dyn_variables(ndia, nadi, ndof, ntraj)
 
-    #sys.exit(0)
-
     # Initialize nuclear variables 
     dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
 
+    #print("Initial coordinates")
+    #dyn_var.get_coords().show_matrix()
     #sys.exit(0)
 
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
-    dyn_var.init_active_states(init_elec, rnd)
+    #dyn_var.init_active_states(init_elec, rnd)
 
-    #sys.exit(0)
 
     # Setup the hierarchy of Hamiltonians 
     ham = nHamiltonian(ndia, nadi, ndof)
@@ -866,9 +859,6 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     else:
         ham.add_new_children(ndia, nadi, ndof, ntraj)
     ham.init_all(2,1)     
-
-
-    #sys.exit(0)
 
     # Compute internals of the Hamiltonian objects
     model_params1 = dict(model_params)
@@ -879,6 +869,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # the transformation matrices to convert amplitudes between the representations
     dyn_params1 = dict(dyn_params)        
 
+    #sys.exit(0)
     if(dyn_params["ham_update_method"]==2):        
         pass
         #update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
@@ -886,7 +877,11 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     else:
         dyn_params1.update({ "ham_update_method":1, "ham_transform_method":1 })
         #update_Hamiltonian_q( dyn_params1, dyn_var, ham, compute_model, model_params1)
+        #print( dyn_params1 )
+        #print(model_params1)
+        #sys.exit()
         update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
+        #sys.exit(0)
         update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
 
     #sys.exit(0)
@@ -894,9 +889,11 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
     # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
     # of electronic variables - this will convert the amplitudes to the proper representation
+    dyn_var.update_basis_transform(ham);
     dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
     dyn_var.update_density_matrix( dyn_params, ham, 1)
-
+    dyn_var.init_active_states(init_elec, rnd)
+    
     #print("Initial adiabatic amplitudes")
     #dyn_var.get_ampl_adi().show_matrix()
 
@@ -909,9 +906,16 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     #print("Initial diabatic DM")
     #dyn_var.get_dm_dia(0).show_matrix()
 
-    #print("Active states")
-    #print(Cpp2Py(dyn_var.act_states))
+    print("Active states (adiabatic)")
+    print(Cpp2Py(dyn_var.act_states))
 
+    print("Initial adiabatic populations")
+    pops_sh1 = dyn_var.compute_average_sh_pop(1)
+    print( Cpp2Py(pops_sh1))
+
+    print("Initial diabatic populations")
+    pops_sh0 = dyn_var.compute_average_sh_pop(0)
+    print( Cpp2Py(pops_sh0))
 
     # Finally, start the dynamics calculations
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)

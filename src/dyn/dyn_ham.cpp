@@ -77,20 +77,23 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
   MATRIX& p = *dyn_var.p;
   MATRIX& iM = *dyn_var.iM;
 
-
   if(update_type==0){
     //============================= Energies =========================
     // How to compute electronic Hamiltonian - this may already read a lot of 
     // other variables, such as time-overlaps, NAC, and Hvib
     if(prms.ham_update_method==0){ ;; }     
-    else if(prms.ham_update_method==1){  
+    else if(prms.ham_update_method==1){ 
+//      cout<<" "<<q.n_cols<<"  "<<q.n_rows<<endl;
+//      cout<<" "<<iM.n_cols<<"  "<<iM.n_rows<<endl;
+//      cout<<" "<<p.n_cols<<"  "<<p.n_rows<<endl;
+      //exit(0);
       ham.compute_diabatic(py_funct, q, model_params, 1);  
+//      exit(0);
     }
     else if(prms.ham_update_method==2){  
       ham.compute_adiabatic(py_funct, q, model_params, 1);  
     }
-
-
+//    exit(0);
     // Do the additional transformation between any reps, if needed
     if(prms.ham_transform_method==0){ ;; }
     else if(prms.ham_transform_method==1){
@@ -131,10 +134,15 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
         st = ham_prev.children[traj]->get_basis_transform().H() * ham.children[traj]->get_basis_transform();
         ham.children[traj]->set_time_overlap_adi_by_val(st);
       }
-    }// 1 
+    }// 1
+
+    // Copy the transformation matrices to the dynamics variable
+    dyn_var.update_basis_transform(ham); 
 
 
   }// update_type == 0
+
+  //exit(0);
 
 
   if(update_type==0 || update_type==1){

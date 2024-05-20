@@ -128,6 +128,9 @@ void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, M
   }
 
   //Rescale velocities and do the hop
+  p -= gamma_ij * t;
+
+/* 
   MATRIX dp(t.n_rows, t.n_cols);
   dp = gamma_ij * t;
 
@@ -135,9 +138,9 @@ void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, M
   /// p -= dp; (only for the active dofs)
   for(idof=0; idof < ndof; idof++){  
     dof = which_dofs[idof];
-    p.add(dof, 0, -dp.get(idof, 0) );
+    p.add(dof, 0, -dp.get(dof, 0) );
   }
-
+*/
 }
 
 
@@ -467,6 +470,7 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
   CMATRIX df(nst, nst);
+  CMATRIX U(nst, nst); // proj_adi;
 
 //  cout<<"In accept_hops with algo = "<<prms.hop_acceptance_algo<<endl;
 //  cout<<"ntraj_active = "<<ntraj_active<<endl;
@@ -571,6 +575,7 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
       int new_st = proposed_states[traj];
 
       if(old_st != new_st){
+
         // Do the calculations only for itraj=0 if isNBRA is 1
         if(isNBRA==1){
         if(itraj==0){
@@ -590,6 +595,8 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
         for(idof = 0; idof < ndof_active; idof++){
           dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
+          U = *dyn_var.proj_adi[traj];
+          //nac = U.H() * nac * U;
           //nac = projectors[traj].H() * nac * projectors[traj];
 
           dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
@@ -599,13 +606,9 @@ vector<int> accept_hops(dyn_variables& dyn_var, nHamiltonian& ham, vector<int>& 
         if(can_rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, which_dofs)){
           fstates[traj] = proposed_states[traj];
         }
-        else{
-          fstates[traj] = initial_states[traj];
-        }
+        else{ fstates[traj] = initial_states[traj];   }
       }
-      else{ 
-        fstates[traj] = initial_states[traj];
-      }
+      else{   fstates[traj] = initial_states[traj];   }
     }// for traj
 
   }// algo = 20
@@ -929,6 +932,8 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
   CMATRIX hvib(nst, nst);
   CMATRIX nac(nst, nst);
   CMATRIX df(nst, nst);
+  CMATRIX U(nst, nst);
+
 
 
   if(prms.momenta_rescaling_algo==0){  // Don't rescale at all
@@ -1015,6 +1020,9 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
   else if(prms.momenta_rescaling_algo==200 || prms.momenta_rescaling_algo==201){  // rescale momenta along the derivative coupling vector
 
     MATRIX dNAC(ndof, 1);
+    MATRIX F_old(ndof, 1);
+    MATRIX F_new(ndof, 1);
+    MATRIX vel(ndof, 1);
     int do_reverse;
 
     if(prms.momenta_rescaling_algo==200){ do_reverse = 0; }
@@ -1028,33 +1036,47 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
       if(old_st!=new_st){
 
         // Do the calculations only for itraj=0 if isNBRA is 1
-        if(isNBRA==1){
-        if(traj==0){
-        hvib = ham.children[traj]->get_ham_adi();
-        //hvib = projectors[traj].H() * hvib * projectors[traj];
-        }
-        }
-        else{
-        hvib = ham.children[traj]->get_ham_adi();
-        //hvib = projectors[traj].H() * hvib * projectors[traj];
-        }
+        if(isNBRA==1){  if(traj==0){  hvib = ham.children[traj]->get_ham_adi();   }   }
+        else{ hvib = ham.children[traj]->get_ham_adi();     }
+
         double E_i = hvib.get(old_st, old_st).real();  // initial potential energy
         double E_f = hvib.get(new_st, new_st).real();  // final potential energy  
 
         dNAC = 0.0;
+        F_old = 0.0;
+        F_new = 0.0;
+
         for(idof = 0; idof < n_active_dof; idof++){
           dof = which_dofs[idof];
           nac = ham.children[traj]->get_dc1_adi(dof);
+
+          U = *dyn_var.proj_adi[traj];
+          //nac = U.H() * nac * U;
           //nac = projectors[traj].H() * nac * projectors[traj];
           dNAC.set(dof, 0, nac.get(old_st, new_st).real() );
+
+          df = ham.children[traj]->get_d1ham_adi(dof);
+          F_old.set(dof, 0, -df.get(old_st, old_st).real() );
+          F_new.set(dof, 0, -df.get(new_st, new_st).real() );
         }
 
         p_tr = p.col(traj);       
-        rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse, which_dofs); 
+        for(dof = 0; dof<ndof; dof++){ vel.set(dof, 0,   p_tr.get(dof, 0) * invM.get(dof, 0) ); }
+
+        int do_reverse_actual = do_reverse;
+        if(prms.use_Jasper_Truhlar_criterion==1){
+          if( (F_old.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){
+            if( (vel.T() * dNAC).get(0,0) * (F_new.T() * dNAC).get(0,0) < 0 ){ ;; }
+            else{ do_reverse_actual *= 0; }
+          }else{  do_reverse_actual *= 0; }
+        }
+        
+        rescale_along_vector(E_i, E_f, p_tr, invM, dNAC, do_reverse_actual, which_dofs); 
 
         for(dof = 0; dof < ndof; dof++){   p.set(dof, traj, p_tr.get(dof, 0));     }
 
       }// if different states
+
     }// for traj
 
   }// algo = 200 || 201

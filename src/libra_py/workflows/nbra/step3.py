@@ -1852,8 +1852,9 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
     # At this step, compute the energy of the SD
     active_space = params['active_space']
     E_ks = np.array( sp.load_npz(params['path_to_npz_files']+F'/E_ks_{step}.npz').todense().real)[active_space,:][:,active_space]
-    E_ks_MATRIX = data_conv.nparray2MATRIX( E_ks )
-    E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks_MATRIX, SD_energy_corr )
+    #E_ks_MATRIX = data_conv.nparray2MATRIX( E_ks )
+    #E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks_MATRIX, SD_energy_corr )
+    E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks, SD_energy_corr )
 
     # Make a list for the final ordering of the sd_states_unique.
     # This will not contain the ground state, which we will manually add later. 
@@ -1863,13 +1864,14 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
     # Make an array of zeros, these will be overwritten with the energy of each SD
     e = np.zeros( nstates_sd )
     for state in range(nstates_sd):
-        e[state] =  E_this_sd.get(state,state).real
+        #e[state] =  E_this_sd.get(state,state).real
+        e[state] =  E_this_sd[state,state].real
         # Obtain the indexing fo the SDs by their energies
     reindex = np.argsort(e)
     # Turning the CMATRIX into numpy
-    E_this_sd = E_this_sd.real()
+    E_this_sd = E_this_sd.real
     # Only the diagonals are needed
-    E_this_sd = np.diag( data_conv.MATRIX2nparray(E_this_sd) )
+    #E_this_sd = np.diag( data_conv.MATRIX2nparray(E_this_sd) )
 
     if sorting_type == "identity":
 
@@ -2526,6 +2528,7 @@ def run_step3_sd_nacs_libint(params):
                 # Compute the St_ci
                 St_ci = np.linalg.multi_dot([sd2ci.T, St_sds[i].todense().real, sd2ci])
                 St_cis.append(sp.csc_matrix(St_ci))
+                sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci))
 
     # Now, we move to applying phase-corrections
     if params['apply_phase_correction']:
@@ -2639,24 +2642,27 @@ def compute_sd_overlaps_in_parallel( step, params ):
                       [active_space,:][:,active_space] ).real
     s_ks_2 = np.array( sp.load_npz(F'{res_dir_1}/S_ks_{step+start_time}.npz').todense()
                       [active_space,:][:,active_space] ).real
-
-    st_ks = data_conv.nparray2MATRIX(st_ks)
-    s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
-    s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
+    # This is not needed anymore as we use the numpy approach 
+    # that works with numpy array of the matrices below
+    #st_ks = data_conv.nparray2MATRIX(st_ks)
+    #s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
+    #s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
 
     # Computing the overlaps for SDs
     t2 = time.time()
-    s_sd_1 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
-                                           sd_states_reindexed_sorted[step], s_ks_1, use_minimal=False, use_mo_approach=True).real()
-    s_sd_2 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step+1], 
-                                           sd_states_reindexed_sorted[step+1], s_ks_2,use_minimal=False, use_mo_approach=True).real()
+    if params['apply_orthonormalization']:
+        s_sd_1 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
+                                               sd_states_reindexed_sorted[step], s_ks_1, use_minimal=False, use_mo_approach=False).real
+        s_sd_2 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step+1], 
+                                               sd_states_reindexed_sorted[step+1], s_ks_2,use_minimal=False, use_mo_approach=False).real
     st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step], 
-                                          sd_states_reindexed_sorted[step+1], st_ks, use_minimal=False, use_mo_approach=True).real()
-
-    s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
-    s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
-    st_sd = data_conv.MATRIX2nparray(st_sd)
-
+                                          sd_states_reindexed_sorted[step+1], st_ks, use_minimal=False, use_mo_approach=False).real
+    #s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
+    #s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
+    #st_sd = data_conv.MATRIX2nparray(st_sd)
+    #print("flag GS of step", step  , sd_states_reindexed_sorted[step][0])
+    #print("flag GS of step", step+1, sd_states_reindexed_sorted[step+1][0])
+    #print("flag np.diag(st_sd):", np.diag(st_sd))
 
 
     if params['apply_orthonormalization']:

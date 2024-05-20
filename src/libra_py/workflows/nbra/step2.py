@@ -470,6 +470,27 @@ def run_cp2k_libint_step2(params):
             os.system(F'{mpi_executable} -n {nprocs} {cp2k_exe} -i Diag_libra-{step}.inp -o step_{step}.log')
             molden_filename = F'Diag_libra-{step}-1_0.molden'
         print('Done with step', step,'Elapsed time:',time.time()-t1)
+#        if params['is_many_body']:
+#            tddft_params = {"logfile_name": f'step_{step}.log', "number_of_states": params['number_of_tddft_states'],
+#                            "isUKS": params['isUKS'], "tolerance": params['min_amplitude']} 
+#            tddft_data = CP2K_methods.read_cp2k_tddfpt_log_file(tddft_params)
+#            # Only tested for isUKS=False 
+#            max_state = 0
+#            min_state = 1e10 # A sufficiently large number for generating min state present in the TDDFT data
+#            if not params['isUKS']:
+#                for k_1 in range(len(tddft_data[1][0])): # Loop over all single-particle SDs
+#                    max_state = int(max(max_state,tddft_data[1][0][k_1][1]))
+#                    min_state = int(min(min_state,tddft_data[1][0][k_1][0]))
+#            else:
+#            for k_0 in range(2): # Loop over spin
+#                for k_1 in range(len(tddft_data[1][k_0])): # Loop over all single-particle SDs
+#                    max_state = int(max(max_state,tddft_data[1][k_0][k_1][1]))
+#                    min_state = int(min(min_state,tddft_data[1][k_0][k_1][0]))
+#            lowest_orbital = min_state
+#            highest_orbital = max_state
+#        else:
+        lowest_orbital = params['lowest_orbital']
+        highest_orbital = params['highest_orbital']
 
         # now if the counter is equal to zero 
         # just compute the MO overlap of that step.
@@ -506,8 +527,6 @@ def run_cp2k_libint_step2(params):
             AO_S = data_conv.MATRIX2nparray(AO_S)
             #scipy.sparse.save_npz(params['res_dir']+'/AO_S.npz', scipy.sparse.csc_matrix(AO_S))
             print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
-            lowest_orbital = params['lowest_orbital']
-            highest_orbital = params['highest_orbital']
             ## Now, we need to resort the eigenvectors based on the new indices
             print('Resorting eigenvectors elements...')
             t1 = time.time()
@@ -755,8 +774,9 @@ def run_cp2k_libint_step2(params):
                         break
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
         counter += 1
-    # Finally move all the pdos and log files to all_pdosfiles and all_logfiles
-    os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
+        # Move all the pdos files to all_pdosfiles for the step that is done!
+        os.system(F'mv *pdos {params["all_pdosfiles"]}/.')
+    # Move all the logfiles after the job is done. This is important in case one requires to restart the calculations
     os.system(F'mv *log {params["all_logfiles"]}/.')
     os.system(F'mv *{params["image_format"].lower()} {params["all_images"]}/.')
     os.system('rm *.wfn* *.tdwfn*')

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2021-2022 Alexey V. Akimov
+* Copyright (C) 2021-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -34,12 +34,14 @@ void dyn_variables::allocate_electronic_vars(){
     proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
+    basis_transform = vector<CMATRIX*>(ntraj);
 
     for(int itraj=0; itraj<ntraj; itraj++){
       proj_adi[itraj] = new CMATRIX(nadi, nadi);
       proj_adi[itraj]->load_identity();
       dm_dia[itraj] = new CMATRIX(ndia, ndia);
       dm_adi[itraj] = new CMATRIX(nadi, nadi);
+      basis_transform[itraj] = new CMATRIX(ndia, nadi);
     }
 
     act_states = vector<int>(ntraj, 0);
@@ -171,6 +173,9 @@ void dyn_variables::allocate_fssh2(){
       dm_dia_prev[itraj] = new CMATRIX(ndia, ndia);
       dm_adi_prev[itraj] = new CMATRIX(nadi, nadi);
     }
+
+    fssh3_errors = vector< vector<double> >(ntraj, vector<double>(5, 0.0) );
+
     fssh2_vars_status = 1;
   }
 }
@@ -296,6 +301,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
       *dm_adi[itraj] = *x.dm_adi[itraj];
+      *basis_transform[itraj] = *x.basis_transform[itraj];
     }
     act_states = x.act_states;
 
@@ -353,6 +359,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *dm_dia_prev[itraj] = *x.dm_dia_prev[itraj];
       *dm_adi_prev[itraj] = *x.dm_adi_prev[itraj];
     }
+    fssh3_errors = x.fssh3_errors;
 
   }// if FSSH2 vars
  
@@ -428,10 +435,12 @@ dyn_variables::~dyn_variables(){
       delete proj_adi[itraj];
       delete dm_dia[itraj];
       delete dm_adi[itraj];
+      delete basis_transform[itraj];
     }
     proj_adi.clear();
     dm_dia.clear();
     dm_adi.clear();
+    basis_transform.clear();
     
     delete ampl_dia;
     delete ampl_adi;
@@ -478,9 +487,11 @@ dyn_variables::~dyn_variables(){
     for(int itraj=0; itraj<ntraj; itraj++){
       delete dm_dia_prev[itraj];
       delete dm_adi_prev[itraj];
+      fssh3_errors[itraj].clear();
     }
     dm_dia_prev.clear();
     dm_adi_prev.clear();
+    fssh3_errors.clear();
 
     fssh2_vars_status = 0;
   }
@@ -562,6 +573,22 @@ CMATRIX dyn_variables::get_dm_dia(int i, int prev_steps){
   else if(prev_steps==1){ return *dm_dia_prev[i]; }
   else{ ;; }
 }
+
+vector< vector<double> > dyn_variables::get_fssh3_errors(){
+  return fssh3_errors;
+}
+
+vector<double> dyn_variables::get_fssh3_average_errors(){
+  int itraj, k;
+  vector<double> res(5,0.0);
+  for(itraj;itraj<ntraj;itraj++){
+    for(k=0;k<5;k++){  res[k] += fssh3_errors[itraj][k];   }
+  }
+  for(k=0;k<5;k++){ res[k] /= ntraj; }
+
+  return res;
+}
+
 
 void dyn_variables::set_parameters(bp::dict params){
 /**
