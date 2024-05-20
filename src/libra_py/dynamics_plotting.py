@@ -462,7 +462,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                         "save_figures":1, "prefix":"out", "dpi":300, "nac_idof":0,
                         "plotting_option":0, "figsize":[36, 18], "titlesize":38, "labelsize":38,
                         "fontsize": 36, "xticksize":28, "yticksize":28, "show_nac_abs":0,
-                        "margin_left": 0.2, "margin_right":0.95, "margin_bottom":0.13, "margin_top":0.88
+                        "margin_left": 0.2, "margin_right":0.95, "margin_bottom":0.13, "margin_top":0.88,
+                        "linewidth":7
                      }
     comn.check_input(plot_params, default_params, critical_params)
         
@@ -488,6 +489,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     margin_right = plot_params["margin_right"]
     margin_top = plot_params["margin_top"]
     margin_bottom = plot_params["margin_bottom"]
+    _linewidth = plot_params["linewidth"]
 
     fig_size = (_figsize[0], _figsize[1])
 
@@ -581,7 +583,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.xlabel('Coordinate, a.u.')
             plt.ylabel('Energy, a.u.')
             for k1 in states_of_interest:
-                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, color = colors[clrs_index[k1]])     
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=_linewidth, color = colors[clrs_index[k1]])     
             plt.legend()    
     
             plt.subplot(1, 2, 2)
@@ -592,7 +594,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             #plt.ylabel('Energy, a.u.')
             plt.yticks([])
             for k1 in states_of_interest:
-                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])     
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=_linewidth, color = colors[clrs_index[k1]])     
             plt.legend()    
 
             if save_figures:
@@ -618,7 +620,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     
                 for k1 in range(nstates):
                     #plt.plot(X, uij[k1][k2], label='$dia_{%i} | adi_{%i}$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
-                    plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=7, color = colors[clrs_index[k1]])         
+                    plt.plot(X, uij[k1][k2], label='$< \psi^{dia}_{%i} | \psi^{adi}_{%i} >$' % (k1, k2), linewidth=_linewidth, color = colors[clrs_index[k1]])         
             plt.legend()               
 
             if save_figures:
@@ -645,8 +647,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             plt.ylabel('Energy, a.u.')
 
             for k1 in states_of_interest:
-                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=7, ls="--", color = colors[clrs_index[k1]])
-                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=7, color = colors[clrs_index[k1]])
+                plt.plot(X, hdia[k1], label='$H_{%i%i}$' % (k1,k1), linewidth=_linewidth, ls="--", color = colors[clrs_index[k1]])
+                plt.plot(X, hadi[k1], label='$E_{%i}$' % (k1), linewidth=_linewidth, color = colors[clrs_index[k1]])
             plt.legend()
 
 
@@ -660,9 +662,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
             for k1 in states_of_interest:
                 for k2 in states_of_interest:
                     if k2>k1:                        
-                        plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, color = colors[clrs_index[cnt]])
+                        plt.plot(X, nac[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=_linewidth, color = colors[clrs_index[cnt]])
                         if show_nac_abs:
-                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=7, ls="--", color = colors[clrs_index[cnt+1]])
+                            plt.plot(X, nac_abs[k1][k2], label='$NAC_{%i%i}$' % (k1,k2), linewidth=_linewidth, ls="--", color = colors[clrs_index[cnt+1]])
                         cnt = cnt + 1
             plt.legend()
 
