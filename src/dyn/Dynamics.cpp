@@ -1351,6 +1351,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   update_forces(prms, dyn_var, ham);
 
+  if(prms.tsh_method == 9){ update_forces_qtsh(dyn_var, ham, prms); }
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -1486,18 +1487,19 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2, FSSH3
+  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2, FSSH3, QTSH
   else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 
        || prms.tsh_method == 4 || prms.tsh_method == 5 || prms.tsh_method == 6 || prms.tsh_method == 7
-       || prms.tsh_method == 8 ){
+       || prms.tsh_method == 8 || prms.tsh_method == 9 ){
 
 
     vector<int> old_states(dyn_var.act_states); 
     //========================== Hop proposal and acceptance ================================
 
-    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8)
+    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8), QTSH(9)
     if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  
-    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 || prms.tsh_method == 8){
+    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 || prms.tsh_method == 8
+    || prms.tsh_method == 9){
 
       /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
       /// of that trajectory
@@ -1564,7 +1566,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
         
-  }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
+  }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 

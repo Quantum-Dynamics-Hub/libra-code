@@ -1205,9 +1205,12 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       // However, for the GFSH option to work properly, we should not be using the transformation of the DM here      
       g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
     }
+    else if(prms.tsh_method == 9){ // QTSH
+      g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
+    }
 
     else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, 7, or 8. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, 7, 8 or 9. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }

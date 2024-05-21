@@ -497,6 +497,9 @@ void export_dyn_decoherence_objects(){
   (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
   def("compute_dkinemat", expt_compute_dkinemat_v1);
 
+  void (*expt_update_forces_qtsh_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms) = &update_forces_qtsh; 
+  def("update_forces_qtsh", expt_update_forces_qtsh_v1);
 
 }
 

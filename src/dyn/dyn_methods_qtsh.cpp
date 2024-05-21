@@ -70,5 +70,60 @@ MATRIX compute_dkinemat(dyn_variables& dyn_var, nHamiltonian& ham){
 }
 
 
+void update_forces_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+  /**
+    Add the nonclassical contribution from the kinematic mometum in QTSH
+  */
+
+  int ntraj = dyn_var.ntraj;
+  int ndof = dyn_var.ndof;
+  int nst = dyn_var.nadi;
+  MATRIX& invM = *dyn_var.iM;
+  
+  CMATRIX C(nst, 1);
+  CMATRIX Coeff(nst, ntraj);
+  
+  MATRIX f_nc(ndof,ntraj);
+
+  // termporaries for d1ham without diagonal elements and f_nc
+  vector<CMATRIX> temp;
+  for(int idof=0; idof<ndof; idof++){
+    temp.push_back(CMATRIX(nst, nst));
+  }
+  CMATRIX hollow(nst, nst);
+  hollow.set(-1, -1, 1.0);
+  for(int i=0; i<nst; i++){
+    hollow.set(i,i, 0.0); 
+  }
+
+  Coeff = *dyn_var.ampl_adi;
+  
+  for(int traj=0; traj<ntraj; traj++){
+    C = Coeff.col(traj);
+
+    CMATRIX ham_adi(nst, nst);
+    ham_adi = ham.children[traj]->get_ham_adi();
+    
+    CMATRIX d1ham_adi(nst, nst);
+    CMATRIX dc1_adi(nst, nst);
+    CMATRIX tmp(nst, nst);
+    for(int idof=0; idof<ndof; idof++){
+      dc1_adi = ham.children[traj]->get_dc1_adi(idof);
+      tmp = dc1_adi.H() * ham_adi;      
+      tmp = tmp + tmp.H();
+      
+      d1ham_adi = ham.children[traj]->get_d1ham_adi(idof);
+      temp[idof].dot_product(hollow, d1ham_adi - tmp );
+    }
+    
+    for(int idof=0; idof<ndof; idof++){
+      f_nc.set(idof, traj, (C.H() * temp[idof] * C).get(0,0).real() );
+    }
+  }//traj
+  
+  *dyn_var.f += f_nc;
+
+}
+
 }// libdyn
 }// liblibra
