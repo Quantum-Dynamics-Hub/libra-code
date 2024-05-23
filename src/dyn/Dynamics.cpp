@@ -1348,7 +1348,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
   if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
-
   update_forces(prms, dyn_var, ham);
 
   if(prms.tsh_method == 9){ update_forces_qtsh(dyn_var, ham, prms); }
@@ -1388,6 +1387,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
+  if(prms.tsh_method == 9){ update_deco_factor_qtsh(dyn_var, ham, prms); }
    
   //============== Begin the TSH part ===================
 

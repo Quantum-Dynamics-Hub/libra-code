@@ -175,6 +175,8 @@ void export_dyn_variables_objects(){
   MATRIX (dyn_variables::*expt_get_coords_aux)(int i) = &dyn_variables::get_coords_aux;
   MATRIX (dyn_variables::*expt_get_momenta_aux)(int i) = &dyn_variables::get_momenta_aux;
   MATRIX (dyn_variables::*expt_get_nab_phase)(int i) = &dyn_variables::get_nab_phase;
+  
+  MATRIX (dyn_variables::*expt_get_qtsh_proxy_phase)(int i) = &dyn_variables::get_qtsh_proxy_phase;
 
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
@@ -237,6 +239,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("mqcxf_vars_status", &dyn_variables::mqcxf_vars_status)
       .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
       .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
+      .def_readwrite("qtsh_vars_status", &dyn_variables::qtsh_vars_status)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -249,6 +252,7 @@ void export_dyn_variables_objects(){
       .def("allocate_shxf", &dyn_variables::allocate_shxf)
       .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
       .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
+      .def("allocate_qtsh", &dyn_variables::allocate_qtsh)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -273,6 +277,7 @@ void export_dyn_variables_objects(){
       .def("get_coords_aux", expt_get_coords_aux)
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
+      .def("get_qtsh_proxy_phase", expt_get_qtsh_proxy_phase)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -496,7 +501,7 @@ void export_dyn_decoherence_objects(){
   MATRIX (*expt_compute_dkinemat_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
   def("compute_dkinemat", expt_compute_dkinemat_v1);
-
+  
   void (*expt_update_forces_qtsh_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms) = &update_forces_qtsh; 
   def("update_forces_qtsh", expt_update_forces_qtsh_v1);

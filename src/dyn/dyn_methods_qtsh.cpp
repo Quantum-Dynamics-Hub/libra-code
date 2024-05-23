@@ -85,11 +85,6 @@ void update_forces_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_p
   
   MATRIX f_nc(ndof,ntraj);
 
-  // termporaries for d1ham without diagonal elements and f_nc
-  vector<CMATRIX> temp;
-  for(int idof=0; idof<ndof; idof++){
-    temp.push_back(CMATRIX(nst, nst));
-  }
   CMATRIX hollow(nst, nst);
   hollow.set(-1, -1, 1.0);
   for(int i=0; i<nst; i++){
@@ -107,21 +102,65 @@ void update_forces_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_p
     CMATRIX d1ham_adi(nst, nst);
     CMATRIX dc1_adi(nst, nst);
     CMATRIX tmp(nst, nst);
+    CMATRIX F_off(nst, nst);
     for(int idof=0; idof<ndof; idof++){
       dc1_adi = ham.children[traj]->get_dc1_adi(idof);
       tmp = dc1_adi.H() * ham_adi;      
       tmp = tmp + tmp.H();
       
       d1ham_adi = ham.children[traj]->get_d1ham_adi(idof);
-      temp[idof].dot_product(hollow, d1ham_adi - tmp );
-    }
-    
-    for(int idof=0; idof<ndof; idof++){
-      f_nc.set(idof, traj, (C.H() * temp[idof] * C).get(0,0).real() );
+      F_off.dot_product(hollow, d1ham_adi - tmp );
+      f_nc.set(idof, traj, -(C.H() * F_off * C).get(0,0).real() );
     }
   }//traj
   
   *dyn_var.f += f_nc;
+
+}
+
+void update_deco_factor_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
+/**
+  This function computes the global decoherence factor used to adjust the hopping probability in QTSH
+*/
+  int ndof = dyn_var.ndof;
+  int ntraj = dyn_var.ntraj;
+  int nadi = dyn_var.nadi;
+  
+  double dt = prms.dt;
+
+  // Compute the proxy phase of each trajectory
+  for(int traj=0; traj<ntraj; traj++){
+    CMATRIX ham_adi(nadi, nadi);
+    ham_adi = ham.children[traj]->get_ham_adi();
+    
+    for(int i=0; i<nadi; i++){
+      for(int j=0; j<nadi; j++){
+        double omega = ham_adi.get(i,i).real() - ham_adi.get(j,j).real();
+        dyn_var.qtsh_proxy_phase[traj]->add(i,j, omega*dt);
+      }
+    }
+  }
+  
+  // Compute the global decoherence factor
+  MATRIX avg_ph(nadi, nadi); 
+  MATRIX avg_ph2(nadi, nadi);
+  MATRIX temp(nadi, nadi);
+  
+  for(int traj=0; traj<ntraj; traj++){
+    MATRIX phi(*dyn_var.qtsh_proxy_phase[traj]);
+    avg_ph += phi;
+    
+    temp.dot_product(phi, phi);
+    avg_ph2 += temp;
+  }
+  avg_ph /= ntraj;
+  avg_ph2 /= ntraj;
+
+  for(int i=0; i<nadi; i++){
+    for(int j=0; j<nadi; j++){
+      dyn_var.qtsh_deco_factor->set(i,j, -0.5*(avg_ph2.get(i,j) - pow(avg_ph.get(i,j), 2.0)) );
+    }
+  }
 
 }
 

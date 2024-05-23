@@ -479,6 +479,34 @@ class dyn_variables{
     Kinetic energies for each trajectory
   */
   vector<double> tcnbra_ekin;
+  
+
+  ///================= For QTSH ===================
+  /**
+    Status of the QTSH vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int qtsh_vars_status; 
+  
+
+  /**
+    Proxy phase in QTSH
+
+    Options:
+     vector<ntraj, MATRIX(nadi, nadi)> 
+  */
+  vector<MATRIX*> qtsh_proxy_phase;
+  
+
+  /**
+    Global decoherence factor in QTSH
+
+    Options:
+     MATRIX(nadi, nadi) 
+  */
+  MATRIX* qtsh_deco_factor;
 
 
   ///================= Misc ===================
@@ -500,6 +528,7 @@ class dyn_variables{
   void allocate_shxf();
   void allocate_tcnbra();
   void allocate_mqcxf();
+  void allocate_qtsh();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
@@ -533,6 +562,8 @@ class dyn_variables{
   MATRIX get_coords_aux(int i){ return *q_aux[i]; }
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
+  MATRIX get_qtsh_proxy_phase(int i){ return *qtsh_proxy_phase[i]; }
+  MATRIX get_qtsh_deco_factor(){ return *qtsh_deco_factor; }
   
   void get_current_timestep(bp::dict params){
     std::string key;

@@ -695,6 +695,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     if tsh_method==7 or tsh_method==8: #  FSSH2 or FSSH3
         dyn_var.allocate_fssh2()
         dyn_var.save_curr_dm_into_prev()
+    if tsh_method==9: #  QTSH
+        dyn_var.allocate_qtsh()
 
     if thermally_corrected_nbra==1:
         dyn_var.allocate_tcnbra()
