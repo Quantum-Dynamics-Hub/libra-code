@@ -100,6 +100,9 @@ void export_dyn_control_params_objects(){
       .def_readwrite("fssh3_max_steps", &dyn_control_params::fssh3_max_steps)
       .def_readwrite("fssh3_err_tol", &dyn_control_params::fssh3_err_tol)
 
+      ///================= FSSH3 specific ====================
+      .def_readwrite("use_qtsh_deco_factor", &dyn_control_params::use_qtsh_deco_factor)
+      
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
@@ -277,6 +280,7 @@ void export_dyn_variables_objects(){
       .def("get_coords_aux", expt_get_coords_aux)
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
+      .def("get_qtsh_deco_factor", &dyn_variables::get_qtsh_deco_factor)
       .def("get_qtsh_proxy_phase", expt_get_qtsh_proxy_phase)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)

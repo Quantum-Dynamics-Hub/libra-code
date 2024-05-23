@@ -85,12 +85,6 @@ void update_forces_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_p
   
   MATRIX f_nc(ndof,ntraj);
 
-  CMATRIX hollow(nst, nst);
-  hollow.set(-1, -1, 1.0);
-  for(int i=0; i<nst; i++){
-    hollow.set(i,i, 0.0); 
-  }
-
   Coeff = *dyn_var.ampl_adi;
   
   for(int traj=0; traj<ntraj; traj++){
@@ -99,18 +93,16 @@ void update_forces_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_p
     CMATRIX ham_adi(nst, nst);
     ham_adi = ham.children[traj]->get_ham_adi();
     
-    CMATRIX d1ham_adi(nst, nst);
     CMATRIX dc1_adi(nst, nst);
-    CMATRIX tmp(nst, nst);
-    CMATRIX F_off(nst, nst);
     for(int idof=0; idof<ndof; idof++){
       dc1_adi = ham.children[traj]->get_dc1_adi(idof);
-      tmp = dc1_adi.H() * ham_adi;      
-      tmp = tmp + tmp.H();
-      
-      d1ham_adi = ham.children[traj]->get_d1ham_adi(idof);
-      F_off.dot_product(hollow, d1ham_adi - tmp );
-      f_nc.set(idof, traj, -(C.H() * F_off * C).get(0,0).real() );
+      for(int i=0; i<nst; i++){
+        for(int j=0; j<nst; j++){
+          if(i<=j){continue;}
+          f_nc.add(idof, traj, 2.0*dc1_adi.get(i,j).real() * (ham_adi.get(i,i) - ham_adi.get(j,j)).real() 
+            * dyn_var.dm_adi[traj]->get(i,j).real() );
+        }
+      }
     }
   }//traj
   
@@ -158,7 +150,7 @@ void update_deco_factor_qtsh(dyn_variables& dyn_var, nHamiltonian& ham, dyn_cont
 
   for(int i=0; i<nadi; i++){
     for(int j=0; j<nadi; j++){
-      dyn_var.qtsh_deco_factor->set(i,j, -0.5*(avg_ph2.get(i,j) - pow(avg_ph.get(i,j), 2.0)) );
+      dyn_var.qtsh_deco_factor->set(i,j, exp( -0.5*(avg_ph2.get(i,j) - pow(avg_ph.get(i,j), 2.0)) ) );
     }
   }
 

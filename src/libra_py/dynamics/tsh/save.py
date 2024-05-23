@@ -201,6 +201,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved decoherence forces based on XF
         if "f_xf" in saver.keywords: # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("f_xf", (_nsteps, _ntraj, _ndof), "R")
+        
+        # Global decoherence factor in QTSH
+        if "qtsh_deco_factor" in saver.keywords: # and "qtsh_deco_factor" in saver.np_data.keys():
+            saver.add_dataset("qtsh_deco_factor", (_nsteps, _nadi, _nadi), "R")
 
     if output_level>=4:
 
@@ -668,6 +672,12 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "f_xf" in saver.keywords and "f_xf" in saver.np_data.keys():
         f_xf = dyn_var.get_f_xf()
         saver.save_matrix(t, "f_xf", f_xf.T())
+    
+    # Global decoherence factor in QTSH
+    # Format: saver.add_dataset("qtsh_deco_factor", (_nsteps, _nadi, _nadi), "R")
+    if "qtsh_deco_factor" in saver.keywords and "qtsh_deco_factor" in saver.np_data.keys():
+        qtsh_deco_factor = dyn_var.get_qtsh_deco_factor()
+        saver.save_matrix(t, "qtsh_deco_factor", qtsh_deco_factor)
 
 
 

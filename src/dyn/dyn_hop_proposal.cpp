@@ -1206,10 +1206,14 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
     }
     else if(prms.tsh_method == 9){ // QTSH
-      CMATRIX dm_adj(nst, nst);
-      dm_adj.dot_product(dm, CMATRIX(*dyn_var.qtsh_deco_factor));
-      g[traj] = hopping_probabilities_fssh(prms, dm_adj, Hvib, dyn_var.act_states[traj]);
-      //g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      if(prms.use_qtsh_deco_factor==1){
+        CMATRIX dm_adj(nst, nst);
+        dm_adj.dot_product(dm, CMATRIX(*dyn_var.qtsh_deco_factor));
+        g[traj] = hopping_probabilities_fssh(prms, dm_adj, Hvib, dyn_var.act_states[traj]);
+      }
+      else{
+        g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      }
     }
 
     else{
