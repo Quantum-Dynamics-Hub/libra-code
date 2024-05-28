@@ -489,25 +489,7 @@ class dyn_variables{
     1 - allocated
   */
   int qtsh_vars_status; 
-  
 
-  /**
-    Proxy phase in QTSH
-
-    Options:
-     vector<ntraj, MATRIX(nadi, nadi)> 
-  */
-  vector<MATRIX*> qtsh_proxy_phase;
-  
-
-  /**
-    Global decoherence factor in QTSH
-
-    Options:
-     MATRIX(nadi, nadi) 
-  */
-  MATRIX* qtsh_deco_factor;
-  
 
   /**
     Kinematic momentum in QTSH
@@ -581,8 +563,6 @@ class dyn_variables{
   MATRIX get_coords_aux(int i){ return *q_aux[i]; }
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
-  MATRIX get_qtsh_proxy_phase(int i){ return *qtsh_proxy_phase[i]; }
-  MATRIX get_qtsh_deco_factor(){ return *qtsh_deco_factor; }
   MATRIX get_qtsh_p_k(){ return *qtsh_p_k; }
   MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
   

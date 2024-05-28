@@ -205,10 +205,6 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved decoherence forces based on XF
         if "f_xf" in saver.keywords: # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("f_xf", (_nsteps, _ntraj, _ndof), "R")
-        
-        ## Global decoherence factor in QTSH
-        #if "qtsh_deco_factor" in saver.keywords: # and "qtsh_deco_factor" in saver.np_data.keys():
-        #    saver.add_dataset("qtsh_deco_factor", (_nsteps, _nadi, _nadi), "R")
 
     if output_level>=4:
 

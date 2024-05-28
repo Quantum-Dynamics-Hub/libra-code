@@ -102,7 +102,6 @@ void export_dyn_control_params_objects(){
 
       ///================= FSSH3 specific ====================
       .def_readwrite("use_qtsh", &dyn_control_params::use_qtsh)
-      .def_readwrite("use_qtsh_deco_factor", &dyn_control_params::use_qtsh_deco_factor)
       
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
@@ -179,8 +178,6 @@ void export_dyn_variables_objects(){
   MATRIX (dyn_variables::*expt_get_coords_aux)(int i) = &dyn_variables::get_coords_aux;
   MATRIX (dyn_variables::*expt_get_momenta_aux)(int i) = &dyn_variables::get_momenta_aux;
   MATRIX (dyn_variables::*expt_get_nab_phase)(int i) = &dyn_variables::get_nab_phase;
-  
-  MATRIX (dyn_variables::*expt_get_qtsh_proxy_phase)(int i) = &dyn_variables::get_qtsh_proxy_phase;
 
   // Arbitrary wavefunction
   void (dyn_variables::*expt_set_parameters_v1)(boost::python::dict params) = &dyn_variables::set_parameters;
@@ -287,8 +284,6 @@ void export_dyn_variables_objects(){
       .def("get_coords_aux", expt_get_coords_aux)
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
-      .def("get_qtsh_deco_factor", &dyn_variables::get_qtsh_deco_factor)
-      .def("get_qtsh_proxy_phase", expt_get_qtsh_proxy_phase)
       .def("get_qtsh_p_k", &dyn_variables::get_qtsh_p_k)
       .def("get_qtsh_f_nc", &dyn_variables::get_qtsh_f_nc)
 
@@ -520,10 +515,6 @@ void export_dyn_decoherence_objects(){
   MATRIX (*expt_compute_dkinemat_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
   def("compute_dkinemat", expt_compute_dkinemat_v1);
-  
-  void (*expt_update_forces_qtsh_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms) = &update_forces_qtsh; 
-  def("update_forces_qtsh", expt_update_forces_qtsh_v1);
 
 }
 

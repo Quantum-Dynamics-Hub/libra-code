@@ -1400,8 +1400,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   else{
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 3);
   }
-
-  //if(prms.tsh_method == 9){ update_deco_factor_qtsh(dyn_var, ham, prms); }
    
   //============== Begin the TSH part ===================
 

@@ -569,7 +569,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     
     #================= QTSH specific ====================
     default_params.update( {"use_qtsh":0 } )
-    default_params.update( {"use_qtsh_deco_factor":0 } )
 
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,

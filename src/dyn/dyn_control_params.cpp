@@ -80,7 +80,6 @@ dyn_control_params::dyn_control_params(){
   
   ///================= QTSH specific ====================
   use_qtsh = 0;
-  use_qtsh_deco_factor = 0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -184,7 +183,6 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   
   ///================= QTSH specific ====================
   use_qtsh = x.use_qtsh;
-  use_qtsh_deco_factor = x.use_qtsh_deco_factor;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -379,7 +377,6 @@ void dyn_control_params::set_parameters(bp::dict params){
     
     ///================= QTSH specific ====================
     else if(key=="use_qtsh"){ use_qtsh = bp::extract<int>(params.values()[i]);  }
-    else if(key=="use_qtsh_deco_factor"){ use_qtsh_deco_factor = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
