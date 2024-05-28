@@ -507,6 +507,25 @@ class dyn_variables{
      MATRIX(nadi, nadi) 
   */
   MATRIX* qtsh_deco_factor;
+  
+
+  /**
+    Kinematic momentum in QTSH
+    
+    Options:
+     MATRIX(ndof, ntraj)
+  */
+  MATRIX* qtsh_p_k; 
+  
+
+  /**
+    nonclassical force in QTSH
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* qtsh_f_nc;
+  
 
 
   ///================= Misc ===================
@@ -564,6 +583,8 @@ class dyn_variables{
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   MATRIX get_qtsh_proxy_phase(int i){ return *qtsh_proxy_phase[i]; }
   MATRIX get_qtsh_deco_factor(){ return *qtsh_deco_factor; }
+  MATRIX get_qtsh_p_k(){ return *qtsh_p_k; }
+  MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
   
   void get_current_timestep(bp::dict params){
     std::string key;
@@ -585,6 +606,8 @@ class dyn_variables{
   double compute_kinetic_energy(int itraj, vector<int>& which_dofs);
   vector<double> compute_kinetic_energies();
   vector<double> compute_kinetic_energies(vector<int>& which_dofs);
+  double compute_average_kinetic_energy_qtsh();
+  double compute_average_kinetic_energy_qtsh(vector<int>& which_dofs);
 
 
   ///====================== In dyn_variables_electronic.cpp =====================

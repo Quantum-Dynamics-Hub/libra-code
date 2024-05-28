@@ -457,6 +457,12 @@ class dyn_control_params{
 
   
   //=========== QTSH options ==========
+  /**
+    Whether to use QTSH
+  */
+  int use_qtsh;
+  
+
   int use_qtsh_deco_factor;
   
   ///===============================================================================

@@ -79,6 +79,7 @@ dyn_control_params::dyn_control_params(){
   fssh3_err_tol = 1e-7;
   
   ///================= QTSH specific ====================
+  use_qtsh = 0;
   use_qtsh_deco_factor = 0;
 
   ///================= Decoherence options =========================================
@@ -182,6 +183,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   fssh3_err_tol = x.fssh3_err_tol;
   
   ///================= QTSH specific ====================
+  use_qtsh = x.use_qtsh;
   use_qtsh_deco_factor = x.use_qtsh_deco_factor;
 
   ///================= Decoherence options =========================================
@@ -376,6 +378,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="fssh3_err_tol"){ fssh3_err_tol = bp::extract<double>(params.values()[i]);  }
     
     ///================= QTSH specific ====================
+    else if(key=="use_qtsh"){ use_qtsh = bp::extract<int>(params.values()[i]);  }
     else if(key=="use_qtsh_deco_factor"){ use_qtsh_deco_factor = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================

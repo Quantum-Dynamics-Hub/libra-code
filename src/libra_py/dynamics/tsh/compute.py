@@ -568,6 +568,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                            } )
     
     #================= QTSH specific ====================
+    default_params.update( {"use_qtsh":0 } )
     default_params.update( {"use_qtsh_deco_factor":0 } )
 
     #================= Decoherence options =========================================
@@ -633,6 +634,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     tsh_method = dyn_params["tsh_method"] 
     thermally_corrected_nbra = dyn_params["thermally_corrected_nbra"]
     total_energy = dyn_params["total_energy"]
+    use_qtsh = dyn_params["use_qtsh"]
  
 
     states = intList()
@@ -698,11 +700,12 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     if tsh_method==7 or tsh_method==8: #  FSSH2 or FSSH3
         dyn_var.allocate_fssh2()
         dyn_var.save_curr_dm_into_prev()
-    if tsh_method==9: #  QTSH
-        dyn_var.allocate_qtsh()
 
     if thermally_corrected_nbra==1:
         dyn_var.allocate_tcnbra()
+    
+    if use_qtsh==1: #  QTSH
+        dyn_var.allocate_qtsh()
 
     ham_aux = nHamiltonian(ham)
 

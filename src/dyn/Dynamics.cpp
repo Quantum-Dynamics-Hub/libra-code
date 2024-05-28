@@ -1214,6 +1214,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
+
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
@@ -1267,6 +1268,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
+  if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -1280,7 +1282,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
       dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
-
+      
+      if(prms.use_qtsh==1){
+        dyn_var.q->add(dof, traj,  0.5*invM.get(dof,0) * dyn_var.qtsh_f_nc->get(dof, traj) * pow(prms.dt, 2.0) ); 
+      }
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
@@ -1303,7 +1308,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_proj_adi(prms, dyn_var, ham); 
 
   // Recompute NAC, Hvib, etc. in response to change of p
-  update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
+  if(prms.use_qtsh==0){
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
+  }
+  else{
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 3);
+  }
 
   // Update wave packet width in XF algorithm
   if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
@@ -1349,8 +1359,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
   update_forces(prms, dyn_var, ham);
-
-  if(prms.tsh_method == 9){ update_forces_qtsh(dyn_var, ham, prms); }
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -1368,6 +1376,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
+  if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5*prms.dt* (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1385,9 +1394,14 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   //ham_aux.copy_content(ham);
-  update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
+  if(prms.use_qtsh==0){
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
+  }
+  else{
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 3);
+  }
 
-  if(prms.tsh_method == 9){ update_deco_factor_qtsh(dyn_var, ham, prms); }
+  //if(prms.tsh_method == 9){ update_deco_factor_qtsh(dyn_var, ham, prms); }
    
   //============== Begin the TSH part ===================
 
@@ -1487,19 +1501,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Adiabatic dynamics
   if(prms.tsh_method==-1){ ;; } 
 
-  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2, FSSH3, QTSH
+  // FSSH, GFSH, MSSH, LZ, ZN, DISH, MASH, FSSH2, FSSH3
   else if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3 
        || prms.tsh_method == 4 || prms.tsh_method == 5 || prms.tsh_method == 6 || prms.tsh_method == 7
-       || prms.tsh_method == 8 || prms.tsh_method == 9 ){
+       || prms.tsh_method == 8 ){
 
 
     vector<int> old_states(dyn_var.act_states); 
     //========================== Hop proposal and acceptance ================================
 
-    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8), QTSH(9)
+    // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8)
     if(prms.tsh_method == 0 || prms.tsh_method == 1 || prms.tsh_method == 2 || prms.tsh_method == 3  
-    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 || prms.tsh_method == 8
-    || prms.tsh_method == 9){
+    || prms.tsh_method == 4 || prms.tsh_method == 6 || prms.tsh_method == 7 || prms.tsh_method == 8){
 
       /// Compute hop proposal probabilities from the active state of each trajectory to all other states 
       /// of that trajectory
@@ -1564,9 +1577,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
-    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
-        
-  }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+    if(prms.use_qtsh!=1){
+      update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
+    }
+
+  }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
 

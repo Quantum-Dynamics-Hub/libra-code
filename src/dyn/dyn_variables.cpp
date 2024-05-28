@@ -296,6 +296,8 @@ void dyn_variables::allocate_qtsh(){
     }
     
     qtsh_deco_factor = new MATRIX(nadi, nadi);
+    qtsh_p_k = new MATRIX(ndof, ntraj);
+    qtsh_f_nc = new MATRIX(ndof, ntraj);
 
     qtsh_vars_status = 1;
   }
@@ -445,6 +447,8 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *qtsh_proxy_phase[itraj] = *x.qtsh_proxy_phase[itraj];
     }
     *qtsh_deco_factor = *x.qtsh_deco_factor;
+    *qtsh_p_k = *x.qtsh_p_k;
+    *qtsh_f_nc = *x.qtsh_f_nc;
 
   }// if QTSH vars
 
@@ -598,6 +602,8 @@ dyn_variables::~dyn_variables(){
     qtsh_proxy_phase.clear();
 
     delete qtsh_deco_factor;
+    delete qtsh_p_k;
+    delete qtsh_f_nc;
 
     qtsh_vars_status = 0;
   }
