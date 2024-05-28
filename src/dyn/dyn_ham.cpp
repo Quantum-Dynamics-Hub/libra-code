@@ -163,11 +163,18 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
       int ndof = dyn_var.ndof;
       int ntraj = dyn_var.ntraj;
      
-      if(update_type==3){ p = *dyn_var.qtsh_p_k; }
+      //if(update_type==3){ p = *dyn_var.qtsh_p_k; }
 
       MATRIX p_quantum_dof(ndof, ntraj);
-      for(auto dof: prms.quantum_dofs){
-        for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );  }
+      if(update_type==1){
+        for(auto dof: prms.quantum_dofs){
+          for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );  }
+        }
+      }
+      else if(update_type==3){
+        for(auto dof: prms.quantum_dofs){
+          for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  dyn_var.qtsh_p_k->get(dof, itraj) );  }
+        }
       }
     
       ham.compute_nac_dia(p_quantum_dof, iM, 0, 1);

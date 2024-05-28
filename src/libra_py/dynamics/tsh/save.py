@@ -111,6 +111,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Average kinetic energy in QTSH
         if "Ekin_ave_qtsh" in saver.keywords:
             saver.add_dataset("Ekin_ave_qtsh", (_nsteps,) , "R")  
+        
+        # Average total energy in QTSH
+        if "Etot_ave_qtsh" in saver.keywords:
+            saver.add_dataset("Etot_ave_qtsh", (_nsteps,) , "R")  
 
 
     if output_level>=2:
@@ -441,6 +445,10 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
         Ekin_qtsh = dyn_var.compute_average_kinetic_energy_qtsh();
         saver.save_scalar(t, "Ekin_ave_qtsh", Ekin_qtsh)
 
+    if "Etot_ave_qtsh" in saver.keywords and "Etot_ave_qtsh" in saver.np_data.keys():
+        Ekin_qtsh = dyn_var.compute_average_kinetic_energy_qtsh();
+        Etot_qtsh = Ekin_qtsh + Epot
+        saver.save_scalar(t, "Etot_ave_qtsh", Etot_qtsh)  
 
 def save_hdf5_2D(saver, i, states, txt_type=0):
     """
