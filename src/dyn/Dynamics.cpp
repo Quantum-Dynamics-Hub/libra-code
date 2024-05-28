@@ -1416,8 +1416,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
-    Eadi = get_Eadi(ham); 
-    Ekin = dyn_var.compute_kinetic_energies();  
+    Eadi = get_Eadi(ham);
+    if(prms.use_qtsh==0){ 
+      Ekin = dyn_var.compute_kinetic_energies();  
+    }
+    else{
+      Ekin = dyn_var.compute_kinetic_energies_qtsh();  
+    }
     decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
 

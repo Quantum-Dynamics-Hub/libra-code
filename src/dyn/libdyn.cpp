@@ -218,6 +218,10 @@ void export_dyn_variables_objects(){
 
   double (dyn_variables::*expt_compute_average_kinetic_energy_qtsh_v1)() = &dyn_variables::compute_average_kinetic_energy_qtsh;
   double (dyn_variables::*expt_compute_average_kinetic_energy_qtsh_v2)(vector<int>& which_dofs) = &dyn_variables::compute_average_kinetic_energy_qtsh;
+  double (dyn_variables::*expt_compute_kinetic_energy_qtsh_v1)(int itraj) = &dyn_variables::compute_kinetic_energy_qtsh;
+  double (dyn_variables::*expt_compute_kinetic_energy_qtsh_v2)(int itraj, vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energy_qtsh;
+  vector<double> (dyn_variables::*expt_compute_kinetic_energies_qtsh_v1)() = &dyn_variables::compute_kinetic_energies_qtsh;
+  vector<double> (dyn_variables::*expt_compute_kinetic_energies_qtsh_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies_qtsh;
 
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
@@ -297,6 +301,10 @@ void export_dyn_variables_objects(){
       .def("compute_kinetic_energies", expt_compute_kinetic_energies_v2)
       .def("compute_average_kinetic_energy_qtsh", expt_compute_average_kinetic_energy_qtsh_v1)
       .def("compute_average_kinetic_energy_qtsh", expt_compute_average_kinetic_energy_qtsh_v2)
+      .def("compute_kinetic_energy_qtsh", expt_compute_kinetic_energy_qtsh_v1)
+      .def("compute_kinetic_energy_qtsh", expt_compute_kinetic_energy_qtsh_v2)
+      .def("compute_kinetic_energies_qtsh", expt_compute_kinetic_energies_qtsh_v1)
+      .def("compute_kinetic_energies_qtsh", expt_compute_kinetic_energies_qtsh_v2)
 
 
       .def("update_amplitudes", expt_update_amplitudes_v1)

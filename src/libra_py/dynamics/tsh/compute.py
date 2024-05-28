@@ -581,7 +581,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(dyn_var.ndof, 1), "schwartz_interaction_width": MATRIX(dyn_var.ndof, 1),
                              "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
-                             "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
+                             "use_xf_force": 0, "project_out_aux": 1, "tp_algo": 1, "use_td_width": 0
                            } )
 
     #================= Entanglement of trajectories ================================

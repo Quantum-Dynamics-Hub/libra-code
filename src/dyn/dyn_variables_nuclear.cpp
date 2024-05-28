@@ -348,6 +348,59 @@ vector<double> dyn_variables::compute_kinetic_energies(vector<int>& which_dofs){
 }
 
 
+double dyn_variables::compute_kinetic_energy_qtsh(int itraj){
+  double res = 0.0;
+
+  for(int idof = 0; idof < ndof; idof++){
+    res += qtsh_p_k->get(idof, itraj) * qtsh_p_k->get(idof, itraj) * iM->get(idof, 0);
+  }
+  res *= 0.5;
+
+  return res;
+}
+
+
+double dyn_variables::compute_kinetic_energy_qtsh(int itraj, vector<int>& which_dofs){
+  double res = 0.0;
+
+  for(auto idof : which_dofs){
+    res += qtsh_p_k->get(idof, itraj) * qtsh_p_k->get(idof, itraj) * iM->get(idof, 0);
+  }
+  res *= 0.5;
+
+  return res;
+}
+
+
+vector<double> dyn_variables::compute_kinetic_energies_qtsh(){
+  vector<double> res(ntraj, 0.0);
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(int idof = 0; idof < ndof; idof++){
+      res[itraj] += qtsh_p_k->get(idof, itraj) * qtsh_p_k->get(idof, itraj) * iM->get(idof, 0);
+    }    
+    res[itraj] *= 0.5;
+  }
+
+  return res;
+
+}
+
+vector<double> dyn_variables::compute_kinetic_energies_qtsh(vector<int>& which_dofs){
+  vector<double> res(ntraj, 0.0);
+
+  for(int itraj = 0; itraj < ntraj; itraj++){
+    for(auto idof : which_dofs){
+      res[itraj] += qtsh_p_k->get(idof, itraj) * qtsh_p_k->get(idof, itraj) * iM->get(idof, 0);
+    }    
+    res[itraj] *= 0.5;
+  }
+
+  return res;
+
+}
+
+
 double dyn_variables::compute_tcnbra_ekin(){
 
   double res = 0.0;

@@ -608,6 +608,10 @@ class dyn_variables{
   vector<double> compute_kinetic_energies(vector<int>& which_dofs);
   double compute_average_kinetic_energy_qtsh();
   double compute_average_kinetic_energy_qtsh(vector<int>& which_dofs);
+  double compute_kinetic_energy_qtsh(int itraj);
+  double compute_kinetic_energy_qtsh(int itraj, vector<int>& which_dofs);
+  vector<double> compute_kinetic_energies_qtsh();
+  vector<double> compute_kinetic_energies_qtsh(vector<int>& which_dofs);
 
 
   ///====================== In dyn_variables_electronic.cpp =====================
