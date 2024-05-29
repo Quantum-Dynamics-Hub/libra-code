@@ -572,14 +572,20 @@ public:
 
 
 
-  ///< In nHamiltonian_compute_QTSH_forces.cpp
+  ///< In nHamiltonian_compute_QTSH.cpp and nHamiltonian_compute_QTSH_forces.cpp
+  complex<double> QTSH_energy_dia(CMATRIX& ampl_dia);
+  complex<double> QTSH_energy_dia(CMATRIX& ampl_dia, vector<int>& id_);
   CMATRIX QTSH_forces_dia_unit(CMATRIX& ampl_dia, int option);      ///< QTSH forces in diabatic basis
   CMATRIX QTSH_forces_dia_unit(CMATRIX& ampl_dia);                  ///< QTSH forces in diabatic basis
   CMATRIX QTSH_forces_dia(CMATRIX& ampl_dia, int lvl, int option);  ///< QTSH forces in diabatic basis
   CMATRIX QTSH_forces_dia(CMATRIX& ampl_dia, int lvl);              ///< QTSH forces in diabatic basis
 
 
-  ///< In nHamiltonian_compute_QTSH_forces.cpp
+  ///< In nHamiltonian_compute_QTSH.cpp and nHamiltonian_compute_QTSH_forces.cpp
+  complex<double> QTSH_energy_adi(CMATRIX& ampl_adi, CMATRIX& transform);
+  complex<double> QTSH_energy_adi(CMATRIX& ampl_adi);
+  complex<double> QTSH_energy_adi(CMATRIX& ampl_adi, vector<int>& id_, CMATRIX& transform);
+  complex<double> QTSH_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
   CMATRIX QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRIX& transform);      ///< QTSH forces in adiabatic basis
   CMATRIX QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option);      ///< QTSH forces in adiabatic basis
   CMATRIX QTSH_forces_adi_unit(CMATRIX& ampl_adi);                  ///< QTSH forces in adiabatic basis

@@ -233,8 +233,6 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
 //  CMATRIX& T = transform;
   CMATRIX T(transform);  T.identity();
 
-  CMATRIX temp_diag(nadi, nadi);
-
   for(int n=0;n<nnucl;n++){
 
     if(d1ham_adi_mem_status[n]==0){ cout<<"Error in QTSH_forces_adi_unit(): the derivatives of the Hamiltonian matrix in the \
@@ -249,16 +247,10 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
       tmp = (T.H() * (*dc1_adi[n]) * T ).H() *  (T.H() * (*ham_adi) * T);      
       tmp = tmp + tmp.H();
       
-      for(int i=0;i<nadi;i++){
-        temp_diag.set(i,i, ( T.H() * (*d1ham_adi[n]) *T - tmp ).get(i,i)); 
-      }
-      res.M[n] = -( ampl_adi.H() * ( T.H() * (*d1ham_adi[n]) * T - tmp - temp_diag ) * ampl_adi ).M[0];
+      res.M[n] = +( ampl_adi.H() * tmp * ampl_adi ).M[0];
     }
     else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
-      for(int i=0;i<nadi;i++){
-        temp_diag.set(i,i, d1ham_adi[n]->get(i,i) ); 
-      }
-      res.M[n] = -( ampl_adi.H() * T.H() * ( *d1ham_adi[n] - temp_diag ) * T * ampl_adi ).M[0];
+      res.M[n] = 0.0; 
     }
 
   }// for n

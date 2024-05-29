@@ -1580,7 +1580,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
-    if(prms.use_qtsh!=1){
+    if(prms.use_qtsh==0){
       update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
     }
 

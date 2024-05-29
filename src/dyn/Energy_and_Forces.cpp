@@ -183,7 +183,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 
   }// NBRA
 */
-  if(prms.force_method==0 || prms.force_method==1 || prms.force_method==3){   // State-specific forces
+  if(prms.force_method==0 || prms.force_method==1){   // State-specific forces
 
     // TSH or adiabatic (including excited states)
     // state-specific forces
@@ -238,6 +238,41 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     }
   
   }// Ehrenfest
+
+  else if(prms.force_method==3){ // QTSH
+    
+    vector<int> effective_states(dyn_vars.act_states);
+    
+    if(prms.enforce_state_following==1){ 
+      for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
+    }
+    
+    // Diabatic 
+    if(prms.rep_force==0){ 
+      CMATRIX coeff(ndia, 1);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_dia(id).get(ist, ist).real(); // diagonal energy
+        
+        coeff = dyn_vars.ampl_dia->col(itraj);
+        res[itraj] += ham.QTSH_energy_dia(coeff, id).real(); // coherence energy
+      }
+    }
+    // Adiabatic 
+    else if(prms.rep_force==1){  
+      CMATRIX coeff(nadi, 1);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_adi(id).get(ist,ist).real(); // diagonal energy
+
+        coeff = dyn_vars.ampl_adi->col(itraj);
+        res[itraj] += ham.QTSH_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real(); // coherence energy
+      }// for itraj
+    }// rep_force == 1
+
+  }
 
 
   return res;
