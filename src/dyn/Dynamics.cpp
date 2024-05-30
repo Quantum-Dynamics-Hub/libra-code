@@ -1308,12 +1308,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   update_proj_adi(prms, dyn_var, ham); 
 
   // Recompute NAC, Hvib, etc. in response to change of p
-  if(prms.use_qtsh==0){
-    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-  }
-  else{
-    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 3);
-  }
+  update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
 
   // Update wave packet width in XF algorithm
   if(prms.decoherence_algo == 5 or prms.decoherence_algo == 6){
@@ -1394,12 +1389,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   //ham_aux.copy_content(ham);
-  if(prms.use_qtsh==0){
-    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-  }
-  else{
-    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 3);
-  }
+  update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
    
   //============== Begin the TSH part ===================
 

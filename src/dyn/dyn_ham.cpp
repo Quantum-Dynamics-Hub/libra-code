@@ -146,7 +146,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
   //exit(0);
 
 
-  if(update_type==0 || update_type==1 || update_type==3){
+  if(update_type==0 || update_type==1){
 
     //========================== Couplings ===============================
     // Don't update NACs - they may have been read in step 1
@@ -166,12 +166,12 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
       //if(update_type==3){ p = *dyn_var.qtsh_p_k; }
 
       MATRIX p_quantum_dof(ndof, ntraj);
-      if(update_type==1){
+      if(prms.use_qtsh==0 or dyn_var.qtsh_vars_status==0){
         for(auto dof: prms.quantum_dofs){
           for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );  }
         }
       }
-      else if(update_type==3){
+      else{
         for(auto dof: prms.quantum_dofs){
           for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  dyn_var.qtsh_p_k->get(dof, itraj) );  }
         }
