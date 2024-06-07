@@ -247,7 +247,16 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
       tmp = (T.H() * (*dc1_adi[n]) * T ).H() *  (T.H() * (*ham_adi) * T);      
       tmp = tmp + tmp.H();
       
-      res.M[n] = +( ampl_adi.H() * tmp * ampl_adi ).M[0];
+      res.M[n] = ( ampl_adi.H() * tmp * ampl_adi ).M[0];
+
+      //for(int i=0; i<nadi; i++){
+      //  for(int j=0; j<nadi; j++){
+      //    if(i<=j){continue;}
+      //
+      //    res.M[n] += 2.0* (T.H() * (*dc1_adi[n]) * T).get(i,j).real() * ((*ham_adi).get(i,i) - (*ham_adi).get(j,j)).real() *
+      //      (T * ampl_adi * ampl_adi.H() * T.H() ).get(i,j).real();
+      //  }
+      //}
     }
     else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
       res.M[n] = 0.0; 
