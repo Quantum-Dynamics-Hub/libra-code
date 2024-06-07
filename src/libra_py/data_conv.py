@@ -578,4 +578,32 @@ def vasp_to_xyz(filename):
     f.close() 
 
 
-
+def adf_to_xyz(filename, step=0):
+    """
+    This function reads the ADF input file and return the coordinates
+    written in that file
+    Args:
+        filename (string): The path to the ADF input file
+        step (integer): This value is arbitray and just for naming of the 
+                        output coordinate file.
+    Returns:
+        None
+    """
+    f = open(filename,'r')
+    lines = f.readlines()
+    f.close()
+    coordinates = []
+    for i in range(len(lines)):
+        if 'atoms' in lines[i].lower():
+            atoms_line = i
+            break
+    for i in range(atoms_line+1, len(lines)):
+        if 'end' in lines[i].lower().split():
+            break
+        else:
+            coordinates.append(lines[i])
+    f = open(f'coord-{step}.xyz','w')
+    f.write(f'{len(coordinates)}\n\n')
+    for i in range(len(coordinates)):
+        f.write(coordinates[i])
+    f.close()

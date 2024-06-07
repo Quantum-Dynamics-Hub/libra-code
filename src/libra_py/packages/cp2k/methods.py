@@ -320,7 +320,7 @@ def read_cp2k_tddfpt_log_file( params ):
 
                 ci_coefficient = float( tmp_splitted_line[4] )
                 if ci_coefficient**2 > tolerance:
-                    if int(tmp_splitted_line[0])>params["lowest_orbital"] and int(tmp_splitted_line[1])<params["highest_orbital"]:
+                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[1])<=params["highest_orbital"]:
                         # We need to remove the paranthesis from the 2nd element of the temporary splitted line
                         tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
@@ -331,7 +331,7 @@ def read_cp2k_tddfpt_log_file( params ):
             else:
                 ci_coefficient = float( tmp_splitted_line[2] )
                 if ci_coefficient**2 > tolerance:
-                    if int(tmp_splitted_line[0])>params["lowest_orbital"] and int(tmp_splitted_line[1])<params["highest_orbital"]:
+                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[1])<=params["highest_orbital"]:
                         tmp_spin.append( "alp" )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[1] ) ]  )
                         tmp_state_coefficients.append( ci_coefficient  )
@@ -2277,4 +2277,37 @@ def atom_components_cp2k(filename):
         indices.append(index)
     return indices
 
+
+def read_efg_data(filename):
+    """
+    This function reads the electric-field gradient data in .efg files
+    Args:
+        filename (string): The path to efg file
+    Returns:
+        atoms (list): A list containing the atoms in the EFG file
+        efg_tensor (numpy array): A numpy array containing the EFG tensor
+                                  for all atoms in the system
+    """
+    f = open(filename, 'r')
+    lines = f.readlines()
+    f.close()
+    
+    efg_lines = []
+    for i in range(len(lines)):
+        if 'efg tensor' in lines[i].lower() and len(lines[i].split())==7:
+            efg_lines.append(i)
+    atoms = []
+    efg_tensor = []
+    for i in efg_lines:
+        tmp = lines[i].split()
+        atoms.append(tmp[1])
+        tmp_tensor = [float(tmp[4]), float(tmp[5]), float(tmp[6])]
+        for j in [i+1,i+2]:
+            tmp = lines[j].split()
+            tmp_tensor.append(float(tmp[0]))
+            tmp_tensor.append(float(tmp[1]))
+            tmp_tensor.append(float(tmp[2]))
+        efg_tensor.append(tmp_tensor)
+    efg_tensor = np.array(efg_tensor)
+    return atoms, efg_tensor
 
