@@ -324,7 +324,7 @@ def read_cp2k_tddfpt_log_file( params ):
                         # We need to remove the paranthesis from the 2nd element of the temporary splitted line
                         tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
-                        tmp_state_coefficients.append( ci_coefficient  ) 
+                        tmp_state_coefficients.append( ci_coefficient  )
 
             # Here, we have the spin-unpolarize Kohn-Sham basis
             # For this case, spin-components will just return all alpha
@@ -1694,7 +1694,7 @@ def gaussian_function_vector(a_vec, mu_vec, sigma, num_points, x_min, x_max):
 
 
 
-def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels):
+def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, orbitals, labels):
     """
     c1 - index of the atom kinds
     atoms - the 
@@ -1722,6 +1722,8 @@ def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoi
     e_max = np.max(pdos_ave[:,1]) + margin
     homo_level = np.max(np.where(pdos_ave[:,2]==homo_occ))
     homo_energy = pdos_ave[:,1][homo_level]
+    if len(labels)==0:
+        labels = []
 
     for c3, orbital_cols in enumerate(orbitals_cols):
         try:
@@ -1730,10 +1732,12 @@ def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoi
             ave_pdos_convolved_all.append(ave_pdos_convolved)
             pdos_label = F"{atoms[1][c1]}, {orbitals[c3]}"
             labels.append(pdos_label)
+#        print('here')
         except:
+#            print('in the pass')
             pass
 
-    return ave_energy_grid, homo_energy, ave_pdos_convolved_all
+    return ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels
 
 
 def pdos(params):
@@ -1779,18 +1783,20 @@ def pdos(params):
     sigma = params['sigma']
     shift = params['shift']
     is_spin_polarized = params["is_spin_polarized"]
-
+    labels = []
+    labels_alp = []
+    labels_bet = []
 
     if is_spin_polarized == 0: # non-polarized case
         homo_occ = 2.0
-        labels = []
+        #labels = []
         ave_pdos_convolved_all = []
 
         for c1,i in enumerate(atoms[0]):
             # Finding all the pdos files
             pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
 
-            ave_energy_grid, homo_energy, ave_pdos_convolved_all = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels)
+            ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, orbitals, labels)
 
             """
             # Finding all the pdos files
@@ -1837,9 +1843,9 @@ def pdos(params):
             pdos_files_alp = glob.glob(path_to_all_pdos+F'/*ALPHA*k{i}*.pdos')
             pdos_files_bet = glob.glob(path_to_all_pdos+F'/*BETA*k{i}*.pdos')
 
-            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp, labels_alp)
+            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp, labels_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp, orbitals, labels_alp)
 
-            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet, labels_bet)
+            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet, labels_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet, orbitals, labels_bet)
 
 
         ave_pdos_convolved_all_alp = np.array(ave_pdos_convolved_all_alp)
@@ -2277,37 +2283,4 @@ def atom_components_cp2k(filename):
         indices.append(index)
     return indices
 
-
-def read_efg_data(filename):
-    """
-    This function reads the electric-field gradient data in .efg files
-    Args:
-        filename (string): The path to efg file
-    Returns:
-        atoms (list): A list containing the atoms in the EFG file
-        efg_tensor (numpy array): A numpy array containing the EFG tensor
-                                  for all atoms in the system
-    """
-    f = open(filename, 'r')
-    lines = f.readlines()
-    f.close()
-    
-    efg_lines = []
-    for i in range(len(lines)):
-        if 'efg tensor' in lines[i].lower() and len(lines[i].split())==7:
-            efg_lines.append(i)
-    atoms = []
-    efg_tensor = []
-    for i in efg_lines:
-        tmp = lines[i].split()
-        atoms.append(tmp[1])
-        tmp_tensor = [float(tmp[4]), float(tmp[5]), float(tmp[6])]
-        for j in [i+1,i+2]:
-            tmp = lines[j].split()
-            tmp_tensor.append(float(tmp[0]))
-            tmp_tensor.append(float(tmp[1]))
-            tmp_tensor.append(float(tmp[2]))
-        efg_tensor.append(tmp_tensor)
-    efg_tensor = np.array(efg_tensor)
-    return atoms, efg_tensor
 

@@ -622,25 +622,28 @@ def compute_properties(params, models, input_scalers, output_scalers):
             # Do the error analysis only for case the output is Kohn-Sham Hamiltonian matrix 
             #if params["output_property"]!="kohn_sham" or params["output_property"]!="hamiltonian":
             #    raise("Error analysis can be done only for the case 'output_property' is set to the Hamiltonian 'kohn_sham' or 'hamiltonian'...")
-            ks_ham_mat_ref = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
-            eigenvalues_ref, eigenvectors_ref = CP2K_methods.compute_energies_coeffs(ks_ham_mat_ref, atomic_overlap)
-            # We only save the eigenvalues but not the eigenvectors of the reference calculations
-            # The first reason is because we want to plot them and then we'll do the error analysis of all
-            # molecular orbitals. The second reason is that we compute the \epsilon_i=<\psi_{i_{ref}}|\psi_{i_{ml}}> for
-            # eigenvectors and that property will be saved. If we're about to save the eigenvectors, it will occupy 
-            # a lot of disk space
-            if params["save_ref_eigenvalues"] or params["save_ref_eigenvectors"]:
-                if not os.path.exists(f"{params['path_to_save_ref_mos']}"):
-                    os.system(f"mkdir {params['path_to_save_ref_mos']}")
-            if params["save_ref_eigenvalues"]:
-                np.save(f"{params['path_to_save_ref_mos']}/E_ref_{step}.npy", eigenvalues_ref) # [lowest_orbital-1:highest_orbital])
-            if params["save_ref_eigenvectors"]:
-                np.save(f"{params['path_to_save_ref_mos']}/mos_ref_{step}.npy", eigenvectors_ref) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital])
-            ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
-            np.save(f"../error_data/epsilon_{step}.npy", np.diag(ml_ref_overlap)) # Only the diagonal elements
-            # The other error measurement is the absolute value of the Hamiltonian matrices difference
-            ham_diff = np.abs(ks_ham_mat-ks_ham_mat_ref)
-            np.save(f"../error_data/Ham_diff_ave_{step}.npy", np.average(ham_diff))
+            try:
+                ks_ham_mat_ref = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
+                eigenvalues_ref, eigenvectors_ref = CP2K_methods.compute_energies_coeffs(ks_ham_mat_ref, atomic_overlap)
+                # We only save the eigenvalues but not the eigenvectors of the reference calculations
+                # The first reason is because we want to plot them and then we'll do the error analysis of all
+                # molecular orbitals. The second reason is that we compute the \epsilon_i=<\psi_{i_{ref}}|\psi_{i_{ml}}> for
+                # eigenvectors and that property will be saved. If we're about to save the eigenvectors, it will occupy 
+                # a lot of disk space
+                if params["save_ref_eigenvalues"] or params["save_ref_eigenvectors"]:
+                    if not os.path.exists(f"{params['path_to_save_ref_mos']}"):
+                        os.system(f"mkdir {params['path_to_save_ref_mos']}")
+                if params["save_ref_eigenvalues"]:
+                    np.save(f"{params['path_to_save_ref_mos']}/E_ref_{step}.npy", eigenvalues_ref) # [lowest_orbital-1:highest_orbital])
+                if params["save_ref_eigenvectors"]:
+                    np.save(f"{params['path_to_save_ref_mos']}/mos_ref_{step}.npy", eigenvectors_ref) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital])
+                ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
+                np.save(f"../error_data/epsilon_{step}.npy", np.diag(ml_ref_overlap)) # Only the diagonal elements
+                # The other error measurement is the absolute value of the Hamiltonian matrices difference
+                ham_diff = np.abs(ks_ham_mat-ks_ham_mat_ref)
+                np.save(f"../error_data/Ham_diff_ave_{step}.npy", np.average(ham_diff))
+            except:
+                pass
         if params["save_ml_ham"]:
             if not os.path.exists("../ml_hams"):
                 os.system(f"mkdir ../ml_hams")
@@ -702,10 +705,10 @@ def compute_properties(params, models, input_scalers, output_scalers):
                 # Now let's run the calculations --- We only need the Total energy so I can simply grep it to 
                 # not to use a lot of disk space but for now, I keep it this way
                 # ================= Only for ML assessment project I grep the output files so that the log file size is small
-                #os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp -o output_{tmp_prefix}_{step}.log")
-                os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp | grep -A 30 'SCF WAVEFUNCTION OPTIMIZATION' > output_{tmp_prefix}_{step}.out")
+                os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp -o output_{tmp_prefix}_{step}.out")
+                #os.system(F"{data_gen_params_1['reference_mpi_exe']} -np {params['nprocs']} {data_gen_params_1['reference_software_exe']} -i input_{tmp_prefix}_{step}.inp | grep -A 30 'SCF WAVEFUNCTION OPTIMIZATION' > output_{tmp_prefix}_{step}.out")
                 # ================= These files can be large... we can setup a flag to remove them but for ML assessment I remove them
-                os.system(f"rm {output_name}")
+                #os.system(f"rm {output_name}")
             # The algorithm for running the calculations
             #if params["compute_total_energy"]:
             # we have to make a cp2k input file based on the reference input
