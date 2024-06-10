@@ -67,6 +67,17 @@ dyn_control_params::dyn_control_params(){
   use_Jasper_Truhlar_criterion = 1;
   use_boltz_factor = 0;
 
+  ///================= FSSH2 specific ====================
+  fssh2_revision = 0;
+
+  ///================= FSSH3 specific ====================
+  fssh3_size_option = 1;
+  fssh3_approach_option = 0;
+  fssh3_decomp_option = 3;
+  fssh3_dt = 0.001;
+  fssh3_max_steps = 1000;
+  fssh3_err_tol = 1e-7;
+
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
   sdm_norm_tolerance = 0.0;
@@ -155,6 +166,17 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   momenta_rescaling_algo = x.momenta_rescaling_algo;
   use_Jasper_Truhlar_criterion = x.use_Jasper_Truhlar_criterion;
   use_boltz_factor = x.use_boltz_factor;
+
+  ///================= FSSH2 specific ====================
+  fssh2_revision = x.fssh2_revision;
+ 
+  ///================= FSSH3 specific ====================
+  fssh3_size_option = x.fssh3_size_option;
+  fssh3_approach_option = x.fssh3_approach_option;
+  fssh3_decomp_option = x.fssh3_decomp_option;
+  fssh3_dt = x.fssh3_dt;
+  fssh3_max_steps = x.fssh3_max_steps;
+  fssh3_err_tol = x.fssh3_err_tol;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -335,6 +357,17 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="momenta_rescaling_algo"){ momenta_rescaling_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="use_Jasper_Truhlar_criterion"){ use_Jasper_Truhlar_criterion = bp::extract<int>(params.values()[i]); }
     else if(key=="use_boltz_factor"){ use_boltz_factor = bp::extract<int>(params.values()[i]);  }
+
+    ///================= FSSH2 specific ====================
+    else if(key=="fssh2_revision"){ fssh2_revision = bp::extract<int>(params.values()[i]);  }
+
+    ///================= FSSH3 specific ====================
+    else if(key=="fssh3_size_option"){ fssh3_size_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_approach_option"){ fssh3_approach_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_decomp_option"){ fssh3_decomp_option = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_dt"){ fssh3_dt = bp::extract<double>(params.values()[i]);  }
+    else if(key=="fssh3_max_steps"){ fssh3_max_steps = bp::extract<int>(params.values()[i]);  }
+    else if(key=="fssh3_err_tol"){ fssh3_err_tol = bp::extract<double>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

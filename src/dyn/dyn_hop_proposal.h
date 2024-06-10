@@ -36,6 +36,8 @@ namespace bp = boost::python;
 /// libdyn namespace
 namespace libdyn{
 
+// Defined in dyn_hop_proposal.cpp
+
 MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
 vector<double> hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx);
 
@@ -43,8 +45,6 @@ MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int atc_state_indx);
 
 vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx);
-
-vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx);
 
 MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
 vector<double> hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int atc_state_indx);
@@ -84,6 +84,14 @@ int hop(int initstate, vector<double>& g, double ksi);
 vector<int> propose_hops(vector<MATRIX>& g, vector<int>& act_states, Random& rnd);
 vector<int> propose_hops(vector< vector<double> >& g, vector<int>& act_states, Random& rnd);
 
+
+// Defined in dyn_hop_proposal_fssh3.cpp
+
+MATRIX adjust_signs(MATRIX& J);
+MATRIX find_best_matrix(MATRIX& c_new, MATRIX& c_old, MATRIX& J);
+
+vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old,
+               int act_state_indx, vector<double>& errors);
 
 
 

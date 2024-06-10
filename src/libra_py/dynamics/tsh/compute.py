@@ -559,6 +559,14 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "use_boltz_factor":0
                            } )
 
+    #================= FSSH2 specific ====================
+    default_params.update( {"fssh2_revision":0 } )
+
+    #================= FSSH3 specific ====================
+    default_params.update( {"fssh3_size_option":1, "fssh3_approach_option":0, "fssh3_decomp_option":3,
+                            "fssh3_dt":0.001, "fssh3_max_steps":1000, "fssh3_err_tol":1e-7
+                           } )
+
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,
                              "dish_decoherence_event_option":1, "decoherence_times_type":-1, 

@@ -19,6 +19,7 @@
 ///#include "Dynamics.h"
 //#include "../hamiltonian/libhamiltonian.h"
 //#include "../io/libio.h"
+#include "../opt/libopt.h"
 #include "../math_meigen/mEigen.h"
 
 ///#include "dyn_control_params.h"
@@ -29,14 +30,13 @@ namespace liblibra{
 
 
 using namespace libmeigen;
+using namespace libopt;
 
 /// libdyn namespace
 namespace libdyn{
 
 
 namespace bp = boost::python;
-
-
 
 
 MATRIX hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib){
@@ -499,6 +499,8 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
   double T = prms.Temperature;
   int use_boltz_factor = prms.use_boltz_factor;
 
+  int version = prms.fssh2_revision;
+
   int nstates = denmat.n_rows;
   vector<double> g(nstates, 0.0);
 
@@ -506,21 +508,30 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
   // Now calculate the hopping probabilities
   i = act_state_indx;
 
-  sum = 0.0;
+  double a_ii = denmat.get(i,i).real();
   double a_ii_old = denmat_old.get(i,i).real();
 
+  double P_out_ii = 0.0;
+  if(a_ii_old > 0.0 ){  P_out_ii = - (a_ii - a_ii_old)/a_ii_old; }
+  if(P_out_ii < 0.0){ P_out_ii = 0.0; } // same as below - assume this is implied
+
+  sum = 0.0;  
   for(j=0;j<nstates;j++){
 
     if(i!=j){
       double a_jj_old = denmat_old.get(j,j).real();
       double a_jj     = denmat.get(j,j).real();
 
-      if(a_ii_old < 1e-8){ g_ij = 0.0; }  // avoid division by zero
-      else{
+      if(a_ii_old> 0.0){ // avoid division by zero
         g_ij = (a_jj - a_jj_old)/a_ii_old;  // This is a general case 
 
-        if(g_ij<0.0){  g_ij = 0.0; }
-      }// else
+        if(g_ij<0.0){  g_ij = 0.0; } // this is not present in the original paper,
+                                     // but the populations can not be negative, so
+                                     // I take that this condition was implied there
+      } else{ g_ij = 0.0; }
+    
+      if(version==0){    g_ij = MIN(g_ij, P_out_ii);  } // original version
+      else if(version==1){  ;; }                        // corrected one - don't do anything here
 
       g[j] = g_ij;
       sum += g_ij;
@@ -531,92 +542,21 @@ vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& de
 
   g[i] = 1.0 - sum;
 
+  if(version==1){  // Revision as discussed
+
+    if(sum>0.0){
+      g[i] = P_out_ii;
+      for(j=0;j<nstates;j++){  if(j!=i){  g[j] *= (1.0 - P_out_ii)/sum; }  }
+    }else{
+      g[i] = 1.0; 
+      for(j=0;j<nstates;j++){  if(j!=i){  g[j] = 0.0; }  }
+    }
+
+  }// revised version
+
   return g;
 
 }// fssh2
-
-
-vector<double> hopping_probabilities_fssh3(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx){
-/**
-  \brief This function computes the surface hopping probabilities according to new experimental idea
-
-  See more details in: TBD
-
-  \param[in] key parameters needed for this type of calculations
-    - dt - integration timestep [a.u.]
-    - Temperature - temperature [ K ]
-    - use_boltz_factor - whether to scale the computed probabilities by a Boltzmann factor
-  \param[in] denmat - [nstates x nstates] - current density matrix
-  \param[in] denmat_old - [nstates x nstates] - previous density matrix
-  \param[in] act_state_indx - index of the initial state
-
-  Returns: A nstates-vector of hopping probabilities to all states from the current active state
-*/
-
-  const double kb = 3.166811429e-6; // Hartree/K
-  int i,j,k;
-  double sum,g_ij,argg;
-
-  double dt = prms.dt;
-  double T = prms.Temperature;
-  int use_boltz_factor = prms.use_boltz_factor;
-
-  int nstates = denmat.n_rows;
-  vector<double> g(nstates, 0.0);
-
-
-  // Now calculate the hopping probabilities
-  i = act_state_indx;
-
-  MATRIX rho_old(nstates, 1);
-  MATRIX rho(nstates,1);
-  //MATRIX drhodt(nstates, 1);
-
-  MATRIX J(nstates, nstates);
-  MATRIX rhorho(nstates, nstates);
-  MATRIX inv_rhorho(nstates, nstates);
-
-
-
-  for(j=0;j<nstates;j++){
-    rho_old.set(j, 0, denmat_old.get(j,j).real());
-    rho.set(j, 0, denmat.get(j,j).real());
-  }// for i
-
-  // Derivative of the density matrix
-  //drhodt = (1.0/dt)*(rho - rho_old);
-
-  rhorho = rho_old * rho_old.T();
-  FullPivLU_inverse(rhorho, inv_rhorho);
-
-  // The formula for fluxes
-  //J = (drhodt*rho.T()) * inv_rhorho;
-  J = (rho * rho_old.T()) * inv_rhorho;
-
-
-  // Now convert them the fluxes that go from node j to all other nodes to probabilities:
-  // if the flux is positive - the hop happens to the state j itself, so we don't consider them
-  // if the flux is negative, we count it
-  double total_flux = 0.0; 
-  for(j=0; j<nstates;j++){ 
-    g[j] = J.get(j, i);
-
-    if(g[j]>0.0){ total_flux += g[j]; }
-    else{ g[j] = 0.0; }
-  } 
-
-  // Now normalize to get the probabilities:
-  if( fabs(total_flux) > 1e-14){
-    for(j=0; j<nstates; j++){ g[j] /= total_flux; g[j] = fabs(g[j]);  }
-  }
-  else{  for(j=0; j<nstates; j++){ g[j] = 0.0; }  g[i] = 1.0;   } 
-
-
-  return g;
-
-
-}// fssh3
-
 
 
 
@@ -1251,11 +1191,19 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
       if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
 
-      //CMATRIX& U = *dyn_var.proj_adi[traj];
-      //CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
-      //dm_prev_trans = U.H() * dm_prev_trans * U;
+      //cout<<"Coordinates\n";    dyn_var.q->show_matrix();
 
-      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev, dyn_var.act_states[traj]);
+      CMATRIX& U = *dyn_var.proj_adi[traj];
+      CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
+  
+      // |psi'> = |psi> T =>  Hvib' = <psi'|H\hat|psi'> = T_new.H() * Hvib * T_new;
+      // |Psi> = |psi> C = |psi'> C' = |psi> T C', so C = T C', C' = T^+ C => rho' = C' C'^+ = T^+ C C^+ T = T^+ rho T
+      //  dm_adi_prev is the DM computed before the current step basis update, so it would transform as
+      //  dm_adi_prev -> T^+ dm_adi_prev * T
+      //dm_prev_trans = U.H() * dm_prev_trans * U;// transformation of the previousely-computed density matrix according to 
+                                                // new ordering found at the current time-step (which is already reflected in the current DM).
+      // However, for the GFSH option to work properly, we should not be using the transformation of the DM here      
+      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
     }
 
     else{
