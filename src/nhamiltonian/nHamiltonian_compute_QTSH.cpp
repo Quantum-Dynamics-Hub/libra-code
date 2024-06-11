@@ -52,9 +52,19 @@ complex<double> nHamiltonian::QTSH_energy_dia(CMATRIX& ampl_dia){
 //  if(ampl_dia_mem_status==0){ cout<<"Error in QTSH_energy_dia(): the amplitudes of the diabatic states are\
 //  not allocated, but they are needed for the calculations\n"; exit(0); }
 
-  complex<double> norm = (ampl_dia.H() * (*ovlp_dia) * ampl_dia).M[0]; 
+  // To obtain the off-diagonal part of the diabatic Hamiltonian matrix
+  CMATRIX* H_diag; H_diag = new CMATRIX(nadi,nadi);
+  CMATRIX* V; V = new CMATRIX(nadi,nadi);
+  for(int i=0; i<nadi; i++){ H_diag->set(i,i, (*ham_dia).get(i,i) ); }
+  *V = *ham_dia - *H_diag; 
 
-  return (ampl_dia.H() * complex<double>(0.0, -1.0)* (*nac_dia) * ampl_dia).M[0] / norm;
+  complex<double> norm = (ampl_dia.H() * (*ovlp_dia) * ampl_dia).M[0]; 
+  complex<double> res = (ampl_dia.H() * ( (*V) + complex<double>(0.0, -1.0)* (*nac_dia) ) * ampl_dia).M[0] / norm;
+  
+  delete H_diag;
+  delete V;
+
+  return res;
 
 }
 

@@ -42,9 +42,9 @@ CMATRIX nHamiltonian::QTSH_forces_dia_unit(CMATRIX& ampl_dia, int option){
   \param[in] ampl_dia: MATRIX(ndia, 1) diabatic amplitudes for one trajectory
 
   Returns:
-  MATRIX(ndof, 1) - QTSH nonclassical forces in diabatic representation, for a single trajectory
+  MATRIX(ndof, 1) - QTSH off-diagonal Hellmann-Feynman forces in diabatic representation, for a single trajectory
  
-  The nonclassical force in QTSH has the form of the off-diagonal terms in the Ehrenfest force.
+  The off-diagonal Hellmann-Feynman force in QTSH has the form of the off-diagonal terms in the Ehrenfest force.
 
 */
 
@@ -212,7 +212,7 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
   option 1 removes all the derivative NACs - this is to enforce the local diabatization approximation, to be
   consistent with it
   
-  The nonclassical force in QTSH has the form of the off-diagonal terms in the Ehrenfest force.
+  The off-diagonal Hellmann-Feynman force in QTSH has the form of the off-diagonal terms in the Ehrenfest force.
 
   Returns:
   MATRIX(ndof, 1) - QTSH forces in adiabatic representation, for single trajectory

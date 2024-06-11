@@ -267,6 +267,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
         int ist = effective_states[itraj];
         res[itraj] = ham.get_ham_adi(id).get(ist,ist).real(); // diagonal energy
 
+        // No need to add the coherence term directly in the adiabatic representation due to the kinetic energy contribution of the kinematic momentum
         // coeff = dyn_vars.ampl_adi->col(itraj);
         // res[itraj] += ham.QTSH_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real(); // coherence energy
       }// for itraj
