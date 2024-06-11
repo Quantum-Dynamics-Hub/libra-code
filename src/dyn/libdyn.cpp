@@ -100,7 +100,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("fssh3_max_steps", &dyn_control_params::fssh3_max_steps)
       .def_readwrite("fssh3_err_tol", &dyn_control_params::fssh3_err_tol)
 
-      ///================= FSSH3 specific ====================
+      ///================= QTSH specific ====================
       .def_readwrite("use_qtsh", &dyn_control_params::use_qtsh)
       
       ///================= Decoherence options =========================================

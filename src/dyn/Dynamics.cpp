@@ -1268,8 +1268,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
-  //if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
-  if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5 * compute_dkinemat(dyn_var, ham); }
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -1284,10 +1284,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     for(dof=0; dof<ndof; dof++){  
       dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
       
-      if(prms.use_qtsh==1){
-        //dyn_var.q->add(dof, traj,  0.5*invM.get(dof,0) * dyn_var.qtsh_f_nc->get(dof, traj) * pow(prms.dt, 2.0) ); 
-        dyn_var.q->add(dof, traj,  invM.get(dof,0) * compute_dkinemat(dyn_var, ham).get(dof, traj) * prms.dt ); 
-      }
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
@@ -1373,8 +1369,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
-  //if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5*prms.dt* (*dyn_var.qtsh_f_nc); }
-  if(prms.use_qtsh==1){ *dyn_var.qtsh_p_k = *dyn_var.p + 0.5* compute_dkinemat(dyn_var, ham); }
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5* compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1573,9 +1569,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
-    if(prms.use_qtsh==0){
-      update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
-    }
+    update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
 
   }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
 

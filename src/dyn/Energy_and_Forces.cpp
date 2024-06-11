@@ -261,14 +261,14 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     }
     // Adiabatic 
     else if(prms.rep_force==1){  
-      CMATRIX coeff(nadi, 1);
+      //CMATRIX coeff(nadi, 1);
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
         int ist = effective_states[itraj];
         res[itraj] = ham.get_ham_adi(id).get(ist,ist).real(); // diagonal energy
 
-        coeff = dyn_vars.ampl_adi->col(itraj);
-        res[itraj] += ham.QTSH_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real(); // coherence energy
+        // coeff = dyn_vars.ampl_adi->col(itraj);
+        // res[itraj] += ham.QTSH_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real(); // coherence energy
       }// for itraj
     }// rep_force == 1
 
@@ -377,7 +377,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
       *dyn_vars.f = ham.forces_adi(effective_states).real(); 
     }// rep_force == 1
 
-    // Non-classical term calculations
+    // Off-diagonal Hellmann-Feynman force calculations
     if(prms.rep_force==0){  
       *dyn_vars.qtsh_f_nc = ham.QTSH_forces_dia(*dyn_vars.ampl_dia, 1).real();
     }

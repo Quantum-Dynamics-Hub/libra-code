@@ -459,6 +459,11 @@ class dyn_control_params{
   //=========== QTSH options ==========
   /**
     Whether to use QTSH
+    
+    Options:
+
+      - 0: don't apply [ default ]
+      - 1: use it 
   */
   int use_qtsh;
   
