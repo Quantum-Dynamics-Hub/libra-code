@@ -1181,12 +1181,7 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
       }
     }
     
-    if(prms.use_qtsh==0){
-      p_real = dyn_var.p->col(traj);
-    } 
-    else{
-      p_real = dyn_var.qtsh_p_k->col(traj); 
-    }
+    p_real = dyn_var.p->col(traj);
 
     int is_tp = 0;
     double alpha; 
@@ -1225,15 +1220,8 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         if (is_first[i] == 0 and prms.tp_algo != 0){
           MATRIX Fa(ndof, 1);
 
-          if(prms.use_qtsh==0){
-            for(int idof=0; idof<ndof; idof++){
-              Fa.set(idof, 0, dyn_var.f->get(idof,0) );
-            }
-          }
-          else{ // QTSH
-            for(int idof=0; idof<ndof; idof++){
-              Fa.set(idof, 0, dyn_var.f->get(idof,0) + dyn_var.qtsh_f_nc->get(idof,0) );
-            }
+          for(int idof=0; idof<ndof; idof++){
+            Fa.set(idof, 0, dyn_var.f->get(idof,0) );
           }
 
           double dp_old = 0.0;
