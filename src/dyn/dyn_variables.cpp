@@ -289,7 +289,6 @@ void dyn_variables::allocate_qtsh(){
 
   if(qtsh_vars_status==0){
     
-    qtsh_p_k = new MATRIX(ndof, ntraj);
     qtsh_f_nc = new MATRIX(ndof, ntraj);
 
     qtsh_vars_status = 1;
@@ -436,7 +435,6 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_qtsh();
     
     // Copy content
-    *qtsh_p_k = *x.qtsh_p_k;
     *qtsh_f_nc = *x.qtsh_f_nc;
 
   }// if QTSH vars
@@ -586,7 +584,6 @@ dyn_variables::~dyn_variables(){
   
   if(qtsh_vars_status==1){
 
-    delete qtsh_p_k;
     delete qtsh_f_nc;
 
     qtsh_vars_status = 0;

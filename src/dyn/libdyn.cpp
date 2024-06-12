@@ -213,13 +213,6 @@ void export_dyn_variables_objects(){
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v1)() = &dyn_variables::compute_kinetic_energies;
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
 
-  double (dyn_variables::*expt_compute_average_kinetic_energy_qtsh_v1)() = &dyn_variables::compute_average_kinetic_energy_qtsh;
-  double (dyn_variables::*expt_compute_average_kinetic_energy_qtsh_v2)(vector<int>& which_dofs) = &dyn_variables::compute_average_kinetic_energy_qtsh;
-  double (dyn_variables::*expt_compute_kinetic_energy_qtsh_v1)(int itraj) = &dyn_variables::compute_kinetic_energy_qtsh;
-  double (dyn_variables::*expt_compute_kinetic_energy_qtsh_v2)(int itraj, vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energy_qtsh;
-  vector<double> (dyn_variables::*expt_compute_kinetic_energies_qtsh_v1)() = &dyn_variables::compute_kinetic_energies_qtsh;
-  vector<double> (dyn_variables::*expt_compute_kinetic_energies_qtsh_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies_qtsh;
-
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
 
@@ -284,7 +277,6 @@ void export_dyn_variables_objects(){
       .def("get_coords_aux", expt_get_coords_aux)
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
-      .def("get_qtsh_p_k", &dyn_variables::get_qtsh_p_k)
       .def("get_qtsh_f_nc", &dyn_variables::get_qtsh_f_nc)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
@@ -294,12 +286,6 @@ void export_dyn_variables_objects(){
       .def("compute_kinetic_energy", expt_compute_kinetic_energy_v2)
       .def("compute_kinetic_energies", expt_compute_kinetic_energies_v1)
       .def("compute_kinetic_energies", expt_compute_kinetic_energies_v2)
-      .def("compute_average_kinetic_energy_qtsh", expt_compute_average_kinetic_energy_qtsh_v1)
-      .def("compute_average_kinetic_energy_qtsh", expt_compute_average_kinetic_energy_qtsh_v2)
-      .def("compute_kinetic_energy_qtsh", expt_compute_kinetic_energy_qtsh_v1)
-      .def("compute_kinetic_energy_qtsh", expt_compute_kinetic_energy_qtsh_v2)
-      .def("compute_kinetic_energies_qtsh", expt_compute_kinetic_energies_qtsh_v1)
-      .def("compute_kinetic_energies_qtsh", expt_compute_kinetic_energies_qtsh_v2)
 
 
       .def("update_amplitudes", expt_update_amplitudes_v1)

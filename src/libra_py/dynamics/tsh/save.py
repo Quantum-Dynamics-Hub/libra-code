@@ -206,10 +206,6 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "f_xf" in saver.keywords: # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("f_xf", (_nsteps, _ntraj, _ndof), "R")
         
-        # Trajectory-resolved kinematic momentum in QTSH
-        if "qtsh_p_k" in saver.keywords: # and "f_xf" in saver.np_data.keys():
-            saver.add_dataset("qtsh_p_k", (_nsteps, _ntraj, _ndof), "R")
-        
         # Trajectory-resolved nonclassical forces in QTSH
         if "qtsh_f_nc" in saver.keywords: # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _ndof), "R")
@@ -443,11 +439,6 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
     if "tcnbra_thermostat_energy" in saver.keywords and "tcnbra_thermostat_energy" in saver.np_data.keys():
         tcnbra_thermostat_energy = dyn_var.compute_tcnbra_thermostat_energy();
         saver.save_scalar(t, "tcnbra_thermostat_energy", tcnbra_thermostat_energy)
-    
-    # QTSH average kinetic energy from kinematic momentum
-    if "Ekin_ave_qtsh" in saver.keywords and "Ekin_ave_qtsh" in saver.np_data.keys():
-        Ekin_qtsh = dyn_var.compute_average_kinetic_energy_qtsh();
-        saver.save_scalar(t, "Ekin_ave_qtsh", Ekin_qtsh)
 
 def save_hdf5_2D(saver, i, states, txt_type=0):
     """
@@ -684,12 +675,6 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "f_xf" in saver.keywords and "f_xf" in saver.np_data.keys():
         f_xf = dyn_var.get_f_xf()
         saver.save_matrix(t, "f_xf", f_xf.T())
-    
-    # Kinematic mometum in QTSH
-    # Format: saver.add_dataset("qtsh_p_k", (_nsteps, _ntraj, _dof), "R")
-    if "qtsh_p_k" in saver.keywords and "qtsh_p_k" in saver.np_data.keys():
-        qtsh_p_k = dyn_var.get_qtsh_p_k()
-        saver.save_matrix(t, "qtsh_p_k", qtsh_p_k.T())
     
     # Nonclassical force in QTSH
     # Format: saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _dof), "R")
