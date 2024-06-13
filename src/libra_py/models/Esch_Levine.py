@@ -158,3 +158,67 @@ def JCP_2020(q, params, full_id):
     obj.dc1_dia = dc1_dia
 
     return obj
+
+
+def general(q, params, full_id):
+    """    
+    M-state linear crossing model
+
+    H_ii =  V_ij +  w_ij * x 
+
+    Args:
+        q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
+        params ( dictionary ): model parameters
+
+            * **params["V"]** ( M lists of M doubles ): constant shifts of all diabatic states [ default: [[0.00,0.00], [0.00, 0.00]], units: Ha]
+            * **params["w"]** ( M lists of M doubles ): slopes for all matrix elemenst [ default: [[0.00,0.00], [0.00, 0.00]], units: Ha/Bohr]
+            * **params["nstates"]** ( int ): the number of states, M [ default : 2]
+
+    Returns:
+        PyObject: obj, with the members:
+
+            * obj.ham_dia ( CMATRIX(M,M) ): diabatic Hamiltonian
+            * obj.ovlp_dia ( CMATRIX(M,M) ): overlap of the basis (diabatic) states [ identity ]
+            * obj.d1ham_dia ( list of 1 CMATRIX(M,M) objects ):
+                derivatives of the diabatic Hamiltonian w.r.t. the nuclear coordinate
+            * obj.dc1_dia ( list of 1 CMATRIX(M,M) objects ): derivative coupling in the diabatic basis [ zero ]
+
+    """
+
+    critical_params = [ ]
+    default_params = { "nstates":2, "V":[[0.00,0.00], [0.00, 0.00]], "w":[[0.00,0.00], [0.00, 0.00]] }
+    comn.check_input(params, default_params, critical_params)
+
+    w = params["w"]
+    V = params["V"]
+    n = params["nstates"]
+
+    Hdia = CMATRIX(n,n)
+    Sdia = CMATRIX(n,n)
+    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
+    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+
+    Id = Cpp2Py(full_id)
+    indx = Id[-1]
+
+    x = q.col(indx).get(0)
+
+    Sdia.identity()
+
+    for i in range(n):
+        for j in range(n):
+            Hdia.set(i,j,  (V[i][j] + w[i][j] * x) * (1.0+0.0j) )
+
+    for k in [0]:
+        #  d Hdia / dR_0
+        for i in range(n):
+            for j in range(n):
+                d1ham_dia[k].set(i,j, w[i][j]*(1.0+0.0j) )
+
+    obj = tmp()
+    obj.ham_dia = Hdia
+    obj.ovlp_dia = Sdia
+    obj.d1ham_dia = d1ham_dia
+    obj.dc1_dia = dc1_dia
+
+    return obj
