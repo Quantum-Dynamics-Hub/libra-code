@@ -100,6 +100,9 @@ void export_dyn_control_params_objects(){
       .def_readwrite("fssh3_max_steps", &dyn_control_params::fssh3_max_steps)
       .def_readwrite("fssh3_err_tol", &dyn_control_params::fssh3_err_tol)
 
+      ///================= QTSH specific ====================
+      .def_readwrite("use_qtsh", &dyn_control_params::use_qtsh)
+      
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
       .def_readwrite("sdm_norm_tolerance", &dyn_control_params::sdm_norm_tolerance)
@@ -210,7 +213,6 @@ void export_dyn_variables_objects(){
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v1)() = &dyn_variables::compute_kinetic_energies;
   vector<double> (dyn_variables::*expt_compute_kinetic_energies_v2)(vector<int>& which_dofs) = &dyn_variables::compute_kinetic_energies;
 
-
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
 
@@ -237,6 +239,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("mqcxf_vars_status", &dyn_variables::mqcxf_vars_status)
       .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
       .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
+      .def_readwrite("qtsh_vars_status", &dyn_variables::qtsh_vars_status)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -249,6 +252,7 @@ void export_dyn_variables_objects(){
       .def("allocate_shxf", &dyn_variables::allocate_shxf)
       .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
       .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
+      .def("allocate_qtsh", &dyn_variables::allocate_qtsh)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -273,6 +277,7 @@ void export_dyn_variables_objects(){
       .def("get_coords_aux", expt_get_coords_aux)
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
+      .def("get_qtsh_f_nc", &dyn_variables::get_qtsh_f_nc)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -496,7 +501,6 @@ void export_dyn_decoherence_objects(){
   MATRIX (*expt_compute_dkinemat_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham) = &compute_dkinemat; 
   def("compute_dkinemat", expt_compute_dkinemat_v1);
-
 
 }
 

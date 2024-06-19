@@ -1214,6 +1214,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
+
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
@@ -1267,6 +1268,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -1280,7 +1283,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
       dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
-
+      
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
@@ -1348,9 +1351,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
   if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
-
   update_forces(prms, dyn_var, ham);
-
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -1368,6 +1369,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5* compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1386,7 +1389,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-
    
   //============== Begin the TSH part ===================
 
@@ -1401,7 +1403,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
-    Eadi = get_Eadi(ham); 
+    Eadi = get_Eadi(ham);
     Ekin = dyn_var.compute_kinetic_energies();  
     decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
@@ -1563,7 +1565,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
-        
+
   }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }

@@ -239,6 +239,42 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
   
   }// Ehrenfest
 
+  else if(prms.force_method==3){ // QTSH
+    
+    vector<int> effective_states(dyn_vars.act_states);
+    
+    if(prms.enforce_state_following==1){ 
+      for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
+    }
+    
+    // Diabatic 
+    if(prms.rep_force==0){ 
+      CMATRIX coeff(ndia, 1);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_dia(id).get(ist, ist).real(); // diagonal energy
+        
+        coeff = dyn_vars.ampl_dia->col(itraj);
+        res[itraj] += ham.QTSH_energy_dia(coeff, id).real(); // coherence energy
+      }
+    }
+    // Adiabatic 
+    else if(prms.rep_force==1){  
+      //CMATRIX coeff(nadi, 1);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        int ist = effective_states[itraj];
+        res[itraj] = ham.get_ham_adi(id).get(ist,ist).real(); // diagonal energy
+
+        // No need to add the coherence term directly in the adiabatic representation due to the kinetic energy contribution of the kinematic momentum
+        // coeff = dyn_vars.ampl_adi->col(itraj);
+        // res[itraj] += ham.QTSH_energy_adi(coeff, id, *(dyn_vars.proj_adi[itraj]) ).real(); // coherence energy
+      }// for itraj
+    }// rep_force == 1
+
+  }
+
 
   return res;
 }
@@ -326,7 +362,41 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 */
     }     
   }// Ehrenfest
+  else if(prms.force_method==3){  // QTSH forces
+    // Effective force determined by the TSH procedure 
+    vector<int> effective_states(dyn_vars.act_states);
+  
+    if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
+      for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
+    }
 
+    // Diabatic 
+    if(prms.rep_force==0){  *dyn_vars.f = ham.forces_dia(effective_states).real();   }
+
+    // Adiabatic 
+    else if(prms.rep_force==1){  
+      *dyn_vars.f = ham.forces_adi(effective_states).real(); 
+    }// rep_force == 1
+
+    // Off-diagonal Hellmann-Feynman force calculations
+    if(prms.rep_force==0){  
+      *dyn_vars.qtsh_f_nc = ham.QTSH_forces_dia(*dyn_vars.ampl_dia, 1).real();
+    }
+    else if(prms.rep_force==1){
+      int option = 0; // default value for NAC-based integrators
+
+      if(prms.electronic_integrator==0 || 
+         prms.electronic_integrator==1 ||
+         prms.electronic_integrator==2 ||
+         prms.electronic_integrator==10 ||
+         prms.electronic_integrator==11 ||
+         prms.electronic_integrator==12 ){ option = 1; } 
+
+      option = 0;
+      *dyn_vars.qtsh_f_nc = ham.QTSH_forces_adi(*dyn_vars.ampl_adi, 1, option).real();
+    }
+
+  }// QTSH
 
 //  return F;
 }

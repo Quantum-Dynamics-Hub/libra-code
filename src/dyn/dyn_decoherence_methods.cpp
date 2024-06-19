@@ -1089,8 +1089,7 @@ void xf_create_AT(dyn_variables& dyn_var, double threshold){
 
       // Prevent spurious decoherence
       if (nr_mixed < 2){
-         is_mixed.assign(nadi, 0);
-         is_first.assign(nadi, 0);
+         xf_init_AT(dyn_var, traj, -1);
       }
     } //traj 
 
@@ -1181,14 +1180,14 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         p_aux_old.set(i, idof, p_aux.get(i, idof));
       }
     }
+    
+    p_real = dyn_var.p->col(traj);
 
     int is_tp = 0;
     double alpha; 
     for(int i=0; i<nadi; i++){
       if(is_mixed[i]==1){
         if(is_fixed[i]==1 or is_keep[i]==1){continue;}
-
-        p_real = dyn_var.p->col(traj); 
         
         if(i==a){
           alpha = compute_kinetic_energy(p_real, invM);
@@ -1214,15 +1213,17 @@ void shxf(dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn
         
         alpha /= compute_kinetic_energy(p_real, invM);
         for(int idof=0; idof<ndof; idof++){
-          p_aux.set(i, idof, dyn_var.p->get(idof, traj) * sqrt(alpha));
+          p_aux.set(i, idof, p_real.get(idof, 0) * sqrt(alpha));
         }
 
         // Check the turning point
         if (is_first[i] == 0 and prms.tp_algo != 0){
           MATRIX Fa(ndof, 1);
+
           for(int idof=0; idof<ndof; idof++){
             Fa.set(idof, 0, dyn_var.f->get(idof,0) );
           }
+
           double dp_old = 0.0;
           double dp_new = 0.0;
 
