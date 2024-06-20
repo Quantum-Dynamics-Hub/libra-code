@@ -77,6 +77,9 @@ dyn_control_params::dyn_control_params(){
   fssh3_dt = 0.001;
   fssh3_max_steps = 1000;
   fssh3_err_tol = 1e-7;
+  
+  ///================= QTSH specific ====================
+  use_qtsh = 0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -177,6 +180,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   fssh3_dt = x.fssh3_dt;
   fssh3_max_steps = x.fssh3_max_steps;
   fssh3_err_tol = x.fssh3_err_tol;
+  
+  ///================= QTSH specific ====================
+  use_qtsh = x.use_qtsh;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -368,6 +374,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="fssh3_dt"){ fssh3_dt = bp::extract<double>(params.values()[i]);  }
     else if(key=="fssh3_max_steps"){ fssh3_max_steps = bp::extract<int>(params.values()[i]);  }
     else if(key=="fssh3_err_tol"){ fssh3_err_tol = bp::extract<double>(params.values()[i]);  }
+    
+    ///================= QTSH specific ====================
+    else if(key=="use_qtsh"){ use_qtsh = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

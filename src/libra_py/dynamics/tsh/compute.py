@@ -566,6 +566,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     default_params.update( {"fssh3_size_option":1, "fssh3_approach_option":0, "fssh3_decomp_option":3,
                             "fssh3_dt":0.001, "fssh3_max_steps":1000, "fssh3_err_tol":1e-7
                            } )
+    
+    #================= QTSH specific ====================
+    default_params.update( {"use_qtsh":0 } )
 
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,
@@ -577,7 +580,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                              "ave_gaps":MATRIX(nstates,nstates),
                              "schwartz_decoherence_inv_alpha": MATRIX(dyn_var.ndof, 1), "schwartz_interaction_width": MATRIX(dyn_var.ndof, 1),
                              "wp_width":MATRIX(dyn_var.ndof, 1), "wp_v":MATRIX(dyn_var.ndof, 1), "coherence_threshold":0.01, "e_mask": 0.0001,
-                             "use_xf_force": 0, "project_out_aux": 0, "tp_algo": 1, "use_td_width": 0
+                             "use_xf_force": 0, "project_out_aux": 1, "tp_algo": 1, "use_td_width": 0
                            } )
 
     #================= Entanglement of trajectories ================================
@@ -630,6 +633,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     tsh_method = dyn_params["tsh_method"] 
     thermally_corrected_nbra = dyn_params["thermally_corrected_nbra"]
     total_energy = dyn_params["total_energy"]
+    use_qtsh = dyn_params["use_qtsh"]
  
 
     states = intList()
@@ -698,6 +702,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     if thermally_corrected_nbra==1:
         dyn_var.allocate_tcnbra()
+    
+    if use_qtsh==1: #  QTSH
+        dyn_var.allocate_qtsh()
 
     ham_aux = nHamiltonian(ham)
 

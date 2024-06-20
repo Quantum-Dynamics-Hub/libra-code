@@ -161,7 +161,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
       int n_active_dof = prms.quantum_dofs.size();
       int ndof = dyn_var.ndof;
       int ntraj = dyn_var.ntraj;
-      
+     
       MATRIX p_quantum_dof(ndof, ntraj);
       for(auto dof: prms.quantum_dofs){
         for(int itraj = 0; itraj < ntraj; itraj++){  p_quantum_dof.set(dof, itraj,  p.get(dof, itraj) );  }
