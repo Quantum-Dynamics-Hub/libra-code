@@ -607,3 +607,6 @@ def adf_to_xyz(filename, step=0):
     for i in range(len(coordinates)):
         f.write(coordinates[i])
     f.close()
+
+
+
