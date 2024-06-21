@@ -324,14 +324,14 @@ def read_cp2k_tddfpt_log_file( params ):
                         # We need to remove the paranthesis from the 2nd element of the temporary splitted line
                         tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
-                        tmp_state_coefficients.append( ci_coefficient  ) 
+                        tmp_state_coefficients.append( ci_coefficient  )
 
             # Here, we have the spin-unpolarize Kohn-Sham basis
             # For this case, spin-components will just return all alpha
             else:
                 ci_coefficient = float( tmp_splitted_line[2] )
                 if ci_coefficient**2 > tolerance:
-                    if int(tmp_splitted_line[0])>params["lowest_orbital"] and int(tmp_splitted_line[1])<params["highest_orbital"]:
+                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[1])<=params["highest_orbital"]:
                         tmp_spin.append( "alp" )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[1] ) ]  )
                         tmp_state_coefficients.append( ci_coefficient  )
@@ -1577,12 +1577,15 @@ def distribute_cp2k_libint_jobs(submit_template: str, run_python_file: str, iste
     lines = file.readlines()
     file.close()
 
-    nsteps_job = int((fstep-istep)/njobs)
+    #nsteps_job = int((fstep-istep)/njobs)
+    nsteps_job = np.linspace(istep, fstep, njobs+1, endpoint=True, dtype=int).tolist()
     for njob in range(njobs):
-        istep_job = njob*nsteps_job+istep
-        fstep_job = (njob+1)*nsteps_job+istep+1
-        if njob==(njobs-1):
-            fstep_job = fstep
+        #istep_job = njob*nsteps_job+istep
+        #fstep_job = (njob+1)*nsteps_job+istep+1
+        istep_job = nsteps_job[njob]
+        fstep_job = nsteps_job[njob+1]+1
+        #if njob==(njobs-1):
+        #    fstep_job = fstep
 
         print('Submitting job',njob+1)
         print('Job',njob,'istep',istep_job,'fstep',fstep_job,'nsteps',fstep_job-istep_job)
@@ -1694,7 +1697,7 @@ def gaussian_function_vector(a_vec, mu_vec, sigma, num_points, x_min, x_max):
 
 
 
-def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels):
+def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all):
     """
     c1 - index of the atom kinds
     atoms - the 
@@ -1722,6 +1725,7 @@ def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoi
     e_max = np.max(pdos_ave[:,1]) + margin
     homo_level = np.max(np.where(pdos_ave[:,2]==homo_occ))
     homo_energy = pdos_ave[:,1][homo_level]
+    labels = []
 
     for c3, orbital_cols in enumerate(orbitals_cols):
         try:
@@ -1733,7 +1737,7 @@ def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoi
         except:
             pass
 
-    return ave_energy_grid, homo_energy, ave_pdos_convolved_all
+    return ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels
 
 
 def pdos(params):
@@ -1783,14 +1787,14 @@ def pdos(params):
 
     if is_spin_polarized == 0: # non-polarized case
         homo_occ = 2.0
-        labels = []
+        #labels = []
         ave_pdos_convolved_all = []
 
         for c1,i in enumerate(atoms[0]):
             # Finding all the pdos files
             pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
 
-            ave_energy_grid, homo_energy, ave_pdos_convolved_all = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, labels)
+            ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all)
 
             """
             # Finding all the pdos files
@@ -1837,9 +1841,9 @@ def pdos(params):
             pdos_files_alp = glob.glob(path_to_all_pdos+F'/*ALPHA*k{i}*.pdos')
             pdos_files_bet = glob.glob(path_to_all_pdos+F'/*BETA*k{i}*.pdos')
 
-            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp, labels_alp)
+            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp, labels_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp)
 
-            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet, labels_bet)
+            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet, labels_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet)
 
 
         ave_pdos_convolved_all_alp = np.array(ave_pdos_convolved_all_alp)

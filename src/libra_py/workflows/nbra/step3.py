@@ -1855,6 +1855,7 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
     #E_ks_MATRIX = data_conv.nparray2MATRIX( E_ks )
     #E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks_MATRIX, SD_energy_corr )
     E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks, SD_energy_corr )
+    #print('Flag E_this_sd before:', E_this_sd)
 
     # Make a list for the final ordering of the sd_states_unique.
     # This will not contain the ground state, which we will manually add later. 
@@ -1869,9 +1870,10 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
         # Obtain the indexing fo the SDs by their energies
     reindex = np.argsort(e)
     # Turning the CMATRIX into numpy
-    E_this_sd = E_this_sd.real
+    E_this_sd = E_this_sd.real#()
     # Only the diagonals are needed
     #E_this_sd = np.diag( data_conv.MATRIX2nparray(E_this_sd) )
+    E_this_sd = np.diag( E_this_sd )
 
     if sorting_type == "identity":
 
@@ -1903,7 +1905,9 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
         for i in range(1,len(reindex)):
             sd_states_unique_sorted.append( sd_states_unique[ int(reindex[i])-1 ] )
-
+    #print('Flag E_this_sd:',E_this_sd.shape)
+    #print('Flag E_this_sd itself:',E_this_sd)
+    #print('Flag np.diag(E_this_sd):',np.diag(E_this_sd))
     E_this_sd_sparse = sp.csc_matrix( np.diag(E_this_sd) )
 
     return E_this_sd_sparse, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
@@ -2289,7 +2293,7 @@ def run_step3_sd_nacs_libint(params):
 
         # number of occupied and unoccupied KS states
         num_occ = ks_homo_index - min_band+1
-        num_unocc = max_band-ks_homo_index + 1
+        num_unocc = max_band-ks_homo_index # + 1
 
         # The new KS active space and HOMO index
         ks_active_space, ks_homo_index_1 = make_active_space(num_occ, 
@@ -2297,7 +2301,11 @@ def run_step3_sd_nacs_libint(params):
                                                              params['data_dim'], 
                                                              params['npz_file_ks_homo_index'])
         params['active_space'] = ks_active_space
-
+        #print('Flag ks_active_space:', ks_active_space)
+        #print('Flag num_occ:',num_occ)
+        #print('Flag num_unocc',num_unocc)
+        #print('Flag params[data_dim]',params['data_dim'])
+        #print('Flag npz file ks homo index',params['npz_file_ks_homo_index'])
         # The KS orbital indices
         ks_orbital_indicies = range(min_band, max_band+1)
 
@@ -2414,6 +2422,7 @@ def run_step3_sd_nacs_libint(params):
 
         if step > start_time:
             E_midpoint = 0.5*(E_sd_step+E_sd_step_plus)
+            #print('Flag E_midpoint.shape:', E_midpoint.shape)
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step-1}_re.npz',E_midpoint)
         E_sd_step_plus = E_sd_step
     print('Done with sorting and computing the SDs energies. Elapsed time:',time.time()-t2)

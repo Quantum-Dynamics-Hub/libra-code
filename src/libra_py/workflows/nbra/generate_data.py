@@ -247,10 +247,10 @@ def distribute_jobs(params):
     Returns:
         None
     """
-    critical_params = ['guess_input_template', 'trajectory_xyz_file', 'reference_input_template', 'istep', 
-                        'fstep', 'submit_template', 'software_load_instructions']
+    critical_params = ['guess_input_template', 'trajectory_xyz_file', 'reference_input_template', 'user_steps', 
+                       'submit_template', 'software_load_instructions']
     default_params = {'prefix': 'libra', 'scratch': True, 'do_more': False, 'do_more_steps': 10, 'random_selection': True,
-                      'guess_dir': './guess', 'do_guess': True, 'reference_dir': './ref', 'do_ref': True, 'user_steps': [],
+                      'guess_dir': './guess', 'do_guess': True, 'reference_dir': './ref', 'do_ref': True, 
                       'guess_software': 'cp2k', 'guess_software_exe': 'cp2k.psmp', 'guess_mpi_exe': 'mpirun',
                       'reference_software': 'cp2k', 'reference_software_exe': 'cp2k.psmp', 'reference_mpi_exe': 'mpirun',
                       'reference_steps': 10, 'njobs': 2, 'nprocs': 2, 'remove_raw_outputs': True, 'submit_exe': 'sbatch'
@@ -258,52 +258,55 @@ def distribute_jobs(params):
     # First load the default parameters etc
     comn.check_input(params, default_params, critical_params)
     # Now let's create the random numbers
-    nsteps = params["fstep"]-params["istep"]
+    # nsteps = params["fstep"]-params["istep"]
+    nsteps = len(params["user_steps"]) #
+    params["istep"] = min(params["user_steps"])
+    params["fstep"] = max(params["user_steps"])
     ref_steps = params["reference_steps"]
     if params["scratch"]==params["do_more"]:
         raise("'scratch' and 'do_more' cannot get the same value at the same time!")
     if params["do_guess"]==False and params["do_ref"]==False:
         raise("do_guess and do_ref cannot get False value at the same time!")
-    if params["scratch"]:
+    #if params["scratch"]:
         # Remove evrything including the data
-        os.system("rm -rf job* sample_files shuffled_indices.npy") # Removes the job folders and the random indices
+        #os.system("rm -rf job* sample_files")# shuffled_indices.npy") # Removes the job folders and the random indices
         #os.system('rm find . -name "*.npy" ') # This seems to be brutal! It removes everything :))
-        shuffled_indices = np.arange(params["istep"], params["fstep"])
-        params["steps"] = list(range(params["istep"], params["fstep"]))
-        if params["random_selection"]:
-            np.random.shuffle(shuffled_indices)
-        np.save('shuffled_indices.npy', shuffled_indices)
-        params["reference_steps"] = shuffled_indices[0:ref_steps].tolist()
+        #shuffled_indices = np.arange(params["istep"], params["fstep"])
+        #params["steps"] = list(range(params["istep"], params["fstep"]))
+        #if params["random_selection"]:
+        #    np.random.shuffle(shuffled_indices)
+        #np.save('shuffled_indices.npy', shuffled_indices)
+        #params["reference_steps"] = shuffled_indices[0:ref_steps].tolist()
         # Here we add the first and last geometries 
         # since this is an interpolation
-        if params["istep"] not in params["reference_steps"]:
-            params["reference_steps"].append(params["istep"])
-        if params["fstep"] not in params["reference_steps"]:
-            params["reference_steps"].append(params["fstep"])
+        #if params["istep"] not in params["reference_steps"]:
+        #    params["reference_steps"].append(params["istep"])
+        #if params["fstep"] not in params["reference_steps"]:
+        #    params["reference_steps"].append(params["fstep"])
 
-    elif params["do_more"]:
-        # find how many steps were done in the reference_dir
-        ref_files = glob.glob(f'{params["reference_dir"]}/*.npy')
-        steps_done = find_steps(ref_files)
-        #print(steps_done)
-        if len(steps_done)==0:
-            raise("Doing more steps is requested but the reference directory is empty!")
-        ref_steps = len(steps_done)
-        #print(ref_steps)
-        more_steps = params["do_more_steps"]
-        shuffled_indices = np.load("shuffled_indices.npy")
-        params["reference_steps"] = shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
-        #print(params['reference_steps'])
-        # For do_more, we don't need to add the first and last step since they are already computed in "scratch"
-        params["steps"] = np.sort(params["reference_steps"]).tolist() # shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
+    #elif params["do_more"]:
+    #    # find how many steps were done in the reference_dir
+    #    ref_files = glob.glob(f'{params["reference_dir"]}/*.npy')
+    #    steps_done = find_steps(ref_files)
+    #    #print(steps_done)
+    #    if len(steps_done)==0:
+    #        raise("Doing more steps is requested but the reference directory is empty!")
+    #    ref_steps = len(steps_done)
+    #    #print(ref_steps)
+    #    more_steps = params["do_more_steps"]
+    #    shuffled_indices = np.load("shuffled_indices.npy")
+    #    params["reference_steps"] = shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
+    #    #print(params['reference_steps'])
+    #    # For do_more, we don't need to add the first and last step since they are already computed in "scratch"
+    #    params["steps"] = np.sort(params["reference_steps"]).tolist() # shuffled_indices[ref_steps:ref_steps+more_steps].tolist()
         
     # Create guess and reference directories
     os.system(f'mkdir {params["reference_dir"]} {params["guess_dir"]}')
-    if (len(params["steps"])/params["njobs"])<2:
-        raise("The division of steps/njobs is less than 2! Please select smaller number of jobs.")
     if len(params["user_steps"])>0:
         params["steps"] = params["user_steps"]
         params["reference_steps"] = params["user_steps"]
+    if (len(params["steps"])/params["njobs"])<2:
+        raise("The division of steps/njobs is less than 2! Please select smaller number of jobs.")
     steps_split = np.array_split(params["steps"], params["njobs"])
     #os.system(F"mkdir {res_directory}")
     # Read the submit file
