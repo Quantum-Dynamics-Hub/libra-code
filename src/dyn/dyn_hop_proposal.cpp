@@ -675,7 +675,6 @@ vector<double> hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& den
 }
 
 
-
 //MATRIX compute_hopping_probabilities_lz(nHamiltonian* ham, int rep, MATRIX& p, const MATRIX& invM, MATRIX& prev_ham_dia){
 vector<double> hopping_probabilities_lz(nHamiltonian* ham, nHamiltonian* ham_prev, int act_state_indx, int rep, MATRIX& p, const MATRIX& invM){
 /**
@@ -967,6 +966,28 @@ vector<double> hopping_probabilities_zn(nHamiltonian& ham, nHamiltonian& ham_pre
 
 
 vector<double> hopping_probabilities_mash(dyn_control_params& prms, CMATRIX& denmat){
+/**
+   \brief Compute the MASH surface hopping probabilities
+   This is the version taking the minimal amount of input information
+
+   The function returns the matrix g with hopping probabilities
+   Abbreviation: MASH - mapped surface hopping
+
+   Hopping with 100% probability to the state with the largest population
+
+   References:
+   (1)Mannouch, J. R.; Richardson, J. O. A Mapping Approach to Surface Hopping. J. Chem. Phys. 2023, 158 (10), 104111. https://doi.org/10.1063/5.0139734.
+   (2)Runeson, J. E.; Manolopoulos, D. E. A Multi-State Mapping Approach to Surface Hopping. The Journal of Chemical Physics 2023, 159 (9), 094115. https://doi.org/10.1063/5.0158147.
+   (3)E. Runeson, J.; P. Fay, T.; E. Manolopoulos, D. Exciton Dynamics from the Mapping Approach to Surface Hopping: Comparison with Förster and Redfield Theories. Physical Chemistry Chemical Physics 2024, 26 (6), 4929–4938. https://doi.org/10.1039/D3CP05926J.
+
+   \param[in] key parameters needed for this type of calculations
+     - dt - integration timestep [a.u.]
+   \param[in] denmat - [nstates x nstates] - density matrix
+
+   Returns: A nstates-vector of hopping probabilities to all states from the current active state
+
+*/
+
 
   int nstates = denmat.n_rows;
   vector<double> g(nstates, 0.0);

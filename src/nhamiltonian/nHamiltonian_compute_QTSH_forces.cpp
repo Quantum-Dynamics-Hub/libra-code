@@ -241,6 +241,18 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
     if(dc1_adi_mem_status[n]==0){ cout<<"Error in QTSH_forces_adi_unit(): the derivatives couplings matrix in the adiabatic \
     basis w.r.t. the nuclear DOF "<<n<<" is not allocated but is needed for the calculations \n"; exit(0); }
 
+/**  Ehrenfest force for reference:
+
+    if(option==0){ // Original formulation with NACs - for non-LD integrators
+      tmp = (T.H() * (*dc1_adi[n]) * T ).H() *  (T.H() * (*ham_adi) * T);
+      tmp = tmp + tmp.H();
+      res.M[n] = -( ampl_adi.H() * ( T.H() * (*d1ham_adi[n]) * T - tmp ) * ampl_adi ).M[0];
+    }
+    else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
+      res.M[n] = -( ampl_adi.H() * T.H() * ( *d1ham_adi[n] ) * T * ampl_adi ).M[0];
+    }
+
+*/
 
     if(option==0){ // Original formulation with NACs - for non-LD integrators
 

@@ -145,6 +145,7 @@ class dyn_control_params{
       - 0: don't compute forces at all - e.g. we do not really need them
       - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
       - 2: Ehrenfest
+      - 3: QTSH force
   */
   int force_method;
 

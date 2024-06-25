@@ -606,6 +606,7 @@ class dyn_variables{
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop(int rep);
+  vector<double> compute_average_mash_pop(int rep);
 
 
   double compute_tcnbra_ekin();

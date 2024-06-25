@@ -1051,6 +1051,42 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
   return res;
 
 }
+
+
+vector<double> dyn_variables::compute_average_mash_pop(int rep){
+/**
+  Computing the MASH population estimators based on:
+
+  (1) E. Runeson, J.; P. Fay, T.; E. Manolopoulos, D. Exciton Dynamics from the Mapping Approach to Surface Hopping: Comparison with Förster and Redfield Theories. Physical Chemistry Chemical Physics 2024, 26 (6), 4929–4938. https://doi.org/10.1039/D3CP05926J.
+
+*/
+
+  //======= First, compute the SE populations ========
+  int sz,i;
+
+  if(rep==0 || rep==2){ sz = ndia; }
+  else if(rep==1 || rep==3){ sz = nadi; }
+
+  MATRIX ave(sz, sz);
+  ave = compute_average_dm(rep).real();
+
+  vector<double> res(sz, 0.0);
+
+  for(i=0; i<sz; i++){ res[i] = ave.get(i,i); }
+
+  //====== Now transform them according to MASH estimators formula =====
+
+  double sum = 0.0;
+  for(i=1; i<=sz; i++){  sum += 1.0/i; }  sum -= 1.0;
+  double alpha_N = (sz - 1.0)/sum;
+  double beta_N = (1.0 - alpha_N)/sz;
+
+  for(i=0; i<sz; i++){  res[i] = alpha_N * res[i] + beta_N; }
+
+  return res;
+
+}
+
   
 
 vector<double> dyn_variables::compute_average_sh_pop(int rep){

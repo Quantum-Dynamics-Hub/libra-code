@@ -313,6 +313,7 @@ void export_dyn_variables_objects(){
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
+      .def("compute_average_mash_pop", &dyn_variables::compute_average_mash_pop)
 
       .def("compute_tcnbra_ekin", &dyn_variables::compute_tcnbra_ekin)
       .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
