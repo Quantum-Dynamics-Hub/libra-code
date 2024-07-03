@@ -84,7 +84,7 @@ vector< vector< vector<int> > > allocate_3D(int sz1, int sz2, int sz3);
 
 
 void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params);
-
+void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params, int verbose);
 
 }// libutil
 
