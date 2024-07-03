@@ -49,7 +49,7 @@ import matplotlib.pyplot as plt   # plots
 #from matplotlib.mlab import griddata
 
 
-def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):    
+def plot_pes_properties(comp_model, _model_params, _pes_params, _plot_params):    
     """
         Args:
         
@@ -113,7 +113,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
                     
     """
     
-    pes_params = dict(pes_params_)
+    #pes_params = dict(_pes_params)
+    pes_params = _pes_params
     pes_params_critical = [ "rep_tdse", "rep_ham" ] 
     pes_params_default = { "ndia":2, "nadi":2, "ndof":1,
                            "active_dof":0,
@@ -163,7 +164,8 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
     clrs_index_ = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
     
-    plot_params = dict(plot_params_)
+    #plot_params = dict(_plot_params)
+    plot_params = _plot_params
     plot_params_critical = [  ] 
     plot_params_default = { "which_ham_dia":[],    "which_ham_adi":[],
                             "which_d1ham_dia":[],  "which_d1ham_adi":[],
@@ -248,6 +250,9 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
     dyn_var = dyn_variables(ndia, nadi, ndof, 1)
     
+    #model_params = dict(_model_params)
+    model_params = _model_params
+
     for step in range(nsteps):
         q = None
         if coord_mapping == None:
@@ -293,8 +298,7 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
         for it_indx, it in enumerate(which_dc1_adi):                
             dc1_adi[it_indx].append( ham.get_dc1_adi(it[0],tid).get(it[1], it[2]).real )
 
-        
-
+    
        
     plt.rc('axes', titlesize=38)      # fontsize of the axes title
     plt.rc('axes', labelsize=38)      # fontsize of the x and y labels
@@ -310,7 +314,9 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
 
             
     #======== Now lets plot what we have computed ===========
-    plt.figure(1, figsize=(36, 18)) # dpi=300, frameon=False)
+    plt.figure(figsize=(36, 18)) # dpi=300, frameon=False)
+    #findx = plt.gcf().number
+    #plt.figure(findx + 1, figsize=(36, 18)) # dpi=300, frameon=False)
     plt.subplot(1,2,1)
     plt.title('Diabatic energies')
     plt.xlabel('Coordinate, a.u.')
@@ -327,9 +333,12 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
         plt.plot(grid, ham_adi[it_indx], label='$H_{%i, %i}$' % (it[0], it[1]), linewidth=5, color = colors[ clrs_index[it_indx] ]) 
     plt.legend()
     plt.show()
+    #plt.clf()
     plt.close()
 
-    plt.figure(2, figsize=(36, 18)) # dpi=300, frameon=False)
+    plt.figure(figsize=(36, 18)) # dpi=300, frameon=False)
+    #findx = plt.gcf().number
+    #plt.figure(findx + 1, figsize=(36, 18)) # dpi=300, frameon=False)
     plt.subplot(1,2,1)
     plt.title('Derivatives of diabatic energies')
     plt.xlabel('Coordinate, a.u.')
@@ -346,10 +355,13 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
         plt.plot(grid, d1ham_adi[it_indx], label='$dH_{%i, %i} / dR_{%i}$' % (it[1],it[2], it[0]), linewidth=5, color = colors[ clrs_index[it_indx] ]) 
     plt.legend()
     plt.show()
+    #plt.clf()
     plt.close()
     
     
-    plt.figure(3, figsize=(36, 18)) # dpi=300, frameon=False)
+    plt.figure(figsize=(36, 18)) # dpi=300, frameon=False)
+    #findx = plt.gcf().number
+    #plt.figure(findx + 1, figsize=(36, 18)) # dpi=300, frameon=False)
     plt.subplot(1,2,1)
     plt.title('Derivatives couplings, diabatic rep.')
     plt.xlabel('Coordinate, a.u.')
@@ -365,16 +377,15 @@ def plot_pes_properties(comp_model, model_params, pes_params_, plot_params_):
     for it_indx, it in enumerate(which_dc1_adi):
         plt.plot(grid, dc1_adi[it_indx], label='$< \psi_{%i} | dR_{%i} | \psi_{%i} >$' % (it[1], it[0], it[2]), linewidth=5, color = colors[ clrs_index[it_indx] ]) 
     plt.legend()    
-    
-
     plt.show()
+    #plt.clf()
     plt.close()
 
     return scan_path
 
 
 
-def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, plot_params,\
+def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, dx, _plot_params,\
                  _ndof=1, _active_dof=0, _all_coordinates=[0.0]):
     """
     Args:
@@ -433,6 +444,8 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
         
     """
 
+    # I know - this is a super-bad practice, but let's do it this way
+    #import matplotlib.pyplot as plt
 
     colors_ = {}
 
@@ -453,7 +466,7 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 
     clrs_index_ = ["11", "21", "31", "41", "12", "22", "32", "13","23", "14", "24"]
 
-
+    plot_params = dict(_plot_params)
 
     # Parameters and dimensions
     critical_params = [  ] 
@@ -517,8 +530,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     for iset in range(sz):
                
         # The "nstates" field must be specified
-        comn.check_input(_param_sets[iset], {}, ["nstates"])
-        n = _param_sets[iset]["nstates"]
+        model_params = dict(_param_sets[iset])
+        comn.check_input(model_params, {}, ["nstates"])
+        n = model_params["nstates"]
         nstates = n
         
         ham = nHamiltonian(nstates, nstates, _ndof) # ndia, nadi, nnucl
@@ -544,14 +558,13 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                 
     
         for i in range(nsteps):
-
             scan_coord = MATRIX(_ndof, 1);
             for j in range(_ndof):
                 scan_coord.set(j, 0, _all_coordinates[j])                 
             scan_coord.set(_active_dof, 0, X[i])  
         
             # Diabatic properties
-            ham.compute_diabatic(_compute_model, scan_coord, _param_sets[iset])
+            ham.compute_diabatic(_compute_model, scan_coord, model_params ) 
             
             # Adiabatic properties
             ham.compute_adiabatic(1);       
@@ -569,10 +582,16 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                     nac[k1][k2].append(nac_k1_k2)
                     nac_abs[k1][k2].append( abs(nac_k1_k2) )
 
+        #print(hadi)
+
 
         if plotting_option==0:  # Plot diabatic and adiabatic surfaces separately, plot projections too
+
+            findx = plt.gcf().number
+            print("Current figre index is ", findx)
                     
-            #plt.figure(2*iset, figsize=fig_size ) # dpi=300, frameon=False)
+            #==================== Diabatic and Adiabatic surfaces ==============
+            #plt.figure(findx + 1, figsize=fig_size ) # dpi=300, frameon=False)
             plt.figure(figsize=fig_size ) # dpi=300, frameon=False)
                 
             plt.subplot(1, 2, 1)    
@@ -601,16 +620,26 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
                 if not os.path.exists(F"{prefix}"):
                     os.system(F"mkdir {prefix}")
                 plt.savefig(F"{prefix}/Ham_dia_E_adi_set_{iset}.png", dpi=dpi_value)            
-            
-                  
-            #plt.figure(2*iset+1, figsize=fig_size ) # dpi=300, frameon=False)            
+
+            if do_show:
+                plt.show()
+
+            #plt.clf()
+            #plt.close()
+
+            #=================== Projections ============================                  
+            findx = plt.gcf().number
+            print("Current figre index is ", findx)
+            #plt.figure( findx + 1, figsize=fig_size ) # dpi=300, frameon=False)            
             plt.figure(figsize=fig_size ) # dpi=300, frameon=False)
             sz1 = len(states_of_interest)
     
             for k2 in states_of_interest:
                 indx = states_of_interest.index(k2)
 
-                plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
+                #plt.figure(2*iset+1+indx, figsize=(36, 18)) # dpi=300, frameon=False)            
+                #plt.figure(2*iset+1+indx, figsize=fig_size) # dpi=300, frameon=False)
+                plt.subplot(sz1, 1, indx+1)
 
                 #plt.subplot(1, sz1, 1+indx)
                 #plt.subplot(1, 1, 1+indx)
@@ -630,13 +659,15 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
     
             if do_show:
                 plt.show()
-        
-            plt.close()          
+
+            #plt.clf()        
+            #plt.close()          
 
         elif plotting_option==1:  # Plot diabatic and adiabatic surfaces in one picture, using dashed lines for diabatic
                                   # Plot NACs in a separate panel
 
-            plt.figure(iset, figsize=fig_size) # dpi=300, frameon=False)
+            findx = plt.gcf().number
+            plt.figure(figsize=fig_size) # dpi=300, frameon=False)
 
             plt.subplot(1, 2, 1)
             plt.ylim(ylim[0], ylim[1])
@@ -676,5 +707,9 @@ def plot_surfaces(_compute_model, _param_sets, states_of_interest, xmin, xmax, d
 
             if do_show:
                 plt.show()
+            #plt.clf()
+            #plt.close()
+    #plt.close()
 
-            plt.close()
+
+
