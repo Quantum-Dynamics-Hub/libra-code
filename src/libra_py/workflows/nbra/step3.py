@@ -949,7 +949,8 @@ def limit_active_space(params):
             lowest_orbital (integer): The lowest_orbital defined in step 2
             highest_orbital (integer): The highest_orbital defined in step 2
     Returns:
-        None but it prints the new value of lowest_orbital and highest_orbital 
+        l2 (integer): The new value of lowest_orbital 
+        h2 (integer): the new value of highest_orbital 
     """
     nocc = params['num_occ_orbitals']
     nunocc = params['num_unocc_orbitals']
