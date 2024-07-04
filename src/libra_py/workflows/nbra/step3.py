@@ -934,6 +934,53 @@ def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
             St.scale(a,b, fab)
 
 
+def limit_active_space(params):
+    """
+    This function limits the active space of Kohn-Sham matrices 
+    generated in step 2 based on the number of 
+    occupied and unoccupied orbitals specified by user. 
+    Args:
+        params (dict):   
+            num_occ_orbitals (integer): The number of occupied orbitals
+            num_unocc_orbitals (integer): The number of unoccupied orbitals
+            path_to_npz_files (string): The full path to res directory from step 2
+            path_to_save_npz_files (string): The full path to save the Kohn-Sham files
+            logfile_directory (string): The full path to all log files 
+            lowest_orbital (integer): The lowest_orbital defined in step 2
+            highest_orbital (integer): The highest_orbital defined in step 2
+    Returns:
+        None but it prints the new value of lowest_orbital and highest_orbital 
+    """
+    nocc = params['num_occ_orbitals']
+    nunocc = params['num_unocc_orbitals']
+    l1 = params['lowest_orbital']
+    h1 = params['highest_orbital']
+    sample_logfile = glob.glob(f'{params["logfile_directory"]}/*.log')[0]
+    os.system(f'mkdir {params["path_to_save_npz_files"]}')
+    # currently working only for restricted KS
+    homo_index = CP2K_methods.read_homo_index(sample_logfile, isUKS=False)
+    l2 = homo_index-nocc+1
+    h2 = homo_index+nunocc
+    l2_index = l2-l1
+    h2_index = h2-l1+1
+    norbitals = nocc + nunocc
+    zero_mat = np.zeros((norbitals, norbitals))
+    for prop in ['S', 'St', 'E']:
+        files = glob.glob(f'{params["path_to_npz_files"]}/{prop}_*.npz')
+        print(f'Restricting the active space for {prop}..')
+        for file in files:
+            mat = sp.load_npz(file).todense().real
+            new_mat = mat[l2_index:h2_index,:][:,l2_index:h2_index]
+            new_mat_two_spinor = data_conv.form_block_matrix(new_mat, zero_mat, zero_mat, new_mat)
+            new_mat_sparse = sp.csc_matrix(new_mat_two_spinor)
+            step = int(file.split('/')[-1].replace(prop,'').replace('_','').replace('ks','').replace('.','').replace('npz',''))
+            sp.save_npz(f'{params["path_to_save_npz_files"]}/{prop}_ks_{step}.npz', new_mat_sparse)
+    print('Done with limiting the active space')
+    print(f'Your new path_to_npz_files is now: {params["path_to_save_npz_files"]}')
+    print(f'Use the new lowest_orbital: {l2} and highest_orbital: {h2}')
+
+    return l2, h2
+
 
 def apply_phase_correction(St):
     """Performs the phase correction according to:         
