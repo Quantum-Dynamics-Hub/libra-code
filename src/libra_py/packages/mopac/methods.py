@@ -63,7 +63,7 @@ def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
     # Create the actual output file
     mopac_input = open(mopac_input_filename,"w");
 
-    mopac_input.write(F"{mopac_run_params}\n\n")
+    mopac_input.write(F"{mopac_run_params}\n\n\n")
 
     nat = len(labels) # how many atoms 
     for i in range(nat):
@@ -71,7 +71,7 @@ def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
         y = coords.get(3*i+0, 1)/units.Angst
         z = coords.get(3*i+0, 2)/units.Angst
         mopac_input.write(F"{labels[i]}   {x}  1  {y} 1   {z}  1\n")
-     
+    mopac_input.write("\n")
     mopac_input.close()
 
 
@@ -107,15 +107,6 @@ def run_mopac_adi(q, params_, full_id):
             * obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian             
             * obj.d1ham_adi ( list of ndof CMATRIX(nstates, nstates) objects ): 
                 derivatives of the adiabatic Hamiltonian w.r.t. the nuclear coordinate            
-
-
-        string method_id="HAMILTONIAN:";
-        string time_step_id="TIME STEPS:";
-        string trajectory_id="TRAJECTORY FILE:";
-        string trajectory_directory_id="TRAJECTORY DIRECTORY:";
-        string charge_id="CHARGE:";
-        string convergence_id="SCF CONVERGENCE CRITERIA:";
-        string mopac_prefix_id="MOPAC PREFIX:";
  
     """
 
@@ -202,72 +193,109 @@ def mopac_nbra_workflow(params_):
 
 
 
-def read_mopac_output(natoms, istate):
+def read_mopac_mos(params_):
     """
-    TO DO: This function is yet to be implemented 
-    This file reads in the total energy (essentially the reference, ground state energy), 
-    the excitation energies, and the corresponding forces on all atoms and return them in 
-    a digital format for further processing.
+    This function reads the MOs from the output files
     
     Args:
     
-        natoms ( int ): the number of atoms in the systemm
-        istate ( int ): the index of the calculation - just for archiving purposes
+        params_ ( dict ): the dictionary containing key parameters
+
+            * **params_["filename"]** ( string ) : the name of the file to read
         
     Returns: 
-        double, MATRIX(ndof, 1): the total energy of a given electronic state,         
-            and the corresponding gradients
+        MATRIX(nao, nmo): the matrix of the MO-LCAO coefficients
+ 
     """
+    params = dict(params_)
+
+    critical_params = [ ]
+    default_params = { "filename":"output"  }
+    comn.check_input(params, default_params, critical_params)
+
+    out_file = params["filename"]
+
     
     # Check the successful completion of the calculations like this:
-    if os.path.isfile('detailed.out'):
-        #print("Found detailed.out")
-        os.system(F"cp detailed.out detailed_{istate}.out")
+    if os.path.isfile(out_file):
+        pass
     else:
-        print("\nCannot find the file detailed.out")
+        print(F"Cannot find the file {out_file}")
         print(F"Hint: Current working directory is: {os.getcwd()}")
         print("Is this where you expect the file detailed.out to be found?")
         print("Exiting program...\n")
         sys.exit(0)
-            
-    
-    ndof = 3 * natoms
-    grad = MATRIX(ndof, 1)
-    
-    
-    f = open("detailed.out")
+                 
+    f = open(out_file)
     output = f.readlines()
     f.close()
-    
-    E = 0.0
     nlines = len(output)
-            
-    for i in range( nlines ):
 
-        output_line = output[i].split()
+    # First, let's find where the MOs are and count how many of them we have
+    ibeg, iend, nmo = 0, nlines-1, 0
+    for i in range(nlines):
+        line = output[i]
 
-        if len( output_line ) >= 2:
-            
-            if output_line[0] == "Total" and output_line[1] == "Forces":
+        if line.find("MOLECULAR ORBITALS") != -1:
+            ibeg = i
+        if line.find("Reference determinate nber") != -1:
+            iend = i
 
-                for j in range( natoms ):
+        if line.find("ROOT NO.") != -1:
+            nmo = int(float(line.split()[-1]))
 
-                    next_lines = output[i+j+1].split()  
+    if False: # Make True, for debugging
+        print("nmo = ", nmo)
+        print(output[ibeg:iend])
 
-                    grad.set( 3*j+0, 0, -float(next_lines[1]) )
-                    grad.set( 3*j+1, 0, -float(next_lines[2]) )
-                    grad.set( 3*j+2, 0, -float(next_lines[3]) )
+    nao = nmo 
 
-            if output_line[0] == "Excitation" and output_line[1] == "Energy:" :
-            
-                E += float(output_line[2])  # energy in a.u.
-                #print(output_line[2])
-                
-            if output_line[0] == "Total" and output_line[1] == "energy:" :
-                
-                E += float(output_line[2])  # energy in a.u.
-                #print(output_line[2])
-    
-    #print(F"Final energy = {E}")
-    return E, grad          
+    # Find the line indices that contain "ROOT NO." keyword
+    # the last one will be the `iend`
+    break_lines = []
+    for i in range(ibeg, iend):
+        line = output[i]
+        if line.find("ROOT NO.") != -1:
+            break_lines.append(i)
+    break_lines.append(iend)
+    nblocks = len(break_lines)
+
+    # Now read energies:
+    E = []
+    Es = MATRIX(nmo, nmo)
+    for j in range(nblocks-1):
+        i = break_lines[j]
+        print(output[i+2])
+        tmp = output[i+2].split()
+        for e in tmp:
+            ener = float(e)
+            E.append( ener )
+    for i in range( nmo ):
+        Es.set(i,i, E[i])
+
+    if False: # Make True, for debugging
+        print(E)
+
+    # Now read MOs:
+    mo_indx = 0
+    MOs = MATRIX(nao, nmo)
+    for j in range(nblocks-1):
+        i = break_lines[j]
+        tmp = output[i+2].split()
+        ncols = len(tmp)
+        ao_indx = 0
+        for i in range( break_lines[j]+5, break_lines[j+1]):
+            tmp = output[i].split()
+            sz = len(tmp)
+            if( sz == ncols + 3 ):
+                for a in range(ncols):
+                    coeff = float(tmp[3+a])
+                    MOs.set(ao_indx, mo_indx + a, coeff)
+                ao_indx += 1
+        mo_indx += ncols
+
+    if False: # Make True, for debugging
+        MOs.show_matrix("MO.txt")
+
+    return Es, MOs
 
