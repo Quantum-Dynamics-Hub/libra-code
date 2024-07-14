@@ -193,9 +193,9 @@ def mopac_nbra_workflow(params_):
 
 
 
-def read_mopac_mos(params_):
+def read_mopac_orbital_info(params_):
     """
-    This function reads the MOs from the output files
+    This function reads the MOs, configurations, and CI from the output files
     
     Args:
     
@@ -204,7 +204,22 @@ def read_mopac_mos(params_):
             * **params_["filename"]** ( string ) : the name of the file to read
         
     Returns: 
-        MATRIX(nao, nmo): the matrix of the MO-LCAO coefficients
+        (Es, MOs, E_CI, CI, configs): 
+     
+            * Es - MATRIX(nmo, nmo): the matrix of the MO energies
+            * MOs - MATRIX(nao, nmo): the matrix of MO-LCAO coefficients
+            * E_CI - MATRIX(nci, nci): the matrix of CI energies
+            * CI - MATRIX(nconf, nci): the matrix of CI coefficients in the basis of spin-adapted configurations
+            * configs - (list of lists): information about the configurations, the first list is [-1, -1] - it corresponds 
+                 to the ground state configurations, other lists are of the kinds [i, j] which corresponds to i->j excitation
+                 The indices i and j are enumerated starting from 0 (Python/C++ convention), which is different from the 
+                 raw MOPAC output, where MO indexing starts from 1
+    Notes:
+            * nao - the number of AOs, it is the same as nmo
+            * nmo - the number of MOs
+            * nconf  - the number of configurations (spin-adapted Slater determinants)
+            * nci - the number of CI states
+                              
  
     """
     params = dict(params_)
@@ -244,7 +259,7 @@ def read_mopac_mos(params_):
         if line.find("ROOT NO.") != -1:
             nmo = int(float(line.split()[-1]))
 
-    if False: # Make True, for debugging
+    if False: # Make True for debugging
         print("nmo = ", nmo)
         print(output[ibeg:iend])
 
@@ -265,7 +280,6 @@ def read_mopac_mos(params_):
     Es = MATRIX(nmo, nmo)
     for j in range(nblocks-1):
         i = break_lines[j]
-        print(output[i+2])
         tmp = output[i+2].split()
         for e in tmp:
             ener = float(e)
@@ -273,7 +287,7 @@ def read_mopac_mos(params_):
     for i in range( nmo ):
         Es.set(i,i, E[i])
 
-    if False: # Make True, for debugging
+    if False: # Make True for debugging
         print(E)
 
     # Now read MOs:
@@ -294,8 +308,72 @@ def read_mopac_mos(params_):
                 ao_indx += 1
         mo_indx += ncols
 
-    if False: # Make True, for debugging
+    if False: # Make True for debugging
         MOs.show_matrix("MO.txt")
 
-    return Es, MOs
+
+    # Find the configurations
+    nconfig = 0
+    configs = []
+    for i in range(nlines):
+        line = output[i]
+        if line.find("The lowest") != -1 and line.find("spin-adapted configurations of multiplicity=  1"):
+            tmp = line.split()
+            if( len(tmp) > 3): 
+                nconfig = int( float(tmp[2]) )
+                #========= Found the configurations info, now read the configurations ========
+                for iconfig in range(nconfig):
+                    tmp = output[i + 4 + iconfig].split()
+                    if len(tmp) == 12: 
+                        configs.append( [-1, -1])  # this is the ground state determinants
+                    if len(tmp) == 13:
+                        i_orb = int(float(tmp[10].split(")->(")[0]))
+                        j_orb = int(float(tmp[11]))
+                        configs.append( [ i_orb-1, j_orb-1])  # orbital indexing from 0
+
+
+    if False: # Make True for debugging
+        print(F"The number of spin-adapted configurations = {nconfig}")
+        print(F"configs are = {configs}")
+
+
+    # Find the line indices that contain the beginning and end of the CI information
+    ci_beg, ci_end = [], []
+    for i in range(nlines):
+        line = output[i]
+        if line.find("State") != -1 and line.find("CI coeff") != -1 and line.find("CI percent") != -1:
+            ci_beg.append(i)
+        if line.find("Total coeff printed") != -1:
+            ci_end.append(i)
+
+    nci = len(ci_beg)
+
+    if False: # Make True for debugging
+        print(F"The number of CI states = {nci}") 
+        for i in range(nci):
+            print(F"CI block {i}")
+            print(output[ci_beg[i]:ci_end[i]])
+
+
+    #  Now, read the information about CI states
+    E_CI = MATRIX(nci, nci)
+    CI = MATRIX(nconfig, nci)
+    for i in range(nci):
+        for j in range(ci_beg[i], ci_end[i]):
+            tmp = output[j].split()
+            sz = len(tmp)
+            if sz==7:
+                ener = float( tmp[2] ) * units.ev2au  # convert to a.u.
+                E_CI.set(i,i, ener)
+            elif sz==4:
+                if tmp[0]=="Config":
+                    iconf = int(float(tmp[1])) - 1
+                    coeff = float(tmp[2])
+                    CI.set(iconf, i, coeff)
+    
+
+    return Es, MOs, E_CI, CI, configs
+
+
+
 
