@@ -421,7 +421,7 @@ def read_trajectory_xyz_file(file_name: str, step: int):
     
     Returns:
     
-        None
+        (list, MATRIX(ndof, 1)): labels of all atoms, and their coordinates, ndof = 3 * natoms
 	
     """
 
@@ -431,6 +431,8 @@ def read_trajectory_xyz_file(file_name: str, step: int):
 
     # The number of atoms for each time step in the .xyz file of the trajectory.
     number_of_atoms = int(lines[0].split()[0])
+
+    q = MATRIX(3*number_of_atoms, 1)
 
     # Write the coordinates of the 't' th step in file coord-t.xyz
     f = open('coord-%d'%step+'.xyz','w')
@@ -443,7 +445,18 @@ def read_trajectory_xyz_file(file_name: str, step: int):
         f.write( lines[i] )
     f.close()
 
+    labels = []
+    for i in range(number_of_atoms):
+        tmp = lines[ n * step + 2 + i ].split()
+        labels.append( tmp[0])
+        x = float( tmp[1])  * units.Angst  # convert Angstrom to Bohr
+        y = float( tmp[2])  * units.Angst  # convert Angstrom to Bohr
+        z = float( tmp[3])  * units.Angst  # convert Angstrom to Bohr
+        q.set(3*i + 0, 0,  x)
+        q.set(3*i + 1, 0,  y)
+        q.set(3*i + 2, 0,  z)
 
+    return labels, q
 
 
 
