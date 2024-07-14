@@ -193,6 +193,62 @@ def mopac_nbra_workflow(params_):
 
 
 
+def make_ref(nelec):
+    """
+    Makes the reference determinant based on the number of electrons
+
+    Args: 
+        nelec (int) : the total number of electrons in the system
+
+    Returns:
+        list of ints: representation of the reference (ground-state) determinant
+
+        E.g. [1, -1, 2, -2] is the determinant of 4 electrons with 2 lowest orbitals doubly-filled 
+        Here, the indexing starts with 1, and negative values correspond to the beta-spin electron
+        while positive values - to the alpha-spin electron
+    """
+
+    res, orb = [], 1
+    for i in range(nelec):
+        if i%2==0:
+            res.append(orb)
+        else:
+            res.append(-orb)
+            orb = orb + 1
+    return res 
+
+def make_alpha_excitation(ref_determinant, config):
+    """
+    This function creates an excitation of the alpha electron in the reference determinant
+    exciting the electron from and to orbitals determined by the `config` argument
+
+    Args: 
+
+        ref_determinant (list of ints): representation of the reference determinants
+         
+        config (list of 2 ints): [src, targt]  - source and target orbitals for single excitation, the 
+            indexing starts from 1, not from 0. 
+
+    Returns: 
+        list of ints: the representation of the excited configuration
+
+    Example: 
+        make_alpha_excitation([1, -1, 2, -2], [2, 3])  corresponds to 2->3 excitation and should return
+      
+        [1, -1, 3, -2]
+    """
+    src = config[0]
+    trgt = config[1]
+
+    res = list(ref_determinant)
+    nelec = len(res)
+    for i in range(nelec):
+        if res[i]==src:
+            res[i] = trgt
+    
+    return res
+
+
 def read_mopac_orbital_info(params_):
     """
     This function reads the MOs, configurations, and CI from the output files
@@ -210,15 +266,15 @@ def read_mopac_orbital_info(params_):
             * MOs - MATRIX(nao, nmo): the matrix of MO-LCAO coefficients
             * E_CI - MATRIX(nci, nci): the matrix of CI energies
             * CI - MATRIX(nconf, nci): the matrix of CI coefficients in the basis of spin-adapted configurations
-            * configs - (list of lists): information about the configurations, the first list is [-1, -1] - it corresponds 
-                 to the ground state configurations, other lists are of the kinds [i, j] which corresponds to i->j excitation
-                 The indices i and j are enumerated starting from 0 (Python/C++ convention), which is different from the 
-                 raw MOPAC output, where MO indexing starts from 1
+            * sd_basis - (list of lists of `nelec` ints): representation of the Slater determinants of `nelec`-electronic
+                 states. The indexing starts from 1.
+
     Notes:
             * nao - the number of AOs, it is the same as nmo
             * nmo - the number of MOs
             * nconf  - the number of configurations (spin-adapted Slater determinants)
             * nci - the number of CI states
+            * nelec - the number of electrons
                               
  
     """
@@ -245,6 +301,14 @@ def read_mopac_orbital_info(params_):
     output = f.readlines()
     f.close()
     nlines = len(output)
+
+    # Determine the number of electrons:
+    nocc = 0
+    for i in range(nlines):
+        line = output[i]
+        if line.find("RHF CALCULATION, NO. OF DOUBLY OCCUPIED LEVELS") != -1:
+            nocc = int( float(line.split()[8]) )
+    nelec = 2 * nocc
 
     # First, let's find where the MOs are and count how many of them we have
     ibeg, iend, nmo = 0, nlines-1, 0
@@ -325,11 +389,17 @@ def read_mopac_orbital_info(params_):
                 for iconfig in range(nconfig):
                     tmp = output[i + 4 + iconfig].split()
                     if len(tmp) == 12: 
-                        configs.append( [-1, -1])  # this is the ground state determinants
+                        configs.append( [1, 1])  # this is the ground state determinant
                     if len(tmp) == 13:
                         i_orb = int(float(tmp[10].split(")->(")[0]))
                         j_orb = int(float(tmp[11]))
-                        configs.append( [ i_orb-1, j_orb-1])  # orbital indexing from 0
+                        configs.append( [ i_orb, j_orb])  # orbital indexing from 1 - as in MOPAC
+
+    sd_basis = []
+    ref = make_ref(nelec); 
+    for cnf in configs:
+        sd = make_alpha_excitation(ref, cnf)
+        sd_basis.append(sd)
 
 
     if False: # Make True for debugging
@@ -372,7 +442,7 @@ def read_mopac_orbital_info(params_):
                     CI.set(iconf, i, coeff)
     
 
-    return Es, MOs, E_CI, CI, configs
+    return Es, MOs, E_CI, CI, sd_basis
 
 
 
