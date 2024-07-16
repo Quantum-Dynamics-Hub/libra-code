@@ -36,7 +36,7 @@ from libra_py import scan
 from libra_py import regexlib as rgl
 
 import libra_py.packages.cp2k.methods as CP2K_methods
-
+import libra_py.workflows.nbra.mapping2 as mapping2
 
 def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
     """
@@ -47,7 +47,7 @@ def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
         * mopac_input_filename ( string ): the name of the input file to create
 
         * mopac_run_params ( string ): the string containing the specification for the MOPAC run. 
-        E.g. one can use: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00"
+        E.g. one can use: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2"
 
         * labels (list of stings): element symbols for atoms in the system (N items), e.g.
          ["C", "H", "H", "H", "H"] for methane
@@ -78,52 +78,43 @@ def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
 class tmp:
     pass
 
-def run_mopac_adi(q, params_, full_id):
+def run_mopac(coords, params_):
     """
    
-    This function executes the MOPAC quantum chemistry calculations and 
-    returns the key properties needed for dynamical calculations.
+    This function executes the MOPAC quantum chemistry calculations 
 
     Args: 
-        q ( MATRIX(ndof, ntraj) ): coordinates of the particle [ units: Bohr ]
+        coords ( MATRIX(ndof, 1) ): coordinates of the particle [ units: Bohr ]
         params ( dictionary ): model parameters
 
             * **params_["labels"]** ( list of strings ): the labels of atomic symbolc - for all atoms,
                 and in a order that is consistent with the coordinates (in triples) stored in `q`.
                 The number of this labels is `natoms`, such that `ndof` = 3 * `natoms`. [ Required ]                
-            * **params["nstates"]** ( int ): the total number of electronic states 
-                in this model [ default: 1 - just the ground state]                     
             * **params_["mopac_exe"]** ( string ):  the full path to `the mopac` executable [ defaut: "mopac" ]
             * **params_["mopac_run_params"]** ( string ): the control string to define the MOPAC job
-                [default: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00"]
+                [default: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2"]
             * **params_["mopac_working_directory"]** ( string ) [ default: "mopac_wd"]
             * **params_["mopac_jobid"]** ( string ) [ default: "job_0000" ]
             * **params_["mopac_input_prefix"]** ( string ) [ default: "input_" ]
             * **params_["mopac_output_prefix"]** ( string ) [ default: "output_" ]
                             
     Returns:       
-        PyObject: obj, with the members:
-
-            * obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian             
-            * obj.d1ham_adi ( list of ndof CMATRIX(nstates, nstates) objects ): 
-                derivatives of the adiabatic Hamiltonian w.r.t. the nuclear coordinate            
+        None
  
     """
 
     params = dict(params_)
     
     critical_params = [ "labels" ] 
-    default_params = { "nstates":1,
-                       "mopac_exe":"mopac", 
-                       "mopac_run_params":"INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00",
+    default_params = { "mopac_exe":"mopac", 
+                       "mopac_run_params":"INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
                        "mopac_working_directory":"mopac_wd",
                        "mopac_jobid":"job_0000",
                        "mopac_input_prefix":"input_", "mopac_output_prefix":"output_"
                      }
     comn.check_input(params, default_params, critical_params)
         
-    labels = params["labels"]      
-    nstates = params["nstates"]    
+    labels = params["labels"]
     mopac_exe = params["mopac_exe"]
     mopac_run_params = params["mopac_run_params"]
     mopac_wd = params["mopac_working_directory"]
@@ -134,24 +125,6 @@ def run_mopac_adi(q, params_, full_id):
     natoms = len(labels)
     ndof = 3 * natoms
         
-    obj = tmp()
-    obj.ham_adi = CMATRIX(nstates, nstates)    
-    obj.nac_adi = CMATRIX(nstates, nstates)    
-    obj.hvib_adi = CMATRIX(nstates, nstates)            
-    obj.basis_transform = CMATRIX(nstates, nstates) 
-    obj.time_overlap_adi = CMATRIX(nstates, nstates)
-    obj.d1ham_adi = CMATRIXList();
-    obj.dc1_adi = CMATRIXList();          
-    for idof in range(ndof):
-        obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
-        obj.dc1_adi.append( CMATRIX(nstates, nstates) )
-  
-
-    Id = Cpp2Py(full_id)
-    indx = Id[-1]
-
-    coords = q.col(indx)
-
     # Create working directory, if doesn't exist
     if not os.path.exists(mopac_wd):
         os.mkdir(mopac_wd)
@@ -169,27 +142,6 @@ def run_mopac_adi(q, params_, full_id):
 
     # Go back to the original directory
     os.chdir("../")
-    
-    """    
-        # At this point, we should have the "detailed.out" file created, so lets read it        
-        E, grad = read_dftb_output(natoms, istate)
-
-        # Now, populate the allocated matrices                
-        obj.ham_adi.set(istate, istate, E * (1.0+0.0j) )
-        obj.hvib_adi.set(istate, istate, E * (1.0+0.0j) )        
-        obj.basis_transform.set(istate, istate, 1.0+0.0j )        
-        obj.time_overlap_adi.set(istate, istate, 1.0+0.0j )
-        for idof in range(ndof):        
-            obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )                
-    """
-                    
-    return obj
-
-
-def mopac_nbra_workflow(params_):
-    pass
-    #labels, q = cp2k.read_trajectory_xyz_file("1_ring-pos-1.xyz", 0)
-    #run_mopac_adi(q, params_, full_id)
 
 
 
@@ -445,5 +397,162 @@ def read_mopac_orbital_info(params_):
     return Es, MOs, E_CI, CI, sd_basis
 
 
+
+def mopac_compute_adi(q, params, full_id):
+    """
+
+    This function creates an input for MOPAC, runs such calculations, extracts the current information on 
+    state energies and CI vectors, computes the required properties (such as time-overlaps, or NACs, etc.)
+    and stores the current information in the "previous variables", so that we could compute the dependent properties
+    on the next time-step
+
+    Args:
+        q ( MATRIX(ndof, ntraj) ): coordinates of the particle [ units: Bohr ]
+        params ( list of dictionaries ): model parameters, for each trajectory; this parameters variable will be used to 
+            also store the previous calculations, but that has to be done separately for each trajectory, i = full_id[-1]. That's why we
+            are making it into a list of dictionaries
+
+            * **params[i]["timestep"]** (int): the index of the timestep for trajectory i [ Required ]
+            * **params[i]["is_first_time"]** (int): the flag indicating if this is the new calculation for this trajectory or not
+              if it is True (1), the current values will be used as if they were previous; if False (0) - the previously stored values
+              will be used [ default: True ]
+            * **params[i]["labels"]** ( list of strings ): the labels of atomic symbolc - for all atoms,
+                and in a order that is consistent with the coordinates (in triples) stored in `q`.
+                The number of this labels is `natoms`, such that `ndof` = 3 * `natoms`. [ Required ]
+            * **params[i]["mopac_exe"]** ( string ):  the full path to `the mopac` executable [ defaut: "mopac" ]
+            * **params_[i]["mopac_run_params"]** ( string ): the control string to define the MOPAC job
+                [default: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2"]
+            * **params[i]["mopac_working_directory"]** ( string ) [ default: "mopac_wd"]
+            * **params[i]["mopac_jobid"]** ( string ) [ default: F"timestep_{timestep}_traj_{i}" ]
+            * **params[i]["mopac_input_prefix"]** ( string ) [ default: "input_" ]
+            * **params[i]["mopac_output_prefix"]** ( string ) [ default: "output_" ]
+            * **params[i]["dt"]** ( float ) - the time interval between the snapshots [ units: a.u.; default: 41 a.u. = 1 fs ]
+
+    Returns:
+        PyObject: obj, with the members:
+
+            * obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian, in the CI basis 
+            * obj.hvib_adi ( CMATRIX(nstates,nstates) ): adiabatic vibronic Hamiltonian, in the CI basis
+            * obj.basis_transform ( CMATRIX(nstates,nstates) ): assumed the identity - don't use it yet!
+            * obj.time_overlap_adi. ( CMATRIX(nstates,nstates) ): time-overlap in the CI basis
+
+    """
+
+    #params = dict(params_)
+
+    Id = Cpp2Py(full_id)
+    itraj = Id[-1]
+    coords = q.col(itraj)
+
+
+    critical_params = [ "labels", "timestep" ]
+    default_params = { "mopac_exe":"mopac", "is_first_time":True,
+                       "mopac_run_params":"INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
+                       "mopac_working_directory":"mopac_wd",
+                       "mopac_input_prefix":"input_", "mopac_output_prefix":"output_",
+                       "dt":1.0*units.fs2au
+                     }
+    comn.check_input(params[itraj], default_params, critical_params)
+
+  
+    timestep = params[itraj]["timestep"]
+    labels = params[itraj]["labels"]
+    is_first_time = params[itraj]["is_first_time"]
+    mopac_exe = params[itraj]["mopac_exe"]
+    mopac_run_params = params[itraj]["mopac_run_params"]
+    mopac_wd = params[itraj]["mopac_working_directory"]
+    mopac_jobid = params[itraj]["mopac_jobid"] = F"timestep_{timestep}_traj_{itraj}"
+    mopac_input_prefix = params[itraj]["mopac_input_prefix"]
+    mopac_output_prefix = params[itraj]["mopac_output_prefix"]
+    dt = params[itraj]["dt"]
+
+    natoms = len(labels)
+    ndof = 3 * natoms
+
+    # Run the calculations
+    #print("================ RUN MOPAC =================\n")
+    run_mopac(coords, params[itraj])
+
+    # Read the current output
+    filename = F"{mopac_wd}/{mopac_input_prefix}{mopac_jobid}.out"
+
+    #print("================ READ MOPAC =================\n")
+    #print("cwd = ", os.getcwd(), " reading the file ", filename)
+    E_curr, MO_curr, E_CI_curr, CI_curr, configs_curr = read_mopac_orbital_info({"filename":filename})
+
+    # Get the properties at the previous time-step
+    E_prev, MO_prev, E_CI_prev, CI_prev, configs_prev = None, None, None, None, None
+  
+    #print("================ THE REST =================\n")
+    if is_first_time:
+        # On the first step, assume the current properties are as the previous
+        E_prev, MO_prev = MATRIX(E_curr), MATRIX(MO_curr)
+        E_CI_prev, CI_prev = MATRIX(E_CI_curr), MATRIX(CI_curr)
+        configs_prev = list(configs_curr)
+    else:
+        # Otherwise, retrieve the previously-stored data
+        E_prev = params[itraj]["E_prev"]
+        MO_prev = params[itraj]["MO_prev"]
+        E_CI_prev = params[itraj]["E_CI_prev"]
+        CI_prev = params[itraj]["CI_prev"]
+        configs_prev = params[itraj]["configs_prev"]
+
+
+    nstates = CI_curr.num_of_cols
+    #print("nstates = ", nstates)
+
+    # Do the calculations - time-overlaps, energies, and Hvib
+    obj = tmp()
+    obj.ham_adi = CMATRIX(nstates, nstates)
+    obj.nac_adi = CMATRIX(nstates, nstates)
+    obj.hvib_adi = CMATRIX(nstates, nstates)
+    obj.basis_transform = CMATRIX(nstates, nstates)
+    obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    # Don't do the derivatives yet
+    #obj.d1ham_adi = CMATRIXList();
+    #obj.dc1_adi = CMATRIXList();
+    #for idof in range(ndof):
+    #    obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
+    #    obj.dc1_adi.append( CMATRIX(nstates, nstates) )
+
+    # Time-overlap in the MO basis 
+    mo_st = MO_prev.T() * MO_curr
+
+    # Time-overlap in the SD basis
+    time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
+
+    # Time-overlap in the CI basis
+    time_ovlp_ci = CI_prev.T() * time_ovlp_sd * CI_curr
+
+    # Now, populate the allocated matrices
+    for istate in range(nstates):   
+        energ = 0.5*( E_CI_curr.get(istate, istate) +  E_CI_prev.get(istate, istate) )
+        obj.ham_adi.set(istate, istate, energ * (1.0+0.0j) )
+        obj.hvib_adi.set(istate, istate, energ * (1.0+0.0j) )
+        obj.basis_transform.set(istate, istate, 1.0+0.0j ) # assume identity
+
+        for jstate in range(nstates):
+            obj.time_overlap_adi.set(istate, jstate, time_ovlp_ci.get(istate, jstate) * (1.0+0.0j) )
+        # Don't do this yet
+        #for idof in range(ndof):
+        #    obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )
+    # Update the Hvib:
+    for istate in range(nstates):
+        for jstate in range(istate+1, nstates):
+            dij = (obj.time_overlap_adi.get(istate, jstate) - obj.time_overlap_adi.get(jstate, istate) )/(2.0*dt)
+            obj.hvib_adi.set(istate, jstate, dij * (0.0-1.0j) )
+            obj.hvib_adi.set(jstate, istate, dij * (0.0+1.0j) )
+
+    # Now, make the current the previous and reset the flag `is_first_time` to False
+    # Note - we directly modify the input parameters    
+    params[itraj]["E_prev"] = E_curr
+    params[itraj]["MO_prev"] = MO_curr
+    params[itraj]["E_CI_prev"] = E_CI_curr
+    params[itraj]["CI_prev"] = CI_curr
+    params[itraj]["configs_prev"] = configs_curr
+    params[itraj]["is_first_time"] = False
+
+
+    return obj
 
 
