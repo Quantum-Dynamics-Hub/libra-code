@@ -753,6 +753,7 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   bp::list lst; lst.append(1.0);
   default_params["istates"] = lst;
   default_params["rep"] = 1;
+  default_params["rep_sh"] = 1;
   default_params["verbosity"] = 0;
 
   check_input(params, default_params, critical_params);
@@ -762,7 +763,7 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   int init_type;
   int istate;
   vector<double> istates;
-  int rep;
+  int rep, rep_sh;
   int verbosity;
 
 
@@ -775,6 +776,7 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
     else if(key=="istate") {  istate = bp::extract<int>(params.values()[i]); }
     else if(key=="istates") {  istates = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
     else if(key=="rep") {  rep = bp::extract<int>(params.values()[i]); }
+    else if(key=="rep_sh") {  rep = bp::extract<int>(params.values()[i]); }
     else if(key=="verbosity") {  verbosity = bp::extract<int>(params.values()[i]); }
 
   }
@@ -825,46 +827,84 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   ///================= Actual calculations  ================================
 
   act_states.clear();  
+  act_states_dia.clear();  
 
   //# Dynamical variables
-  //================ For adiabatic - set up them directly =================
-  for(traj=0; traj<ntraj; traj++){
-    if(init_type==0 || init_type==1 || init_type==4){ 
-      act_states.push_back(istate);
-    }
-    else if(init_type==2 || init_type==3){
-      ksi = rnd.uniform(0.0, 1.0);
-      act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
-    }
-  }// for traj
-
-  //============= For adiabatic: more complicated =========================
-  if(rep==0){
-    vector<int> dia_act_states(act_states);
-
-    CMATRIX pop_adi(nadi, nadi);
-    CMATRIX pop_dia(ndia, ndia);
-
+  if(rep_sh==1){
+    //================ For adiabatic - set up them directly =================
     for(traj=0; traj<ntraj; traj++){
-      i = dia_act_states[traj]; // active diabatic state
-      pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
-
-      // The following transformation is correct only for S_dia = 1
-      pop_adi = (*basis_transform[traj]).H() * pop_dia * (*basis_transform[traj]);
-
-      vector<double> res(nadi, 0.0);
-      for(i=0; i<nadi;i++){ res[i] = pop_adi.get(i,i).real(); }
-
-      // Now select an adiabatic state according to the probabilities in the res
-      ksi = rnd.uniform(0.0, 1.0);
-      act_states[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
-                                         // the distribution of the diabatic populations
-
-
+      if(init_type==0 || init_type==1 || init_type==4){ 
+        act_states.push_back(istate);
+      }
+      else if(init_type==2 || init_type==3){
+        ksi = rnd.uniform(0.0, 1.0);
+        act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
+      }
     }// for traj
 
-  }// rep == 0
+    //============= For adiabatic: more complicated =========================
+    if(rep==0){
+      act_states_dia = act_states;
 
+      CMATRIX pop_adi(nadi, nadi);
+      CMATRIX pop_dia(ndia, ndia);
+
+      for(traj=0; traj<ntraj; traj++){
+        i = act_states_dia[traj]; // active diabatic state
+        pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+        // The following transformation is correct only for S_dia = 1
+        pop_adi = (*basis_transform[traj]).H() * pop_dia * (*basis_transform[traj]);
+
+        vector<double> res(nadi, 0.0);
+        for(i=0; i<nadi;i++){ res[i] = pop_adi.get(i,i).real(); }
+
+        // Now select an adiabatic state according to the probabilities in the res
+        ksi = rnd.uniform(0.0, 1.0);
+        act_states[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
+                                         // the distribution of the diabatic populations
+      }// for traj
+  
+    }// rep == 0
+
+  }
+  else{
+    //================ For diabatic - set up them directly =================
+    for(traj=0; traj<ntraj; traj++){
+      if(init_type==0 || init_type==1 || init_type==4){ 
+        act_states_dia.push_back(istate);
+      }
+      else if(init_type==2 || init_type==3){
+        ksi = rnd.uniform(0.0, 1.0);
+        act_states_dia.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
+      }
+    }// for traj
+
+    //============= For diabatic: more complicated =========================
+    if(rep==1){
+      act_states = act_states_dia;
+
+      CMATRIX pop_adi(nadi, nadi);
+      CMATRIX pop_dia(ndia, ndia);
+
+      for(traj=0; traj<ntraj; traj++){
+        i = act_states[traj]; // active adiabatic state
+        pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+        pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H();
+
+        vector<double> res(nadi, 0.0);
+        for(i=0; i<nadi;i++){ res[i] = pop_dia.get(i,i).real(); }
+
+        // Now select an adiabatic state according to the probabilities in the res
+        ksi = rnd.uniform(0.0, 1.0);
+        act_states_dia[traj] = hop(res, ksi);  // this is the diabatic state that corresponds to
+                                         // the distribution of the adiabatic populations
+      }// for traj
+  
+    }// rep == 1
+
+  }
 }
 
 
@@ -1100,33 +1140,38 @@ vector<double> dyn_variables::compute_average_sh_pop(int rep){
   }
 
   vector<double> res(sz, 0.0);
-  vector<int> effective_states( act_states );
 
   if(rep==0){
-    // ===== For diabatic SH populations: use the prescription of ======
-    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
-    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
-
-    CMATRIX pop_adi(nadi, nadi);
-    CMATRIX pop_dia(ndia, ndia);
-    CMATRIX U(ndia, nadi);
-
-    for(traj=0; traj<ntraj; traj++){
-      i = effective_states[traj]; // active adiabatic state
-      pop_adi = *dm_adi[traj];
-      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
-      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
-
-      // The following transformation is correct only for S_dia = 1
-      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
-      
-      pop_dia = U * pop_adi * U.H(); 
-      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
-    }
+    //===== For diabatic populations =======
+    vector<int> effective_states( act_states_dia );
+    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+   
+    // Now, the active states in both representations are updated in each MD step 
+//    // ===== For diabatic SH populations: use the prescription of ======
+//    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+//    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+//
+//    CMATRIX pop_adi(nadi, nadi);
+//    CMATRIX pop_dia(ndia, ndia);
+//    CMATRIX U(ndia, nadi);
+//
+//    for(traj=0; traj<ntraj; traj++){
+//      i = effective_states[traj]; // active adiabatic state
+//      pop_adi = *dm_adi[traj];
+//      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
+//      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+//
+//      // The following transformation is correct only for S_dia = 1
+//      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+//      
+//      pop_dia = U * pop_adi * U.H(); 
+//      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
+//    }
   }// rep == 0
 
   else if(rep==1){
     //===== For adiabatic populations, we just use the active adiabatic states =======
+    vector<int> effective_states( act_states );
     for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
   }// rep == 1
 

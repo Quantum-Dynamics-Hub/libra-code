@@ -1220,6 +1220,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
+  vector<int> act_states_dia(dyn_var.act_states_dia);
   MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
@@ -1495,6 +1496,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
     vector<int> old_states(dyn_var.act_states); 
+    vector<int> old_states_dia(dyn_var.act_states_dia); 
     //========================== Hop proposal and acceptance ================================
 
     // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8)
@@ -1507,15 +1509,21 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
 
       // Propose new discrete states for all trajectories
-      vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
+      vector<int> prop_states(ntraj, 0);
+      if(prms.rep_sh==1){
+        prop_states = propose_hops(g, dyn_var.act_states, rnd);
     
-      // Decide if to accept the transitions (and then which)
-      // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-      // 10/21/2023 - deprecate this version 
-      //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
-      // in favor of this:
-      act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
-
+        // Decide if to accept the transitions (and then which)
+        // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
+        // 10/21/2023 - deprecate this version 
+        //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
+        // in favor of this:
+        act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
+      }
+      else{
+        prop_states = propose_hops(g, dyn_var.act_states, rnd);
+        act_states_dia = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states_dia, prms, rnd);
+      }
 
       //=== Post-hop decoherence options ===
 
@@ -1536,7 +1544,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
       else if(prms.decoherence_algo==7){ ;; } // DISH rev 2023, nothing to do here
 
-      // Experimental: instantaneous decoherence in diabatic basis
+      // Experimental: instantaneous decoherence in diabatic basis | TODO: check the compatibility with rep_sh==0
       else if(prms.decoherence_algo==8){
         if(prms.rep_tdse==1){
           instantaneous_decoherence_dia(*dyn_var.ampl_adi, ham, act_states, prop_states, old_states,
@@ -1554,11 +1562,18 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// DISH
 
 
-
     //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
-    handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
-    dyn_var.act_states = act_states;
+    if(prms.rep_sh==1){
+      handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+      dyn_var.act_states = act_states;
+    }
+    else{
+      handle_hops_nuclear(dyn_var, ham, act_states_dia, old_states_dia, prms);
+      dyn_var.act_states_dia = act_states_dia;
+    }
+
+    // TODO: Update the active states between representations
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }

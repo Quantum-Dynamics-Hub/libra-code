@@ -1161,17 +1161,26 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
     else{
       // Compute the Hvib for all traj
       Hvib = ham.children[traj]->get_hvib_adi();
+      if(prms.rep_tdse==0 || prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
     }
 
     if(prms.tsh_method == 0){ // FSSH
 
-      g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
-
+      if(prms.rep_sh==1){
+        g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      }
+      else{
+        g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states_dia[traj]);
+      }
     }
     else if(prms.tsh_method == 1){ // GFSH
 
-      g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states[traj]);
-
+      if(prms.rep_sh==1){
+        g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      }
+      else{
+        g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states_dia[traj]);
+      }
     }
     else if(prms.tsh_method == 2){ // MSSH
 

@@ -159,6 +159,15 @@ class dyn_variables{
      vector<int> act_states(ntraj)
   */
   vector<int> act_states;
+  
+
+  /**
+    Diabatic active states for each trajectory
+    
+    Options:
+     vector<int> act_states_dia(ntraj)
+  */
+  vector<int> act_states_dia;
 
 
   /**

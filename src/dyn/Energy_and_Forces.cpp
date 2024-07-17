@@ -188,7 +188,9 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     // TSH or adiabatic (including excited states)
     // state-specific forces
 
-    vector<int> effective_states(dyn_vars.act_states);
+    vector<int> effective_states(ntraj, 0);
+    if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
+    else{ effective_states = dyn_vars.act_states_dia; }
 
     if(prms.enforce_state_following==1){ 
       for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -241,7 +243,9 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 
   else if(prms.force_method==3){ // QTSH
     
-    vector<int> effective_states(dyn_vars.act_states);
+    vector<int> effective_states(ntraj, 0);
+    if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
+    else{ effective_states = dyn_vars.act_states_dia; }
     
     if(prms.enforce_state_following==1){ 
       for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -315,7 +319,9 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
 
     // TSH or adiabatic (including excited states)
     // state-specific forces   
-    vector<int> effective_states(dyn_vars.act_states);
+    vector<int> effective_states(ntraj, 0);
+    if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
+    else{ effective_states = dyn_vars.act_states_dia; }
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -364,7 +370,9 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
   }// Ehrenfest
   else if(prms.force_method==3){  // QTSH forces
     // Effective force determined by the TSH procedure 
-    vector<int> effective_states(dyn_vars.act_states);
+    vector<int> effective_states(ntraj, 0);
+    if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
+    else{ effective_states = dyn_vars.act_states_dia; }
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }

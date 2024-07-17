@@ -229,6 +229,7 @@ void export_dyn_variables_objects(){
 
       .def_readwrite("electronic_vars_status", &dyn_variables::electronic_vars_status)
       .def_readwrite("act_states", &dyn_variables::act_states)
+      .def_readwrite("act_states_dia", &dyn_variables::act_states_dia)
       .def_readwrite("nuclear_vars_status", &dyn_variables::nuclear_vars_status)
       .def_readwrite("afssh_vars_status", &dyn_variables::afssh_vars_status)
       .def_readwrite("bcsh_vars_status", &dyn_variables::bcsh_vars_status)
