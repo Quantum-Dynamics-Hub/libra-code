@@ -145,28 +145,42 @@ def run_mopac(coords, params_):
 
 
 
-def make_ref(nelec):
+def make_ref(nelec, active_space=None):
     """
     Makes the reference determinant based on the number of electrons
 
     Args: 
         nelec (int) : the total number of electrons in the system
+        active_space (list of ints): the indices of allowed orbitals, starting from 1 [default: None]
 
     Returns:
         list of ints: representation of the reference (ground-state) determinant
 
         E.g. [1, -1, 2, -2] is the determinant of 4 electrons with 2 lowest orbitals doubly-filled 
         Here, the indexing starts with 1, and negative values correspond to the beta-spin electron
-        while positive values - to the alpha-spin electron
+        while positive values - to the alpha-spin electron.
+
+        If the active_space is [2], then the above reference determinant will become just [2, -2]
     """
 
     res, orb = [], 1
-    for i in range(nelec):
-        if i%2==0:
-            res.append(orb)
-        else:
-            res.append(-orb)
-            orb = orb + 1
+    if active_space==None:
+        for i in range(nelec):
+            if i%2==0:
+                res.append(orb)
+            else:
+                res.append(-orb)
+                orb = orb + 1
+
+    else: 
+        for i in range(nelec):        
+            if i%2==0:
+                if orb in active_space:
+                    res.append(orb)
+            else:
+                if orb in active_space:
+                    res.append(-orb)
+                orb = orb + 1
     return res 
 
 def make_alpha_excitation(ref_determinant, config):
@@ -210,18 +224,23 @@ def read_mopac_orbital_info(params_):
         params_ ( dict ): the dictionary containing key parameters
 
             * **params_["filename"]** ( string ) : the name of the file to read
+            * **params_["active_space"]** (list of ints): the orbital numbers to be includes, the indexing starts with 1, not 0 [default: None]
         
     Returns: 
         (Es, MOs, E_CI, CI, configs): 
      
-            * Es - MATRIX(nmo, nmo): the matrix of the MO energies
-            * MOs - MATRIX(nao, nmo): the matrix of MO-LCAO coefficients
+            * Es - MATRIX(nact, nact): the matrix of the MO energies for active MOs
+            * MOs - MATRIX(nao, nact): the matrix of MO-LCAO coefficients for active MOs
             * E_CI - MATRIX(nci, nci): the matrix of CI energies
             * CI - MATRIX(nconf, nci): the matrix of CI coefficients in the basis of spin-adapted configurations
-            * sd_basis - (list of lists of `nelec` ints): representation of the Slater determinants of `nelec`-electronic
-                 states. The indexing starts from 1.
+            * sd_basis - (list of lists of `nact` ints): representation of the Slater determinants of `nelec`-electronic
+                 states but with the restriction of using only the orbitals belonging to the active space. This is the reduced basis
+                 The indexing starts from 1.
+            * sd_basis_raw - (list of lists of `nelec` ints): representation of the Slater determinants of `nelec`-electronic
+                 states. The indexing starts from 1. This is the original (raw) basis without the restriction.
 
     Notes:
+            * nact - the number of active MOs to be included 
             * nao - the number of AOs, it is the same as nmo
             * nmo - the number of MOs
             * nconf  - the number of configurations (spin-adapted Slater determinants)
@@ -233,7 +252,7 @@ def read_mopac_orbital_info(params_):
     params = dict(params_)
 
     critical_params = [ ]
-    default_params = { "filename":"output"  }
+    default_params = { "filename":"output", "active_space":None  }
     comn.check_input(params, default_params, critical_params)
 
     out_file = params["filename"]
@@ -280,6 +299,13 @@ def read_mopac_orbital_info(params_):
         print(output[ibeg:iend])
 
     nao = nmo 
+    active_space = range(1, nmo+1);
+    if params["active_space"] == None:
+        pass # defualt - use all orbitals
+    else:
+        active_space = list(params["active_space"])
+
+    nact = len(active_space)
 
     # Find the line indices that contain "ROOT NO." keyword
     # the last one will be the `iend`
@@ -293,22 +319,27 @@ def read_mopac_orbital_info(params_):
 
     # Now read energies:
     E = []
-    Es = MATRIX(nmo, nmo)
     for j in range(nblocks-1):
         i = break_lines[j]
         tmp = output[i+2].split()
         for e in tmp:
             ener = float(e)
             E.append( ener )
-    for i in range( nmo ):
-        Es.set(i,i, E[i])
+
+    #Es = MATRIX(nmo, nmo)
+    Es = MATRIX(nact, nact)
+    for i in range( nact ):
+        j = active_space[i] - 1
+        Es.set(i,i, E[j])
 
     if False: # Make True for debugging
         print(E)
 
     # Now read MOs:
     mo_indx = 0
-    MOs = MATRIX(nao, nmo)
+    #MOs = MATRIX(nao, nmo)
+    MOs = MATRIX(nao, nact)
+
     for j in range(nblocks-1):
         i = break_lines[j]
         tmp = output[i+2].split()
@@ -320,7 +351,10 @@ def read_mopac_orbital_info(params_):
             if( sz == ncols + 3 ):
                 for a in range(ncols):
                     coeff = float(tmp[3+a])
-                    MOs.set(ao_indx, mo_indx + a, coeff)
+                    #MOs.set(ao_indx, mo_indx + a, coeff)
+                    if mo_indx+a+1 in active_space:
+                        indx = active_space.index(mo_indx+a+1)
+                        MOs.set(ao_indx, indx, coeff)
                 ao_indx += 1
         mo_indx += ncols
 
@@ -347,12 +381,24 @@ def read_mopac_orbital_info(params_):
                         j_orb = int(float(tmp[11]))
                         configs.append( [ i_orb, j_orb])  # orbital indexing from 1 - as in MOPAC
 
-    sd_basis = []
-    ref = make_ref(nelec); 
+    # Raw SD basis - using the indixes (starting with 1) used in the original N-electron system
+    sd_basis_raw = []
+    ref = make_ref(nelec, active_space); # make a restricted reference determinant
     for cnf in configs:
         sd = make_alpha_excitation(ref, cnf)
-        sd_basis.append(sd)
+        sd_basis_raw.append(sd)
 
+    # Make the SD basis restructed - so reindex everything according to active_space
+    sd_basis = []
+    for cnf_raw in sd_basis_raw:
+        cnf = []
+        for a in cnf_raw:
+            sign = 1
+            if a<0.0:
+                sign = -1
+            b = active_space.index(abs(a)) + 1
+            cnf.append( sign * b)
+        sd_basis.append(cnf)
 
     if False: # Make True for debugging
         print(F"The number of spin-adapted configurations = {nconfig}")
@@ -394,7 +440,7 @@ def read_mopac_orbital_info(params_):
                     CI.set(iconf, i, coeff)
     
 
-    return Es, MOs, E_CI, CI, sd_basis
+    return Es, MOs, E_CI, CI, sd_basis, sd_basis_raw
 
 
 
@@ -412,6 +458,7 @@ def mopac_compute_adi(q, params, full_id):
             also store the previous calculations, but that has to be done separately for each trajectory, i = full_id[-1]. That's why we
             are making it into a list of dictionaries
 
+            * **params[i]["active_space"]** (list of ints): the orbital numbers to be includes, the indexing starts with 1, not 0 [default: None]
             * **params[i]["timestep"]** (int): the index of the timestep for trajectory i [ Required ]
             * **params[i]["is_first_time"]** (int): the flag indicating if this is the new calculation for this trajectory or not
               if it is True (1), the current values will be used as if they were previous; if False (0) - the previously stored values
@@ -436,6 +483,15 @@ def mopac_compute_adi(q, params, full_id):
             * obj.basis_transform ( CMATRIX(nstates,nstates) ): assumed the identity - don't use it yet!
             * obj.time_overlap_adi. ( CMATRIX(nstates,nstates) ): time-overlap in the CI basis
 
+        Also, the following key-value pairs right in the input parameters dictionaries will be created/updated:
+
+           * **params[i]["E_prev"]** (MATRIX(nact, nact)): the diagonal matrix of MO energies in the MO basis belonging to the active space
+           * **params[i]["MO_prev"]** (MATRIX(nao, nact)): the MOs belonging to the active space
+           * **params[i]["E_CI_prev"]** (MATRIX(nstates, nstates)): the diagonal matrix of the CI state energies
+           * **params[i]["CI_prev"]** (MATRIX(nconf, nstates)): the CI eigenvectors in the basis of configuration functions 
+           * **params[i]["configs_prev"]** (list of lists): the list of reduced-notation configurations
+           * **params[i]["configs_raw_prev"]** (list of lists): the list of full-notation configurations
+
     """
 
     #params = dict(params_)
@@ -446,7 +502,7 @@ def mopac_compute_adi(q, params, full_id):
 
 
     critical_params = [ "labels", "timestep" ]
-    default_params = { "mopac_exe":"mopac", "is_first_time":True,
+    default_params = { "mopac_exe":"mopac", "is_first_time":True, "active_space":None,
                        "mopac_run_params":"INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
                        "mopac_working_directory":"mopac_wd",
                        "mopac_input_prefix":"input_", "mopac_output_prefix":"output_",
@@ -478,10 +534,10 @@ def mopac_compute_adi(q, params, full_id):
 
     #print("================ READ MOPAC =================\n")
     #print("cwd = ", os.getcwd(), " reading the file ", filename)
-    E_curr, MO_curr, E_CI_curr, CI_curr, configs_curr = read_mopac_orbital_info({"filename":filename})
+    E_curr, MO_curr, E_CI_curr, CI_curr, configs_curr, configs_raw_curr = read_mopac_orbital_info({"filename":filename})
 
     # Get the properties at the previous time-step
-    E_prev, MO_prev, E_CI_prev, CI_prev, configs_prev = None, None, None, None, None
+    E_prev, MO_prev, E_CI_prev, CI_prev, configs_prev, configs_raw_prev = None, None, None, None, None, None
   
     #print("================ THE REST =================\n")
     if is_first_time:
@@ -489,6 +545,7 @@ def mopac_compute_adi(q, params, full_id):
         E_prev, MO_prev = MATRIX(E_curr), MATRIX(MO_curr)
         E_CI_prev, CI_prev = MATRIX(E_CI_curr), MATRIX(CI_curr)
         configs_prev = list(configs_curr)
+        configs_raw_prev = list(configs_raw_curr)
     else:
         # Otherwise, retrieve the previously-stored data
         E_prev = params[itraj]["E_prev"]
@@ -496,7 +553,7 @@ def mopac_compute_adi(q, params, full_id):
         E_CI_prev = params[itraj]["E_CI_prev"]
         CI_prev = params[itraj]["CI_prev"]
         configs_prev = params[itraj]["configs_prev"]
-
+        configs_raw_prev = params[itraj]["configs_raw_prev"]
 
     nstates = CI_curr.num_of_cols
     #print("nstates = ", nstates)
@@ -550,6 +607,7 @@ def mopac_compute_adi(q, params, full_id):
     params[itraj]["E_CI_prev"] = E_CI_curr
     params[itraj]["CI_prev"] = CI_curr
     params[itraj]["configs_prev"] = configs_curr
+    params[itraj]["configs_raw_prev"] = configs_raw_curr
     params[itraj]["is_first_time"] = False
 
 
