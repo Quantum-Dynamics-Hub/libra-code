@@ -1541,7 +1541,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       }// AFSSH
       else if(prms.decoherence_algo==3){ ;; } // BCSH of Linjun Wang, nothing to do here
       else if(prms.decoherence_algo==4){ ;; } // MF-SD of Bedard-Hearn, Larsen, Schwartz, nothing to do here 
-      else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
+      else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  
+        if(prms.rep_sh==1){
+          xf_hop_reset(dyn_var, act_states, old_states);   
+        }
+        else{ cout<<"ERROR: Independent-trajectory XF methods require rep_sh = 1\nExiting now...\n"; exit(0); }
+      } // SHXF or MQCXF
       else if(prms.decoherence_algo==7){ ;; } // DISH rev 2023, nothing to do here
 
       // Experimental: instantaneous decoherence in diabatic basis | TODO: check the compatibility with rep_sh==0
