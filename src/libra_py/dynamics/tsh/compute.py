@@ -915,6 +915,9 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
     print("Active states (adiabatic)")
     print(Cpp2Py(dyn_var.act_states))
+    
+    print("Active states (diabatic)")
+    print(Cpp2Py(dyn_var.act_states_dia))
 
     print("Initial adiabatic populations")
     pops_sh1 = dyn_var.compute_average_sh_pop(1)

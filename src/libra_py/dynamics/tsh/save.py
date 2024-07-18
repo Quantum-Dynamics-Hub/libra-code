@@ -118,6 +118,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved instantaneous adiabatic states
         if "states" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("states", (_nsteps, _ntraj), "I") 
+        
+        # Trajectory-resolved instantaneous adiabatic states
+        if "states_dia" in saver.keywords: # and "states_dia" in saver.np_data.keys():
+            saver.add_dataset("states_dia", (_nsteps, _ntraj), "I") 
 
         # Average adiabatic SE populations 
         if "se_pop_adi" in saver.keywords: # and "states" in saver.np_data.keys():
@@ -488,6 +492,13 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         ntraj = dyn_var.ntraj
         for itraj in range(ntraj):
             saver.save_multi_scalar(t, itraj, "states", dyn_var.act_states[itraj])
+    
+    if "states_dia" in saver.keywords and "states_dia" in saver.np_data.keys():
+        # Trajectory-resolved instantaneous diabatic states
+        # Format: saver.add_dataset("states", (_nsteps, _ntraj), "I")        
+        ntraj = dyn_var.ntraj
+        for itraj in range(ntraj):
+            saver.save_multi_scalar(t, itraj, "states_dia", dyn_var.act_states_dia[itraj])
 
     if "se_pop_dia" in saver.keywords and "se_pop_dia" in saver.np_data.keys():
         # Average diabatic SE populations 
