@@ -215,6 +215,8 @@ void export_dyn_variables_objects(){
 
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
+  
+  void (dyn_variables::*expt_set_active_states_diff_rep_v1)(int rep_sh) = &dyn_variables::set_active_states_diff_rep;
 
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
@@ -303,6 +305,8 @@ void export_dyn_variables_objects(){
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
+      
+      .def("set_active_states_diff_rep", expt_set_active_states_diff_rep_v1)
 
       .def("update_basis_transform", &dyn_variables::update_basis_transform)
 

@@ -1342,7 +1342,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  if(prms.tsh_method == 3 or prms.tsh_method == 4 ){  
+  if(prms.tsh_method == 3 or prms.tsh_method == 4 or prms.rep_sh == 0 ){  
   // Don't update states based on amplitudes, in the LZ method
     ;;
   }
@@ -1573,7 +1573,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       dyn_var.act_states_dia = act_states_dia;
     }
 
-    // TODO: Update the active states between representations
+    // Set the active states in the other representation through the tranformation matrix
+    dyn_var.set_active_states_diff_rep(prms.rep_sh);
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
