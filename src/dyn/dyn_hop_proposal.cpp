@@ -1169,7 +1169,8 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       // Compute the Hvib for all traj
       if(prms.rep_sh==1){
         Hvib = ham.children[traj]->get_hvib_adi();
-        if(prms.rep_tdse==0 || prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
+        //if(prms.rep_tdse==0 || prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
+        if(prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
       }
       else{
         Hvib = ham.children[traj]->get_hvib_dia();
