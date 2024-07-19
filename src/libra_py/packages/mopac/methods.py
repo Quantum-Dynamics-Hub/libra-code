@@ -608,6 +608,11 @@ def mopac_compute_adi(q, params, full_id):
         U_curr = step3.get_Lowdin_general(ovlp_ci_curr).real()
 
         ci_ovlp_curr = U_curr.T() * ovlp_ci_curr.real() * U_curr
+    else:
+        S_curr = MO_curr.T() * MO_curr;
+        ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, S_curr, False).real()
+        ovlp_sd_curr.scale(-1, 0, sqt2); ovlp_sd_curr.scale(0, -1, sqt2); ovlp_sd_curr.scale(0,  0, 0.5)
+        ci_ovlp_curr = CI_curr.T() * ovlp_sd_curr * CI_curr
 
     # Time-overlap in the SD basis
     time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
