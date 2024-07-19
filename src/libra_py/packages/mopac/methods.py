@@ -37,6 +37,7 @@ from libra_py import regexlib as rgl
 
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.workflows.nbra.mapping2 as mapping2
+import libra_py.workflows.nbra.step3 as step3
 
 def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
     """
@@ -474,6 +475,7 @@ def mopac_compute_adi(q, params, full_id):
             * **params[i]["mopac_input_prefix"]** ( string ) [ default: "input_" ]
             * **params[i]["mopac_output_prefix"]** ( string ) [ default: "output_" ]
             * **params[i]["dt"]** ( float ) - the time interval between the snapshots [ units: a.u.; default: 41 a.u. = 1 fs ]
+            * **params[i]["do_Lowdin"]** ( bool or int): 0 - don't do - use the raw inputs [ defualt ]; 1 - do it - correct for rounding errors
 
     Returns:
         PyObject: obj, with the members:
@@ -506,7 +508,7 @@ def mopac_compute_adi(q, params, full_id):
                        "mopac_run_params":"INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
                        "mopac_working_directory":"mopac_wd",
                        "mopac_input_prefix":"input_", "mopac_output_prefix":"output_",
-                       "dt":1.0*units.fs2au
+                       "dt":1.0*units.fs2au, "do_Lowdin":0
                      }
     comn.check_input(params[itraj], default_params, critical_params)
 
@@ -521,6 +523,7 @@ def mopac_compute_adi(q, params, full_id):
     mopac_input_prefix = params[itraj]["mopac_input_prefix"]
     mopac_output_prefix = params[itraj]["mopac_output_prefix"]
     dt = params[itraj]["dt"]
+    do_Lowdin = params[itraj]["do_Lowdin"]
 
     natoms = len(labels)
     ndof = 3 * natoms
@@ -572,14 +575,40 @@ def mopac_compute_adi(q, params, full_id):
     #    obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
     #    obj.dc1_adi.append( CMATRIX(nstates, nstates) )
 
+    # MO overlaps - needed for Lowdin orthonormalization
+    S_prev, S_curr, U_prev, U_curr = None, None, None, None
+    if do_Lowdin:
+        S_prev = MO_prev.T() * MO_prev; im = MATRIX(S_prev); im *= 0.0; S_prev = CMATRIX(S_prev, im);
+        S_curr = MO_curr.T() * MO_curr; im = MATRIX(S_curr); im *= 0.0; S_curr = CMATRIX(S_curr, im);
+        U_prev = step3.get_Lowdin_general(S_prev).real()
+        U_curr = step3.get_Lowdin_general(S_curr).real()
+
     # Time-overlap in the MO basis 
     mo_st = MO_prev.T() * MO_curr
+    if do_Lowdin:
+        mo_st = U_prev.T() * mo_st * U_curr  # Lowdin correction on MOs
+
+    # Overlaps in the SD basis - for the Lowdin:
+    if do_Lowdin:
+        ident_curr = U_curr.T() * S_curr.real() * U_curr;
+        ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, False).real()
+
+        ident_prev = U_prev.T() * S_prev.real() * U_prev;
+        ovlp_sd_prev = mapping2.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, False).real()
+
+        ovlp_ci_curr = CI_curr.T() * ovlp_sd_curr * CI_curr; im = MATRIX(ovlp_ci_curr); im *= 0.0; ovlp_ci_curr = CMATRIX(ovlp_ci_curr, im);
+        ovlp_ci_prev = CI_prev.T() * ovlp_sd_prev * CI_prev; im = MATRIX(ovlp_ci_prev); im *= 0.0; ovlp_ci_prev = CMATRIX(ovlp_ci_prev, im);
+
+        U_prev = step3.get_Lowdin_general(ovlp_ci_prev).real()
+        U_curr = step3.get_Lowdin_general(ovlp_ci_curr).real()
 
     # Time-overlap in the SD basis
     time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
 
     # Time-overlap in the CI basis
     time_ovlp_ci = CI_prev.T() * time_ovlp_sd * CI_curr
+    if do_Lowdin:
+        time_ovlp_ci = U_prev.T() * time_ovlp_ci * U_curr  # Lowdin correction on CIs
 
     # Now, populate the allocated matrices
     for istate in range(nstates):   
