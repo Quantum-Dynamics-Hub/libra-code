@@ -497,6 +497,7 @@ def mopac_compute_adi(q, params, full_id):
     """
 
     #params = dict(params_)
+    sqt2 = math.sqrt(2.0)
 
     Id = Cpp2Py(full_id)
     itraj = Id[-1]
@@ -568,6 +569,7 @@ def mopac_compute_adi(q, params, full_id):
     obj.hvib_adi = CMATRIX(nstates, nstates)
     obj.basis_transform = CMATRIX(nstates, nstates)
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    obj.overlap_adi = CMATRIX(nstates, nstates)
     # Don't do the derivatives yet
     #obj.d1ham_adi = CMATRIXList();
     #obj.dc1_adi = CMATRIXList();
@@ -589,12 +591,15 @@ def mopac_compute_adi(q, params, full_id):
         mo_st = U_prev.T() * mo_st * U_curr  # Lowdin correction on MOs
 
     # Overlaps in the SD basis - for the Lowdin:
+    ci_ovlp_curr = None
     if do_Lowdin:
         ident_curr = U_curr.T() * S_curr.real() * U_curr;
         ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, False).real()
+        ovlp_sd_curr.scale(-1, 0, sqt2); ovlp_sd_curr.scale(0, -1, sqt2); ovlp_sd_curr.scale(0,  0, 0.5)
 
         ident_prev = U_prev.T() * S_prev.real() * U_prev;
         ovlp_sd_prev = mapping2.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, False).real()
+        ovlp_sd_prev.scale(-1, 0, sqt2); ovlp_sd_prev.scale(0, -1, sqt2); ovlp_sd_prev.scale(0,  0, 0.5)
 
         ovlp_ci_curr = CI_curr.T() * ovlp_sd_curr * CI_curr; im = MATRIX(ovlp_ci_curr); im *= 0.0; ovlp_ci_curr = CMATRIX(ovlp_ci_curr, im);
         ovlp_ci_prev = CI_prev.T() * ovlp_sd_prev * CI_prev; im = MATRIX(ovlp_ci_prev); im *= 0.0; ovlp_ci_prev = CMATRIX(ovlp_ci_prev, im);
@@ -602,8 +607,12 @@ def mopac_compute_adi(q, params, full_id):
         U_prev = step3.get_Lowdin_general(ovlp_ci_prev).real()
         U_curr = step3.get_Lowdin_general(ovlp_ci_curr).real()
 
+        ci_ovlp_curr = U_curr.T() * ovlp_ci_curr.real() * U_curr
+
     # Time-overlap in the SD basis
     time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
+    # Scaling to account for SAC prefactors:
+    time_ovlp_sd.scale(-1, 0, sqt2); time_ovlp_sd.scale(0, -1, sqt2); time_ovlp_sd.scale(0,  0, 0.5)
 
     # Time-overlap in the CI basis
     time_ovlp_ci = CI_prev.T() * time_ovlp_sd * CI_curr
@@ -619,9 +628,13 @@ def mopac_compute_adi(q, params, full_id):
 
         for jstate in range(nstates):
             obj.time_overlap_adi.set(istate, jstate, time_ovlp_ci.get(istate, jstate) * (1.0+0.0j) )
+            if ci_ovlp_curr != None:
+                obj.overlap_adi.set( istate, jstate,  ci_ovlp_curr.get(istate, jstate) * (1.0+0.0j) )
         # Don't do this yet
         #for idof in range(ndof):
         #    obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )
+
+
     # Update the Hvib:
     for istate in range(nstates):
         for jstate in range(istate+1, nstates):
