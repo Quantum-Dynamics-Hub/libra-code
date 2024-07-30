@@ -822,7 +822,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
 
     #========== Dynamics params ==========
     # Now, we can use the information of ndof to define the default quantum_dofs
-    comn.check_input( dyn_params, { "rep_tdse":1, "is_nbra":0, "direct_init":0, "ntraj":1,
+    comn.check_input( dyn_params, { "rep_tdse":1, "rep_sh":1, "is_nbra":0, "direct_init":0, "ntraj":1,
                                     "quantum_dofs":list(range(ndof))
                                   }, [  ] )
 
@@ -899,8 +899,12 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     dyn_var.update_basis_transform(ham);
     dyn_var.update_amplitudes( {"rep_tdse":init_elec["rep"] }, ham)
     dyn_var.update_density_matrix( dyn_params, ham, 1)
-    dyn_var.init_active_states(init_elec, rnd)
     
+    if dyn_params["rep_sh"] == 1:
+        dyn_var.init_active_states(init_elec, rnd)
+    elif dyn_params["rep_sh"] == 0:
+        dyn_var.init_active_states_dia(init_elec, rnd)
+
     #print("Initial adiabatic amplitudes")
     #dyn_var.get_ampl_adi().show_matrix()
 
@@ -913,19 +917,20 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
     #print("Initial diabatic DM")
     #dyn_var.get_dm_dia(0).show_matrix()
 
-    print("Active states (adiabatic)")
-    print(Cpp2Py(dyn_var.act_states))
-    
-    print("Active states (diabatic)")
-    print(Cpp2Py(dyn_var.act_states_dia))
-
-    print("Initial adiabatic populations")
-    pops_sh1 = dyn_var.compute_average_sh_pop(1)
-    print( Cpp2Py(pops_sh1))
-
-    print("Initial diabatic populations")
-    pops_sh0 = dyn_var.compute_average_sh_pop(0)
-    print( Cpp2Py(pops_sh0))
+    if dyn_params["rep_sh"] == 1:
+        print("Active states (adiabatic)")
+        print(Cpp2Py(dyn_var.act_states))
+        
+        print("Initial adiabatic populations")
+        pops_sh1 = dyn_var.compute_average_sh_pop(1)
+        print( Cpp2Py(pops_sh1))
+    elif dyn_params["rep_sh"] == 0:
+        print("Active states (diabatic)")
+        print(Cpp2Py(dyn_var.act_states_dia))
+        
+        print("Initial diabatic populations")
+        pops_sh0 = dyn_var.compute_average_sh_pop(0)
+        print( Cpp2Py(pops_sh0))
 
     # Finally, start the dynamics calculations
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)

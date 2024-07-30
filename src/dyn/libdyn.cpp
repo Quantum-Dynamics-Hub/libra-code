@@ -313,6 +313,7 @@ void export_dyn_variables_objects(){
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
       .def("init_active_states", &dyn_variables::init_active_states)
+      .def("init_active_states_dia", &dyn_variables::init_active_states_dia)
       .def("init_electronic_dyn_var", &dyn_variables::init_electronic_dyn_var)
 
       .def("compute_average_dm", &dyn_variables::compute_average_dm)

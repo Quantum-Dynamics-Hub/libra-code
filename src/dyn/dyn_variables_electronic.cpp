@@ -825,62 +825,27 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
   ///================= Actual calculations  ================================
 
   act_states.clear();  
-  act_states_dia.clear();  
 
-  if(rep==1){
-    //================ For adiabatic - set up them directly =================
-    for(traj=0; traj<ntraj; traj++){
-      if(init_type==0 || init_type==1 || init_type==4){ 
-        act_states.push_back(istate);
-      }
-      else if(init_type==2 || init_type==3){
-        ksi = rnd.uniform(0.0, 1.0);
-        act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
-      }
-      act_states_dia.push_back(0);
-    }// for traj
-
-    // Set the diabatic active state
-    CMATRIX pop_adi(nadi, nadi);
-    CMATRIX pop_dia(ndia, ndia);
-
-    for(traj=0; traj<ntraj; traj++){
-      i = act_states[traj]; // active adiabatic state
-      pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
-
-      // The following transformation is correct only for S_dia = 1
-      pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H();
-
-      vector<double> res(ndia, 0.0);
-      for(i=0; i<nadi;i++){ res[i] = pop_dia.get(i,i).real(); }
-
-      // Now select an adiabatic state according to the probabilities in the res
+  //================ For adiabatic - set up them directly =================
+  for(traj=0; traj<ntraj; traj++){
+    if(init_type==0 || init_type==1 || init_type==4){ 
+      act_states.push_back(istate);
+    }
+    else if(init_type==2 || init_type==3){
       ksi = rnd.uniform(0.0, 1.0);
-      act_states_dia[traj] = hop(res, ksi);  // this is the diabatic state that corresponds to
-                                       // the distribution of the adiabatic populations
-    }// for traj
+      act_states.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
+    }
+  }// for traj
 
-  }// rep==1
-
+  //============= For adiabatic: more complicated =========================
   if(rep==0){
-    //================ For diabatic - set up them directly =================
-    for(traj=0; traj<ntraj; traj++){
-      if(init_type==0 || init_type==1 || init_type==4){ 
-        act_states_dia.push_back(istate);
-      }
-      else if(init_type==2 || init_type==3){
-        ksi = rnd.uniform(0.0, 1.0);
-        act_states_dia.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
-      }
-      act_states.push_back(0);
-    }// for traj
-    
-    // Set the adiabatic active state
+    vector<int> dia_act_states_temp(act_states);
+
     CMATRIX pop_adi(nadi, nadi);
     CMATRIX pop_dia(ndia, ndia);
 
     for(traj=0; traj<ntraj; traj++){
-      i = act_states_dia[traj]; // active diabatic state
+      i = dia_act_states_temp[traj]; // active diabatic state
       pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
 
       // The following transformation is correct only for S_dia = 1
@@ -892,10 +857,139 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
       // Now select an adiabatic state according to the probabilities in the res
       ksi = rnd.uniform(0.0, 1.0);
       act_states[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
-                                       // the distribution of the diabatic populations
+                                         // the distribution of the diabatic populations
+
+
     }// for traj
 
   }// rep == 0
+
+}
+
+
+void dyn_variables::init_active_states_dia(bp::dict _params, Random& rnd){
+
+  //# Read the parameters
+  bp::list critical_params; 
+  bp::dict default_params;
+  bp::dict params(_params);
+
+
+  default_params["init_type"] = 0;
+  default_params["istate"] = 0;
+  bp::list lst; lst.append(1.0);
+  default_params["istates"] = lst;
+  default_params["rep"] = 0;
+  default_params["verbosity"] = 0;
+
+  check_input(params, default_params, critical_params);
+
+  int i, traj;
+  double ksi;
+  int init_type;
+  int istate;
+  vector<double> istates;
+  int rep;
+  int verbosity;
+
+
+  std::string key;
+  for(int i=0;i<len(params.values());i++){
+    key = bp::extract<std::string>(params.keys()[i]);
+
+    ///================= Computing Hamiltonian-related properties ====================
+    if(key=="init_type") {  init_type = bp::extract<int>(params.values()[i]); }
+    else if(key=="istate") {  istate = bp::extract<int>(params.values()[i]); }
+    else if(key=="istates") {  istates = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+    else if(key=="rep") {  rep = bp::extract<int>(params.values()[i]); }
+    else if(key=="verbosity") {  verbosity = bp::extract<int>(params.values()[i]); }
+
+  }
+
+
+  ///================= Sanity check ================================
+  if(! ((rep==0) || (rep==1)) ){
+    cout<<"WARNINIG in init_active_states_dia:\
+           the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
+  }
+
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
+    cout<<"WARNINIG in init_active_states_dia:\
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4]\n";
+  }
+  
+  if(init_type==0 || init_type==1 || init_type==4){
+    if(istate>=ndia && rep==0){
+      cout<<"ERROR in init_active_states_dia: the istate is= "<<istate<<", but should be less than "<<ndia<<"\n";
+      exit(0);
+    }
+    if(istate>=ndia && rep==1){
+      cout<<"ERROR in init_active_states_dia: the istate is= "<<istate<<", but should be less than "<<ndia<<"\n";
+      exit(0);
+    }
+  }
+
+  if(init_type==2 || init_type==3){
+    if(istates.size()!=ndia && rep==0){
+      cout<<"ERROR in init_active_states_dia: the istates array is of length = "<<istates.size()<<", but should be of length "<<ndia<<"\n";
+      exit(0);
+    }
+    if(istates.size()!=ndia && rep==1){
+      cout<<"ERROR in init_active_states_dia: the istates array is of length = "<<istates.size()<<", but should be of length "<<ndia<<"\n";
+      exit(0);
+    }
+
+    double summ = 0.0;
+    for(i=0; i<istates.size(); i++){  summ += istates[i]; }
+    if( fabs(summ - 1.0) > 1e-5 ){
+      cout<<"ERROR in init_active_states_dia: the sum of the entries in the istates array is "<<summ<<", but should be 1.0\n";
+      exit(0);
+    }
+  }
+
+
+
+  ///================= Actual calculations  ================================
+
+  act_states_dia.clear();  
+
+  //================ For diabatic - set up them directly =================
+  for(traj=0; traj<ntraj; traj++){
+    if(init_type==0 || init_type==1 || init_type==4){ 
+      act_states_dia.push_back(istate);
+    }
+    else if(init_type==2 || init_type==3){
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
+    }
+  }// for traj
+
+  //============= For diabatic: more complicated =========================
+  if(rep==1){
+    vector<int> act_states_temp(act_states_dia);
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = act_states_temp[traj]; // active diabatic state
+      pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H();
+
+      vector<double> res(ndia, 0.0);
+      for(i=0; i<ndia;i++){ res[i] = pop_dia.get(i,i).real(); }
+
+      // Now select an adiabatic state according to the probabilities in the res
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
+                                         // the distribution of the diabatic populations
+
+
+    }// for traj
+
+  }// rep == 1
 
 }
 
