@@ -1520,8 +1520,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
         // in favor of this:
         act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
       }
-      else{
-        prop_states = propose_hops(g, dyn_var.act_states, rnd);
+      else if(prms.rep_sh==0){
+        prop_states = propose_hops(g, dyn_var.act_states_dia, rnd);
         act_states_dia = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states_dia, prms, rnd);
       }
 
