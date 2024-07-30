@@ -190,7 +190,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
 
     vector<int> effective_states(ntraj, 0);
     if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
-    else{ effective_states = dyn_vars.act_states_dia; }
+    else if(prms.rep_sh==0){ effective_states = dyn_vars.act_states_dia; }
 
     if(prms.enforce_state_following==1){ 
       for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -245,7 +245,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     
     vector<int> effective_states(ntraj, 0);
     if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
-    else{ effective_states = dyn_vars.act_states_dia; }
+    else if(prms.rep_sh==0){ effective_states = dyn_vars.act_states_dia; }
     
     if(prms.enforce_state_following==1){ 
       for(itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -321,7 +321,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     // state-specific forces   
     vector<int> effective_states(ntraj, 0);
     if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
-    else{ effective_states = dyn_vars.act_states_dia; }
+    else if(prms.rep_sh==0){ effective_states = dyn_vars.act_states_dia; }
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
@@ -372,7 +372,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     // Effective force determined by the TSH procedure 
     vector<int> effective_states(ntraj, 0);
     if(prms.rep_sh==1){ effective_states = dyn_vars.act_states; }
-    else{ effective_states = dyn_vars.act_states_dia; }
+    else if(prms.rep_sh==0){ effective_states = dyn_vars.act_states_dia; }
   
     if(prms.enforce_state_following==1){ // NBRA-like enforcement: adiabatic dynamics, in terms of forces 
       for(int itraj=0; itraj<ntraj; itraj++){ effective_states[itraj] = prms.enforced_state_index; }
