@@ -603,7 +603,7 @@ class dyn_variables{
 
   void update_active_states(int direction, int property);
   void update_active_states();
-  void set_active_states_diff_rep(int rep_sh);
+  void set_active_states_diff_rep(int rep_sh, Random& rnd);
 
   void update_basis_transform(nHamiltonian& ham);
 

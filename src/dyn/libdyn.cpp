@@ -216,7 +216,7 @@ void export_dyn_variables_objects(){
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
   
-  void (dyn_variables::*expt_set_active_states_diff_rep_v1)(int rep_sh) = &dyn_variables::set_active_states_diff_rep;
+  void (dyn_variables::*expt_set_active_states_diff_rep_v1)(int rep_sh, Random& rnd) = &dyn_variables::set_active_states_diff_rep;
 
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())

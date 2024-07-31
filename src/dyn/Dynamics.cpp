@@ -1579,7 +1579,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }
 
     // Set the active states in the other representation through the tranformation matrix
-    dyn_var.set_active_states_diff_rep(prms.rep_sh);
+    dyn_var.set_active_states_diff_rep(prms.rep_sh, rnd);
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }

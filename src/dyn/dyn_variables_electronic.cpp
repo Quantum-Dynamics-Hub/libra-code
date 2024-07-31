@@ -1072,7 +1072,7 @@ void dyn_variables::update_active_states(){
 
 
 
-void dyn_variables:: set_active_states_diff_rep(int rep_sh){
+void dyn_variables:: set_active_states_diff_rep(int rep_sh, Random& rnd){
 /*
   Set the active state in the other representation through the transformation matrix
 
@@ -1084,7 +1084,8 @@ void dyn_variables:: set_active_states_diff_rep(int rep_sh){
   Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
   The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
 */
-  int sz, i, j, traj; 
+  int sz, i, j, traj;
+  double ksi; 
   if(rep_sh==0){ sz = ndia; }
   else if(rep_sh==1){ sz = nadi; }
   else{ 
@@ -1111,15 +1112,11 @@ void dyn_variables:: set_active_states_diff_rep(int rep_sh){
       
       pop_dia = U * pop_adi * U.H(); 
       
-      // Set the state having the largest diagonal element to the active state
-      int max_diag_indx = 0;
-      double max_diag = pop_dia.get(0,0).real();
-      for(int i=1; i<ndia; i++){
-        double el_diag = pop_dia.get(i,i).real();
-        if(el_diag > max_diag){  max_diag_indx = i; max_diag = el_diag; }
-      }
-      
-      act_states_dia[traj] = max_diag_indx; 
+      vector<double> diag_els(ndia, 0.0);
+      for(i=0;i<ndia; i++){ diag_els[i] = pop_dia.get(i,i).real(); }
+
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia[traj] = hop(diag_els, ksi); 
     }
   }
 
@@ -1136,15 +1133,11 @@ void dyn_variables:: set_active_states_diff_rep(int rep_sh){
       
       pop_adi = U.H() * pop_dia * U; 
       
-      // Set the state having the largest diagonal element to the active state
-      int max_diag_indx = 0;
-      double max_diag = pop_adi.get(0,0).real();
-      for(int i=1; i<nadi; i++){
-        double el_diag = pop_adi.get(i,i).real();
-        if(el_diag > max_diag){  max_diag_indx = i; max_diag = el_diag; }
-      }
-      
-      act_states[traj] = max_diag_indx; 
+      vector<double> diag_els(nadi, 0.0);
+      for(i=0;i<nadi; i++){ diag_els[i] = pop_adi.get(i,i).real(); }
+
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states[traj] = hop(diag_els, ksi); 
     }
   }
 
