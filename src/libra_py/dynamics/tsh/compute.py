@@ -922,7 +922,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
         print(Cpp2Py(dyn_var.act_states))
         
         print("Initial adiabatic populations")
-        pops_sh1 = dyn_var.compute_average_sh_pop_rep_sh1(1)
+        pops_sh1 = dyn_var.compute_average_sh_pop(1)
         print( Cpp2Py(pops_sh1))
 
     elif dyn_params["rep_sh"] == 0:
@@ -930,7 +930,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params,_init_elec, _init_n
         print(Cpp2Py(dyn_var.act_states_dia))
         
         print("Initial diabatic populations")
-        pops_sh0 = dyn_var.compute_average_sh_pop_rep_sh0(0)
+        pops_sh0 = dyn_var.compute_average_sh_pop(0)
         print( Cpp2Py(pops_sh0))
 
     # Finally, start the dynamics calculations

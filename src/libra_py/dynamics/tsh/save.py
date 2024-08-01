@@ -139,6 +139,14 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "sh_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R") 
 
+        # Average adiabatic SH populations from the Tempelaar and Reichman's method 
+        if "sh_pop_adi_TR" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("sh_pop_adi_TR", (_nsteps, _nadi), "R") 
+
+        # Average diabatic SH populations from the Tempelaar and Reichman's method 
+        if "sh_pop_dia_TR" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("sh_pop_dia_TR", (_nsteps, _nadi), "R") 
+
         # Average adiabatic MASH populations
         if "mash_pop_adi" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("mash_pop_adi", (_nsteps, _nadi), "R")
@@ -147,14 +155,6 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "mash_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("mash_pop_dia", (_nsteps, _ndia), "R")
         
-        # Average adiabatic SH populations from the probabilistic sampling
-        if "sh_sample_pop_adi" in saver.keywords: # and "states" in saver.np_data.keys():
-            saver.add_dataset("sh_sample_pop_adi", (_nsteps, _nadi), "R")
-        
-        # Average diabatic SH populations from the probabilistic sampling
-        if "sh_sample_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
-            saver.add_dataset("sh_sample_pop_dia", (_nsteps, _ndia), "R")
-
         # Average errors from FSSH3
         if "fssh3_average_errors" in saver.keywords: # and "fssh3_average_errors" in saver.np_data.keys():
             saver.add_dataset("fssh3_average_errors", (_nsteps, 5), "R")
@@ -481,7 +481,7 @@ def save_hdf5_2D(saver, i, states, txt_type=0):
 
 
 
-def save_hdf5_2D_new(saver, i, params, dyn_var, ham, txt_type=0):
+def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
 
@@ -489,7 +489,6 @@ def save_hdf5_2D_new(saver, i, params, dyn_var, ham, txt_type=0):
 
     """
     
-    rep_sh = params["rep_sh"]
 
     t = 0
     if txt_type==0:
@@ -529,30 +528,34 @@ def save_hdf5_2D_new(saver, i, params, dyn_var, ham, txt_type=0):
     if "sh_pop_dia" in saver.keywords and "sh_pop_dia" in saver.np_data.keys():
         # Average diabatic SH populations
         # Format: saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R")
-        if rep_sh==1:
-            pops_sh0 = dyn_var.compute_average_sh_pop_rep_sh1(0)
-            ndia = dyn_var.ndia
-            for ist in range(ndia):
-                saver.save_multi_scalar(t, ist, "sh_pop_dia", pops_sh0[ist])
-        elif rep_sh==0:
-            pops_sh0 = dyn_var.compute_average_sh_pop_rep_sh0(0)
-            ndia = dyn_var.ndia
-            for ist in range(ndia):
-                saver.save_multi_scalar(t, ist, "sh_pop_dia", pops_sh0[ist])
+        pops_sh0 = dyn_var.compute_average_sh_pop(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "sh_pop_dia", pops_sh0[ist])
     
     if "sh_pop_adi" in saver.keywords and "sh_pop_adi" in saver.np_data.keys():    
         # Average adiabatic SH populations 
         # Format: saver.add_dataset("sh_pop_adi", (_nsteps, _nadi), "R") 
-        if rep_sh==1:
-            pops_sh1 = dyn_var.compute_average_sh_pop_rep_sh1(1)
-            nadi = dyn_var.nadi
-            for ist in range(nadi):
-                saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
-        elif rep_sh==0:
-            pops_sh1 = dyn_var.compute_average_sh_pop_rep_sh0(1)
-            nadi = dyn_var.nadi
-            for ist in range(nadi):
-                saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
+        pops_sh1 = dyn_var.compute_average_sh_pop(1)
+        nadi = dyn_var.nadi
+        for ist in range(nadi):
+            saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
+
+    if "sh_pop_dia_TR" in saver.keywords and "sh_pop_dia_TR" in saver.np_data.keys():
+        # Average diabatic SH populations
+        # Format: saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R")
+        pops_sh0 = dyn_var.compute_average_sh_pop_TR(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "sh_pop_dia_TR", pops_sh0[ist])
+    
+    if "sh_pop_adi_TR" in saver.keywords and "sh_pop_adi_TR" in saver.np_data.keys():    
+        # Average adiabatic SH populations 
+        # Format: saver.add_dataset("sh_pop_adi", (_nsteps, _nadi), "R") 
+        pops_sh1 = dyn_var.compute_average_sh_pop_TR(1)
+        nadi = dyn_var.nadi
+        for ist in range(nadi):
+            saver.save_multi_scalar(t, ist, "sh_pop_adi_TR", pops_sh1[ist])
 
     if "mash_pop_dia" in saver.keywords and "mash_pop_dia" in saver.np_data.keys():
         # Average diabatic MASH populations
@@ -569,22 +572,6 @@ def save_hdf5_2D_new(saver, i, params, dyn_var, ham, txt_type=0):
         nadi = dyn_var.nadi
         for ist in range(nadi):
             saver.save_multi_scalar(t, ist, "mash_pop_adi", pops_sh1[ist])
-
-    if "sh_sample_pop_dia" in saver.keywords and "sh_sample_pop_dia" in saver.np_data.keys():
-        # Average diabatic SH populations based on the probabilistic sampling
-        # Format: saver.add_dataset("sh_sample_pop_dia", (_nsteps, _nadi), "R")
-        pops_sh0 = dyn_var.compute_average_sh_sample_pop(0)
-        ndia = dyn_var.ndia
-        for ist in range(ndia):
-            saver.save_multi_scalar(t, ist, "sh_sample_pop_dia", pops_sh0[ist])
-
-    if "sh_sample_pop_adi" in saver.keywords and "sh_sample_pop_adi" in saver.np_data.keys():
-        # Average adiabatic SH populations based on the probabilistic sampling
-        # Format: saver.add_dataset("sh_sample_pop_adi", (_nsteps, _nadi), "R")
-        pops_sh1 = dyn_var.compute_average_sh_sample_pop(1)
-        nadi = dyn_var.nadi
-        for ist in range(nadi):
-            saver.save_multi_scalar(t, ist, "sh_sample_pop_adi", pops_sh1[ist])
 
 
 
@@ -932,19 +919,19 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
     # =========== Using : def save_hdf5_2D_new(saver, i, dyn_var, txt_type=0) =====================
     if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
         #save_hdf5_2D(_savers["hdf5_saver"], i, states)
-        save_hdf5_2D_new(_savers["hdf5_saver"], i, params, dyn_var, ham)
+        save_hdf5_2D_new(_savers["hdf5_saver"], i, dyn_var, ham)
 
     if mem_output_level>=2 and _savers["mem_saver"]!=None:
         #save_hdf5_2D(_savers["mem_saver"], i, states)
-        save_hdf5_2D_new(_savers["mem_saver"], i, params, dyn_var, ham)
+        save_hdf5_2D_new(_savers["mem_saver"], i, dyn_var, ham)
 
     if txt_output_level>=2 and _savers["txt_saver"]!=None:
         #save_hdf5_2D(_savers["txt_saver"], i, states)
-        save_hdf5_2D_new(_savers["txt_saver"], i, params, dyn_var, ham)
+        save_hdf5_2D_new(_savers["txt_saver"], i, dyn_var, ham)
 
     if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
         #save_hdf5_2D(_savers["txt2_saver"], i, states, 1)
-        save_hdf5_2D_new(_savers["txt2_saver"], i, params, dyn_var, ham, 1)
+        save_hdf5_2D_new(_savers["txt2_saver"], i, dyn_var, ham, 1)
 
 
     # ============ Using: def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0) ==========================

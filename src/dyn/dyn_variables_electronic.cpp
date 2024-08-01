@@ -1282,109 +1282,12 @@ vector<double> dyn_variables::compute_average_mash_pop(int rep){
 
 }
 
-  
-vector<double> dyn_variables::compute_average_sh_pop_rep_sh1(int rep){
-
-  int sz, i, j, traj; 
-  if(rep==0){ sz = ndia; }
-  else if(rep==1){ sz = nadi; }
-  else{ 
-    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
-    exit(0);
-  }
-
-  vector<double> res(sz, 0.0);
-  vector<int> effective_states( act_states );
-
-  if(rep==0){
-   
-    // Now, the active states in both representations are updated in each MD step 
-    // ===== For diabatic SH populations: use the prescription of ======
-    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
-    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
-
-    CMATRIX pop_adi(nadi, nadi);
-    CMATRIX pop_dia(ndia, ndia);
-    CMATRIX U(ndia, nadi);
-
-    for(traj=0; traj<ntraj; traj++){
-      i = effective_states[traj]; // active adiabatic state
-      pop_adi = *dm_adi[traj];
-      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
-      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
-
-      // The following transformation is correct only for S_dia = 1
-      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
-      
-      pop_dia = U * pop_adi * U.H(); 
-      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
-    }
-  }// rep == 0
-
-  else if(rep==1){
-    //===== For adiabatic populations, we just use the active adiabatic states =======
-    vector<int> effective_states( act_states );
-    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
-  }// rep == 1
-
-  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
-
-  return res;
-}
 
 
-
-vector<double> dyn_variables::compute_average_sh_pop_rep_sh0(int rep){
-
-  int sz, i, j, traj; 
-  if(rep==0){ sz = ndia; }
-  else if(rep==1){ sz = nadi; }
-  else{ 
-    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
-    exit(0);
-  }
-
-  vector<double> res(sz, 0.0);
-  vector<int> effective_states( act_states_dia );
-
-  if(rep==1){
-   
-    // Now, the active states in both representations are updated in each MD step 
-    // ===== For adiabatic SH populations: analoguous to the compute_average_sh_pop_rep_sh1 ======
-
-    CMATRIX pop_dia(ndia, ndia);
-    CMATRIX pop_adi(nadi, nadi);
-    CMATRIX U(ndia, nadi);
-
-    for(traj=0; traj<ntraj; traj++){
-      i = effective_states[traj]; // active diabatic state
-      pop_dia = *dm_dia[traj];
-      for(j=0;j<ndia; j++){ pop_dia.set(j,j, complex<double>(0.0, 0.0) ); }
-      pop_dia.set(i, i, complex<double>(1.0, 0.0) );
-
-      // The following transformation is correct only for S_dia = 1
-      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
-      
-      pop_adi = U.H() * pop_dia * U; 
-      for(j=0; j<nadi; j++){ res[j] += pop_adi.get(j,j).real(); }
-    }
-  }// rep == 1
-
-  else if(rep==0){
-    //===== For diabatic populations, we just use the active diabatic states =======
-    vector<int> effective_states( act_states_dia );
-    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
-  }// rep == 0
-
-  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
-
-  return res;
-}
-
-vector<double> dyn_variables::compute_average_sh_sample_pop(int rep){
+vector<double> dyn_variables::compute_average_sh_pop(int rep){
 /**
-  Computing the SH population with the probabilistic sampling.
-  If rep is set to the hop representation (rep_sh), the result is the same as that from the compute_average_sh_pop method
+  Computing the SH population with the active state of the input rep.
+  If rep is different from rep_sh, the resultant SH population is computed indirectly through the sampling based on diagonal elments of the density matrix
 */
 
   int sz, i, j, traj; 
@@ -1411,6 +1314,72 @@ vector<double> dyn_variables::compute_average_sh_sample_pop(int rep){
 
   return res;
 }
+
+
+
+vector<double> dyn_variables::compute_average_sh_pop_TR(int rep){
+/**
+  Computing the SH population based on the following work:
+  Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+  The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+*/
+  int sz, i, j, traj; 
+  if(rep==0){ sz = ndia; }
+  else if(rep==1){ sz = nadi; }
+  else{ 
+    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
+    exit(0);
+  }
+
+  vector<double> res(sz, 0.0);
+
+  if(rep==0){
+    vector<int> effective_states( act_states );
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+    CMATRIX U(ndia, nadi);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = effective_states[traj]; // active adiabatic state
+      pop_adi = *dm_adi[traj];
+      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_dia = U * pop_adi * U.H(); 
+      for(j=0; j<ndia; j++){ res[j] += pop_dia.get(j,j).real(); }
+    }
+  }// rep == 0
+
+  else if(rep==1){
+    vector<int> effective_states( act_states_dia );
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+    CMATRIX U(ndia, nadi);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = effective_states[traj]; // active diabatic state
+      pop_dia = *dm_dia[traj];
+      for(j=0;j<ndia; j++){ pop_dia.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_adi = U.H() * pop_dia * U; 
+      for(j=0; j<nadi; j++){ res[j] += pop_adi.get(j,j).real(); }
+    }
+  }// rep == 1
+
+  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
+
+  return res;
+}
+
 
 
 void dyn_variables::save_curr_dm_into_prev(){
