@@ -631,13 +631,15 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
         - "sh_pop_dia"
         - "mash_pop_adi"
         - "mash_pop_dia"
+        - "sh_sample_pop_adi"
+        - "sh_sample_pop_dia"
         
     
     Call it after adding a sub-plot
     """
     
     possible_options = ["D_dia_raw", "D_adi_raw", "SH_pop_raw", "D_dia", "D_adi", "SH_pop", "se_pop_adi", "se_pop_dia", 
-                        "sh_pop_adi", "sh_pop_dia", "mash_pop_adi", "mash_pop_dia"]
+                        "sh_pop_adi", "sh_pop_dia", "mash_pop_adi", "mash_pop_dia", "sh_sample_pop_adi", "sh_sample_pop_dia"]
     if pop_type not in possible_options:
         print(F"Error in add_populations - the pop_type argument {pop_type} is invalid\n")
         print(F"Must be one of the following options: {possible_options}\nExiting")
@@ -705,6 +707,16 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
             nstates = hdf_file["mash_pop_adi/data"].shape[1]
             which_states = plot_params["which_adi_states"]
 
+    elif pop_type in ["sh_sample_pop_dia"]:  # diabatic SH populations based on the probabilistic sampling
+        if "sh_sample_pop_dia/data" in hdf_file.keys():
+            nstates = hdf_file["sh_sample_pop_dia/data"].shape[1]
+            which_states = plot_params["which_dia_states"]
+
+    elif pop_type in ["sh_sample_pop_adi"]:  # adiabatic SH populations based on the probabilistic sampling
+        if "sh_sample_pop_adi/data" in hdf_file.keys():
+            nstates = hdf_file["sh_sample_pop_adi/data"].shape[1]
+            which_states = plot_params["which_adi_states"]
+
         
     titles = { "D_dia": "Diabatic SE populations",
                "D_dia_raw": "Diabatic SE populations (raw)",
@@ -717,7 +729,9 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
                "sh_pop_dia": "Diabatic SH populations",
                "sh_pop_adi": "Adiabatic SH populations",
                "mash_pop_dia": "Diabatic MASH populations",
-               "mash_pop_adi": "Adiabatic MASH populations"
+               "mash_pop_adi": "Adiabatic MASH populations",
+               "sh_sample_pop_dia": "Diabatic SH populations with the sampling",
+               "sh_sample_pop_adi": "Adiabatic SH populations with the sampling"
              }
     
     if xlim!=None:
@@ -756,7 +770,7 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
                              label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ]) 
 
 
-    elif pop_type in ["se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia", "mash_pop_adi", "mash_pop_dia"]:
+    elif pop_type in ["se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia", "mash_pop_adi", "mash_pop_dia", "sh_sample_pop_adi", "sh_sample_pop_dia"]:
         if F"{pop_type}/data" in hdf_file.keys():
             res = 1
             indx = -1
@@ -1054,6 +1068,22 @@ def plot_dynamics(plot_params_):
             res = add_populations(plt, f, plot_params_, "mash_pop_dia")
             if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/mash_pop_dia.png", dpi=plot_params["dpi"])
+
+        if "sh_sample_pop_adi" in what_to_plot:
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_populations(plt, f, plot_params_, "sh_sample_pop_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_sample_pop_adi.png", dpi=plot_params["dpi"])
+
+        if "sh_sample_pop_dia" in what_to_plot:
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_populations(plt, f, plot_params_, "sh_sample_pop_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_sample_pop_dia.png", dpi=plot_params["dpi"])
                                        
                        
         #===== Trajectory-resolved adiabatic energies =========

@@ -618,6 +618,7 @@ class dyn_variables{
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop(int rep);
   vector<double> compute_average_mash_pop(int rep);
+  vector<double> compute_average_sh_sample_pop(int rep);
 
 
   double compute_tcnbra_ekin();
