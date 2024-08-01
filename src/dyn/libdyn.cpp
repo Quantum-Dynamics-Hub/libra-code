@@ -318,7 +318,8 @@ void export_dyn_variables_objects(){
 
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
-      .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
+      .def("compute_average_sh_pop_rep_sh1", &dyn_variables::compute_average_sh_pop_rep_sh1)
+      .def("compute_average_sh_pop_rep_sh0", &dyn_variables::compute_average_sh_pop_rep_sh0)
       .def("compute_average_mash_pop", &dyn_variables::compute_average_mash_pop)
       .def("compute_average_sh_sample_pop", &dyn_variables::compute_average_sh_sample_pop)
 
