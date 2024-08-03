@@ -1137,6 +1137,7 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
   vector< vector<double> > g(ntraj, vector<double>(nst,0.0) ); /// the hopping probability for all trajectories
   MATRIX p_traj(ndof, 1);
   CMATRIX coeff(nst, 1);
+  CMATRIX dm(nst, nst);
   CMATRIX Hvib(nst, nst);
   vector<int> fstates(ntraj,0); 
 
@@ -1144,8 +1145,14 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
   // Proposed hops probabilities
   for(traj=0; traj<ntraj; traj++){
 
-    CMATRIX& dm = *dyn_var.dm_adi[traj];
-    if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia[traj]; }
+    if(prms.rep_sh==1){
+      dm = *dyn_var.dm_adi[traj];
+      //if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia[traj]; }
+      if(prms.rep_tdse==2){ dm = *dyn_var.dm_dia[traj]; }
+    }
+    else{
+      dm = *dyn_var.dm_dia[traj];
+    }
 
     nucl_stenc_y[0] = traj;
     el_stenc_y[0] = traj;
@@ -1160,18 +1167,33 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
 
     else{
       // Compute the Hvib for all traj
-      Hvib = ham.children[traj]->get_hvib_adi();
+      if(prms.rep_sh==1){
+        Hvib = ham.children[traj]->get_hvib_adi();
+        //if(prms.rep_tdse==0 || prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
+        if(prms.rep_tdse==2){ Hvib = ham.children[traj]->get_hvib_dia(); }
+      }
+      else{
+        Hvib = ham.children[traj]->get_hvib_dia();
+      }
     }
 
     if(prms.tsh_method == 0){ // FSSH
 
-      g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
-
+      if(prms.rep_sh==1){
+        g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      }
+      else{
+        g[traj] = hopping_probabilities_fssh(prms, dm, Hvib, dyn_var.act_states_dia[traj]);
+      }
     }
     else if(prms.tsh_method == 1){ // GFSH
 
-      g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states[traj]);
-
+      if(prms.rep_sh==1){
+        g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states[traj]);
+      }
+      else{
+        g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states_dia[traj]);
+      }
     }
     else if(prms.tsh_method == 2){ // MSSH
 

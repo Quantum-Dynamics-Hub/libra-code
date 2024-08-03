@@ -215,6 +215,8 @@ void export_dyn_variables_objects(){
 
   void (dyn_variables::*expt_update_active_states_v1)(int direction, int property) = &dyn_variables::update_active_states;
   void (dyn_variables::*expt_update_active_states_v2)() = &dyn_variables::update_active_states;
+  
+  void (dyn_variables::*expt_set_active_states_diff_rep_v1)(int rep_sh, Random& rnd) = &dyn_variables::set_active_states_diff_rep;
 
 
   class_<dyn_variables>("dyn_variables",init<int, int, int, int>())
@@ -229,6 +231,7 @@ void export_dyn_variables_objects(){
 
       .def_readwrite("electronic_vars_status", &dyn_variables::electronic_vars_status)
       .def_readwrite("act_states", &dyn_variables::act_states)
+      .def_readwrite("act_states_dia", &dyn_variables::act_states_dia)
       .def_readwrite("nuclear_vars_status", &dyn_variables::nuclear_vars_status)
       .def_readwrite("afssh_vars_status", &dyn_variables::afssh_vars_status)
       .def_readwrite("bcsh_vars_status", &dyn_variables::bcsh_vars_status)
@@ -302,18 +305,22 @@ void export_dyn_variables_objects(){
 
       .def("update_active_states", expt_update_active_states_v1)
       .def("update_active_states", expt_update_active_states_v2)
+      
+      .def("set_active_states_diff_rep", expt_set_active_states_diff_rep_v1)
 
       .def("update_basis_transform", &dyn_variables::update_basis_transform)
 
       .def("init_amplitudes", &dyn_variables::init_amplitudes)
       .def("init_density_matrix", &dyn_variables::init_density_matrix)
       .def("init_active_states", &dyn_variables::init_active_states)
+      .def("init_active_states_dia", &dyn_variables::init_active_states_dia)
       .def("init_electronic_dyn_var", &dyn_variables::init_electronic_dyn_var)
 
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
       .def("compute_average_mash_pop", &dyn_variables::compute_average_mash_pop)
+      .def("compute_average_sh_pop_TR", &dyn_variables::compute_average_sh_pop_TR)
 
       .def("compute_tcnbra_ekin", &dyn_variables::compute_tcnbra_ekin)
       .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)

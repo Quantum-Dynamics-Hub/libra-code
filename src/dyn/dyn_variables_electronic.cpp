@@ -826,7 +826,6 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
 
   act_states.clear();  
 
-  //# Dynamical variables
   //================ For adiabatic - set up them directly =================
   for(traj=0; traj<ntraj; traj++){
     if(init_type==0 || init_type==1 || init_type==4){ 
@@ -840,13 +839,13 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
 
   //============= For adiabatic: more complicated =========================
   if(rep==0){
-    vector<int> dia_act_states(act_states);
+    vector<int> dia_act_states_temp(act_states);
 
     CMATRIX pop_adi(nadi, nadi);
     CMATRIX pop_dia(ndia, ndia);
 
     for(traj=0; traj<ntraj; traj++){
-      i = dia_act_states[traj]; // active diabatic state
+      i = dia_act_states_temp[traj]; // active diabatic state
       pop_dia *= 0.0; pop_dia.set(i, i, complex<double>(1.0, 0.0) );
 
       // The following transformation is correct only for S_dia = 1
@@ -864,6 +863,133 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
     }// for traj
 
   }// rep == 0
+
+}
+
+
+void dyn_variables::init_active_states_dia(bp::dict _params, Random& rnd){
+
+  //# Read the parameters
+  bp::list critical_params; 
+  bp::dict default_params;
+  bp::dict params(_params);
+
+
+  default_params["init_type"] = 0;
+  default_params["istate"] = 0;
+  bp::list lst; lst.append(1.0);
+  default_params["istates"] = lst;
+  default_params["rep"] = 0;
+  default_params["verbosity"] = 0;
+
+  check_input(params, default_params, critical_params);
+
+  int i, traj;
+  double ksi;
+  int init_type;
+  int istate;
+  vector<double> istates;
+  int rep;
+  int verbosity;
+
+
+  std::string key;
+  for(int i=0;i<len(params.values());i++){
+    key = bp::extract<std::string>(params.keys()[i]);
+
+    ///================= Computing Hamiltonian-related properties ====================
+    if(key=="init_type") {  init_type = bp::extract<int>(params.values()[i]); }
+    else if(key=="istate") {  istate = bp::extract<int>(params.values()[i]); }
+    else if(key=="istates") {  istates = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+    else if(key=="rep") {  rep = bp::extract<int>(params.values()[i]); }
+    else if(key=="verbosity") {  verbosity = bp::extract<int>(params.values()[i]); }
+
+  }
+
+
+  ///================= Sanity check ================================
+  if(! ((rep==0) || (rep==1)) ){
+    cout<<"WARNINIG in init_active_states_dia:\
+           the rep = "<<rep<<" is not known. Allowed values are: [0, 1]\n";
+  }
+
+  if(! (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
+    cout<<"WARNINIG in init_active_states_dia:\
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0, 1, 2, 3, 4]\n";
+  }
+  
+  if(init_type==0 || init_type==1 || init_type==4){
+    if(istate>=ndia && rep==0){
+      cout<<"ERROR in init_active_states_dia: the istate is= "<<istate<<", but should be less than "<<ndia<<"\n";
+      exit(0);
+    }
+    if(istate>=ndia && rep==1){
+      cout<<"ERROR in init_active_states_dia: the istate is= "<<istate<<", but should be less than "<<ndia<<"\n";
+      exit(0);
+    }
+  }
+
+  if(init_type==2 || init_type==3){
+    if(istates.size()!=ndia && rep==0){
+      cout<<"ERROR in init_active_states_dia: the istates array is of length = "<<istates.size()<<", but should be of length "<<ndia<<"\n";
+      exit(0);
+    }
+    if(istates.size()!=ndia && rep==1){
+      cout<<"ERROR in init_active_states_dia: the istates array is of length = "<<istates.size()<<", but should be of length "<<ndia<<"\n";
+      exit(0);
+    }
+
+    double summ = 0.0;
+    for(i=0; i<istates.size(); i++){  summ += istates[i]; }
+    if( fabs(summ - 1.0) > 1e-5 ){
+      cout<<"ERROR in init_active_states_dia: the sum of the entries in the istates array is "<<summ<<", but should be 1.0\n";
+      exit(0);
+    }
+  }
+
+
+
+  ///================= Actual calculations  ================================
+
+  act_states_dia.clear();  
+
+  //================ For diabatic - set up them directly =================
+  for(traj=0; traj<ntraj; traj++){
+    if(init_type==0 || init_type==1 || init_type==4){ 
+      act_states_dia.push_back(istate);
+    }
+    else if(init_type==2 || init_type==3){
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia.push_back( liblibra::libspecialfunctions::set_random_state(istates, ksi) );
+    }
+  }// for traj
+
+  //============= For diabatic: more complicated =========================
+  if(rep==1){
+    vector<int> act_states_temp(act_states_dia);
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = act_states_temp[traj]; // active diabatic state
+      pop_adi *= 0.0; pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      pop_dia = (*basis_transform[traj]) * pop_adi * (*basis_transform[traj]).H();
+
+      vector<double> res(ndia, 0.0);
+      for(i=0; i<ndia;i++){ res[i] = pop_dia.get(i,i).real(); }
+
+      // Now select an adiabatic state according to the probabilities in the res
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia[traj] = hop(res, ksi);  // this is the adiabatic state that corresponds to
+                                         // the distribution of the diabatic populations
+
+
+    }// for traj
+
+  }// rep == 1
 
 }
 
@@ -946,7 +1072,76 @@ void dyn_variables::update_active_states(){
 
 
 
+void dyn_variables:: set_active_states_diff_rep(int rep_sh, Random& rnd){
+/*
+  Set the active state in the other representation through the transformation matrix
 
+  rep_sh = 1 - Use the adiabatic active states to set the diabatic ones
+           0 - Use the diabatic active states to set the adiabatic ones
+
+  The process for determining the active state is based on the transformation of the density matrix,
+  whose diagonal elements are replaced by the active state information, in similar to the following.
+  Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+  The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+*/
+  int sz, i, j, traj;
+  double ksi; 
+  if(rep_sh==0){ sz = ndia; }
+  else if(rep_sh==1){ sz = nadi; }
+  else{ 
+    cout<<"Wrong representation = "<<rep_sh<<"\nExiting...\n";
+    exit(0);
+  }
+  
+  // Transform the active states between representations based on the transformation matrix.
+  CMATRIX pop_adi(nadi, nadi);
+  CMATRIX pop_dia(ndia, ndia);
+  CMATRIX U(ndia, nadi);
+  
+  // Obtain the diabatic active states from the adiabatic ones
+  if(rep_sh==1){
+
+    for(traj=0; traj<ntraj; traj++){
+      i = act_states[traj]; // active adiabatic state
+      pop_adi = *dm_adi[traj];
+      for(j=0;j<nadi; j++){ pop_adi.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_adi.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_dia = U * pop_adi * U.H(); 
+      
+      vector<double> diag_els(ndia, 0.0);
+      for(i=0;i<ndia; i++){ diag_els[i] = pop_dia.get(i,i).real(); }
+
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states_dia[traj] = hop(diag_els, ksi); 
+    }
+  }
+
+  // Obtain the adiabatic active states from the diabatic ones
+  else{
+    for(traj=0; traj<ntraj; traj++){
+      i = act_states_dia[traj]; // active diabatic state
+      pop_dia = *dm_dia[traj];
+      for(j=0;j<nadi; j++){ pop_dia.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_adi = U.H() * pop_dia * U; 
+      
+      vector<double> diag_els(nadi, 0.0);
+      for(i=0;i<nadi; i++){ diag_els[i] = pop_adi.get(i,i).real(); }
+
+      ksi = rnd.uniform(0.0, 1.0);
+      act_states[traj] = hop(diag_els, ksi); 
+    }
+  }
+
+}
 
 
 /*
@@ -1087,9 +1282,13 @@ vector<double> dyn_variables::compute_average_mash_pop(int rep){
 
 }
 
-  
+
 
 vector<double> dyn_variables::compute_average_sh_pop(int rep){
+/**
+  Computing the SH population with the active state of the input rep.
+  If rep is different from rep_sh, the resultant SH population is computed indirectly through the sampling based on diagonal elments of the density matrix
+*/
 
   int sz, i, j, traj; 
   if(rep==0){ sz = ndia; }
@@ -1100,12 +1299,42 @@ vector<double> dyn_variables::compute_average_sh_pop(int rep){
   }
 
   vector<double> res(sz, 0.0);
-  vector<int> effective_states( act_states );
 
   if(rep==0){
-    // ===== For diabatic SH populations: use the prescription of ======
-    // Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
-    // The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+    vector<int> effective_states( act_states_dia );
+    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+  }// rep == 0
+
+  else if(rep==1){
+    vector<int> effective_states( act_states );
+    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+  }// rep == 1
+
+  for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
+
+  return res;
+}
+
+
+
+vector<double> dyn_variables::compute_average_sh_pop_TR(int rep){
+/**
+  Computing the SH population based on the following work:
+  Tempelaar, R.; Reichman, D. R. Generalization of Fewest-Switches Surface Hopping for Coherences. 
+  The Journal of Chemical Physics 2018, 148 (10), 102309. https://doi.org/10.1063/1.5000843
+*/
+  int sz, i, j, traj; 
+  if(rep==0){ sz = ndia; }
+  else if(rep==1){ sz = nadi; }
+  else{ 
+    cout<<"Can not compute SH population for representation = "<<rep<<"\nExiting...\n";
+    exit(0);
+  }
+
+  vector<double> res(sz, 0.0);
+
+  if(rep==0){
+    vector<int> effective_states( act_states );
 
     CMATRIX pop_adi(nadi, nadi);
     CMATRIX pop_dia(ndia, ndia);
@@ -1126,14 +1355,31 @@ vector<double> dyn_variables::compute_average_sh_pop(int rep){
   }// rep == 0
 
   else if(rep==1){
-    //===== For adiabatic populations, we just use the active adiabatic states =======
-    for(traj=0; traj<ntraj; traj++){ i = effective_states[traj]; res[i] += 1.0;  }
+    vector<int> effective_states( act_states_dia );
+
+    CMATRIX pop_adi(nadi, nadi);
+    CMATRIX pop_dia(ndia, ndia);
+    CMATRIX U(ndia, nadi);
+
+    for(traj=0; traj<ntraj; traj++){
+      i = effective_states[traj]; // active diabatic state
+      pop_dia = *dm_dia[traj];
+      for(j=0;j<ndia; j++){ pop_dia.set(j,j, complex<double>(0.0, 0.0) ); }
+      pop_dia.set(i, i, complex<double>(1.0, 0.0) );
+
+      // The following transformation is correct only for S_dia = 1
+      U = (*basis_transform[traj]);// * (*proj_adi[traj]);
+      
+      pop_adi = U.H() * pop_dia * U; 
+      for(j=0; j<nadi; j++){ res[j] += pop_adi.get(j,j).real(); }
+    }
   }// rep == 1
 
   for(j=0; j<sz; j++){   res[j] = res[j] / (float)ntraj;   }
 
   return res;
 }
+
 
 
 void dyn_variables::save_curr_dm_into_prev(){

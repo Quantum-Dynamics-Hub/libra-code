@@ -45,6 +45,7 @@ void dyn_variables::allocate_electronic_vars(){
     }
 
     act_states = vector<int>(ntraj, 0);
+    act_states_dia = vector<int>(ntraj, 0);
 
     electronic_vars_status = 1;
   }
@@ -318,6 +319,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *basis_transform[itraj] = *x.basis_transform[itraj];
     }
     act_states = x.act_states;
+    act_states_dia = x.act_states_dia;
 
   }
 
@@ -470,6 +472,7 @@ dyn_variables::~dyn_variables(){
     delete ampl_adi;
 
     act_states.clear();
+    act_states_dia.clear();
     electronic_vars_status = 0;
   }
 
