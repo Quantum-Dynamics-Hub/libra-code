@@ -60,6 +60,7 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St);
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
 CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
 
+CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& p, MATRIX& iM, double dt, int act_state);
 
 }// namespace libdyn
 }// liblibra

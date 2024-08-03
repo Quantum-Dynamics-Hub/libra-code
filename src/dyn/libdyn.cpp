@@ -887,6 +887,21 @@ void export_dyn_ham(){
   def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v1);
   def("update_Hamiltonian_variables", expt_update_Hamiltonian_variables_v2);
 
+
+  void (*expt_update_time_overlaps_v1)
+  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& ham,  
+   nHamiltonian& ham_prev) = &update_time_overlaps;
+  def("update_time_overlaps", expt_update_time_overlaps_v1);
+
+  void (*expt_update_proj_adi_v1)
+  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham, 
+   nHamiltonian& Ham_prev) = &update_proj_adi;
+  void (*expt_update_proj_adi_v2)
+  (dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham) = &update_proj_adi;
+
+  def("update_proj_adi", expt_update_proj_adi_v1);
+  def("update_proj_adi", expt_update_proj_adi_v2);
+
 /*
   void (*expt_update_Hamiltonian_q_v1)
   (dyn_control_params& prms, MATRIX& q, nHamiltonian& ham, 

@@ -1303,7 +1303,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
   // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
-  update_proj_adi(prms, dyn_var, ham); 
+  update_proj_adi(prms, dyn_var, ham, ham_aux); 
 
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);

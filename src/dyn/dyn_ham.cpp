@@ -207,6 +207,20 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 
     }// for nac_update_method == 2
 
+    if(1){  // Experimental option to fix the phase of NACs:
+      for(int traj=0; traj<ntraj; traj++){
+        for(int i=0; i<nadi;i++){
+          for(int j=i+1; j<nadi; j++){
+            double x1 = ham.children[traj]->nac_adi->get(i,j).real();
+            double x2 = ham_prev.children[traj]->nac_adi->get(i,j).real();
+            double sng =  SIGN(x1) * SIGN(x2); 
+            ham.children[traj]->nac_adi->scale(i,j, sng);
+            ham.children[traj]->nac_adi->scale(j,i, sng);
+          }// for j
+        }// for i
+      }// for traj
+    }// if correction
+
     
     //========================== Vibronic Hamiltonian ===============================    
     // Don't update Hvib - perhaps because they are read from files in step 1
@@ -268,21 +282,32 @@ void update_time_overlaps(dyn_control_params& prms, dyn_variables& dyn_var, nHam
 
 }
 
-void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham){ //  nHamiltonian& Ham_prev){
+void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham,  nHamiltonian& Ham_prev){
 /**
   Just re-compute the proj_adi matrices
 */
 
   //======= Parameters of the dyn variables ==========
   int ntraj = dyn_var.ntraj;
+  vector<int> traj_id(1,0);
+
+  CMATRIX f_prev(dyn_var.nadi, dyn_var.ndof);
+  CMATRIX f_curr(dyn_var.nadi, dyn_var.ndof);
+  MATRIX iM(dyn_var.get_imass());
+  MATRIX momenta(dyn_var.get_momenta());
+  MATRIX p(dyn_var.ndof, 1);
+  double dt = prms.dt;  
 
   double diff = 0.0;
 
   for(int itraj=0; itraj<ntraj; itraj++){
     int traj1 = itraj; // if(method >=100 && method <200){ traj1 = 0; }
+    traj_id[0] = traj1;
 
     nHamiltonian* ham = Ham.children[traj1];
-    //nHamiltonian* ham_prev = Ham_prev.children[traj1];
+    nHamiltonian* ham_prev = Ham_prev.children[traj1];
+    p = momenta.col(traj1);
+    int act_state = dyn_var.act_states[traj1];
 
     //================= Basis re-expansion ===================
     CMATRIX P(ham->nadi, ham->nadi);
@@ -301,10 +326,25 @@ void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamilton
       }
       T_new = orthogonalized_T( T_new );
     }
-    else{ // This is based on reordering + phase correction
+    else if(prms.state_tracking_algo==1 || prms.state_tracking_algo==2 || prms.state_tracking_algo==3 ||
+            prms.state_tracking_algo==32 || prms.state_tracking_algo==33){ // This is based on reordering + phase correction
       CMATRIX Eadi(ham->get_ham_adi());
       T_new = P;
       T_new = compute_projector(prms, Eadi, T_new);
+    }
+    else if(prms.state_tracking_algo==4){ // new experimental approach - based on forces
+      //exit(0);
+      CMATRIX Eadi(ham->get_ham_adi());
+      MATRIX e_curr(ham->get_ham_adi().real());
+      MATRIX e_prev(ham_prev->get_ham_adi().real());
+      f_curr = ham->all_forces_adi(traj_id);
+      f_prev = ham_prev->all_forces_adi(traj_id);
+      //ham->get_hvib_adi().show_matrix();
+      T_new = compute_F_cost_matrix(f_curr, f_prev, e_curr, e_prev, p, iM, dt, act_state);
+      //T_new.show_matrix();
+      //exit(0);
+      T_new = compute_projector(prms, Eadi, T_new);  // CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
+    //  T_new = orthogonalized_T( T_new );
     }
 
     *dyn_var.proj_adi[itraj] = T_new;
@@ -314,6 +354,9 @@ void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamilton
 
 }// reproject_basis
 
+void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamiltonian& Ham){
+  update_proj_adi(prms, dyn_var, Ham, Ham);
+}
 
 
 

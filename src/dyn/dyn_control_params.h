@@ -252,6 +252,7 @@ class dyn_control_params{
       - 3: experimental stochastic algorithm, the original version with elimination (known problems)
       - 32: experimental stochastic algorithms with all permutations (too expensive)
       - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
+      - 4: new, experimental force-based tracking
 
 
   */
