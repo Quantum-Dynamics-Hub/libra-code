@@ -159,6 +159,15 @@ class dyn_variables{
      vector<int> act_states(ntraj)
   */
   vector<int> act_states;
+  
+
+  /**
+    Diabatic active states for each trajectory
+    
+    Options:
+     vector<int> act_states_dia(ntraj)
+  */
+  vector<int> act_states_dia;
 
 
   /**
@@ -594,18 +603,21 @@ class dyn_variables{
 
   void update_active_states(int direction, int property);
   void update_active_states();
+  void set_active_states_diff_rep(int rep_sh, Random& rnd);
 
   void update_basis_transform(nHamiltonian& ham);
 
   void init_amplitudes(bp::dict params, Random& rnd);
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
+  void init_active_states_dia(bp::dict _params, Random& rnd);
 
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop(int rep);
+  vector<double> compute_average_sh_pop_TR(int rep);
   vector<double> compute_average_mash_pop(int rep);
 
 
