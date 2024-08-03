@@ -51,6 +51,7 @@ dyn_control_params::dyn_control_params(){
   hvib_update_method = 1;
   do_ssy = 0;
   do_phase_correction = 1;
+  do_nac_phase_correction = 0;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = -1;
   MK_alpha = 0.0;
@@ -154,6 +155,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   hvib_update_method = x.hvib_update_method;
   do_ssy = x.do_ssy;
   do_phase_correction = x.do_phase_correction;
+  do_nac_phase_correction = x.do_nac_phase_correction;
   phase_correction_tol = x.phase_correction_tol; 
   state_tracking_algo = x.state_tracking_algo;
   MK_alpha = x.MK_alpha;
@@ -350,6 +352,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="do_ssy") { do_ssy = bp::extract<int>(params.values()[i]);   }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
+    else if(key=="do_nac_phase_correction"){ do_nac_phase_correction = bp::extract<int>(params.values()[i]); }
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="MK_alpha") { MK_alpha = bp::extract<double>(params.values()[i]);  }
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }

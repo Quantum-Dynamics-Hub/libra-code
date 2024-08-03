@@ -207,7 +207,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 
     }// for nac_update_method == 2
 
-    if(1){  // Experimental option to fix the phase of NACs:
+    if(prms.do_nac_phase_correction==1){  // Experimental option to fix the phase of NACs:
       for(int traj=0; traj<ntraj; traj++){
         for(int i=0; i<nadi;i++){
           for(int j=i+1; j<nadi; j++){

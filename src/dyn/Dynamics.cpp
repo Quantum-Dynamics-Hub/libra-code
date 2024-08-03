@@ -268,45 +268,6 @@ void apply_afssh(dyn_variables& dyn_var, CMATRIX& C, vector<int>& act_states, MA
 }
 
 
-
-/*
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
-
-//  This is a version to maintain the backward-compatibility
- 
-  dyn_control_params prms;
-  prms.set_parameters(dyn_params);
-
-  int ntraj = q.n_cols;
-  vector<Thermostat> therm(ntraj, Thermostat(prms.thermostat_params));
-
-  compute_dynamics(q, p, invM, C, projectors, act_states, ham, py_funct, params, dyn_params, rnd, therm);
-
-}
-
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict& params, bp::dict& dyn_params, Random& rnd,
-              vector<Thermostat>& therm){
-
-  int ndof = q.n_rows;
-  int ntraj = q.n_cols;
-  int nst = C.n_rows;    
-
-  dyn_variables dyn_var(nst, nst, ndof, ntraj);
-  compute_dynamics(q, p, invM, C, projectors, act_states, ham, py_funct, params, dyn_params, rnd, therm, dyn_var);
-
-}
-
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict& params, bp::dict& dyn_params, Random& rnd,
-              vector<Thermostat>& therm, dyn_variables& dyn_var){
-}
-*/
-
 void apply_projectors(CMATRIX& C, vector<CMATRIX>& proj){
 
   int ntraj = proj.size();
@@ -660,38 +621,6 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
   }
 }
 
-/*
-void update_proj_adi(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
-
-  Just re-compute the proj_adi matrices
-
-
-
-  //======= Parameters of the dyn variables ==========
-  int ntraj = dyn_var.ntraj;
-
-  for(int itraj=0; itraj<ntraj; itraj++){
-    int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
-
-    nHamiltonian* ham = Ham->children[traj1];
-    nHamiltonian* ham_prev = Ham_prev->children[traj1];
-
-    //================= Basis re-expansion ===================
-    CMATRIX P(ham->nadi, ham->nadi);
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-    CMATRIX T_new(ham->nadi, ham->nadi);
-
-    P = ham->get_time_overlap_adi();  // U_old.H() * U;
-
-    // More consistent with the new derivations:
-    FullPivLU_inverse(P, T_new);
-    T_new = orthogonalized_T( T_new );
-
-    *dyn_var.proj_adi[itraj] = T_new;
-  }//for ntraj
-
-}// reproject_basis
-*/
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -1333,9 +1262,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   // Recompute density matrices in response to the updated amplitudes  
-//  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1); 
   dyn_var.update_density_matrix(prms);
  
   vector<int> old_states( dyn_var.act_states);
@@ -1479,9 +1406,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Update amplitudes and density matrices in response to decoherence corrections
-//  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_density_matrix(prms);
 
 
@@ -1513,11 +1438,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       if(prms.rep_sh==1){
         prop_states = propose_hops(g, dyn_var.act_states, rnd);
     
-        // Decide if to accept the transitions (and then which)
-        // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-        // 10/21/2023 - deprecate this version 
-        //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
-        // in favor of this:
+        // Decide if to accept the transitions (and then which)        
         act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
       }
       else if(prms.rep_sh==0){
@@ -1594,9 +1515,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Update the amplitudes and DM, in response to state hopping and other changes in the TSH part
   // so that we have them consistent in the output
-//  dyn_var.update_amplitudes(prms, ham); 
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_density_matrix(prms);
 
 

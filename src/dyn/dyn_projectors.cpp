@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2023 Alexey V. Akimov
+* Copyright (C) 2019-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -980,10 +980,6 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
   MATRIX vel(ndof, 1);  vel.dot_product(iM, p);  
   MATRIX tmp(ndof, 1);
 
-//  cout<<"Forces:\n";
-//  F_prev.real().show_matrix();
-//  F_curr.real().show_matrix();
-
   double val = 0.0;
   for(i=0; i<nst; i++){
     double sum = 1.0; 
@@ -996,73 +992,22 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
       fj_curr = F_curr.row(j).real();
       fj_prev = F_prev.row(j).real();
 
-//      tmp.dot_product(iM.T(), fi_prev );
-      dq_i = vel.T() * dt; // + 0.5*tmp*dt*dt;
+      dq_i = vel.T() * dt; 
       double dE = e_prev.get(j,j) - e_prev.get(i,i);
       double dE_i = -(fi_prev * dq_i).get(0,0);
 
-//      tmp.dot_product(iM.T(), fj_prev );
-      dq_j = vel.T() * dt;// + 0.5*tmp*dt*dt;
+      dq_j = vel.T() * dt;
       double dE_j = -(fj_prev * dq_j).get(0,0);
       double dE_new = dE + dE_j - dE_i;
 
-      double dE_curr = e_curr.get(j,j) - e_curr.get(i,i);
-
-      //cout<<"dE = "<<dE<<" dE + dE_j - dE_i = "<<dE_new<<endl;
-//      cout<<"SIGN( dE ) = "<<SIGN( dE )<<" SIGN( dE_new ) = "<<SIGN( dE_new )<<endl;
       if(i==j){ ; ; }
       else{ val = 1.0 - SIGN( dE ) * SIGN( dE_new );  sum -= val; } 
-//      val = 0.0;
-//      val = SIGN( dE ) * SIGN( dE_new );
-
-      //cout<<"val = "<<val<<endl;
-/* 
-      int flag1, flag2, flag3;
-      flag1 = flag2 = flag3 = 1;
-      double nrm1 = (fi_prev * fi_prev.T()).get(0,0);
-      if(nrm1 > 0.0 ){ ;; }else{  flag1 = 0; }
-
-      double nrm2 = (fj_prev * fj_prev.T()).get(0,0);
-      if(nrm2 > 0.0 ){ ;; }else{  flag2 = 0; }
-
-      double val = 0.0; 
-      // If the surfaces are parallel:
-      if( flag1==0 && flag2==0){ 
-        if(i==j){val = 1.0;} // keep the same states unchanged
-        else{ val = 0.0; }   // keep different states
-      }
-      else{  // surfaces are not parallel
-
-        double dE = e_prev.get(j,j) - e_prev.get(i,i);
-        double delta = -dt * ((fj_prev - fi_prev) * vel).get(0,0);
-
-        if(dE + delta < 0.0){ // feasible (diabatic) state crossing 
-          
-          double nrm3 = (fj_curr * fj_curr.T()).get(0,0);
-          if(nrm3 > 0){ ;; }else{  flag3 = 0;  }
-
-          if( flag1==1 and flag3==1){ // non-zero forces i,prev and j,curr
-            val = (fi_prev * fj_curr.T()).get(0,0)/sqrt(nrm1 * nrm3);
-          }
-          else{  // one of the forces is zero, but we have a crossing - so assign change of state
-            val = 1.0; // here, we can be only for different states
-          }  
-        }else{ // no diabatic crossing
-          if(i==j){val = 1.0;} // keep the same states unchanged
-          else{ val = 0.0; }   // keep different states
-        }
-      } // surfaces are not parallel
-*/
 
       res.set(i, j, complex<double>( val, 0.0) );
-      //res.set(j, i, complex<double>( val, 0.0) );
-
     }// for j
     res.set(i, i, complex<double>(sum, 0.0) );
   }// for i
 
-//  res.show_matrix();
-  
   return res;
 }
 

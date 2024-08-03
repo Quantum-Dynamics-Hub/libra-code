@@ -63,20 +63,6 @@ class dyn_control_params{
 
 
   /** 
-   The representation of the Hamiltonian update. This is the representation in which the 
-   computed properties are assumed to be. For instance, we may have set it to 1, to read the 
-   adiabatic energies and nonadiabatic couplings, to bypass the diabatic-to-adiabatic transformation,
-   which may be useful in some atomistic calculations, or with the NBRA
-
-   Options:
-     - 0: diabatic representation [ default ]
-     - 1: adiabatic representation 
-
-  */
-  //int rep_ham;  /// TO BE REPLACED BY the ham_update_method
-
-
-  /** 
    How to update Hamiltonian and which type of Hamiltonian to update
 
    Options:
@@ -242,6 +228,18 @@ class dyn_control_params{
   */
   double phase_correction_tol;
 
+  
+  /**
+    New phase correction, directly applied to NACs. Intended to be used mostly with state_tracking_algo == 4,
+    although can be useful with other state treacking algorithms. Should not be used together with 
+    `do_phase_correction`
+
+    Options:
+      - 0: no correction [ default ]
+      - 1: do this correction
+  */
+  int do_nac_phase_correction; 
+
 
   /** 
     State tracking algorithm:
@@ -311,7 +309,7 @@ class dyn_control_params{
       - 5: DISH
       - 6: MASH
       - 7: FSSH2
-      - 8: FSSH3 - experimental
+      - 8: FSSH3
   */
   int tsh_method;
 
@@ -335,7 +333,7 @@ class dyn_control_params{
       - 32: accept hops with the probability taken from the classical Maxwell-Boltzmann distribution
       - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
 
-      - 40: based on possibility to conserve energy using tcnbra_ekin variables (experimental for TC-NBRA)
+      - 40: based on possibility to conserve energy using tcnbra_ekin variables (for TC-NBRA)
   */
   int hop_acceptance_algo;
 
@@ -426,7 +424,8 @@ class dyn_control_params{
   int fssh3_approach_option;
 
   /** 
-    The matrix decomposition method for solving the least-squares problem
+    The matrix decomposition method for solving the least-squares problem.
+    In the present implementation, is not used.
 
     Options:
       - 0: bdcSvd
@@ -439,7 +438,7 @@ class dyn_control_params{
   
   /**
     The time-step of the optimization procedure in the FSSH3 calculations
-    Default: 0.001
+    Default: 0.001 a.u.
   */
   double fssh3_dt;
 
@@ -608,78 +607,110 @@ class dyn_control_params{
 
 
   /**
-  MATRIX(ndof, 1) of (initial) wave packet widths for the decoherence from SHXF & MQCXF
-  [ default : NULL ]
+    MATRIX(ndof, 1) Widths of all DOFs for Gaussian function as an 
+    approximation to adiabatic wave packets. According to the choice of the Gaussian width approximation,
+    this parameter has different meanings:
+                
+        - A constant width in the fixed-width approximation, that is, `use_td_width == 0`
+        - The initial width in the free-particle Gaussian wave packet approximation, that is, `use_td_width == 1`
+        - The interaction width in the Schwarz scheme, that is, `use_td_width == 2`
+        - No influence on the dynamics since the width will be determined by internal variables in the Subotnik scheme, 
+          that is, `use_td_width == 3`
+
+    Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+    [ default : NULL ]
   */
   MATRIX* wp_width;
 
 
   /**
-  MATRIX(ndof, 1) of wave packet velocities for the decoherence from SHXF & MQCXF
-  This value is applied when use_td_width = 1
-  [ default : NULL ]
+    MATRIX(ndof, 1) The velocity of Gaussian wave packet in the free-particle Gaussian  approximation, 
+    that is, `use_td_width == 1` Only used with independent-trajectory XF methods, that is, 
+    with `decoherence_algo == 5 or 6` [ default : NULL ]
   */
   MATRIX* wp_v;
 
 
   /**
-  The criterion whether the electronic state is in a coherence
-  [ default : 0.01 ]
+    A population threshold for creating/destroying auxiliary trajectories. [ default: 0.01 ]. 
+    Only used with independent-trajectory XF methods, that is, with `decoherence_algo == 5 or 6`
   */
   double coherence_threshold;
 
 
   /**
-  The masking parameter for computing nabla phase vectors in the MQCXF
-  [ default : 0.0001 ]
+    The masking parameter for computing nabla phase vectors. [ default: 0.0001 Ha ]
+    Only used with the MQCXF method, that is, `decoherence_algo == 5`
   */
   double e_mask;
 
 
   /**
-  Whether to use the decoherence force in MQCXF
-  The corresponding electronic propagation is adjusted for the energy conservation
-  [ default : 0 ]
+    Whether to use the decoherence force in MQCXF. The corresponding electronic propagation 
+    is adjusted for the energy conservation. Only used with `decoherence_algo == 6`
+
+  Options:
+      - 0: don't use it, so for XF-methods this is only Ehrenfest-like force; EhXF [ default ]
+      - 1: The whole force including the XF-correction; MQCXF 
+
   */
   int use_xf_force;
 
 
   /**
-  Whether to project out the density on an auxiliary trajectory when its motion is classically forbidden
-  [ default : 0 ]
+    Whether to project out the density on an auxiliary trajectory when its motion is classically 
+    forbidden. Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+ 
+    Options:
+        - 0: don't [default]
+        - 1: do
   */
   int project_out_aux;
 
 
   /**
-  Turning-point algorithm for auxiliary trajectories
+    Turning-point algorithm for auxiliary trajectories. Only used with independent-trajectory XF methods, 
+    that is, `decoherence_algo == 5 or 6`
 
-  Options:
-      - 0: no treatment of a turning point
-      - 1: collapse to the active state [default]
-      - 2: fix auxiliary positions of adiabatic states except for the active state
-      - 3: keep auxiliary momenta of adiabatic states except for the active state
+    Options:
+        - 0: no treatment of a turning point
+        - 1: collapse to the active state [default]
+        - 2: fix auxiliary positions of adiabatic states except for the active state
+        - 3: keep auxiliary momenta of adiabatic states except for the active state
   */
   int tp_algo;
   
 
   /**
-  Whether to use the td Gaussian width for the nuclear wave packet approximation
-  This option can be considered when it comes to unbounded systems.
-  This approximation is based on a nuclear wave packet on a free surface:
+    Whether to use the td Gaussian width for the nuclear wave packet approximation
+    This option can be considered when it comes to unbounded systems.
+    This approximation is based on a nuclear wave packet on a free surface:
     \sigma_x(t)=\sqrt[\sigma_x(0)^2 + (wp_v * t)^2]
-  [ default : 0 ]
+    Only used with independent-trajectory XF methods, that is, `decoherence_algo == 5 or 6`
+  
+    Options:
+        - 0: no td width; use the fixed-width Gaussian approximation [ default ]
+        - 1: the td Gaussian width from a free particle Gaussian wave packet, \sigma(t)=\sqrt[\sigma(0)^2 + (wp_v * t)^2]
+        - 2: the Schwarz scheme where the width depends on the instantaneous de Broglie 
+             wavelength, \sigma(t)^(-2) = [\sigma(0)^2 * P/ (4 * PI) ]^2
+        - 3: the Subotnik scheme where the width is given as a sum of pairwise widths depending on the auxiliary 
+             variables, \sigma_ij(t)^2 = |R_i - R_j| / |P_i - P_j| 
+
   */
   int use_td_width;
 
 
-  /**
-  A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
-  we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
-  If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
-  are computed for all trajectories.
+  ///===============================================================================
+  ///================= NBRA options =========================================
+  ///===============================================================================
 
-  Options:
+  /**
+    A flag for NBRA calculations. Since in NBRA, the Hamiltonian is the same for all the trajectories
+    we can only compute the Hamiltonian related properties once for one trajectory and increase the speed of calculations.
+    If we set the value to 1 it will consider the NBRA type calculations and other integers the Hamiltonian related properties
+    are computed for all trajectories.
+
+    Options:
       - 0: no NBRA - Hamiltonians for all trajectories are computed explicitly [ default ]
       - 1: the NBRA is involved - the calculations of the Hamiltonian are conducted for only 1 trajectory, 
            and re-used by all other SH trajectories.  
@@ -860,8 +891,11 @@ class dyn_control_params{
     If set to True (1), we will force the reprojection matrix T_new to be the identity matrix. This effectively
     removes basis-reprojection (local diabatization) approach and turns on the "naive" approach where
     no trivial crossings exist.
-    Default: No (0) - we do want to use the LD approaches by default.
-    If Yes (1), one may need to turn on additional state tracking and phase correction methods
+
+    Options:
+
+      - 0: No - we do want to use the LD approaches by default. [ default]
+      - 1: Yes - one may need to turn on additional state tracking and phase correction methods
   */
   int assume_always_consistent;
 
