@@ -685,7 +685,7 @@ def dftb_distribute( istep, fstep, nsteps_this_job, trajectory_xyz_file, dftb_in
     for step in range( nsteps_this_job ):
 
         # extract the curr_step xyz coordianates from the trajectory file and write it to another xyz file
-        CP2K_methods.read_trajectory_xyz_file( trajectory_xyz_file, curr_step )
+        _, _ = CP2K_methods.read_trajectory_xyz_file( trajectory_xyz_file, curr_step )
         curr_step += 1
 
     # Go back to the main directory

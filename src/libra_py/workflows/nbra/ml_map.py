@@ -34,7 +34,8 @@ import joblib
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from sklearn.kernel_ridge import KernelRidge
-from sklearn.metrics import mean_squared_error, accuracy_score, mean_absolute_error, r2_score
+from sklearn.cluster import KMeans
+from sklearn.metrics import mean_squared_error, accuracy_score, mean_absolute_error, r2_score, pairwise_distances
 from liblibra_core import *
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.packages.dftbplus.methods as DFTB_methods
@@ -517,6 +518,76 @@ def find_indices_inputs(params):
     return list(indices)
 
 
+def read_trajectory_xyz_file(file_name: str, istep: int, fstep: int):
+    """
+    """
+    f = open(file_name,'r')
+    lines = f.readlines()
+    f.close()
+    # The number of atoms for each time step in the .xyz file of the trajectory.
+    number_of_atoms = int(lines[0].split()[0])
+
+    # This is used to skip the first two lines for each time step.
+    n = number_of_atoms+2
+
+    # Write the coordinates of the 'step'th time step into the file
+    coords = []
+    for step in range(istep, fstep+1):
+        coord = []
+        for i in range( n * step + 2, n * ( step + 1 ) ):
+            tmp = lines[ i ].split()
+#             print(tmp)
+            x = float( tmp[1])
+            y = float( tmp[2])
+            z = float( tmp[3])
+            coord.append([x,y,z])
+        coords.append(coord)
+    
+    coords = np.array(coords)
+    labels = []
+    for i in range(2, number_of_atoms+2):
+        tmp = lines[i].split()
+        labels.append( tmp[0])
+
+    return labels, coords
+
+def rmsd(p1, p2):
+    """
+    Calculate RMSD between two geometries
+    """
+    return np.sqrt(np.mean((p1 - p2)**2))
+
+
+def find_kmeans_indices(trajectory_file, istep, fstep, ncluster=10, random_state=0):
+    """
+    """
+    # Read the XYZ trajectory file
+    t1 = time.time()
+    labels, coords = read_trajectory_xyz_file(trajectory_file, istep, fstep)
+    print('Finished reading trajectory file: ', time.time()-t1)
+    # Vectorize the coordinates nparray
+    flattened_coords = coords.reshape(coords.shape[0], -1)
+    t1 = time.time()
+    rmsd_matrix = pairwise_distances(flattened_coords, metric=rmsd)
+    print('Finished computing the distance matrix with RMSD metric: ', time.time()-t1)
+    # Do the K-means clustering
+    t1 = time.time()
+    kmeans = KMeans(n_clusters=ncluster, random_state=random_state).fit(rmsd_matrix) 
+    print(f'Finished clustering for ncluster={ncluster}: ', time.time()-t1)
+    clusters = kmeans.labels_
+    indices = []
+    for cluster_id in range(ncluster):
+        cluster_members = np.where(clusters == cluster_id)[0]
+        # Select the first member of the cluster as representative
+        indices.append(np.sort(cluster_members)[0])
+    # Sort the indices
+    indices = list(np.sort(indices))
+    # Print the geometries indices
+    print("Selected geometries indices are:", indices)
+
+    return indices
+
+
 def rebuild_matrix_from_partitions(params, partitions, output_shape):
     """
     This function is one of the most important here. It will
@@ -598,24 +669,43 @@ def compute_properties(params, models, input_scalers, output_scalers):
     for i, step in enumerate(indices):
         print("======================== \n Performing calculations for step ", step)
         print("*** Generating guess Hamiltonian for step ", step)
+        tt = time.time()
         generate_data.gen_data(data_gen_params, step) 
+        print('data generation time:', time.time()-tt, ' seconds')
         input_mat = np.load(f'{params["path_to_input_mats"]}/{params["prefix"]}_{params["input_property"]}_{step}.npy')
         if i==0: 
             ref_mat_files = glob.glob(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_*.npy')
             #output_mat = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
             output_mat = np.load(ref_mat_files[0])
         params["input_partition"] = True
+        tt = time.time()
         partitioned_input = partition_matrix(params, input_mat)
+        print('input partitioning time:', time.time()-tt, ' seconds')
         # Now apply the models to each partition
+        tt = time.time()
         outputs = []
         for j in range(len(input_scalers)):
             input_scaled = input_scalers[j].transform(np.array(partitioned_input[j]).reshape(1,-1))
             output_scaled = models[j].predict(input_scaled)#.reshape(1,-1))
             output = output_scalers[j].inverse_transform(output_scaled)
             outputs.append(output.reshape(output.shape[1]))
+        print('scaling data time:', time.time()-tt, ' seconds')
+        tt = time.time()
         ks_ham_mat = rebuild_matrix_from_partitions(params, outputs, output_mat.shape)
+        print('rebuilding matrix from partitions time:', time.time()-tt, ' seconds')
+        tt = time.time()
         atomic_overlap = compute_atomic_orbital_overlap_matrix(params, step)
+        print('atomic orbital overlap calculation time:', time.time()-tt, ' seconds')
+        tt = time.time()
+        #os.environ['OMP_NUM_THREADS'] = '%d'%params['nprocs']
+        #print(type(ks_ham_mat))
+        #print(type(atomic_overlap))
+        #np.save('k.npy', ks_ham_mat)
+        #np.save('s.npy', atomic_overlap)
         eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs(ks_ham_mat, atomic_overlap)
+        #eigenvalues, eigenvectors = CP2K_methods.compute_energies_coeffs_scipy(ks_ham_mat, atomic_overlap)
+        #os.environ['OMP_NUM_THREADS'] = '1'
+        print('diagonalizing the KS Hamiltonian matrix time:', time.time()-tt, ' seconds')
         if params["do_error_analysis"]:
             if not os.path.exists("../error_data"):
                 os.system(f"mkdir ../error_data")
@@ -625,6 +715,7 @@ def compute_properties(params, models, input_scalers, output_scalers):
             try:
                 ks_ham_mat_ref = np.load(f'{params["path_to_output_mats"]}/{params["prefix"]}_ref_{params["output_property"]}_{step}.npy')
                 eigenvalues_ref, eigenvectors_ref = CP2K_methods.compute_energies_coeffs(ks_ham_mat_ref, atomic_overlap)
+                #eigenvalues_ref, eigenvectors_ref = CP2K_methods.compute_energies_coeffs_scipy(ks_ham_mat_ref, atomic_overlap)
                 # We only save the eigenvalues but not the eigenvectors of the reference calculations
                 # The first reason is because we want to plot them and then we'll do the error analysis of all
                 # molecular orbitals. The second reason is that we compute the \epsilon_i=<\psi_{i_{ref}}|\psi_{i_{ml}}> for
@@ -635,6 +726,7 @@ def compute_properties(params, models, input_scalers, output_scalers):
                         os.system(f"mkdir {params['path_to_save_ref_mos']}")
                 if params["save_ref_eigenvalues"]:
                     np.save(f"{params['path_to_save_ref_mos']}/E_ref_{step}.npy", eigenvalues_ref) # [lowest_orbital-1:highest_orbital])
+                    np.save(f"{params['path_to_save_ref_mos']}/E_ml_{step}.npy", eigenvalues) # [lowest_orbital-1:highest_orbital]) 
                 if params["save_ref_eigenvectors"]:
                     np.save(f"{params['path_to_save_ref_mos']}/mos_ref_{step}.npy", eigenvectors_ref) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital])
                 ml_ref_overlap = compute_mo_overlaps(params, eigenvectors_ref, eigenvectors, step, step) #[lowest_orbital-1:highest_orbital,:][:,lowest_orbital-1:highest_orbital]
@@ -713,10 +805,10 @@ def compute_properties(params, models, input_scalers, output_scalers):
             #if params["compute_total_energy"]:
             # we have to make a cp2k input file based on the reference input
             # and then run it. Then since the files are large we need to remove them
-    os.system("rm *.log *.npy *.wfn* *.inp *.xyz")
+    #os.system("rm *.log *.npy *.wfn* *.inp *.xyz")
     os.system("mkdir ../ml_total_energy")
     os.system("mv output*.out ../ml_total_energy/.")
-    os.system("rm *.out")
+    #os.system("rm *.out")
     #os.chdir("../")
     #os.system(f"rm -rf tmp_guess_ham_{params['job']}")
 

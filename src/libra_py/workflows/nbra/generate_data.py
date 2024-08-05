@@ -46,7 +46,7 @@ def make_input(prefix, input_template, software, trajectory_xyz_file, step):
     lines_input = f.readlines()
     f.close()
 
-    CP2K_methods.read_trajectory_xyz_file(trajectory_xyz_file, step)
+    _, _ = CP2K_methods.read_trajectory_xyz_file(trajectory_xyz_file, step)
 
     if software.lower()=="cp2k":
         f = open(F"input_{prefix}_{step}.inp", "w")
