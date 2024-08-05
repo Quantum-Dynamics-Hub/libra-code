@@ -23,6 +23,7 @@ import math
 import re
 import numpy as np
 import scipy.sparse as sp
+import scipy.linalg
 import time
 import glob 
 from libra_py.workflows.nbra import step2_many_body
@@ -2123,6 +2124,36 @@ def compute_energies_coeffs(ks_mat, overlap):
     # Transform back the coefficients 
     eigenvectors = np.dot(U_inv, eigenvectors)
     sorted_indices = np.argsort(eigenvalues)
+    eigenvectors = eigenvectors[:,sorted_indices].T
+    
+    
+    return eigenvalues[sorted_indices], eigenvectors
+
+
+def compute_energies_coeffs_scipy(ks_mat, overlap):
+    """
+    This function solves the general eigenvalue problem described above using a Cholesky decomposition
+    of the overlap matrix. The eigenvalues are sorted.
+    More information: https://doi.org/10.1016/j.cpc.2004.12.014
+    Args:
+        ks_mat (numpy array): The Kohn-Sham matrix
+        overlap (numpy array): The atomic orbital overlap matrix
+    Returns:
+        eigenvalues (numpy array): The energies (eigenvalues)
+        eigenvectors (numpy array): The MO coefficients
+    """
+    # Cholesky decomposition of the overlap matrix
+    U = scipy.linalg.cholesky( overlap ).T
+    # One ca also use the following as well but it is computationally more demanding
+    # U = scipy.linalg.fractional_matrix_power(S, 0.5)
+    U_inv = scipy.linalg.inv( U )
+    UT_inv = scipy.linalg.inv( U.T )
+    #K_prime = scipy.linalg.multi_dot( [UT_inv, ks_mat, U_inv] )
+    K_prime = UT_inv @ ks_mat @ U_inv
+    eigenvalues, eigenvectors = scipy.linalg.eig( K_prime )
+    # Transform back the coefficients 
+    eigenvectors = U_inv @ eigenvectors
+    sorted_indices = np.argsort(eigenvalues) 
     eigenvectors = eigenvectors[:,sorted_indices].T
     
     

@@ -2545,11 +2545,12 @@ def run_step3_sd_nacs_libint(params):
             # Since we have performed state-reordering we need to 
             # convert to scipy npz format now
             t2 = time.time()
-            for i in range(len(St_sds_cmatrix)):
+            for i in range(len(St_sds_cmatrix)-1):
                 St_sds[i] = data_conv.MATRIX2scipynpz( St_sds_cmatrix[i].real() )
-                sd2ci = SD2CI[i]
+                sd2ci_prev = SD2CI[i]
+                sd2ci_curr = SD2CI[i+1]
                 # Compute the St_ci
-                St_ci = np.linalg.multi_dot([sd2ci.T, St_sds[i].todense().real, sd2ci])
+                St_ci = np.linalg.multi_dot([sd2ci_prev.T, St_sds[i].todense().real, sd2ci_curr])
                 St_cis.append(sp.csc_matrix(St_ci))
 
             # Now we need to apply state-reordering to St_cis
@@ -2580,10 +2581,11 @@ def run_step3_sd_nacs_libint(params):
                 St_cis[i] = data_conv.MATRIX2scipynpz( St_cis_cmatrix[i].real() )
     
         else:
-            for i in range(len(St_sds)):
-                sd2ci = SD2CI[i]
+            for i in range(len(St_sds)-1):
+                sd2ci_prev = SD2CI[i]
+                sd2ci_curr = SD2CI[i+1]
                 # Compute the St_ci
-                St_ci = np.linalg.multi_dot([sd2ci.T, St_sds[i].todense().real, sd2ci])
+                St_ci = np.linalg.multi_dot([sd2ci_prev.T, St_sds[i].todense().real, sd2ci_curr])
                 St_cis.append(sp.csc_matrix(St_ci))
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci))
 
