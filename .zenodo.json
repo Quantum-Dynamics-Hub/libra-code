@@ -1,0 +1,239 @@
+{
+  "access": {
+    "embargo": {
+      "active": false,
+      "reason": null
+    },
+    "files": "public",
+    "record": "public",
+    "status": "open"
+  },
+  "metadata": {
+    "creators": [
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Akimov",
+          "given_name": "Alexey",
+          "name": "Akimov, Alexey",
+          "type": "personal"
+        },
+        "orcid": "0000-0002-7815-3731"
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Shakiba",
+          "given_name": "Mohammad",
+          "name": "Shakiba, Mohammad",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Smith",
+          "given_name": "Brendan",
+          "name": "Smith, Brendan",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02b6qw903",
+            "name": "University of South Carolina"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Dutra",
+          "given_name": "Matthew",
+          "name": "Dutra, Matthew",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Han",
+          "given_name": "Daeho",
+          "name": "Han, Daeho",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Sato",
+          "given_name": "Kosuke",
+          "name": "Sato, Kosuke",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01y64my43",
+            "name": "University at Buffalo, State University of New York"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Temen",
+          "given_name": "Story",
+          "name": "Temen, Story",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "01dzed356",
+            "name": "Hunan Agricultural University"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Li",
+          "given_name": "Wei",
+          "name": "Li, Wei",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "046rm7j60",
+            "name": "University of California, Los Angeles"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Khvorost",
+          "given_name": "Taras",
+          "name": "Khvorost, Taras",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02vpsdb40",
+            "name": "New York University Shanghai"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Sun",
+          "given_name": "Xiang",
+          "name": "Sun, Xiang",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02b6qw903",
+            "name": "University of Southern California"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Stippell",
+          "given_name": "Liz",
+          "name": "Stippell, Liz",
+          "type": "personal"
+        }
+      },
+      {
+        "affiliations": [
+          {
+            "id": "02qyf5152",
+            "name": "Indian Institute of Technology Bombay"
+          }
+        ],
+        "person_or_org": {
+          "family_name": "Jain",
+          "given_name": "Amber",
+          "name": "Jain, Amber",
+          "type": "personal"
+        }
+      }
+    ],
+    "resource_type": {
+      "id": "software",
+      "title": {
+        "de": "Software",
+        "en": "Software"
+      }
+    },
+    "rights": [
+      {
+        "description": {
+          "en": "Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights."
+        },
+        "id": "gpl-3.0-or-later",
+        "props": {
+          "scheme": "spdx",
+          "url": "https://www.gnu.org/licenses/gpl-3.0-standalone.html"
+        },
+        "title": {
+          "en": "GNU General Public License v3.0 or later"
+        }
+      }
+    ],
+    "subjects": [
+      {
+        "subject": "nonadiabatic dynamics"
+      },
+      {
+        "subject": "trajectory surface hopping"
+      },
+      {
+        "subject": "nonadiabatic molecular dynamics"
+      },
+      {
+        "subject": "molecular dynamics"
+      },
+      {
+        "subject": "excited states"
+      },
+      {
+        "subject": "computational chemistry"
+      },
+      {
+        "subject": "charge transfer"
+      },
+      {
+        "subject": "quantum dynamics"
+      },
+      {
+        "subject": "solid state"
+      },
+      {
+        "subject": "molecular simulations"
+      }
+    ]
+  }
+}
+
