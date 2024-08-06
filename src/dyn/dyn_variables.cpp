@@ -45,6 +45,7 @@ void dyn_variables::allocate_electronic_vars(){
     }
 
     act_states = vector<int>(ntraj, 0);
+    act_states_dia = vector<int>(ntraj, 0);
 
     electronic_vars_status = 1;
   }
@@ -109,6 +110,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   
   ///================= MQCXF ====================
   mqcxf_vars_status = 0;
+  
+  ///================= QTSH ====================
+  qtsh_vars_status = 0;
 
 }
 
@@ -281,6 +285,17 @@ void dyn_variables::allocate_tcnbra(){
 }// allocate_tcnbra
 
 
+
+void dyn_variables::allocate_qtsh(){
+
+  if(qtsh_vars_status==0){
+    
+    qtsh_f_nc = new MATRIX(ndof, ntraj);
+
+    qtsh_vars_status = 1;
+  }
+}
+
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
@@ -304,6 +319,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
       *basis_transform[itraj] = *x.basis_transform[itraj];
     }
     act_states = x.act_states;
+    act_states_dia = x.act_states_dia;
 
   }
 
@@ -414,6 +430,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     tcnbra_ekin = x.tcnbra_ekin; 
 
   }// if TCNBRA vars
+  
+
+  // QTSH vars - only if initialized
+  if(x.qtsh_vars_status==1){
+    allocate_qtsh();
+    
+    // Copy content
+    *qtsh_f_nc = *x.qtsh_f_nc;
+
+  }// if QTSH vars
 
 }// dyn_variables cctor
 
@@ -446,6 +472,7 @@ dyn_variables::~dyn_variables(){
     delete ampl_adi;
 
     act_states.clear();
+    act_states_dia.clear();
     electronic_vars_status = 0;
   }
 
@@ -556,6 +583,13 @@ dyn_variables::~dyn_variables(){
     delete f_xf;
 
     mqcxf_vars_status = 0;
+  }
+  
+  if(qtsh_vars_status==1){
+
+    delete qtsh_f_nc;
+
+    qtsh_vars_status = 0;
   }
 
 }

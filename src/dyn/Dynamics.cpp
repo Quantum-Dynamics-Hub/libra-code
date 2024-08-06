@@ -268,45 +268,6 @@ void apply_afssh(dyn_variables& dyn_var, CMATRIX& C, vector<int>& act_states, MA
 }
 
 
-
-/*
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict params, bp::dict dyn_params, Random& rnd){
-
-//  This is a version to maintain the backward-compatibility
- 
-  dyn_control_params prms;
-  prms.set_parameters(dyn_params);
-
-  int ntraj = q.n_cols;
-  vector<Thermostat> therm(ntraj, Thermostat(prms.thermostat_params));
-
-  compute_dynamics(q, p, invM, C, projectors, act_states, ham, py_funct, params, dyn_params, rnd, therm);
-
-}
-
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict& params, bp::dict& dyn_params, Random& rnd,
-              vector<Thermostat>& therm){
-
-  int ndof = q.n_rows;
-  int ntraj = q.n_cols;
-  int nst = C.n_rows;    
-
-  dyn_variables dyn_var(nst, nst, ndof, ntraj);
-  compute_dynamics(q, p, invM, C, projectors, act_states, ham, py_funct, params, dyn_params, rnd, therm, dyn_var);
-
-}
-
-void compute_dynamics(MATRIX& q, MATRIX& p, MATRIX& invM, CMATRIX& C, vector<CMATRIX>& projectors,
-              vector<int>& act_states,              
-              nHamiltonian& ham, bp::object py_funct, bp::dict& params, bp::dict& dyn_params, Random& rnd,
-              vector<Thermostat>& therm, dyn_variables& dyn_var){
-}
-*/
-
 void apply_projectors(CMATRIX& C, vector<CMATRIX>& proj){
 
   int ntraj = proj.size();
@@ -660,38 +621,6 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
   }
 }
 
-/*
-void update_proj_adi(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
-
-  Just re-compute the proj_adi matrices
-
-
-
-  //======= Parameters of the dyn variables ==========
-  int ntraj = dyn_var.ntraj;
-
-  for(int itraj=0; itraj<ntraj; itraj++){
-    int traj1 = itraj;  if(method >=100 && method <200){ traj1 = 0; }
-
-    nHamiltonian* ham = Ham->children[traj1];
-    nHamiltonian* ham_prev = Ham_prev->children[traj1];
-
-    //================= Basis re-expansion ===================
-    CMATRIX P(ham->nadi, ham->nadi);
-    CMATRIX T(*dyn_var.proj_adi[itraj]);  T.load_identity();
-    CMATRIX T_new(ham->nadi, ham->nadi);
-
-    P = ham->get_time_overlap_adi();  // U_old.H() * U;
-
-    // More consistent with the new derivations:
-    FullPivLU_inverse(P, T_new);
-    T_new = orthogonalized_T( T_new );
-
-    *dyn_var.proj_adi[itraj] = T_new;
-  }//for ntraj
-
-}// reproject_basis
-*/
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -1214,11 +1143,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
+
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
   else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
 
 
   vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
+  vector<int> act_states_dia(dyn_var.act_states_dia);
   MATRIX p(*dyn_var.p);
   MATRIX& invM = *dyn_var.iM;
   
@@ -1267,6 +1198,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof = 0; cdof < prms.constrained_dofs.size(); cdof++){   
@@ -1280,7 +1213,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
       dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
-
+      
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
       }
@@ -1300,7 +1233,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute the orthogonalized reprojection matrices, stored in dyn_var.proj_adi
   // this calculaitons used ham.children[i].time_overlap matrix, updated in the previous step
-  update_proj_adi(prms, dyn_var, ham); 
+  update_proj_adi(prms, dyn_var, ham, ham_aux); 
 
   // Recompute NAC, Hvib, etc. in response to change of p
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
@@ -1329,16 +1262,14 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   // Recompute density matrices in response to the updated amplitudes  
-//  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1); 
   dyn_var.update_density_matrix(prms);
  
   vector<int> old_states( dyn_var.act_states);
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
   // change the active adiabatic state
-  if(prms.tsh_method == 3 or prms.tsh_method == 4 ){  
+  if(prms.tsh_method == 3 or prms.tsh_method == 4 or prms.rep_sh == 0 ){  
   // Don't update states based on amplitudes, in the LZ method
     ;;
   }
@@ -1348,9 +1279,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // For now, this function also accounts for the kinetic energy adjustments to reflect the adiabatic evolution
   if(prms.thermally_corrected_nbra==1){    apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd); }
 
-
   update_forces(prms, dyn_var, ham);
-
  
   if(prms.decoherence_algo == 6 and prms.use_xf_force == 1){
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -1368,6 +1297,8 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
+  //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5* compute_dkinemat(dyn_var, ham); }
+  if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
   // Kinetic constraint
   for(cdof=0; cdof<prms.constrained_dofs.size(); cdof++){   
@@ -1386,7 +1317,6 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-
    
   //============== Begin the TSH part ===================
 
@@ -1401,7 +1331,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
   /// Compute the dephasing rates according the original energy-based formalism
   else if(prms.decoherence_times_type==1){
-    Eadi = get_Eadi(ham); 
+    Eadi = get_Eadi(ham);
     Ekin = dyn_var.compute_kinetic_energies();  
     decoherence_rates = edc_rates(Eadi, Ekin, prms.decoherence_C_param, prms.decoherence_eps_param, prms.isNBRA);       
   }
@@ -1476,9 +1406,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
   // Update amplitudes and density matrices in response to decoherence corrections
-//  dyn_var.update_amplitudes(prms, ham);
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_density_matrix(prms);
 
 
@@ -1493,6 +1421,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 
     vector<int> old_states(dyn_var.act_states); 
+    vector<int> old_states_dia(dyn_var.act_states_dia); 
     //========================== Hop proposal and acceptance ================================
 
     // FSSH (0), GFSH (1), MSSH (2), LZ(3), ZN (4), MASH(6), FSSH2(7), FSSH3(8)
@@ -1505,15 +1434,17 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
 
       // Propose new discrete states for all trajectories
-      vector<int> prop_states( propose_hops(g, dyn_var.act_states, rnd) );
+      vector<int> prop_states(ntraj, 0);
+      if(prms.rep_sh==1){
+        prop_states = propose_hops(g, dyn_var.act_states, rnd);
     
-      // Decide if to accept the transitions (and then which)
-      // Here, it is okay to use the local copies of the q, p, etc. variables, since we don't change the actual variables
-      // 10/21/2023 - deprecate this version 
-      //act_states = accept_hops(prms, *dyn_var.q, *dyn_var.p, invM, *dyn_var.ampl_adi, ham, prop_states, dyn_var.act_states, rnd); 
-      // in favor of this:
-      act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
-
+        // Decide if to accept the transitions (and then which)        
+        act_states = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states, prms, rnd);
+      }
+      else if(prms.rep_sh==0){
+        prop_states = propose_hops(g, dyn_var.act_states_dia, rnd);
+        act_states_dia = accept_hops(dyn_var, ham, prop_states, dyn_var.act_states_dia, prms, rnd);
+      }
 
       //=== Post-hop decoherence options ===
 
@@ -1531,10 +1462,15 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       }// AFSSH
       else if(prms.decoherence_algo==3){ ;; } // BCSH of Linjun Wang, nothing to do here
       else if(prms.decoherence_algo==4){ ;; } // MF-SD of Bedard-Hearn, Larsen, Schwartz, nothing to do here 
-      else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  xf_hop_reset(dyn_var, act_states, old_states);   } // SHXF or MQCXF
+      else if(prms.decoherence_algo==5 or prms.decoherence_algo==6){  
+        if(prms.rep_sh==1){
+          xf_hop_reset(dyn_var, act_states, old_states);   
+        }
+        else{ cout<<"ERROR: Independent-trajectory XF methods require rep_sh = 1\nExiting now...\n"; exit(0); }
+      } // SHXF or MQCXF
       else if(prms.decoherence_algo==7){ ;; } // DISH rev 2023, nothing to do here
 
-      // Experimental: instantaneous decoherence in diabatic basis
+      // Experimental: instantaneous decoherence in diabatic basis | TODO: check the compatibility with rep_sh==0
       else if(prms.decoherence_algo==8){
         if(prms.rep_tdse==1){
           instantaneous_decoherence_dia(*dyn_var.ampl_adi, ham, act_states, prop_states, old_states,
@@ -1552,18 +1488,26 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }// DISH
 
 
-
     //====================== Momenta adjustment after successful/frustrated hops ===================
     // Velocity rescaling: however here we may be changing velocities
-    handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
-    dyn_var.act_states = act_states;
+    if(prms.rep_sh==1){
+      handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+      dyn_var.act_states = act_states;
+    }
+    else{
+      handle_hops_nuclear(dyn_var, ham, act_states_dia, old_states_dia, prms);
+      dyn_var.act_states_dia = act_states_dia;
+    }
+
+    // Set the active states in the other representation through the tranformation matrix
+    dyn_var.set_active_states_diff_rep(prms.rep_sh, rnd);
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
     
     // Update vib Hamiltonian to reflect the change of the momentum
     update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1); 
-        
+
   }// tsh_method == 0, 1, 2, 3, 4, 5, 6, 7, 8
 
   else{   cout<<"tsh_method == "<<prms.tsh_method<<" is undefined.\nExiting...\n"; exit(0);  }
@@ -1571,9 +1515,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Update the amplitudes and DM, in response to state hopping and other changes in the TSH part
   // so that we have them consistent in the output
-//  dyn_var.update_amplitudes(prms, ham); 
   dyn_var.update_amplitudes(prms);
-//  dyn_var.update_density_matrix(prms, ham, 1);
   dyn_var.update_density_matrix(prms);
 
 

@@ -1,5 +1,5 @@
 /*********************************************************************************
-* Copyright (C) 2019-2023 Alexey V. Akimov
+* Copyright (C) 2019-2024 Alexey V. Akimov
 *
 * This file is distributed under the terms of the GNU General Public License
 * as published by the Free Software Foundation, either version 3 of
@@ -623,6 +623,9 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     if(prms.state_tracking_algo==33){
         perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts, prms.min_probability_reordering, 0);
     }
+    if(prms.state_tracking_algo==4){ // same as option 2, but the input  for St argument will be different 
+        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
+    }
     
     // P -> P * perm
     CMATRIX p_i(nst, nst);
@@ -780,7 +783,7 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 
 
   if(prms.state_tracking_algo==1){ perm_t = get_reordering(st);  }
-  else if(prms.state_tracking_algo==2){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity);   }
+  else if(prms.state_tracking_algo==2 || prms.state_tracking_algo==4){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity);   }
 /*
   else if(prms.state_tracking_algo==3){ perm_t = get_stochastic_reordering(st, rnd);   }
   else if(prms.state_tracking_algo==32){ perm_t = get_stochastic_reordering2(st, rnd);  }
@@ -950,6 +953,62 @@ CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
 
   return res;
 
+}
+
+CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& _p, MATRIX& iM, double dt, int act_state){
+/**  F_curr, F_prev - CMATRIX(nadi, ndof)
+     p - MATRIX(ndof, 1) - current momentum
+     iM - MATRIX(ndof, 1) - inverse matrices
+     dt - time step
+     act_state - the current active state
+*/  
+  int i,j;
+  int ndof = F_curr.n_cols;
+  int nst = F_curr.n_rows; 
+  CMATRIX res(nst, nst);
+  MATRIX fi_curr(1, ndof);
+  MATRIX fj_curr(1, ndof);
+  MATRIX fi_prev(1, ndof);
+  MATRIX fj_prev(1, ndof);
+  MATRIX dq_i(ndof,1);
+  MATRIX dq_j(ndof,1);
+  MATRIX p(_p);
+
+  // correction, because the current p is already a half-step propagated using old forces
+  //p -= dt * F_prev.row(act_state).real().T();
+
+  MATRIX vel(ndof, 1);  vel.dot_product(iM, p);  
+  MATRIX tmp(ndof, 1);
+
+  double val = 0.0;
+  for(i=0; i<nst; i++){
+    double sum = 1.0; 
+
+    for(j=0;j<nst; j++){
+
+      fi_curr = F_curr.row(i).real();
+      fi_prev = F_prev.row(i).real();
+
+      fj_curr = F_curr.row(j).real();
+      fj_prev = F_prev.row(j).real();
+
+      dq_i = vel.T() * dt; 
+      double dE = e_prev.get(j,j) - e_prev.get(i,i);
+      double dE_i = -(fi_prev * dq_i).get(0,0);
+
+      dq_j = vel.T() * dt;
+      double dE_j = -(fj_prev * dq_j).get(0,0);
+      double dE_new = dE + dE_j - dE_i;
+
+      if(i==j){ ; ; }
+      else{ val = 1.0 - SIGN( dE ) * SIGN( dE_new );  sum -= val; } 
+
+      res.set(i, j, complex<double>( val, 0.0) );
+    }// for j
+    res.set(i, i, complex<double>(sum, 0.0) );
+  }// for i
+
+  return res;
 }
 
 

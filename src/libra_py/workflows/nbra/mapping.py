@@ -252,12 +252,11 @@ def energy_mat_arb(SD, e, dE):
         CMATRIX(N,N): the matrix of energies in the SD basis. Here, N = len(SD) - the number of SDs.
 
     """
-
     n = len(SD)
     #E = CMATRIX(n,n)
     E = np.zeros((n,n))
   
-    E0 = 0.0 #energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
+    E0 = energy_arb(SD[0], e) + dE[0] #*(1.0+0.0j)
     for i in range(0,n):
         #E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
         E[i,i] = energy_arb(SD[i], e) + dE[i] - E0

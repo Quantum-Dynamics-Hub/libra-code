@@ -53,8 +53,6 @@ void dish_project_out_collapse(vector<int>& old_states, vector<int>& proposed_st
 MATRIX compute_dkinemat(dyn_variables& dyn_var, nHamiltonian& ham);
 
 
-
-
 }// namespace libdyn
 }// liblibra
 

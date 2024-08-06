@@ -934,6 +934,54 @@ def do_phase_corr(cum_phase1, St, cum_phase2, phase_i):
             St.scale(a,b, fab)
 
 
+def limit_active_space(params):
+    """
+    This function limits the active space of Kohn-Sham matrices 
+    generated in step 2 based on the number of 
+    occupied and unoccupied orbitals specified by user. 
+    Args:
+        params (dict):   
+            num_occ_orbitals (integer): The number of occupied orbitals
+            num_unocc_orbitals (integer): The number of unoccupied orbitals
+            path_to_npz_files (string): The full path to res directory from step 2
+            path_to_save_npz_files (string): The full path to save the Kohn-Sham files
+            logfile_directory (string): The full path to all log files 
+            lowest_orbital (integer): The lowest_orbital defined in step 2
+            highest_orbital (integer): The highest_orbital defined in step 2
+    Returns:
+        l2 (integer): The new value of lowest_orbital 
+        h2 (integer): the new value of highest_orbital 
+    """
+    nocc = params['num_occ_orbitals']
+    nunocc = params['num_unocc_orbitals']
+    l1 = params['lowest_orbital']
+    h1 = params['highest_orbital']
+    sample_logfile = glob.glob(f'{params["logfile_directory"]}/*.log')[0]
+    os.system(f'mkdir {params["path_to_save_npz_files"]}')
+    # currently working only for restricted KS
+    homo_index = CP2K_methods.read_homo_index(sample_logfile, isUKS=False)
+    l2 = homo_index-nocc+1
+    h2 = homo_index+nunocc
+    l2_index = l2-l1
+    h2_index = h2-l1+1
+    norbitals = nocc + nunocc
+    zero_mat = np.zeros((norbitals, norbitals))
+    for prop in ['S', 'St', 'E']:
+        files = glob.glob(f'{params["path_to_npz_files"]}/{prop}_*.npz')
+        print(f'Restricting the active space for {prop}..')
+        for file in files:
+            mat = sp.load_npz(file).todense().real
+            new_mat = mat[l2_index:h2_index,:][:,l2_index:h2_index]
+            new_mat_two_spinor = data_conv.form_block_matrix(new_mat, zero_mat, zero_mat, new_mat)
+            new_mat_sparse = sp.csc_matrix(new_mat_two_spinor)
+            step = int(file.split('/')[-1].replace(prop,'').replace('_','').replace('ks','').replace('.','').replace('npz',''))
+            sp.save_npz(f'{params["path_to_save_npz_files"]}/{prop}_ks_{step}.npz', new_mat_sparse)
+    print('Done with limiting the active space')
+    print(f'Your new path_to_npz_files is now: {params["path_to_save_npz_files"]}')
+    print(f'Use the new lowest_orbital: {l2} and highest_orbital: {h2}')
+
+    return l2, h2
+
 
 def apply_phase_correction(St):
     """Performs the phase correction according to:         
@@ -1855,6 +1903,7 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
     #E_ks_MATRIX = data_conv.nparray2MATRIX( E_ks )
     #E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks_MATRIX, SD_energy_corr )
     E_this_sd = mapping.energy_mat_arb( sd_states_reindexed, E_ks, SD_energy_corr )
+    #print('Flag E_this_sd before:', E_this_sd)
 
     # Make a list for the final ordering of the sd_states_unique.
     # This will not contain the ground state, which we will manually add later. 
@@ -1869,9 +1918,10 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
         # Obtain the indexing fo the SDs by their energies
     reindex = np.argsort(e)
     # Turning the CMATRIX into numpy
-    E_this_sd = E_this_sd.real
+    E_this_sd = E_this_sd.real#()
     # Only the diagonals are needed
     #E_this_sd = np.diag( data_conv.MATRIX2nparray(E_this_sd) )
+    E_this_sd = np.diag( E_this_sd )
 
     if sorting_type == "identity":
 
@@ -1903,7 +1953,9 @@ def sort_unique_SD_basis_scipy( step, sd_states_unique, sd_states_reindexed,  _p
 
         for i in range(1,len(reindex)):
             sd_states_unique_sorted.append( sd_states_unique[ int(reindex[i])-1 ] )
-
+    #print('Flag E_this_sd:',E_this_sd.shape)
+    #print('Flag E_this_sd itself:',E_this_sd)
+    #print('Flag np.diag(E_this_sd):',np.diag(E_this_sd))
     E_this_sd_sparse = sp.csc_matrix( np.diag(E_this_sd) )
 
     return E_this_sd_sparse, sd_states_unique_sorted, sd_states_reindexed_sorted, reindex_nsteps
@@ -2289,7 +2341,7 @@ def run_step3_sd_nacs_libint(params):
 
         # number of occupied and unoccupied KS states
         num_occ = ks_homo_index - min_band+1
-        num_unocc = max_band-ks_homo_index + 1
+        num_unocc = max_band-ks_homo_index # + 1
 
         # The new KS active space and HOMO index
         ks_active_space, ks_homo_index_1 = make_active_space(num_occ, 
@@ -2297,7 +2349,11 @@ def run_step3_sd_nacs_libint(params):
                                                              params['data_dim'], 
                                                              params['npz_file_ks_homo_index'])
         params['active_space'] = ks_active_space
-
+        #print('Flag ks_active_space:', ks_active_space)
+        #print('Flag num_occ:',num_occ)
+        #print('Flag num_unocc',num_unocc)
+        #print('Flag params[data_dim]',params['data_dim'])
+        #print('Flag npz file ks homo index',params['npz_file_ks_homo_index'])
         # The KS orbital indices
         ks_orbital_indicies = range(min_band, max_band+1)
 
@@ -2414,6 +2470,7 @@ def run_step3_sd_nacs_libint(params):
 
         if step > start_time:
             E_midpoint = 0.5*(E_sd_step+E_sd_step_plus)
+            #print('Flag E_midpoint.shape:', E_midpoint.shape)
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/Hvib_sd_{step-1}_re.npz',E_midpoint)
         E_sd_step_plus = E_sd_step
     print('Done with sorting and computing the SDs energies. Elapsed time:',time.time()-t2)
@@ -2488,11 +2545,12 @@ def run_step3_sd_nacs_libint(params):
             # Since we have performed state-reordering we need to 
             # convert to scipy npz format now
             t2 = time.time()
-            for i in range(len(St_sds_cmatrix)):
+            for i in range(len(St_sds_cmatrix)-1):
                 St_sds[i] = data_conv.MATRIX2scipynpz( St_sds_cmatrix[i].real() )
-                sd2ci = SD2CI[i]
+                sd2ci_prev = SD2CI[i]
+                sd2ci_curr = SD2CI[i+1]
                 # Compute the St_ci
-                St_ci = np.linalg.multi_dot([sd2ci.T, St_sds[i].todense().real, sd2ci])
+                St_ci = np.linalg.multi_dot([sd2ci_prev.T, St_sds[i].todense().real, sd2ci_curr])
                 St_cis.append(sp.csc_matrix(St_ci))
 
             # Now we need to apply state-reordering to St_cis
@@ -2523,10 +2581,11 @@ def run_step3_sd_nacs_libint(params):
                 St_cis[i] = data_conv.MATRIX2scipynpz( St_cis_cmatrix[i].real() )
     
         else:
-            for i in range(len(St_sds)):
-                sd2ci = SD2CI[i]
+            for i in range(len(St_sds)-1):
+                sd2ci_prev = SD2CI[i]
+                sd2ci_curr = SD2CI[i+1]
                 # Compute the St_ci
-                St_ci = np.linalg.multi_dot([sd2ci.T, St_sds[i].todense().real, sd2ci])
+                St_ci = np.linalg.multi_dot([sd2ci_prev.T, St_sds[i].todense().real, sd2ci_curr])
                 St_cis.append(sp.csc_matrix(St_ci))
                 sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_ci_{step+start_time}_re.npz', sp.csc_matrix(St_ci))
 

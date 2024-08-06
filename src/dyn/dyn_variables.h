@@ -159,6 +159,15 @@ class dyn_variables{
      vector<int> act_states(ntraj)
   */
   vector<int> act_states;
+  
+
+  /**
+    Diabatic active states for each trajectory
+    
+    Options:
+     vector<int> act_states_dia(ntraj)
+  */
+  vector<int> act_states_dia;
 
 
   /**
@@ -479,6 +488,26 @@ class dyn_variables{
     Kinetic energies for each trajectory
   */
   vector<double> tcnbra_ekin;
+  
+
+  ///================= For QTSH ===================
+  /**
+    Status of the QTSH vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int qtsh_vars_status; 
+
+
+  /**
+    nonclassical force in QTSH
+
+    Options:
+     MATRIX(ndof, ntraj) 
+  */
+  MATRIX* qtsh_f_nc;
+  
 
 
   ///================= Misc ===================
@@ -500,6 +529,7 @@ class dyn_variables{
   void allocate_shxf();
   void allocate_tcnbra();
   void allocate_mqcxf();
+  void allocate_qtsh();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
@@ -533,6 +563,7 @@ class dyn_variables{
   MATRIX get_coords_aux(int i){ return *q_aux[i]; }
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
+  MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
   
   void get_current_timestep(bp::dict params){
     std::string key;
@@ -572,18 +603,22 @@ class dyn_variables{
 
   void update_active_states(int direction, int property);
   void update_active_states();
+  void set_active_states_diff_rep(int rep_sh, Random& rnd);
 
   void update_basis_transform(nHamiltonian& ham);
 
   void init_amplitudes(bp::dict params, Random& rnd);
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
+  void init_active_states_dia(bp::dict _params, Random& rnd);
 
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
   CMATRIX compute_average_dm(int rep);
   vector<double> compute_average_se_pop(int rep);
   vector<double> compute_average_sh_pop(int rep);
+  vector<double> compute_average_sh_pop_TR(int rep);
+  vector<double> compute_average_mash_pop(int rep);
 
 
   double compute_tcnbra_ekin();

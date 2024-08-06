@@ -271,7 +271,6 @@ double dyn_variables::compute_average_kinetic_energy(vector<int>& which_dofs){
   return 0.5*res / float(which_dofs.size() );
 }
 
-
 double dyn_variables::compute_kinetic_energy(int itraj){
   double res = 0.0;
 
@@ -324,7 +323,6 @@ vector<double> dyn_variables::compute_kinetic_energies(vector<int>& which_dofs){
   return res;
 
 }
-
 
 double dyn_variables::compute_tcnbra_ekin(){
 

@@ -99,7 +99,9 @@ void export_util_objects(){
 
 
   void (*expt_check_input_v1)(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params) = &check_input;
-  def("check_input", expt_check_input_v1);  
+  void (*expt_check_input_v2)(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params, int verbose) = &check_input;
+  def("check_input", expt_check_input_v1);
+  def("check_input", expt_check_input_v2);  
  
   //std::string int2str(int inp);
   //int find_section(vector<std::string>& A,std::string marker_beg,std::string marker_end,int min_line,int max_line,int& beg,int& end);

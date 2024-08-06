@@ -625,12 +625,21 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
         - "D_dia"
         - "D_adi"
         - "SH_pop"
+        - "se_pop_adi"
+        - "se_pop_dia"
+        - "sh_pop_adi"
+        - "sh_pop_dia"
+        - "sh_pop_adi_TR"
+        - "sh_pop_dia_TR"
+        - "mash_pop_adi"
+        - "mash_pop_dia"
         
     
     Call it after adding a sub-plot
     """
     
-    possible_options = ["D_dia_raw", "D_adi_raw", "SH_pop_raw", "D_dia", "D_adi", "SH_pop", "se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia"]
+    possible_options = ["D_dia_raw", "D_adi_raw", "SH_pop_raw", "D_dia", "D_adi", "SH_pop", "se_pop_adi", "se_pop_dia", 
+                        "sh_pop_adi", "sh_pop_dia", "sh_pop_adi_TR", "sh_pop_dia_TR", "mash_pop_adi", "mash_pop_dia"]
     if pop_type not in possible_options:
         print(F"Error in add_populations - the pop_type argument {pop_type} is invalid\n")
         print(F"Must be one of the following options: {possible_options}\nExiting")
@@ -688,6 +697,27 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
             nstates = hdf_file["sh_pop_adi/data"].shape[1] 
             which_states = plot_params["which_adi_states"]
 
+    elif pop_type in ["sh_pop_dia_TR"]:  # diabatic SH populations from the Tempelaar and Reichman's method
+        if "sh_pop_dia_TR/data" in hdf_file.keys():          
+            nstates = hdf_file["sh_pop_dia_TR/data"].shape[1] 
+            which_states = plot_params["which_dia_states"]
+
+    elif pop_type in ["sh_pop_adi_TR"]:  # adiabatic SH populations from the Tempelaar and Reichman's method
+        if "sh_pop_adi_TR/data" in hdf_file.keys():          
+            nstates = hdf_file["sh_pop_adi_TR/data"].shape[1] 
+            which_states = plot_params["which_adi_states"]
+
+    elif pop_type in ["mash_pop_dia"]:  # diabatic MASH populations
+        if "mash_pop_dia/data" in hdf_file.keys():
+            nstates = hdf_file["mash_pop_dia/data"].shape[1]
+            which_states = plot_params["which_dia_states"]
+
+    elif pop_type in ["mash_pop_adi"]:  # adiabatic MASH populations
+        if "mash_pop_adi/data" in hdf_file.keys():
+            nstates = hdf_file["mash_pop_adi/data"].shape[1]
+            which_states = plot_params["which_adi_states"]
+
+
         
     titles = { "D_dia": "Diabatic SE populations",
                "D_dia_raw": "Diabatic SE populations (raw)",
@@ -698,7 +728,11 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
                "SH_pop": "Adiabatic SH populations",
                "SH_pop_raw": "Adiabatic SH populations (raw)",
                "sh_pop_dia": "Diabatic SH populations",
-               "sh_pop_adi": "Adiabatic SH populations"
+               "sh_pop_adi": "Adiabatic SH populations",
+               "sh_pop_dia_TR": "Diabatic SH populations from the Tempelaar and Reichman's method",
+               "sh_pop_adi_TR": "Adiabatic SH populations from the Tempelaar and Reichman's method",
+               "mash_pop_dia": "Diabatic MASH populations",
+               "mash_pop_adi": "Adiabatic MASH populations",
              }
     
     if xlim!=None:
@@ -737,7 +771,7 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
                              label=F"state {istate}", linewidth=Lw, color = colors[clrs_index[indx] ]) 
 
 
-    elif pop_type in ["se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia"]:
+    elif pop_type in ["se_pop_adi", "se_pop_dia", "sh_pop_adi", "sh_pop_dia", "sh_pop_adi_TR", "sh_pop_dia_TR", "mash_pop_adi", "mash_pop_dia"]:
         if F"{pop_type}/data" in hdf_file.keys():
             res = 1
             indx = -1
@@ -1019,11 +1053,44 @@ def plot_dynamics(plot_params_):
             res = add_populations(plt, f, plot_params_, "sh_pop_dia")
             if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/sh_pop_dia.png", dpi=plot_params["dpi"])
+
+        if "mash_pop_adi" in what_to_plot:
+            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_populations(plt, f, plot_params_, "mash_pop_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/mash_pop_adi.png", dpi=plot_params["dpi"])
+
+        if "mash_pop_dia" in what_to_plot:
+            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+                       edgecolor='black', frameon=plot_params["frameon"])
+            plt.subplot(1,1,1)
+            res = add_populations(plt, f, plot_params_, "mash_pop_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/mash_pop_dia.png", dpi=plot_params["dpi"])
+        
+        if "sh_pop_adi_TR" in what_to_plot:
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "sh_pop_adi_TR")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_pop_adi_TR.png", dpi=plot_params["dpi"])
+
+        if "sh_pop_dia_TR" in what_to_plot:
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_populations(plt, f, plot_params_, "sh_pop_dia_TR")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/sh_pop_dia_TR.png", dpi=plot_params["dpi"])
+
                                        
                        
         #===== Trajectory-resolved adiabatic energies =========
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=11, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
@@ -1031,7 +1098,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/hvib_adi.png", dpi=plot_params["dpi"])
 
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=12, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
@@ -1041,7 +1108,7 @@ def plot_dynamics(plot_params_):
 
         #===== Time-overlaps and projectors =========
         if "time_overlaps" in what_to_plot:
-            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "St")
@@ -1050,7 +1117,7 @@ def plot_dynamics(plot_params_):
 
 
         if "projector" in what_to_plot:
-            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=16, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "projector")
@@ -1060,7 +1127,7 @@ def plot_dynamics(plot_params_):
 
         #===== Basis transforms =========
         if "basis_transform" in what_to_plot:
-            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=17, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])          
             plt.subplot(1,1,1)
             res = add_basis_transform(plt, f, plot_params)                   

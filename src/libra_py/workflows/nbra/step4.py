@@ -63,6 +63,7 @@ elif sys.platform=="linux" or sys.platform=="linux2":
 import util.libutil as comn
 
 import libra_py.data_read as data_read
+from libra_py import data_conv
 from . import decoherence_times as dectim
 #import libra_py.tsh as tsh
 import libra_py.tsh_stat as tsh_stat
@@ -1125,21 +1126,21 @@ def get_Hvib_scipy(params):
             step += params['init_times']
     
             try:
-                file_name = params['data_set_paths'][0] + params['Hvib_re_prefix'] + str(step) + params['Hvib_re_suffix']
+                file_name = params['data_set_paths'][0] + params['Hvib_re_prefix'] + str(step) + params['Hvib_re_suffix'] + '.npz'
                 tmp_real = sp.load_npz(file_name).real
             except:
                 print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
                 tmp_real = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
     
             try:
-                file_name = params['data_set_paths'][0] + params['Hvib_im_prefix'] + str(step) + params['Hvib_im_suffix']
+                file_name = params['data_set_paths'][0] + params['Hvib_im_prefix'] + str(step) + params['Hvib_im_suffix'] + '.npz'
                 tmp_imag = sp.load_npz(file_name).real
             except:
                 print(F'File {file_name} not found! Please check the path to Hvibs. Setting zero matrix into hvib...')
                 tmp_imag = sp.csc_matrix( np.zeros((params['nstates'], params['nstates'])) )
     
-            real_MATRIX = scipynpz2MATRIX(tmp_real)
-            imag_MATRIX = scipynpz2MATRIX(tmp_imag)
+            real_MATRIX = data_conv.scipynpz2MATRIX(tmp_real)
+            imag_MATRIX = data_conv.scipynpz2MATRIX(tmp_imag)
             hvib[i].append( CMATRIX(real_MATRIX, imag_MATRIX)  )
     
     return hvib

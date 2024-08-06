@@ -477,7 +477,7 @@ vector< vector< vector<int> > > allocate_3D(int sz1, int sz2, int sz3){
 
 
 
-void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params){
+void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params, int verbose){
 /*****************************************************************
 
     This function checks the input Python dictionary and verifies if it contains
@@ -582,14 +582,23 @@ void check_input(boost::python::dict params, boost::python::dict default_params,
       key = boost::python::extract<std::string>(default_params.keys()[i]);
 
       if(!params.has_key(key)){
+
+        if(verbose){
           std::cout<<"WARNING: Parameter "<< key<< " is not defined! in the input parameters"
                    <<"Use the default value \n"; //<< default_params.values()[i]<<"\n";
+        }
 
-          params.setdefault(key, default_params.values()[i]);
-      }
+        params.setdefault(key, default_params.values()[i]);
+     }
   }
 }
 
+
+void check_input(boost::python::dict params, boost::python::dict default_params, boost::python::list critical_params){
+
+  check_input(params, default_params, critical_params, 1);
+
+}
 
 
 }// libutil

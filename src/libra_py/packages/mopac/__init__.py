@@ -7,12 +7,6 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 #***********************************************************/
 
-__all__ = ["cp2k",
-           "dftbplus",
-           "ergo",
-           "gaussian",
-           "lammps",
-           "mopac",
-           "qe"
+__all__ = ["methods"
           ]
 

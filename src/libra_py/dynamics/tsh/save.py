@@ -107,6 +107,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # TC-NBRA thermostat energy
         if "tcnbra_thermostat_energy" in saver.keywords:
             saver.add_dataset("tcnbra_thermostat_energy", (_nsteps,), "R")
+        
+        # Average kinetic energy in QTSH
+        if "Ekin_ave_qtsh" in saver.keywords:
+            saver.add_dataset("Ekin_ave_qtsh", (_nsteps,) , "R")  
 
 
     if output_level>=2:
@@ -114,6 +118,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved instantaneous adiabatic states
         if "states" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("states", (_nsteps, _ntraj), "I") 
+        
+        # Trajectory-resolved instantaneous adiabatic states
+        if "states_dia" in saver.keywords: # and "states_dia" in saver.np_data.keys():
+            saver.add_dataset("states_dia", (_nsteps, _ntraj), "I") 
 
         # Average adiabatic SE populations 
         if "se_pop_adi" in saver.keywords: # and "states" in saver.np_data.keys():
@@ -131,6 +139,22 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "sh_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
             saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R") 
 
+        # Average adiabatic SH populations from the Tempelaar and Reichman's method 
+        if "sh_pop_adi_TR" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("sh_pop_adi_TR", (_nsteps, _nadi), "R") 
+
+        # Average diabatic SH populations from the Tempelaar and Reichman's method 
+        if "sh_pop_dia_TR" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("sh_pop_dia_TR", (_nsteps, _nadi), "R") 
+
+        # Average adiabatic MASH populations
+        if "mash_pop_adi" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("mash_pop_adi", (_nsteps, _nadi), "R")
+
+        # Average diabatic MASH populations
+        if "mash_pop_dia" in saver.keywords: # and "states" in saver.np_data.keys():
+            saver.add_dataset("mash_pop_dia", (_nsteps, _ndia), "R")
+        
         # Average errors from FSSH3
         if "fssh3_average_errors" in saver.keywords: # and "fssh3_average_errors" in saver.np_data.keys():
             saver.add_dataset("fssh3_average_errors", (_nsteps, 5), "R")
@@ -201,6 +225,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved decoherence forces based on XF
         if "f_xf" in saver.keywords: # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("f_xf", (_nsteps, _ntraj, _ndof), "R")
+        
+        # Trajectory-resolved nonclassical forces in QTSH
+        if "qtsh_f_nc" in saver.keywords: # and "f_xf" in saver.np_data.keys():
+            saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _ndof), "R")
 
     if output_level>=4:
 
@@ -432,7 +460,6 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
         tcnbra_thermostat_energy = dyn_var.compute_tcnbra_thermostat_energy();
         saver.save_scalar(t, "tcnbra_thermostat_energy", tcnbra_thermostat_energy)
 
-
 def save_hdf5_2D(saver, i, states, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
@@ -461,6 +488,7 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
     txt_type ( int ): 0 - standard, all the timesteps, 1 - only the current one
 
     """
+    
 
     t = 0
     if txt_type==0:
@@ -473,6 +501,13 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         ntraj = dyn_var.ntraj
         for itraj in range(ntraj):
             saver.save_multi_scalar(t, itraj, "states", dyn_var.act_states[itraj])
+    
+    if "states_dia" in saver.keywords and "states_dia" in saver.np_data.keys():
+        # Trajectory-resolved instantaneous diabatic states
+        # Format: saver.add_dataset("states", (_nsteps, _ntraj), "I")        
+        ntraj = dyn_var.ntraj
+        for itraj in range(ntraj):
+            saver.save_multi_scalar(t, itraj, "states_dia", dyn_var.act_states_dia[itraj])
 
     if "se_pop_dia" in saver.keywords and "se_pop_dia" in saver.np_data.keys():
         # Average diabatic SE populations 
@@ -505,6 +540,39 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         nadi = dyn_var.nadi
         for ist in range(nadi):
             saver.save_multi_scalar(t, ist, "sh_pop_adi", pops_sh1[ist])
+
+    if "sh_pop_dia_TR" in saver.keywords and "sh_pop_dia_TR" in saver.np_data.keys():
+        # Average diabatic SH populations
+        # Format: saver.add_dataset("sh_pop_dia", (_nsteps, _ndia), "R")
+        pops_sh0 = dyn_var.compute_average_sh_pop_TR(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "sh_pop_dia_TR", pops_sh0[ist])
+    
+    if "sh_pop_adi_TR" in saver.keywords and "sh_pop_adi_TR" in saver.np_data.keys():    
+        # Average adiabatic SH populations 
+        # Format: saver.add_dataset("sh_pop_adi", (_nsteps, _nadi), "R") 
+        pops_sh1 = dyn_var.compute_average_sh_pop_TR(1)
+        nadi = dyn_var.nadi
+        for ist in range(nadi):
+            saver.save_multi_scalar(t, ist, "sh_pop_adi_TR", pops_sh1[ist])
+
+    if "mash_pop_dia" in saver.keywords and "mash_pop_dia" in saver.np_data.keys():
+        # Average diabatic MASH populations
+        # Format: saver.add_dataset("mash_pop_dia", (_nsteps, _ndia), "R")
+        pops_sh0 = dyn_var.compute_average_mash_pop(0)
+        ndia = dyn_var.ndia
+        for ist in range(ndia):
+            saver.save_multi_scalar(t, ist, "mash_pop_dia", pops_sh0[ist])
+
+    if "mash_pop_adi" in saver.keywords and "mash_pop_adi" in saver.np_data.keys():
+        # Average adiabatic MASH populations
+        # Format: saver.add_dataset("mash_pop_adi", (_nsteps, _nadi), "R")
+        pops_sh1 = dyn_var.compute_average_mash_pop(1)
+        nadi = dyn_var.nadi
+        for ist in range(nadi):
+            saver.save_multi_scalar(t, ist, "mash_pop_adi", pops_sh1[ist])
+
 
 
     if "fssh3_average_errors" in saver.keywords and "fssh3_average_errors" in saver.np_data.keys():
@@ -668,6 +736,12 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "f_xf" in saver.keywords and "f_xf" in saver.np_data.keys():
         f_xf = dyn_var.get_f_xf()
         saver.save_matrix(t, "f_xf", f_xf.T())
+    
+    # Nonclassical force in QTSH
+    # Format: saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _dof), "R")
+    if "qtsh_f_nc" in saver.keywords and "qtsh_f_nc" in saver.np_data.keys():
+        qtsh_f_nc = dyn_var.get_qtsh_f_nc()
+        saver.save_matrix(t, "qtsh_f_nc", qtsh_f_nc.T())
 
 
 

@@ -51,6 +51,7 @@ dyn_control_params::dyn_control_params(){
   hvib_update_method = 1;
   do_ssy = 0;
   do_phase_correction = 1;
+  do_nac_phase_correction = 0;
   phase_correction_tol = 1e-3; 
   state_tracking_algo = -1;
   MK_alpha = 0.0;
@@ -77,6 +78,9 @@ dyn_control_params::dyn_control_params(){
   fssh3_dt = 0.001;
   fssh3_max_steps = 1000;
   fssh3_err_tol = 1e-7;
+  
+  ///================= QTSH specific ====================
+  use_qtsh = 0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -151,6 +155,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   hvib_update_method = x.hvib_update_method;
   do_ssy = x.do_ssy;
   do_phase_correction = x.do_phase_correction;
+  do_nac_phase_correction = x.do_nac_phase_correction;
   phase_correction_tol = x.phase_correction_tol; 
   state_tracking_algo = x.state_tracking_algo;
   MK_alpha = x.MK_alpha;
@@ -177,6 +182,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   fssh3_dt = x.fssh3_dt;
   fssh3_max_steps = x.fssh3_max_steps;
   fssh3_err_tol = x.fssh3_err_tol;
+  
+  ///================= QTSH specific ====================
+  use_qtsh = x.use_qtsh;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -262,7 +270,8 @@ void dyn_control_params::sanity_check(){
   if(state_tracking_algo==-1 ||
      state_tracking_algo==0 || state_tracking_algo==1 ||
      state_tracking_algo==2 || state_tracking_algo==3 ||
-     state_tracking_algo==32 || state_tracking_algo==33){ ; ; }
+     state_tracking_algo==32 || state_tracking_algo==33 ||
+     state_tracking_algo==4){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
         <<state_tracking_algo<<" is not allowed\nExiting...\n";
@@ -343,6 +352,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="do_ssy") { do_ssy = bp::extract<int>(params.values()[i]);   }
     else if(key=="do_phase_correction") { do_phase_correction = bp::extract<int>(params.values()[i]);  }
     else if(key=="phase_correction_tol") { phase_correction_tol = bp::extract<double>(params.values()[i]);  }
+    else if(key=="do_nac_phase_correction"){ do_nac_phase_correction = bp::extract<int>(params.values()[i]); }
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="MK_alpha") { MK_alpha = bp::extract<double>(params.values()[i]);  }
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }
@@ -368,6 +378,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="fssh3_dt"){ fssh3_dt = bp::extract<double>(params.values()[i]);  }
     else if(key=="fssh3_max_steps"){ fssh3_max_steps = bp::extract<int>(params.values()[i]);  }
     else if(key=="fssh3_err_tol"){ fssh3_err_tol = bp::extract<double>(params.values()[i]);  }
+    
+    ///================= QTSH specific ====================
+    else if(key=="use_qtsh"){ use_qtsh = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

@@ -288,6 +288,31 @@ void export_nhamiltonian_objects(){
   vector<CMATRIX> (nHamiltonian::*expt_Ehrenfest_forces_tens_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
   = &nHamiltonian::Ehrenfest_forces_tens_dia;
 
+  complex<double> (nHamiltonian::*expt_QTSH_energy_adi_v1)(CMATRIX& ampl_adi)
+  = &nHamiltonian::QTSH_energy_adi;
+  complex<double> (nHamiltonian::*expt_QTSH_energy_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
+  = &nHamiltonian::QTSH_energy_adi;
+  complex<double> (nHamiltonian::*expt_QTSH_energy_dia_v1)(CMATRIX& ampl_dia) 
+  = &nHamiltonian::QTSH_energy_dia;
+  complex<double> (nHamiltonian::*expt_QTSH_energy_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
+  = &nHamiltonian::QTSH_energy_dia;
+  
+  //CMATRIX (nHamiltonian::*expt_QTSH_forces_adi_v1)(CMATRIX& ampl_adi, int lvl, int option, CMATRIX& transform)
+  //= &nHamiltonian::QTSH_forces_adi;
+  CMATRIX (nHamiltonian::*expt_QTSH_forces_adi_v1)(CMATRIX& ampl_adi, int lvl, int option)
+  = &nHamiltonian::QTSH_forces_adi;
+  CMATRIX (nHamiltonian::*expt_QTSH_forces_adi_v2)(CMATRIX& ampl_adi, int lvl)
+  = &nHamiltonian::QTSH_forces_adi;
+
+//  CMATRIX (nHamiltonian::*expt_QTSH_forces_adi_v2)(CMATRIX& ampl_adi, vector<int>& id_)
+//  = &nHamiltonian::QTSH_forces_adi;
+  CMATRIX (nHamiltonian::*expt_QTSH_forces_dia_v1)(CMATRIX& ampl_dia, int lvl, int option)
+  = &nHamiltonian::QTSH_forces_dia;
+  CMATRIX (nHamiltonian::*expt_QTSH_forces_dia_v2)(CMATRIX& ampl_dia, int lvl)
+  = &nHamiltonian::QTSH_forces_dia;
+//  CMATRIX (nHamiltonian::*expt_QTSH_forces_dia_v2)(CMATRIX& ampl_dia, vector<int>& id_)
+//  = &nHamiltonian::QTSH_forces_dia;
+
 
   void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;
   void (nHamiltonian::*expt_add_ethd_adi_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_adi;
@@ -540,6 +565,19 @@ void export_nhamiltonian_objects(){
       .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v1)
       .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v2)
 //      .def("Ehrenfest_forces_dia", expt_Ehrenfest_forces_dia_v2)
+      
+      .def("QTSH_energy_adi", expt_QTSH_energy_adi_v1)
+      .def("QTSH_energy_adi", expt_QTSH_energy_adi_v2)
+      .def("QTSH_energy_dia", expt_QTSH_energy_dia_v1)
+      .def("QTSH_energy_dia", expt_QTSH_energy_dia_v2)
+      
+      .def("QTSH_forces_adi", expt_QTSH_forces_adi_v1)
+      .def("QTSH_forces_adi", expt_QTSH_forces_adi_v2)
+//      .def("QTSH_forces_adi", expt_QTSH_forces_adi_v3)
+//      .def("QTSH_forces_adi", expt_QTSH_forces_adi_v2)
+      .def("QTSH_forces_dia", expt_QTSH_forces_dia_v1)
+      .def("QTSH_forces_dia", expt_QTSH_forces_dia_v2)
+//      .def("QTSH_forces_dia", expt_QTSH_forces_dia_v2)
 
 
   ;
