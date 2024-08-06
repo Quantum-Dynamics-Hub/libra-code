@@ -289,7 +289,7 @@ def gaussian_distribute( istep, fstep, nsteps_this_job, trajectory_xyz_file, gau
     for step in range( nsteps_this_job ):
 
         # Extract the coordinates and write them to a xyz file
-        CP2K_methods.read_trajectory_xyz_file( trajectory_xyz_file, curr_step )
+        _, _ = CP2K_methods.read_trajectory_xyz_file( trajectory_xyz_file, curr_step )
 
         # Now, we need to edit the gaussian_input file by adding the 
         # coordinates to the input file
