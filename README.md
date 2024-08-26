@@ -133,7 +133,8 @@ First let's install the most general packages:
 Next, all what we actually need:
 
     conda install -y conda-build make
-    conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 cmake=3.24.2 boost=1.80.0 python-devtools llvm-openmp
+    conda install -y anaconda::py-boost
+    conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 cmake=3.24.2 python-devtools llvm-openmp
     conda install -y -c conda-forge/label/gcc7 eigen mpfr
     conda install -y -c psi4/label/dev libint2=2.7.1
     conda install -y -c anaconda h5py gmp
