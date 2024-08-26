@@ -125,9 +125,7 @@ Do this **one by one, and in this order**, (should not matter too much, but who 
 
 First let's install the most general packages:
 
-    conda install -y -c conda-forge numpy scipy matplotlib imageio jupyter_core
-    conda install -y ipykernel
-    conda install -y -c rmg py3dmol
+    conda install -y -c conda-forge numpy scipy matplotlib imageio
 
 
 Next, all what we actually need:
@@ -138,6 +136,20 @@ Next, all what we actually need:
     conda install -y -c conda-forge/label/gcc7 eigen mpfr
     conda install -y -c psi4/label/dev libint2=2.7.1
     conda install -y -c anaconda h5py gmp
+
+
+Install Jupyter Lab or traditional Jupyter notebook as explainted [here](https://jupyter.org/install):
+
+    pip install -U jupyterlab
+
+    or 
+
+    pit install -U notebook
+
+
+Install py3Dmol for viewing molecular structures:
+
+    pip install -U py3Dmol
 
 
 Installation instruction of Scikit-learn from its official website:
