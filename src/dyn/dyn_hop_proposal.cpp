@@ -1150,7 +1150,7 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       //if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia[traj]; }
       if(prms.rep_tdse==2){ dm = *dyn_var.dm_dia[traj]; }
     }
-    else{
+    else if(prms.rep_sh==0){
       dm = *dyn_var.dm_dia[traj];
     }
 
@@ -1191,7 +1191,7 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
       if(prms.rep_sh==1){
         g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states[traj]);
       }
-      else{
+      else if(prms.rep_sh==0){
         g[traj] = hopping_probabilities_gfsh(prms, dm, Hvib, dyn_var.act_states_dia[traj]);
       }
     }
@@ -1224,29 +1224,41 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
 
     else if(prms.tsh_method == 7){ // FSSH2
 
-      CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
-      if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
-
-      g[traj] = hopping_probabilities_fssh2(prms, dm, dm_prev, dyn_var.act_states[traj]);
+      if(prms.rep_sh==1){
+        CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
+        if(prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
+        g[traj] = hopping_probabilities_fssh2(prms, dm, dm_prev, dyn_var.act_states[traj]);
+      }
+      else if(prms.rep_sh==0){
+        CMATRIX& dm_prev = *dyn_var.dm_dia_prev[traj];
+        g[traj] = hopping_probabilities_fssh2(prms, dm, dm_prev, dyn_var.act_states_dia[traj]);
+      }
     }
     else if(prms.tsh_method == 8){ // FSSH3
 
-      CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
-      if(prms.rep_tdse==0 || prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
+      if(prms.rep_sh==1){
+        CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
+        if(prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
 
-      //cout<<"Coordinates\n";    dyn_var.q->show_matrix();
+        //cout<<"Coordinates\n";    dyn_var.q->show_matrix();
 
-      CMATRIX& U = *dyn_var.proj_adi[traj];
-      CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
+        CMATRIX& U = *dyn_var.proj_adi[traj];
+        CMATRIX dm_prev_trans(*dyn_var.dm_adi_prev[traj]);
   
-      // |psi'> = |psi> T =>  Hvib' = <psi'|H\hat|psi'> = T_new.H() * Hvib * T_new;
-      // |Psi> = |psi> C = |psi'> C' = |psi> T C', so C = T C', C' = T^+ C => rho' = C' C'^+ = T^+ C C^+ T = T^+ rho T
-      //  dm_adi_prev is the DM computed before the current step basis update, so it would transform as
-      //  dm_adi_prev -> T^+ dm_adi_prev * T
-      //dm_prev_trans = U.H() * dm_prev_trans * U;// transformation of the previousely-computed density matrix according to 
+        // |psi'> = |psi> T =>  Hvib' = <psi'|H\hat|psi'> = T_new.H() * Hvib * T_new;
+        // |Psi> = |psi> C = |psi'> C' = |psi> T C', so C = T C', C' = T^+ C => rho' = C' C'^+ = T^+ C C^+ T = T^+ rho T
+        //  dm_adi_prev is the DM computed before the current step basis update, so it would transform as
+        //  dm_adi_prev -> T^+ dm_adi_prev * T
+        //dm_prev_trans = U.H() * dm_prev_trans * U;// transformation of the previousely-computed density matrix according to 
                                                 // new ordering found at the current time-step (which is already reflected in the current DM).
-      // However, for the GFSH option to work properly, we should not be using the transformation of the DM here      
-      g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
+        // However, for the GFSH option to work properly, we should not be using the transformation of the DM here      
+        g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states[traj], dyn_var.fssh3_errors[traj]);
+      }
+      else if(prms.rep_sh==0){
+        CMATRIX& dm_prev = *dyn_var.dm_dia_prev[traj];
+        CMATRIX dm_prev_trans(*dyn_var.dm_dia_prev[traj]);
+        g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states_dia[traj], dyn_var.fssh3_errors[traj]);
+      }
     }
 
     else{
