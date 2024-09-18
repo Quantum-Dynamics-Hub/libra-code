@@ -147,6 +147,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("tcnbra_nu_therm", &dyn_control_params::tcnbra_nu_therm)
       .def_readwrite("tcnbra_nhc_size", &dyn_control_params::tcnbra_nhc_size)
       .def_readwrite("tcnbra_do_nac_scaling", &dyn_control_params::tcnbra_do_nac_scaling)
+      .def_readwrite("properties_to_save", &dyn_control_params::properties_to_save)
 
 
       .def("sanity_check", expt_sanity_check_v1)
@@ -1036,6 +1037,9 @@ void export_Dyn_objects(){
 
   CMATRIX (*expt_Zhu_Liouvillian_v1)(double Etot, CMATRIX& Ham, CMATRIX& rho) = Zhu_Liouvillian;
   def("Zhu_Liouvillian", expt_Zhu_Liouvillian_v1);
+  
+  int (*expt_need_active_states_diff_rep_v1)(dyn_control_params& prms) = need_active_states_diff_rep;
+  def("need_active_states_diff_rep", expt_need_active_states_diff_rep_v1);
 
   void (*expt_propagate_electronic_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &propagate_electronic;
