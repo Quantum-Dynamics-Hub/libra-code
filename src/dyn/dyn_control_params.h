@@ -940,6 +940,15 @@ class dyn_control_params{
   int tcnbra_do_nac_scaling;
   
 
+  /**
+    Properties to save
+
+    A Python list contains property name to print out. This variable won't affect the dynamical results directly,
+    but is read for reducing redundant calculations.
+  */
+  bp::list properties_to_save;
+  
+
 
   dyn_control_params();
   dyn_control_params(const dyn_control_params& x);
