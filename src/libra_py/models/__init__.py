@@ -19,6 +19,7 @@ __all__ = ["Beswick_Jortner",
            "LVC",
            "Martens",
            "Morse",
+           "Phenol",
            "SSY",
            "Subotnik",
            "Tully"
