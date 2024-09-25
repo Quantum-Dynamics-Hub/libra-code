@@ -133,6 +133,8 @@ dyn_control_params::dyn_control_params(){
   tcnbra_nu_therm = 0.001; 
   tcnbra_nhc_size = 1;
   tcnbra_do_nac_scaling = 1;
+
+  properties_to_save = bp::list();
 }
 
 
@@ -250,6 +252,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   tcnbra_nhc_size = x.tcnbra_nhc_size;
   tcnbra_do_nac_scaling = x.tcnbra_do_nac_scaling;
 
+  properties_to_save = bp::list(x.properties_to_save);
 }
 dyn_control_params::~dyn_control_params() {  
 
@@ -479,6 +482,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="tcnbra_nu_therm") { tcnbra_nu_therm =  bp::extract<double>(params.values()[i]); }
     else if(key=="tcnbra_nhc_size") { tcnbra_nhc_size =  bp::extract<int>(params.values()[i]); }
     else if(key=="tcnbra_do_nac_scaling") { tcnbra_do_nac_scaling =  bp::extract<int>(params.values()[i]); }
+    
+    else if(key=="properties_to_save"){ properties_to_save = bp::extract<bp::list>(params.values()[i]); }    
 
   }// for i
 

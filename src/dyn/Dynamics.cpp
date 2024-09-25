@@ -621,6 +621,28 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
   }
 }
 
+int need_active_states_diff_rep(dyn_control_params& prms){
+  int res = 0;
+
+  int list_size = bp::len(prms.properties_to_save);
+
+  if (prms.rep_sh == 0){
+    for (int i = 0; i < list_size; ++i) {
+        // Extract each element and convert it to a std::string
+        std::string property = bp::extract<std::string>(prms.properties_to_save[i]);
+        if (property == "sh_pop_adi") { res = 1;}
+    }
+  }
+  else if(prms.rep_sh == 1){
+    for (int i = 0; i < list_size; ++i) {
+        // Extract each element and convert it to a std::string
+        std::string property = bp::extract<std::string>(prms.properties_to_save[i]);
+        if (property == "sh_pop_dia") { res = 1;}
+    }
+  }
+
+  return res;
+}
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
@@ -1500,7 +1522,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     }
 
     // Set the active states in the other representation through the tranformation matrix
-    dyn_var.set_active_states_diff_rep(prms.rep_sh, rnd);
+    if(need_active_states_diff_rep(prms) == 1){ dyn_var.set_active_states_diff_rep(prms.rep_sh, rnd); }
 
     // Re-scale (back) couplings and time-overlaps, if the TC-NBRA was used
     if(prms.thermally_corrected_nbra==1 && prms.tcnbra_do_nac_scaling==1){  remove_thermal_correction(dyn_var, ham, prms);  }
