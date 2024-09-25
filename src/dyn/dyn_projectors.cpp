@@ -970,6 +970,8 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
   MATRIX fj_curr(1, ndof);
   MATRIX fi_prev(1, ndof);
   MATRIX fj_prev(1, ndof);
+  MATRIX ai(ndof, 1);
+  MATRIX aj(ndof, 1);
   MATRIX dq_i(ndof,1);
   MATRIX dq_j(ndof,1);
   MATRIX p(_p);
@@ -979,6 +981,8 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
 
   MATRIX vel(ndof, 1);  vel.dot_product(iM, p);  
   MATRIX tmp(ndof, 1);
+  tmp = fi_curr.T(); ai.dot_product(iM, tmp);
+  tmp = fj_curr.T(); aj.dot_product(iM, tmp); 
 
   double val = 0.0;
   for(i=0; i<nst; i++){
@@ -992,24 +996,87 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
       fj_curr = F_curr.row(j).real();
       fj_prev = F_prev.row(j).real();
 
-      dq_i = vel.T() * dt; 
+      dq_i = (vel * dt + 0.5 * ai * dt * dt); 
       double dE = e_prev.get(j,j) - e_prev.get(i,i);
       double dE_i = -(fi_prev * dq_i).get(0,0);
 
-      dq_j = vel.T() * dt;
+      dq_j = (vel * dt + 0.5 * aj * dt * dt);
       double dE_j = -(fj_prev * dq_j).get(0,0);
       double dE_new = dE + dE_j - dE_i;
 
-      if(i==j){ ; ; }
-      else{ val = 1.0 - SIGN( dE ) * SIGN( dE_new );  sum -= val; } 
+      val = 0.5*(1.0 - SIGN( dE ) * SIGN( dE_new )) ;
+/*
+      if(i==j){ val = 0.0; }
+      //else{ val = 1.0 - SIGN( dE ) * SIGN( dE_new );  sum -= val; } 
+      else{ 
+         double val1;
+         val = SIGN( dE ) * SIGN( dE_new );  
+         if(val<0.0){ val1 = 1.0;  }
+         else{ val1 = 0.0; }
+         val = val1;
+         //sum -= val;
+      }
+*/
 
       res.set(i, j, complex<double>( val, 0.0) );
     }// for j
-    res.set(i, i, complex<double>(sum, 0.0) );
+
+    //if(sum<=0.0){ sum = 0.0; }
+    //res.set(i, i, complex<double>(sum, 0.0) );
   }// for i
 
   return res;
 }
+
+
+CMATRIX compute_F_cost_matrix2(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& _p, MATRIX& iM, double dt, int act_state){
+/**  F_curr, F_prev - CMATRIX(nadi, ndof)
+     p - MATRIX(ndof, 1) - current momentum
+     iM - MATRIX(ndof, 1) - inverse matrices
+     dt - time step
+     act_state - the current active state
+*/
+  int i,j;
+  int ndof = F_curr.n_cols;
+  int nst = F_curr.n_rows;
+  CMATRIX res(nst, nst);
+  MATRIX fi_curr(1, ndof);
+  MATRIX fj_curr(1, ndof);
+  MATRIX fi_prev(1, ndof);
+  MATRIX fj_prev(1, ndof);
+
+  double val = 0.0;
+  // Compute the norms
+  for(i=0; i<nst; i++){
+    for(j=0;j<nst; j++){
+
+      fi_curr = F_curr.row(i).real();
+      fi_prev = F_prev.row(i).real();
+      fj_curr = F_curr.row(j).real();
+      fj_prev = F_prev.row(j).real();
+
+      double ni_curr = (fi_curr.T() * fi_curr).get(0, 0);
+      double nj_curr = (fj_curr.T() * fj_curr).get(0, 0);
+      double ni_prev = (fi_prev.T() * fi_prev).get(0, 0);
+      double nj_prev = (fj_prev.T() * fj_prev).get(0, 0);
+      double nij = (fi_prev.T() * fj_curr).get(0,0);
+
+      if(ni_prev >= 1e-12 && nj_curr>= 1e-12 ){ 
+          val = nij / sqrt(ni_prev * nj_curr);
+      } 
+      else{
+	  if(i==j){ val = 1.0; }
+	  else{     val = 0.0; } 
+      }
+      res.set(i, j, complex<double>( val, 0.0) );
+      
+    }// for j
+  }// for i
+
+  return res;
+}
+
+
 
 
 
