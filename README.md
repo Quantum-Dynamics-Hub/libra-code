@@ -100,7 +100,7 @@ for all users with the intent:
 
   In fact, you can call it whatever you like:
 
-    conda create -n libra python=3.7
+    conda create -n libra python=3.9
 
 #### 2.2 Activate this environment
 
