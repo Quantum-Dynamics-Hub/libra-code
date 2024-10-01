@@ -234,6 +234,7 @@ vector<double> hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& den
  
  
         if(g_ij<0.0){  g_ij = 0.0; }
+        if(g_ij>1.0){  g_ij = 1.0; }
  
       }// else
  
@@ -243,6 +244,8 @@ vector<double> hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& den
     else{ g[j] = 0.0; }
  
   }// for j
+
+  if(sum>1.0){ sum = 1.0; }
  
   g[i] = 1.0 - sum;
  
