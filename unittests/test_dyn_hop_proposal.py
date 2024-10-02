@@ -93,6 +93,30 @@ set1 = [
 [0.1, 0.1, 1, 1.0, 1, 0.0, 1.0 ]
 ]
 
+#initstate', 'gvector', 'ksi', 'res_expt'
+
+set2 = [
+ [ 0, [0.0, 1.0], 0.0, 1 ],
+ [ 0, [0.0, 1.0], 0.1, 1 ],
+ [ 0, [0.2, 0.8], 0.1, 0 ],
+ [ 0, [0.2, 0.8], 0.5, 1 ],
+ [ 0, [1.0, 0.0], 0.2, 0 ],
+ [ 1, [0.0, 1.0], 0.0, 1 ],
+ [ 1, [0.0, 1.0], 0.1, 1 ],
+ [ 1, [0.2, 0.8], 0.1, 0 ],
+ [ 1, [0.2, 0.8], 0.5, 1 ],
+ [ 1, [1.0, 0.0], 0.2, 0 ],
+ [ 0, [0.1, 0.3, 0.6], 0.0, 0 ],
+ [ 0, [0.1, 0.3, 0.6], 0.2, 1 ],
+ [ 0, [0.1, 0.3, 0.6], 0.7, 2 ],
+ [ 1, [0.1, 0.3, 0.6], 0.0, 0 ],
+ [ 1, [0.1, 0.3, 0.6], 0.2, 1 ],
+ [ 1, [0.1, 0.3, 0.6], 0.7, 2 ],
+ [ 2, [0.1, 0.3, 0.6], 0.0, 0 ],
+ [ 2, [0.1, 0.3, 0.6], 0.2, 1 ],
+ [ 2, [0.1, 0.3, 0.6], 0.7, 2 ]
+]
+
 
 class TestSpecialFunctions: #(unittest.TestCase):
 
@@ -137,6 +161,14 @@ class TestSpecialFunctions: #(unittest.TestCase):
         g = hopping_probabilities_fssh(prms, denmat, Hvib, istate);
         assert abs(g[0] - g0) < 1e-10
         assert abs(g[1] - g1) < 1e-10
+
+
+    @pytest.mark.parametrize(('initstate', 'gvector', 'ksi', 'res_expt'), set2)
+    def test_2(self, initstate, gvector, ksi, res_expt):
+
+        res = hop(initstate, Py2Cpp_double(gvector), ksi)
+
+        assert res == res_expt
 
 """
 To generate the set1 run the code below:
