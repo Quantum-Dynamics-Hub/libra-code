@@ -2254,7 +2254,7 @@ def run_step3_sd_nacs_libint(params):
                       'path_to_save_sd_Hvibs': os.getcwd()+'/res-sd',
                       'path_to_save_ks_Hvibs': os.getcwd()+'/res-ks',
                       'time_step': 1.0, 'start_time': 0, 'finish_time':1,
-                      'sorting_type': 'energy', 'apply_phase_correction': False,
+                      'sorting_type': 'energy', 'apply_phase_correction': False, 'spin_adapted': False,
                       'apply_orthonormalization': False, 'do_state_reordering': 0,
                       'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
                       'num_occ_alpha': 1, 'num_unocc_alpha': 1,
@@ -2664,7 +2664,7 @@ def run_step3_sd_nacs_libint(params):
             sp.save_npz(F'{params["path_to_save_sd_Hvibs"]}/St_sd_{step+start_time}_re.npz', St_sds[step] )
 
         if params['is_many_body']:
-            for step in range( finish_time - start_time -1 ):
+            for step in range( finish_time - start_time - 2 ):
                 St_ci_step = St_cis[step].todense().real
                 if nac_algo==0:
                     Hvib_ci = -0.5/dt * (St_ci_step.T - St_ci_step)
@@ -2727,6 +2727,10 @@ def compute_sd_overlaps_in_parallel( step, params ):
     if params['apply_orthonormalization']:
         print('Applying orthonormalization for SDs for step', step)
         st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1.real, s_sd_2.real, st_sd.real)
+    if params['spin_adapted']:
+        st_sd[:,0] *= np.sqrt(2)
+        st_sd[:,0] *= np.sqrt(2)
+        st_sd[0,0] *= 0.5
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 
     return sp.csc_matrix(st_sd) 
