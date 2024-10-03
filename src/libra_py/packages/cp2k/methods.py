@@ -1711,7 +1711,7 @@ def gaussian_function_vector(a_vec, mu_vec, sigma, num_points, x_min, x_max):
 
 
 
-def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all):
+def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, orbitals, labels):
     """
     c1 - index of the atom kinds
     atoms - the 
@@ -1739,7 +1739,7 @@ def aux_pdos(c1, atoms, pdos_files, margin, homo_occ, orbitals_cols, sigma, npoi
     e_max = np.max(pdos_ave[:,1]) + margin
     homo_level = np.max(np.where(pdos_ave[:,2]==homo_occ))
     homo_energy = pdos_ave[:,1][homo_level]
-    labels = []
+    #labels = []
 
     for c3, orbital_cols in enumerate(orbitals_cols):
         try:
@@ -1801,14 +1801,14 @@ def pdos(params):
 
     if is_spin_polarized == 0: # non-polarized case
         homo_occ = 2.0
-        #labels = []
+        labels = []
         ave_pdos_convolved_all = []
 
         for c1,i in enumerate(atoms[0]):
             # Finding all the pdos files
             pdos_files = glob.glob(path_to_all_pdos+F'/*k{i}*.pdos')
 
-            ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all)
+            ave_energy_grid, homo_energy, ave_pdos_convolved_all, labels = aux_pdos(c1, atoms, pdos_files, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all, orbitals, labels)
 
             """
             # Finding all the pdos files
@@ -1855,9 +1855,9 @@ def pdos(params):
             pdos_files_alp = glob.glob(path_to_all_pdos+F'/*ALPHA*k{i}*.pdos')
             pdos_files_bet = glob.glob(path_to_all_pdos+F'/*BETA*k{i}*.pdos')
 
-            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp, labels_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp)
+            ave_energy_grid_alp, homo_energy_alp, ave_pdos_convolved_all_alp, labels_alp = aux_pdos(c1, atoms, pdos_files_alp, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_alp, orbitals, labels_alp)
 
-            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet, labels_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet)
+            ave_energy_grid_bet, homo_energy_bet, ave_pdos_convolved_all_bet, labels_bet = aux_pdos(c1, atoms, pdos_files_bet, shift, homo_occ, orbitals_cols, sigma, npoints, ave_pdos_convolved_all_bet, orbitals, labels_bet)
 
 
         ave_pdos_convolved_all_alp = np.array(ave_pdos_convolved_all_alp)
