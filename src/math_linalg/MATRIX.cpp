@@ -102,7 +102,7 @@ the corresponding given input vectors
 
 
 
-MATRIX MATRIX::T(){   
+MATRIX MATRIX::T() const {   
 // Returns the matrix which is transposed w.r.t. the caller matrix  
 
   MATRIX res(*this); res.Transpose();
@@ -110,7 +110,7 @@ MATRIX MATRIX::T(){
 }
 
 
-MATRIX MATRIX::col(int i){
+MATRIX MATRIX::col(int i) const {
 // takes given column and makes it n x 1 CMATRIX  
 
   MATRIX tmp(n_rows,1);
@@ -118,7 +118,7 @@ MATRIX MATRIX::col(int i){
   return tmp;
 }
 
-MATRIX MATRIX::row(int i){ 
+MATRIX MATRIX::row(int i) const { 
 // takes given row and makes it 1 x n CMATRIX  
 
   MATRIX tmp(1,n_cols);
