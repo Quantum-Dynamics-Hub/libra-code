@@ -375,7 +375,7 @@ void export_dyn_decoherence_objects(){
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence", expt_instantaneous_decoherence_v1);
 
-  void (*expt_instantaneous_decoherence_dia_v1)(CMATRIX& Coeff, nHamiltonian& ham,
+  void (*expt_instantaneous_decoherence_dia_v1)(CMATRIX& Coeff,
   vector<int>& accepted_states, vector<int>& proposed_states, vector<int>& initial_states,
   int instantaneous_decoherence_variant, int collapse_option) = &instantaneous_decoherence;
   def("instantaneous_decoherence_dia", expt_instantaneous_decoherence_dia_v1);
@@ -474,7 +474,7 @@ void export_dyn_decoherence_objects(){
   def("schwartz_1", expt_schwartz_1_v2);
 
   vector<MATRIX> (*expt_schwartz_2_v1)
-  (dyn_control_params& prms, CMATRIX& amplitudes, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
+  (dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
   def("schwartz_2", expt_schwartz_2_v1);
 
 
