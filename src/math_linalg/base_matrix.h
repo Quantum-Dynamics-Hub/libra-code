@@ -172,10 +172,10 @@ public:
   }
   
   ///< Returns the matrix element with the index "indx"
-  T1 get(int i){ return M[i]; }
+  T1 get(int i) const { return M[i]; }
 
   ///< Returns the matrix element accessed by its row and coloumn indices
-  T1 get(int i, int j){  return M[i*n_cols+j];  }
+  T1 get(int i, int j) const {  return M[i*n_cols+j];  }
 
   base_matrix<T1> vec(){
   /** Matrix vectorization: The vector formed by concatenating all the columns of

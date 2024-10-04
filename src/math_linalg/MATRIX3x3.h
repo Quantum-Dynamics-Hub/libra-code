@@ -129,7 +129,7 @@ class MATRIX3x3{
     tmp = xz; xz = zx; zx = tmp;
     tmp = yz; yz = zy; yz = tmp;
   }
-  MATRIX3x3 T(){
+  MATRIX3x3 T()const {
     MATRIX3x3 m;
     m.xx = xx; m.xy = yx; m.xz = zx;
     m.yx = xy; m.yy = yy; m.yz = zy;
