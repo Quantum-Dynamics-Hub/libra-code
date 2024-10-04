@@ -19,6 +19,7 @@
 #include <ctime> 
 
 #include <complex>
+#include <array>
 #include <vector>
 
 #include <iomanip>

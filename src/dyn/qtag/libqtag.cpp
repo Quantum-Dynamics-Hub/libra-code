@@ -66,8 +66,13 @@ void export_qtag_objects(){
   CMATRIX (*expt_qtag_potential_v1)
   (MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
+   nHamiltonian& ham, int method, std::array<double,3> ABC) = &qtag_potential;
+  CMATRIX (*expt_qtag_potential_v1_noABC)
+  (MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
+   MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
    nHamiltonian& ham, int method) = &qtag_potential;
   def("qtag_potential", expt_qtag_potential_v1);
+  def("qtag_potential", expt_qtag_potential_v1_noABC);
 
 
   void (*expt_qtag_hamiltonian_and_overlap_v1)
