@@ -792,7 +792,7 @@ public:
   ///< Assignment = copying (by value)
   void operator=(const base_matrix<T1>& ob){
 
-    if(this == &ob){  return *this;    }
+    if(this == &ob){  return;    }
     else{
       n_rows = ob.n_rows;
       n_cols = ob.n_cols;
