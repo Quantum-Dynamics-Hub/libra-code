@@ -1310,8 +1310,8 @@ int hop(vector<double>& prob, double ksi){
       } // for
 
     } // if nrm
-    else{  finstate = initstate; }  // probability to hop to any other states is zero
-                                    // so stay on the original state
+    else{  finstate = -1; }  // probability to hop to any other states is zero
+                             // so stay on the original state
                                   
     if(finstate==-1){
       std::cout<<"Something is wrong in the hop(...) function\nExiting now...\n";
