@@ -25,5 +25,7 @@ endif()
 #
 TARGET_LINK_LIBRARIES(qtag      linalg_stat ${ext_libs})
 TARGET_LINK_LIBRARIES(qtag_stat linalg_stat ${ext_libs})
+TARGET_LINK_LIBRARIES(qtag      nhamiltonian      ${ext_libs})
+TARGET_LINK_LIBRARIES(qtag_stat nhamiltonian_stat ${ext_libs})
 
 
