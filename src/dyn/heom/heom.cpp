@@ -360,7 +360,7 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
 
           scaling_factor = 1.0;
           if(do_scale==1){ // Scaled HEOM approach from JCP 130, 084105 (2009)
-            scaling_factor = sqrt((nvectors[n][m*(KK+1) + k] + 1.0 )*fabs(c_matsubara[k]));
+            scaling_factor = sqrt((nvectors[n][m*(KK+1) + k] + 1.0 )*std::abs(c_matsubara[k]));
           } 
 
           sum_rho_over_k  += scaling_factor * rho[nplus];  
@@ -388,7 +388,7 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
           scaling_factor = double(nvectors[n][m*(KK+1) + k]);
           if(do_scale==1){ // Scaled HEOM approach from JCP 130, 084105 (2009)
 
-            double denom = fabs(c_matsubara[k]);
+            double denom = std::abs(c_matsubara[k]);
             if(denom > 1e-50){
               scaling_factor = sqrt( nvectors[n][m*(KK+1) + k] / denom );
             }
@@ -714,7 +714,7 @@ void scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict prms)
 
           int nn = nvec[n][m*(KK+1) + k];
           scaling_factor *= FACTORIAL( nn );
-          scaling_factor *= FAST_POW( fabs(c_matsubara[k]), nn);          
+          scaling_factor *= FAST_POW( std::abs(c_matsubara[k]), nn);          
         }// for k
       }// for m
 
@@ -757,7 +757,7 @@ void inv_scale_rho(vector<CMATRIX>& rho, vector<CMATRIX>& rho_scaled, bp::dict p
 
           int nn = nvec[n][m*(KK+1) + k];
           scaling_factor *= FACTORIAL( nn );
-          scaling_factor *= FAST_POW( fabs(c_matsubara[k]), nn);          
+          scaling_factor *= FAST_POW( std::abs(c_matsubara[k]), nn);          
         }// for k
       }// for m
 
