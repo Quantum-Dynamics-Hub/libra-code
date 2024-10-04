@@ -598,7 +598,11 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object 
 
   else if(lvl>level){
 
+#ifdef __OPENMP
     int nthreads = omp_get_num_threads();
+#else
+    int nthreads = 1;
+#endif
     #pragma omp parallel num_threads( nthreads )
     {
         #pragma omp for  
