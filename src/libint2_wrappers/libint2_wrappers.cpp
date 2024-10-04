@@ -102,8 +102,6 @@ void add_to_shell(std::vector<libint2::Shell>& shells,
                        {{coords.x, coords.y, coords.z}}   // origin coordinates
                      }
                     );
-    // Return the shell with new data
-    return shells;
 
 }
 
