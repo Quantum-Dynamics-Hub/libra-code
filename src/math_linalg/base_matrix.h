@@ -193,7 +193,7 @@ public:
     return res;
   }
 
-  ivec(base_matrix<T1>& x){
+  void ivec(base_matrix<T1>& x){
   /** Matrix vectorization: The vector formed by concatenating all the columns of
    http://www.ee.ic.ac.uk/hp/staff/dmb/matrix/property.html
 
