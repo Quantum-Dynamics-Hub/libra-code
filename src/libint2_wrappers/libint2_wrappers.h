@@ -82,7 +82,7 @@ void parallel_do(Lambda& lambda, int nthreads) {
 }
 #else  // use C++11 threads
 std::vector<std::thread> threads;
-for (int thread_id = 0; thread_id != libint2::nthreads; ++thread_id) {
+for (int thread_id = 0; thread_id != nthreads; ++thread_id) {
   if (thread_id != nthreads - 1)
     threads.push_back(std::thread(lambda, thread_id));
   else
