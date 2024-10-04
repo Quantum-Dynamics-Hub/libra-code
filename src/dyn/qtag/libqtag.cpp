@@ -66,7 +66,7 @@ void export_qtag_objects(){
   CMATRIX (*expt_qtag_potential_v1)
   (MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
    MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
-   nHamiltonian& ham, int method) = &qtag_potential;
+   nHamiltonian& ham, int method, double ABC[3]) = &qtag_potential;
   def("qtag_potential", expt_qtag_potential_v1);
 
 
