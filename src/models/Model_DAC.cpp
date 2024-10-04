@@ -27,7 +27,7 @@ namespace libmodels{
 
 
 void model_DAC(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params){ 
+               vector<double> &q, vector<double>& params){
 /*** 
     To use with the nHamiltonian class
 
