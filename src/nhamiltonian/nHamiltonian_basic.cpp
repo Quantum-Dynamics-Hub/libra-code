@@ -310,7 +310,7 @@ void nHamiltonian::copy_content(nHamiltonian* src){
 
 void nHamiltonian::copy_content(const nHamiltonian& src){
 
-  copy_content(&src);
+  copy_content(src);
 
 }
 
