@@ -749,6 +749,9 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
     else if(prms.state_tracking_algo==2){
         perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
     }
+    else if(prms.state_tracking_algo==21){
+        perm_t = hungarian_algorithm(st, Eadi[traj], prms.MK_alpha);
+    }
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(st, rnd);
     }
