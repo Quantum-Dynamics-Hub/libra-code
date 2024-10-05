@@ -1,8 +1,8 @@
 #*********************************************************************************  
-#* Copyright (C) 2017-2018 Kosuke Sato, Alexey V. Akimov 
+#* Copyright (C) 2017-2024 Kosuke Sato, Alexey V. Akimov 
 #*
 #* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
+#* as published by the Free Software Foundation, either version 3 of
 #* the License, or (at your option) any later version. 
 #* See the file LICENSE in the root directory of this distribution
 #* or <http://www.gnu.org/licenses/>. 
@@ -166,6 +166,13 @@ def test_get_reordering(mtx, perm):
     x = Cpp2Py( get_reordering(mtx) )
     assert perm == x
 
+@pytest.mark.parametrize(('mtx', 'perm'), set1)
+def test_hungarian(mtx, perm):
+    en = CMATRIX(mtx); en *= 0.0;
+    x = Cpp2Py( hungarian_algorithm(mtx, en, 0.0, 0) )
+    assert perm == x
+
+
 
 def get_U(N):
     U = CMATRIX(N,N)
@@ -207,5 +214,15 @@ def test_get_reordering_2(perm):
     res = Cpp2Py(get_reordering(X))
     assert res == perm
 
+
+@pytest.mark.parametrize(('perm'), set2)
+def test_hungarian(perm):
+    N = len(perm)
+    U  = get_U(N)
+    Ut = permute(U, perm)
+    X = Ut.H() * U
+    en = CMATRIX(X); en *= 0.0;
+    res = Cpp2Py(hungarian_algorithm(X, en, 0.0))
+    assert res == perm
 
 

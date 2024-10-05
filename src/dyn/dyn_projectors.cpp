@@ -26,6 +26,10 @@
     
 */
 
+#include <vector>
+#include <limits>
+#include <algorithm>
+
 #include "Surface_Hopping.h"
 #include "Energy_and_Forces.h"
 #include "Dynamics.h"
@@ -45,6 +49,135 @@ namespace libdyn{
 using namespace libutil;
 
 namespace bp = boost::python;
+
+//############## ChartGPT-generated code #####################
+
+
+const double INF = numeric_limits<double>::max();  // Use double for real values
+
+// Subtract minimum value from each row
+void subtract_row_minima(vector<vector<double>>& cost_matrix) {
+    for (auto& row : cost_matrix) {
+        double row_min = *min_element(row.begin(), row.end());
+        for (auto& element : row) {
+            element -= row_min;
+        }
+    }
+}
+
+// Subtract minimum value from each column
+void subtract_column_minima(vector<vector<double>>& cost_matrix) {
+    int n = cost_matrix.size();
+    for (int j = 0; j < n; ++j) {
+        double col_min = INF;
+        for (int i = 0; i < n; ++i) {
+            col_min = min(col_min, cost_matrix[i][j]);
+        }
+        for (int i = 0; i < n; ++i) {
+            cost_matrix[i][j] -= col_min;
+        }
+    }
+}
+
+// Find an augmenting path to increase the matching
+bool find_augmenting_path(int u, const vector<vector<double>>& cost_matrix, vector<int>& match_l, vector<int>& match_r, vector<bool>& visited_l, vector<bool>& visited_r) {
+    int n = cost_matrix.size();
+    visited_l[u] = true;
+    for (int v = 0; v < n; ++v) {
+        if (!visited_r[v] && cost_matrix[u][v] == 0) {
+            visited_r[v] = true;
+            if (match_r[v] == -1 || find_augmenting_path(match_r[v], cost_matrix, match_l, match_r, visited_l, visited_r)) {
+                match_l[u] = v;
+                match_r[v] = u;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+// Hungarian algorithm that returns both the cost and the assignment matrix
+vector<vector<int>> hungarian_algorithm(vector<vector<double>>& cost_matrix) {
+    int n = cost_matrix.size();
+    subtract_row_minima(cost_matrix);
+    subtract_column_minima(cost_matrix);
+
+    vector<int> match_l(n, -1), match_r(n, -1); // For keeping track of matchings
+
+    // Repeat to find a complete matching
+    for (int u = 0; u < n; ++u) {
+        vector<bool> visited_l(n, false), visited_r(n, false);
+        if (!find_augmenting_path(u, cost_matrix, match_l, match_r, visited_l, visited_r)) {
+            // Couldn't find augmenting path, need to adjust labels and retry.
+            double delta = INF;
+            for (int i = 0; i < n; ++i) {
+                if (visited_l[i]) {
+                    for (int j = 0; j < n; ++j) {
+                        if (!visited_r[j]) {
+                            delta = min(delta, cost_matrix[i][j]);
+                        }
+                    }
+                }
+            }
+
+            for (int i = 0; i < n; ++i) {
+                if (visited_l[i]) {
+                    for (int j = 0; j < n; ++j) {
+                        cost_matrix[i][j] -= delta;
+                    }
+                }
+                if (visited_r[i]) {
+                    for (int j = 0; j < n; ++j) {
+                        cost_matrix[j][i] += delta;
+                    }
+                }
+            }
+
+            u--; // Retry this row after adjusting labels
+        }
+    }
+
+    // Create the assignment matrix
+    vector<vector<int>> assignment_matrix(n, vector<int>(n, 0));
+    double total_cost = 0;
+    for (int i = 0; i < n; ++i) {
+        int job = match_l[i];
+        assignment_matrix[i][job] = 1; // Mark the assignment
+        total_cost += cost_matrix[i][job];
+    }
+
+    return assignment_matrix;
+}
+
+
+vector<int> hungarian_algorithm(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){ 
+
+  int i,j;
+  MATRIX cost_mat = -make_cost_mat(orb_mat_inp, en_mat_inp, alpha);
+  int n = cost_mat.n_cols;
+
+  vector< vector<double> > cost_matrix(n, vector<double>(n, 0.0) );
+  for(i=0; i<n;i++){
+    for(j=0; j<n; j++){
+      cost_matrix[i][j] = cost_mat.get(i,j);
+    }
+  }
+
+  // This function minimizes the total cost, so we have to use the negative 
+  // of the original cost matrix - see above 
+  vector< vector<int> > assignment_mtx = hungarian_algorithm(cost_matrix);
+
+  vector<int> perm(n, 0);
+  for(i=0;i<n;i++){
+    for(j=0; j<n; j++){  if(assignment_mtx[i][j]==1){  perm[i] = j; }  }
+  }// for i
+
+  return perm;
+}
+
+
+
+//############################################################
 
 
 CMATRIX compute_phase_corrections(CMATRIX& S, double tol){

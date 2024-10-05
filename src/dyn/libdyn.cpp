@@ -727,6 +727,10 @@ void export_dyn_projectors_objects(){
 
   //============= dyn_projectors.cpp ======================
 
+  vector<int> (*expt_hungarian_algorithm_v1)
+  (CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha) = &hungarian_algorithm;
+  def("hungarian_algorithm", expt_hungarian_algorithm_v1);
+
   CMATRIX (*expt_compute_phase_corrections_v1)(CMATRIX& S, double tol) = &compute_phase_corrections;
   def("compute_phase_corrections", expt_compute_phase_corrections_v1);
 

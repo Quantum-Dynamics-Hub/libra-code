@@ -32,6 +32,9 @@ namespace bp = boost::python;
 /// libdyn namespace
 namespace libdyn{
 
+
+vector<int> hungarian_algorithm(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha);
+
 CMATRIX compute_phase_corrections(CMATRIX& S, double tol);
 CMATRIX compute_phase_corrections(CMATRIX& S);
 vector<int> get_reordering(CMATRIX& time_overlap);
