@@ -134,14 +134,17 @@ vector<int> get_reordering(CMATRIX& time_overlap){
     // Original permutation
     vector<int> perm(sz, 0);  
     vector<int> perm_cum(sz, 0);  
-    for(i=0;i<sz;i++){ perm_cum[i] = i; } 
-    
+    for(i=0;i<sz;i++){ perm_cum[i] = i; }
+    int maxiter = sz; 
+   
+
     for(int col=0; col<sz; col++){
 
       int indx = -1;
       complex<double> val(0.0, 0.0);
-      
-      while(indx!=col){
+   
+      int iter = 0;   
+      while(indx!=col and iter<maxiter){
 
         // Find the max element in the given column "col"
         S.max_col_elt(col, val, indx);
@@ -157,7 +160,7 @@ vector<int> get_reordering(CMATRIX& time_overlap){
         S.swap_cols(col,indx);
 
         update_permutation(perm, perm_cum);
-
+        iter++;
 
       }// while indx!=col
     }// for col
