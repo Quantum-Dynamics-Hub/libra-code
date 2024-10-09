@@ -327,11 +327,11 @@ def run_dynamics(wfc, _params, model_params, savers):
 
             elif ndof==2:
                 for st in wfcr_states:
-                    a, b, c, st = wfcr_params[0], wfcr_params[1], wfcr_params[2], wfcr_states[0]
+                    a, b, c = wfcr_params[0], wfcr_params[1], wfcr_params[2]
                     wfc.print_wfc_2D(F"{wfc_prefix}/wfcr_snap_{snap}_state_{st}", wfcr_rep, st, a,b,c)
 
                 for st in wfck_states:
-                    a, b, c, st = wfck_params[0], wfck_params[1], wfck_params[2], wfck_states[0]
+                    a, b, c = wfck_params[0], wfck_params[1], wfck_params[2]
                     wfc.print_reci_wfc_2D(F"{wfc_prefix}/wfck_snap_{snap}_state_{st}", wfck_rep, st, a,b,c)           
 
 
