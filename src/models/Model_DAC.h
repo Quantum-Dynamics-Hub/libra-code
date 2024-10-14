@@ -29,7 +29,7 @@ namespace libmodels{
 
 
 void model_DAC(CMATRIX& Hdia, CMATRIX& Sdia, vector<CMATRIX>& d1ham_dia, vector<CMATRIX>& dc1_dia,
-               vector<double> q, vector<double>& params);
+               vector<double> &q, vector<double>& params);
 
 void DAC_Ham(double x, MATRIX* H, MATRIX* dH, MATRIX* d2H, vector<double>& params_);
 boost::python::list DAC_Ham(double x, boost::python::list params_);
