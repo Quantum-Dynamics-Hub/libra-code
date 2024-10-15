@@ -55,7 +55,7 @@ CMATRIX qtag_psi(MATRIX& q, MATRIX& q1, MATRIX& p1, MATRIX& alp1, MATRIX& s1, CM
 
   CMATRIX wfc(nstates, 1);
 
-  for(itraj<0; itraj<ntraj; itraj++){
+  for(itraj=0; itraj<ntraj; itraj++){
 
     complex<double> prod(1.0, 0.0);  
     double sum1, sum2; sum1 = sum2 = 0.0;
