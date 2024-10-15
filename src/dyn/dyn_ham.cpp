@@ -326,8 +326,8 @@ void update_proj_adi(dyn_control_params& prms, dyn_variables& dyn_var, nHamilton
       }
       T_new = orthogonalized_T( T_new );
     }
-    else if(prms.state_tracking_algo==1 || prms.state_tracking_algo==2 || prms.state_tracking_algo==3 ||
-            prms.state_tracking_algo==32 || prms.state_tracking_algo==33){ // This is based on reordering + phase correction
+    else if(prms.state_tracking_algo==1 || prms.state_tracking_algo==2  || prms.state_tracking_algo==21 || 
+            prms.state_tracking_algo==3 || prms.state_tracking_algo==32 || prms.state_tracking_algo==33){ // This is based on reordering + phase correction
       CMATRIX Eadi(ham->get_ham_adi());
       T_new = P;
       T_new = compute_projector(prms, Eadi, T_new);

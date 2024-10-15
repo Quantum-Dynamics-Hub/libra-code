@@ -1205,6 +1205,12 @@ CMATRIX orthogonalized_T(CMATRIX& T){
     
   t2 = T.H() * T;
   sqrt_matrix(t2, t2_half, t2_i_half);
+
+  CMATRIX id(nst,nst); id.identity();
+  if( std::abs( (t2_half * t2_i_half - id).max_elt()) > 1e-5 ){
+    cout<<"Error in orthogonlized_T: S^{1/2} * S^{-1/2} is not an identity matrix\nExiting...\n";
+    exit(0);
+  }
   t2 = T * t2_i_half;
 
   return t2;
