@@ -435,19 +435,19 @@ MATRIX Wfcgrid2::get_coherences(int rep){
   int istate, jstate, npt1;
   
   MATRIX temp(Npts, 1);
-  if(rep=0){
+  if(rep==0){
     for(npt1=0; npt1<Npts; npt1++){
       temp.set(npt1, 0, (PSI_dia[npt1].H()*PSI_dia[npt1]).get(0,0).real() );
     }
   }
-  else if(rep=1){
+  else if(rep==1){
     for(npt1=0; npt1<Npts; npt1++){
       temp.set(npt1, 0, (PSI_adi[npt1].H()*PSI_adi[npt1]).get(0,0).real() );
     }
   }
   
   double rho_i, rho_j, coh_ij;
-  if(rep=0){
+  if(rep==0){
     for(npt1=0; npt1<Npts; npt1++){
       for(istate=0; istate<nstates; istate++){
         rho_i = (PSI_dia[npt1].get(istate, 0) * std::conj(PSI_dia[npt1].get(istate, 0))).real();
@@ -459,7 +459,7 @@ MATRIX Wfcgrid2::get_coherences(int rep){
       }// for istate
     }// for npt1
   }
-  else if(rep=1){
+  else if(rep==1){
     for(npt1=0; npt1<Npts; npt1++){
       for(istate=0; istate<nstates; istate++){
         rho_i = (PSI_adi[npt1].get(istate, 0) * std::conj(PSI_adi[npt1].get(istate, 0))).real();
