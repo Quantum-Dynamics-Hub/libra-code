@@ -1297,7 +1297,7 @@ int hop(vector<double>& prob, double ksi){
 
   // To avoid problems, lets renormalize the hopping probabilities
   double nrm = 0.0;
-  if(ksi >= 1){ finstate = nstates; } // hops to highest state if ksi = 1 to avoid rounding errors
+  if(ksi >= 1){ finstate = nstates - 1; } // hops to highest state if ksi = 1 to avoid rounding errors
   else{
     for(i=0;i<nstates;i++){  nrm += prob[i];  }
 
@@ -1344,7 +1344,7 @@ int hop(int initstate, MATRIX& g, double ksi){
 
   // To avoid problems, lets renormalize the hopping probabilities
   double nrm = 0.0;
-  if(ksi >= 1){ finstate = nstates; } // hops to highest state if ksi = 1 to avoid rounding errors
+  if(ksi >= 1){ finstate = nstates - 1; } // hops to highest state if ksi = 1 to avoid rounding errors
   else{
     for(i=0;i<nstates;i++){  nrm += g.get(initstate, i);  }
 
@@ -1390,7 +1390,7 @@ int hop(int initstate, vector<double>& g, double ksi){
 
   // To avoid problems, lets renormalize the hopping probabilities
   double nrm = 0.0;
-  if(ksi >= 1){ finstate = nstates; } // hops to highest state if ksi = 1 to avoid rounding errors
+  if(ksi >= 1){ finstate = nstates - 1; } // hops to highest state if ksi = 1 to avoid rounding errors
   else{
     for(i=0;i<nstates;i++){  nrm += g[i];  }
 
