@@ -57,7 +57,7 @@ ctx_Control_Parameters::ctx_Control_Parameters(){
   int diis_max = 3;                         add("scf_options.diis_max", diis_max);
   int diis_start_iter = 0;                  add("scf_options.diis_start_iter", diis_start_iter);
   int use_level_shift = 0;                  add("scf_options.use_level_shift", use_level_shift);
-  int shift_magnitude = 2.5;                add("scf_options.shift_magnitude", shift_magnitude);
+  double shift_magnitude = 2.5;             add("scf_options.shift_magnitude", shift_magnitude);
   int use_damping = 0;                      add("scf_options.use_damping", use_damping);
   int damping_start = 3;                    add("scf_options.damping_start", damping_start);
   double damping_const = 0.05;              add("scf_options.damping_const", damping_const);

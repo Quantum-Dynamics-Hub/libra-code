@@ -298,7 +298,8 @@ void Fock_to_P(int Norb,int Nocc, int degen, double Nel, std::string eigen_metho
 
   // Generate and order bands in compressed form from the matrices
   if(BM){ bench_t[1].start(); }
-  order_bands(&E->real(), bands);
+  auto Ereal = E->real();
+  order_bands(&Ereal, bands);
   if(BM){ bench_t[1].stop(); }
 
   // Populate bands
@@ -424,7 +425,8 @@ void Fock_to_P(CMATRIX* Fao, CMATRIX* Sao, double Nel, double degen, double kT, 
 
   // Generate and order bands in compressed form from the matrices
   if(BM){ bench_t[1].start(); }
-  order_bands(&E->real(), bands);
+  auto Ereal = E->real();
+  order_bands(&Ereal, bands);
   if(BM){ bench_t[1].stop(); }
 
   // Populate bands

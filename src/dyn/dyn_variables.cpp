@@ -615,7 +615,7 @@ vector< vector<double> > dyn_variables::get_fssh3_errors(){
 vector<double> dyn_variables::get_fssh3_average_errors(){
   int itraj, k;
   vector<double> res(5,0.0);
-  for(itraj;itraj<ntraj;itraj++){
+  for(itraj=0;itraj<ntraj;itraj++){
     for(k=0;k<5;k++){  res[k] += fssh3_errors[itraj][k];   }
   }
   for(k=0;k<5;k++){ res[k] /= ntraj; }
