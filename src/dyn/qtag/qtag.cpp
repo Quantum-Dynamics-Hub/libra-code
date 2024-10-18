@@ -593,7 +593,20 @@ complex<double> BATe(int i, int j,
 
 CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
                        MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
-                       nHamiltonian& ham, int method, double AA, double BB, double CC){
+                       nHamiltonian& ham, int method) {
+  return qtag_potential(q1, p1, s1, alp1, n1, traj_on_surf_n1,
+                        q2, p2, s2, alp2, n2, traj_on_surf_n2,
+                        ham, method, {0.0, 0.0, 0.0});
+}
+
+CMATRIX qtag_potential(MATRIX& q1, MATRIX& p1, MATRIX& s1, MATRIX& alp1, int n1, vector<int>& traj_on_surf_n1,
+                       MATRIX& q2, MATRIX& p2, MATRIX& s2, MATRIX& alp2, int n2, vector<int>& traj_on_surf_n2,
+                       nHamiltonian& ham, int method, std::array<double,3> ABC){
+
+  double AA = ABC[0];
+  double BB = ABC[1];
+  double CC = ABC[2];
+
 
   int ntraj_on_surf_n1 = q1.n_cols;
   int ntraj_on_surf_n2 = q2.n_cols;
@@ -785,7 +798,7 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
           CMATRIX h12(ntraj_on_surf_n1, ntraj_on_surf_n2);
           CMATRIX pot(ntraj_on_surf_n1, ntraj_on_surf_n2);
           
-          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, AA, BB, CC);
+          pot = qtag_potential(q1, p1, s1, a1, n1, traj_on_surf[n1], q2, p2, s2, a2, n2, traj_on_surf[n2], ham, method, {AA, BB, CC});
           h12.dot_product(pot, s12);
           
 
