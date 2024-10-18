@@ -272,8 +272,8 @@ void dyn_control_params::sanity_check(){
   ///=================== Options for state tracking ======================
   if(state_tracking_algo==-1 ||
      state_tracking_algo==0 || state_tracking_algo==1 ||
-     state_tracking_algo==2 || state_tracking_algo==3 ||
-     state_tracking_algo==32 || state_tracking_algo==33 ||
+     state_tracking_algo==2 || state_tracking_algo==21 || 
+     state_tracking_algo==3 || state_tracking_algo==32 || state_tracking_algo==33 ||
      state_tracking_algo==4){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
