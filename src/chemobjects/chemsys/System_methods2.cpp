@@ -1354,7 +1354,7 @@ void System::GROUP_ATOMS(boost::python::list atoms_list,int Group_Id){
 
   // Clean last empty places
   for(it1=Fragments.end()-1;it1!=Fragments.begin();it1--){
-    if(it1->Group_Size==0){ Fragments.pop_back(); it1==Fragments.end()-1; Number_of_fragments--; }
+    if(it1->Group_Size==0){ Fragments.pop_back(); it1=Fragments.end()-1; Number_of_fragments--; }
     else{ break; }
   }
 

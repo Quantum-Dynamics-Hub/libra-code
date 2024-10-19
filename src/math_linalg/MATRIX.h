@@ -128,9 +128,9 @@ class MATRIX : public base_matrix<double>{
 
   ///========== Return derivative matrices ===========
 
-  MATRIX T();   ///< Returns the matrix which is transposed w.r.t. the caller matrix
-  MATRIX col(int i); ///< takes given column and makes it n x 1 CMATRIX
-  MATRIX row(int i); ///< takes given column and makes it n x 1 CMATRIX
+  MATRIX T() const;   ///< Returns the matrix which is transposed w.r.t. the caller matrix
+  MATRIX col(int i) const; ///< takes given column and makes it n x 1 CMATRIX
+  MATRIX row(int i) const; ///< takes given column and makes it n x 1 CMATRIX
 
   ///================ Matrix properties =====================
   /// Inherited properties

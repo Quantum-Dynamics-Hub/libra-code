@@ -60,7 +60,7 @@ class TestInts(unittest.TestCase):
                
             self.assertAlmostEqual( ovlp, ref_ovlp )
                 
-        print "Tested ", len(A), "unnormalized overlap integrals"
+        print( "Tested ", len(A), "unnormalized overlap integrals")
 
 
     def test_2(self):
@@ -94,7 +94,7 @@ class TestInts(unittest.TestCase):
 
             self.assertAlmostEqual( ovlp, ref_ovlp )
 
-        print "Tested ", len(A), "normalized overlap integrals"
+        print( "Tested ", len(A), "normalized overlap integrals")
 
 
     def test_3(self):
@@ -128,7 +128,7 @@ class TestInts(unittest.TestCase):
 
             self.assertAlmostEqual( kin, ref_kin )
 
-        print "Tested ", len(A), "kinetic energy integrals"
+        print( "Tested ", len(A), "kinetic energy integrals")
 
 
        

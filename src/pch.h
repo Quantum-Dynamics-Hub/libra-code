@@ -9,7 +9,9 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
+#ifdef __OPENMP
 #include <omp.h>
+#endif
 
 #include <cmath>
 #include <cstdio>
@@ -17,6 +19,7 @@
 #include <ctime> 
 
 #include <complex>
+#include <array>
 #include <vector>
 
 #include <iomanip>

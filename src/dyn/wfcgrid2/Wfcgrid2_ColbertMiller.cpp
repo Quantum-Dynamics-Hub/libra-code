@@ -408,7 +408,7 @@ void Wfcgrid2::Colbert_Miller_SOFT(CMATRIX& expT, vector<CMATRIX>& expV, int opt
 
     for(i=0; i<Npts; i++){  PSI_dia[i] = expV[i] * PSI_dia[i];   }
 
-    for(istate=0; istate<nstates; istate){
+    for(istate=0; istate<nstates; istate++){
 
       for(i=0; i<Npts; i++){   psi_tmp.set(i, 0, PSI_dia[i].get(istate, 0) );  }
       psi_tmp = expT * psi_tmp;

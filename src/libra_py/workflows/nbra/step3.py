@@ -2729,7 +2729,7 @@ def compute_sd_overlaps_in_parallel( step, params ):
         st_sd, s_sd = apply_orthonormalization_scipy(s_sd_1.real, s_sd_2.real, st_sd.real)
     if params['spin_adapted']:
         st_sd[:,0] *= np.sqrt(2)
-        st_sd[:,0] *= np.sqrt(2)
+        st_sd[0,:] *= np.sqrt(2)
         st_sd[0,0] *= 0.5
     print(F'Done with computing the SD overlap of step {step}. Elapsed time {time.time()-t2}')
 

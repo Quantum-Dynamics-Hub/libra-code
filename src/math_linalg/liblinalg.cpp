@@ -46,8 +46,8 @@ void export_base_matrix(){
   void (base_matrix<T1>::*expt_set_v1)(int i, T1 val) = &base_matrix<T1>::set;
   void (base_matrix<T1>::*expt_set_v2)(int i, int j, T1 val) = &base_matrix<T1>::set;
 
-  T1 (base_matrix<T1>::*expt_get_v1)(int i) = &base_matrix<T1>::get;
-  T1 (base_matrix<T1>::*expt_get_v2)(int i, int j) = &base_matrix<T1>::get;
+  T1 (base_matrix<T1>::*expt_get_v1)(int i) const = &base_matrix<T1>::get;
+  T1 (base_matrix<T1>::*expt_get_v2)(int i, int j) const = &base_matrix<T1>::get;
 
   void (base_matrix<T1>::*expt_diag_v1)(int dim, T1 x) = &base_matrix<T1>::diag;
   void (base_matrix<T1>::*expt_diag_v2)(T1 x) = &base_matrix<T1>::diag;
