@@ -73,6 +73,14 @@ std::vector<libint2::Shell> initialize_shell(int l_val, bool is_spherical,
 }
 
 
+// Create a unit shell with exponents of 0 and coefficients of 1 from libint2::Shell::unit().
+libint2::Shell unit_shell(){
+
+  const auto& unitshell = libint2::Shell::unit();
+
+  return unitshell;
+}
+
 
 
 // This function adds the basis sets for each atomic type to a libint2::Shell variable
@@ -118,7 +126,16 @@ void print_shells(std::vector<libint2::Shell>& shells){
     }
 }
 
+// This function prints the shells. It is useful to check the results (this is also interfaced with Python using Pybind11)
+void print_shells_2(std::vector<libint2::Shell>& shells){
 
+    std::cout << "\n\tShells are:\n";
+    for(auto s=0; s < shells.size(); s++){
+      std::cout << shells[s] << std::endl;
+      // The shell size
+      std::cout << "\n The shell size is:\n" << shells.size() << std::endl;
+    }
+}
 
 // Below are the functions that we use for starting the engine for computing the overlap integrals.
 size_t nbasis(const std::vector<libint2::Shell>& shells){
@@ -384,6 +401,28 @@ MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::
     return S;
 }
 
+double compute_4center_eri(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, 
+                           const std::vector<libint2::Shell>& shells_3, const std::vector<libint2::Shell>& shells_4, 
+                           const int deriv_order){
+                           //int number_of_threads) {
+
+  int max_n = std::max(std::max(max_nprim(shells_1), max_nprim(shells_2)), std::max(max_nprim(shells_3), max_nprim(shells_4)));
+  int max_lval = std::max(std::max(max_l(shells_1), max_l(shells_2)), std::max(max_l(shells_3), max_l(shells_4)));
+ 
+  // Initialize Libint    
+  libint2::initialize();
+
+  using libint2::Engine;
+  using libint2::BraKet;
+  using libint2::Operator;
+  Engine engine(Operator::coulomb, max_n, max_lval, deriv_order); 
+  const auto& buf = engine.results();
+  engine.compute(shells_1[0], shells_2[0], shells_3[0], shells_4[0]);
+  const auto* integral_val = buf[0];
+  libint2::finalize(); // done with libint
+  return integral_val[0];
+
+}
 
 /*
 MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2) {
