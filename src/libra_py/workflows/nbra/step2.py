@@ -778,7 +778,7 @@ def run_cp2k_libint_step2(params):
                         St = np.linalg.multi_dot([eigenvectors_1, AO_t_all_numpy[counter1], eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                         St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
                         St_step_sparse = scipy.sparse.csc_matrix(St_step)
-                        scipy.sparse.save_npz(params['res_dir']+F'/{emultipole_labels[counter1]}t_ks_{step}.npz', S_step_sparse)
+                        scipy.sparse.save_npz(params['res_dir']+F'/{emultipole_labels[counter1]}t_ks_{step-1}.npz', S_step_sparse)
 
                 else:
                     S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
