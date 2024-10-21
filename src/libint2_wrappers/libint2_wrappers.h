@@ -124,6 +124,8 @@ double compute_4center_eri(const std::vector<libint2::Shell>& shells_1, const st
                            const std::vector<libint2::Shell>& shells_3, const std::vector<libint2::Shell>& shells_4,
                            const int deriv_order);
 
+std::vector<MATRIX> compute_1body_ints_parallel_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int nthreads);
+std::vector<MATRIX> compute_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int number_of_threads);
 
 typedef std::vector< libint2::Shell > libint2_ShellList;  ///< Data type that holds a vector of libint2::Shell objects
 

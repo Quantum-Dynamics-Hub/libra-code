@@ -328,6 +328,30 @@ def run(params):
 
         t = t + 1
 
+
+def component_to_index(components):
+    """
+    This function returns the index of the emultipole integration components.
+    Args:
+        components (list)
+    Returns:
+        emultipole_index (list): The indices of the emultipole components
+        emultipole_labels (list): The names of the emultipole components
+    """
+    emultipole_index = []
+    emultipole_labels = []
+    # S is the overlap
+    all_components = ['S', 'x', 'y', 'z', 'x2', 'xy', 'xz', 'y2', 'yz', 'z2', 'x3', 'x2y', 'x2z', 'xy2', 'xyz', 'xz2', 'y3', 'y2z', 'yz2', 'z3']
+    for component in components:
+        for i in range(len(all_components)):
+            if all_components[i]==component:
+                emultipole_index.append(i)
+                emultipole_labels.append(component)
+
+    return emultipole_index, emultipole_labels
+        
+
+
 def run_cp2k_libint_step2(params):
     """
     This function runs the step2 for computing the MO overlaps for both DFT and xTB calculations and saves them as sparse 
@@ -507,7 +531,11 @@ def run_cp2k_libint_step2(params):
             print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
             print('Computing atomic orbital overlap matrix...')
             t1 = time.time()
-            AO_S = compute_overlaps(shell_1,shell_1,nprocs)
+            if params['use_emultipole']:
+                AO_c_all = compute_emultipole3(shell_1, shell_1, nprocs)
+                emultipole_index, emultipole_labels = component_to_index(params['emultipole_components'])
+            else:
+                AO_S = compute_overlaps(shell_1,shell_1,nprocs)
             if is_periodic:
                 cell = []
                 cell.append(params['A_cell_vector'])
@@ -519,12 +547,22 @@ def run_cp2k_libint_step2(params):
                     translational_vector = np.array(translational_vectors[i1])
                     print(F'Computing the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
                     shell_1p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
-                    AO_S += compute_overlaps(shell_1,shell_1p, nprocs)
+                    if params['use_emultipole']:
+                        AO_c_all_p = compute_emultipole3(shell_1,shell_1p, nprocs)
+                        for counter1 in range(20):
+                            AO_c_all[counter1] += AO_c_all_p[counter1]
+                    else:
+                        AO_S += compute_overlaps(shell_1,shell_1p, nprocs)
 
             print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
             t1 = time.time()
             print('Turning the MATRIX to numpy array...')
-            AO_S = data_conv.MATRIX2nparray(AO_S)
+            if params['use_emultipole']:
+                AO_c_all_numpy = []
+                for counter1 in emultipole_index:
+                    AO_c_all_numpy.append(data_conv.MATRIX2nparray(AO_c_all[counter1]))
+            else:
+                AO_S = data_conv.MATRIX2nparray(AO_S) 
             #scipy.sparse.save_npz(params['res_dir']+'/AO_S.npz', scipy.sparse.csc_matrix(AO_S))
             print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
             ## Now, we need to resort the eigenvectors based on the new indices
@@ -563,6 +601,9 @@ def run_cp2k_libint_step2(params):
             # Note that we choose the data from lowest_orbital to highest_orbital
             # the values for lowest_orbital and highest_orbital start from 1
             if isUKS:
+                # Will continue the implementation of emultipole for isUKS,,, It's just a lot at this point but very straightforward
+                if params['use_emultipole']:
+                    raise('emultipole not implemented for isUKS... Sorry!!') 
                 S_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_S, alpha_eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 S_beta  = np.linalg.multi_dot([beta_eigenvectors_1, AO_S, beta_eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 # creating zero matrix                                     
@@ -577,20 +618,31 @@ def run_cp2k_libint_step2(params):
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
             else:
-                S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                # creating zero matrix
-                mat_block_size = len(S)
-                zero_mat = np.zeros((mat_block_size,mat_block_size))
-                S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
-                # Since a lot of the data are zeros we save them as sparse matrices
-                S_step_sparse = scipy.sparse.csc_matrix(S_step)
+                if params['use_emultipole']:
+                    for counter1 in range(len(emultipole_labels)):
+                        # I'll keep the same naming for matrices as it is more convenient
+                        S = np.linalg.multi_dot([eigenvectors_1, AO_c_all_numpy[counter1], eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                        mat_block_size = len(S)
+                        zero_mat = np.zeros((mat_block_size,mat_block_size))
+                        S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+                        # Since a lot of the data are zeros we save them as sparse matrices
+                        S_step_sparse = scipy.sparse.csc_matrix(S_step)
+                        scipy.sparse.save_npz(params['res_dir']+F'/{emultipole_labels[counter1]}_ks_{step}.npz', S_step_sparse)
+                else:
+                    S = np.linalg.multi_dot([eigenvectors_1, AO_S, eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                    # creating zero matrix
+                    mat_block_size = len(S)
+                    zero_mat = np.zeros((mat_block_size,mat_block_size))
+                    S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+                    # Since a lot of the data are zeros we save them as sparse matrices
+                    S_step_sparse = scipy.sparse.csc_matrix(S_step)
+                    scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
                 E_step = data_conv.form_block_matrix(np.diag(energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat,\
                                                      np.diag(energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
-            scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
-            scipy.sparse.save_npz(params['res_dir']+F'/E_ks_{step}.npz', E_step_sparse)
+                scipy.sparse.save_npz(params['res_dir']+F'/E_ks_{step}.npz', E_step_sparse)
             print('Done with computing molecular orbital overlaps. Elapsed time:', time.time()-t1)
             print(F'Done with step {step}.','Elapsed time:',time.time()-t1_all)
             if params['remove_molden']:
@@ -610,8 +662,13 @@ def run_cp2k_libint_step2(params):
             print('Done with reading energies and eigenvectors. Elapsed time:', time.time()-t1)
             print('Computing atomic orbital overlap matrix...')
             t1 = time.time()
-            AO_S = compute_overlaps(shell_2,shell_2,nprocs)
-            AO_St = compute_overlaps(shell_1,shell_2,nprocs)
+            if params['use_emultipole']:
+                AO_c_all = compute_emultipole3(shell_2, shell_2, nprocs)
+                AO_t_all = compute_emultipole3(shell_1, shell_2, nprocs)
+                emultipole_index, emultipole_labels = component_to_index(params['emultipole_components'])
+            else:
+                AO_S = compute_overlaps(shell_2,shell_2,nprocs)
+                AO_St = compute_overlaps(shell_1,shell_2,nprocs)
             if is_periodic:
                 cell = []
                 cell.append(params['A_cell_vector'])
@@ -623,14 +680,28 @@ def run_cp2k_libint_step2(params):
                     translational_vector = np.array(translational_vectors[i1])
                     print(F'Computing the AO overlaps between R({translational_vector[0]},{translational_vector[1]},{translational_vector[2]}) and R(0,0,0)')
                     shell_2p, l_vals = molden_methods.molden_file_to_libint_shell(molden_filename, is_spherical, is_periodic, cell, translational_vector)
-                    AO_S += compute_overlaps(shell_2,shell_2p, nprocs)
-                    AO_St += compute_overlaps(shell_1,shell_2p, nprocs)
+                    if params['use_emultipole']:
+                        AO_c_all_p = compute_emultipole3(shell_2,shell_2p, nprocs)
+                        AO_t_all_p = compute_emultipole3(shell_1,shell_2p, nprocs)
+                        for counter1 in range(20):
+                            AO_c_all[counter1] += AO_c_all_p[counter1]
+                            AO_t_all[counter1] += AO_t_all_p[counter1]
+                    else:
+                        AO_S += compute_overlaps(shell_2,shell_2p, nprocs)
+                        AO_St += compute_overlaps(shell_1,shell_2p, nprocs)
 
             print('Done with computing atomic orbital overlaps. Elapsed time:', time.time()-t1)
             t1 = time.time()
             print('Turning the MATRIX to numpy array...')
-            AO_S = data_conv.MATRIX2nparray(AO_S)
-            AO_St = data_conv.MATRIX2nparray(AO_St)
+            if params['use_emultipole']:
+                AO_c_all_numpy = []
+                AO_t_all_numpy = []
+                for counter1 in emultipole_index:
+                    AO_c_all_numpy.append(data_conv.MATRIX2nparray(AO_c_all[counter1]))
+                    AO_t_all_numpy.append(data_conv.MATRIX2nparray(AO_t_all[counter1]))
+            else:
+                AO_S = data_conv.MATRIX2nparray(AO_S)
+                AO_St = data_conv.MATRIX2nparray(AO_St)
             print('Done with transforming MATRIX 2 numpy array. Elapsed time:', time.time()-t1)
             ## Now, we need to resort the eigenvectors based on the new indices
             print('Resorting eigenvectors elements...')
@@ -675,6 +746,8 @@ def run_cp2k_libint_step2(params):
             print('Computing and saving molecular orbital overlaps...')
 
             if isUKS:
+                if params['use_emultipole']:
+                    raise('emultipole not implemented for isUKS... Sorry!!')
                 S_alpha = np.linalg.multi_dot([alpha_eigenvectors_2, AO_S, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
                 St_alpha = np.linalg.multi_dot([alpha_eigenvectors_1, AO_St, alpha_eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
 
@@ -692,19 +765,35 @@ def run_cp2k_libint_step2(params):
 
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
             else:
-                S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                St = np.linalg.multi_dot([eigenvectors_1, AO_St, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
-                S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
-                St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
-                S_step_sparse = scipy.sparse.csc_matrix(S_step)
-                St_step_sparse = scipy.sparse.csc_matrix(St_step)
+                if params['use_emultipole']:
+                    for counter1 in range(len(emultipole_labels)):
+                        # I'll keep the same naming for matrices as it is more convenient
+                        S = np.linalg.multi_dot([eigenvectors_1, AO_c_all_numpy[counter1], eigenvectors_1.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                        mat_block_size = len(S)
+                        zero_mat = np.zeros((mat_block_size,mat_block_size))
+                        S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+                        # Since a lot of the data are zeros we save them as sparse matrices
+                        S_step_sparse = scipy.sparse.csc_matrix(S_step)
+                        scipy.sparse.save_npz(params['res_dir']+F'/{emultipole_labels[counter1]}_ks_{step}.npz', S_step_sparse)
+                        St = np.linalg.multi_dot([eigenvectors_1, AO_t_all_numpy[counter1], eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                        St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
+                        St_step_sparse = scipy.sparse.csc_matrix(St_step)
+                        scipy.sparse.save_npz(params['res_dir']+F'/{emultipole_labels[counter1]}t_ks_{step}.npz', S_step_sparse)
+
+                else:
+                    S = np.linalg.multi_dot([eigenvectors_2, AO_S, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                    St = np.linalg.multi_dot([eigenvectors_1, AO_St, eigenvectors_2.T])[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital]
+                    S_step = data_conv.form_block_matrix(S,zero_mat,zero_mat,S)
+                    St_step = data_conv.form_block_matrix(St,zero_mat,zero_mat,St)
+                    S_step_sparse = scipy.sparse.csc_matrix(S_step)
+                    St_step_sparse = scipy.sparse.csc_matrix(St_step)
+                    scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
+                    scipy.sparse.save_npz(params['res_dir']+F'/St_ks_{step-1}.npz', St_step_sparse)
                 E_step = data_conv.form_block_matrix(np.diag(energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital],\
                                                      zero_mat,zero_mat,\
                                                      np.diag(energies_2)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
 
-            scipy.sparse.save_npz(params['res_dir']+F'/S_ks_{step}.npz', S_step_sparse)
-            scipy.sparse.save_npz(params['res_dir']+F'/St_ks_{step-1}.npz', St_step_sparse)
             scipy.sparse.save_npz(params['res_dir']+F'/E_ks_{step}.npz', E_step_sparse)
 
             print('Done with computing molecular orbital overlaps. Elapsed time:', time.time()-t1)
