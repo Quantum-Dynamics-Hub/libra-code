@@ -922,7 +922,9 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 
 
   if(prms.state_tracking_algo==1){ perm_t = get_reordering(st);  }
-  else if(prms.state_tracking_algo==2 || prms.state_tracking_algo==4){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity);   }
+  else if(prms.state_tracking_algo==2 || prms.state_tracking_algo==4){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity); }
+  else if(prms.state_tracking_algo==21){ perm_t = hungarian_algorithm(st, Eadi, prms.MK_alpha);     }
+
 /*
   else if(prms.state_tracking_algo==3){ perm_t = get_stochastic_reordering(st, rnd);   }
   else if(prms.state_tracking_algo==32){ perm_t = get_stochastic_reordering2(st, rnd);  }
