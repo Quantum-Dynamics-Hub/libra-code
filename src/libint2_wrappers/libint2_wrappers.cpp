@@ -73,6 +73,14 @@ std::vector<libint2::Shell> initialize_shell(int l_val, bool is_spherical,
 }
 
 
+// Create a unit shell with exponents of 0 and coefficients of 1 from libint2::Shell::unit().
+libint2::Shell unit_shell(){
+
+  const auto& unitshell = libint2::Shell::unit();
+
+  return unitshell;
+}
+
 
 
 // This function adds the basis sets for each atomic type to a libint2::Shell variable
@@ -116,7 +124,16 @@ void print_shells(std::vector<libint2::Shell>& shells){
     }
 }
 
+// This function prints the shells. It is useful to check the results (this is also interfaced with Python using Pybind11)
+void print_shells_2(std::vector<libint2::Shell>& shells){
 
+    std::cout << "\n\tShells are:\n";
+    for(auto s=0; s < shells.size(); s++){
+      std::cout << shells[s] << std::endl;
+      // The shell size
+      std::cout << "\n The shell size is:\n" << shells.size() << std::endl;
+    }
+}
 
 // Below are the functions that we use for starting the engine for computing the overlap integrals.
 size_t nbasis(const std::vector<libint2::Shell>& shells){
@@ -382,6 +399,28 @@ MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::
     return S;
 }
 
+double compute_4center_eri(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, 
+                           const std::vector<libint2::Shell>& shells_3, const std::vector<libint2::Shell>& shells_4, 
+                           const int deriv_order){
+                           //int number_of_threads) {
+
+  int max_n = std::max(std::max(max_nprim(shells_1), max_nprim(shells_2)), std::max(max_nprim(shells_3), max_nprim(shells_4)));
+  int max_lval = std::max(std::max(max_l(shells_1), max_l(shells_2)), std::max(max_l(shells_3), max_l(shells_4)));
+ 
+  // Initialize Libint    
+  libint2::initialize();
+
+  using libint2::Engine;
+  using libint2::BraKet;
+  using libint2::Operator;
+  Engine engine(Operator::coulomb, max_n, max_lval, deriv_order); 
+  const auto& buf = engine.results();
+  engine.compute(shells_1[0], shells_2[0], shells_3[0], shells_4[0]);
+  const auto* integral_val = buf[0];
+  libint2::finalize(); // done with libint
+  return integral_val[0];
+
+}
 
 /*
 MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2) {
@@ -395,6 +434,141 @@ MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, cons
 }
 
 */
+
+std::vector<MATRIX> compute_1body_ints_parallel_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int nthreads){
+  //using libint2::nthreads;
+
+  const auto n_1 = nbasis(shells_1);
+  const auto n_2 = nbasis(shells_2);
+
+  std::vector<MATRIX> res;
+  for (int i=0; i<20; i++){
+       MATRIX m2(n_1, n_2);
+       res.push_back(std::move(m2));
+  }
+
+
+  std::vector<Matrix> results(20);
+  for (Matrix &m : results){
+      m = Matrix(n_1,n_2);
+  }
+  int max_n;
+  int max_lval;
+  if (max_nprim(shells_1)>max_nprim(shells_2))
+  {
+    max_n = max_nprim(shells_1);
+  }
+  else
+  {
+    max_n = max_nprim(shells_2);
+  }
+  if (max_l(shells_1)>max_l(shells_2))
+  {
+    max_lval = max_l(shells_1);
+  }
+  else
+  {
+    max_lval = max_l(shells_2);
+  }
+
+  // Initializing different engines based on the nthreads
+  std::vector<libint2::Engine> engines(nthreads);
+  // Initializing the first engine. Others will be the same as this one (as is shown below)
+  engines[0] = libint2::Engine(libint2::Operator::emultipole3, max_n, max_lval, 0);
+  // This part is for other operators, I'll keep it but not necessary.
+  //  engines[0].set_params(oparams);
+  // Other engines
+  for (size_t i = 1; i != nthreads; ++i) {
+    engines[i] = engines[0];
+  }
+
+  // Mapping the shells into basis sets
+  auto shell2bf1 = map_shell_to_basis_function(shells_1);
+  auto shell2bf2 = map_shell_to_basis_function(shells_2);
+  // Compute for each thread_id
+  auto compute = [&](int thread_id) {
+
+    const auto& buf = engines[thread_id].results();
+    for (auto s1 = 0l, s12 = 0l; s1 != shells_1.size(); ++s1) {
+//    for (auto s1 = 0; s1 < shells_1.size(); ++s1) {
+      auto bf1 = shell2bf1[s1];     // first basis function in this shell
+      auto n1 = shells_1[s1].size();
+      //std::cout << "shells_1[" << s1 << "]" << shells_1[s1].size() << "\n";
+      auto s1_offset = s1 * (s1+1) / 2;
+      //for (auto s2 = 0; s2 < shells_2.size(); ++s2) {
+      for (auto s2=0; s2!= shells_2.size(); ++s2) {
+        //std::cout << "shells_2[" << s2 << "]" << shells_2[s2].size() << "\n";
+        auto s12 = s1_offset + s2;
+        if (s12 % nthreads != thread_id) continue;
+          auto bf2 = shell2bf2[s2];   // first basis function in this shell
+          auto n2  = shells_2[s2].size();
+
+        auto n12 = n1 * n2;
+                // Make compute for each engine
+        engines[thread_id].compute(shells_1[s1], shells_2[s2]);
+        for (int index=0; index<20; index++){
+        // The results block
+        Eigen::Map<const Matrix> buf_mat(buf[index], n1, n2);
+        results[index].block(bf1, bf2, n1, n2) = buf_mat;
+
+        if (s1 != s2)  // if s1 >= s2, copy {s1,s2} to the corresponding
+                       // {s2,s1} block, note the transpose!
+        results[index].block(bf2, bf1, n2, n1) = buf_mat.transpose();
+        }
+        }
+      }
+    };
+  //std::cout << "Done";
+  // Now for compute, do parallel
+  parallel_do(compute, nthreads);
+  for (int index=0; index<20; index++){
+    for(int i=0;i<n_1;i++){
+      for(int j=0; j<n_2;j++){
+        res[index].set(i,j, results[index](i,j));
+      }
+    }
+  }
+  // Return the AO matrices as a vector of MATRIX
+  return res;
+}
+
+std::vector<MATRIX> compute_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int number_of_threads) {
+
+   //int nthreads;
+
+
+  //  using libint2::Operator;
+  //  using libint2::nthreads;
+
+    auto nthreads_cstr = getenv("LIBINT_NUM_THREADS");
+    int nthreads = number_of_threads;
+    if (nthreads_cstr && strcmp(nthreads_cstr, "")) {
+       std::istringstream iss(nthreads_cstr);
+       iss >> nthreads;
+       if (nthreads > 1 << 16 || nthreads <= 0) nthreads = 1;
+    }
+
+#if defined(_OPENMP)
+      omp_set_num_threads(nthreads);
+#endif
+//     ;; //std::cout << "Will scale over " << nthreads
+//#if defined(_OPENMP)
+//     ;;//          << " OpenMP"
+//#else
+//     ;;//          << " C++11"
+//#endif
+//     ;;//          << " threads" << std::endl;
+    // Initialize Libint
+    libint2::initialize();
+        // Compute the AO overlap matrix
+    std::vector<MATRIX> S = compute_1body_ints_parallel_emultipole3(shells_1, shells_2, nthreads);
+    //auto S = compute_1body_ints_parallel_emultipole3(shells_1, shells_2, nthreads);
+    //std::cout << "\n\tFinished computing overlap integral\n";
+        // End of AO matrix calculation
+    libint2::finalize(); // done with libint
+
+    return S;
+}
 
 
 }// namespace liblibint2_wrappers

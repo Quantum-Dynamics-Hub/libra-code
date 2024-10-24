@@ -95,6 +95,7 @@ for (int thread_id = 0; thread_id < nthreads - 1; ++thread_id)
 
 
 
+libint2::Shell unit_shell();
 
 std::vector<libint2::Shell> initialize_shell(int l_val, bool is_spherical, 
  const std::vector<double>& exponents, const std::vector<double>& coeff, VECTOR& coords);
@@ -103,6 +104,7 @@ void add_to_shell(std::vector<libint2::Shell>& shells,
   int l_val, bool is_spherical , const std::vector<double>& exponents, const std::vector<double>& coeff, VECTOR& coords);
 
 void print_shells(std::vector<libint2::Shell>& shells);
+void print_shells_2(std::vector<libint2::Shell>& shells);
 
 
 size_t nbasis(const std::vector<libint2::Shell>& shells);
@@ -118,7 +120,12 @@ MATRIX compute_1body_ints_parallel(const std::vector<libint2::Shell>& shells_1, 
 MATRIX compute_overlaps(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int number_of_threads);
 //MATRIX compute_overlaps_serial(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2);
 
+double compute_4center_eri(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,
+                           const std::vector<libint2::Shell>& shells_3, const std::vector<libint2::Shell>& shells_4,
+                           const int deriv_order);
 
+std::vector<MATRIX> compute_1body_ints_parallel_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int nthreads);
+std::vector<MATRIX> compute_emultipole3(const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2, int number_of_threads);
 
 typedef std::vector< libint2::Shell > libint2_ShellList;  ///< Data type that holds a vector of libint2::Shell objects
 

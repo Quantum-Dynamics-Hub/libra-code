@@ -66,6 +66,8 @@ void export_libint2_wrappers_objects(){
   size_t (*expt_nbasis_v1)(const std::vector<libint2::Shell>& shells) = &nbasis;
   def("nbasis", expt_nbasis_v1);
 
+  libint2::Shell (*expt_unit_shell_v1)() = &unit_shell;
+  def("unit_shell", expt_unit_shell_v1); 
 
   std::vector<libint2::Shell> (*expt_initialize_shell_v1)(
   int l_val, bool is_spherical , const std::vector<double>& exponents, 
@@ -84,6 +86,8 @@ void export_libint2_wrappers_objects(){
   void (*expt_print_shells_v1)(std::vector<libint2::Shell>& shells) = &print_shells;  
   def("print_shell", expt_print_shells_v1);
 
+  void (*expt_print_shells_2_v1)(std::vector<libint2::Shell>& shells) = &print_shells_2;  
+  def("print_shell_2", expt_print_shells_2_v1);
 
   class_<libint2::Shell>("libint2_Shell",init<>())
       .def(init<const libint2::Shell&>())
@@ -91,6 +95,9 @@ void export_libint2_wrappers_objects(){
       .def("__deepcopy__", &generic__deepcopy__<libint2::Shell>)
       .def_readwrite("alpha",&libint2::Shell::alpha)
       .def_readwrite("contr",&libint2::Shell::contr)
+      .def_readwrite("O",&libint2::Shell::O)
+      .def_readwrite("max_ln_coeff",&libint2::Shell::max_ln_coeff)
+      //.def_readwrite("unit",&libint2::Shell::unit)
       //.def("init",&PrimitiveG::init)
   ;
 
@@ -108,6 +115,20 @@ void export_libint2_wrappers_objects(){
    const std::vector<libint2::Shell>& shells_2, int number_of_threads) = &compute_overlaps; 
  
   def("compute_overlaps", expt_compute_overlaps_v1);
+
+  double (*expt_compute_4center_eri_v1)
+                          (const std::vector<libint2::Shell>& shells_1, const std::vector<libint2::Shell>& shells_2,
+                           const std::vector<libint2::Shell>& shells_3, const std::vector<libint2::Shell>& shells_4,
+                           int deriv_order) = &compute_4center_eri;
+
+  def("compute_4center_eri", expt_compute_4center_eri_v1);
+
+
+  std::vector<MATRIX> (*expt_compute_emultipole3_v1)
+  (const std::vector<libint2::Shell>& shells_1,
+   const std::vector<libint2::Shell>& shells_2, int number_of_threads) = &compute_emultipole3;
+
+  def("compute_emultipole3", expt_compute_emultipole3_v1);
 
 /*
   MATRIX (*expt_compute_overlaps_serial_v1)
