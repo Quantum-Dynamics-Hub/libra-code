@@ -76,7 +76,7 @@ def test_multipoles(a1, a2, r, vals):
     res = True
     for i in range(4):
         res = res * ( abs( x[i].get(0,0) - vals[i] ) < 1e-10 )
-    assert res
+    assert res == True
 
 
 #['S', 'x', 'y', 'z', 'x2', 'xy', 'xz', 'y2', 'yz', 'z2', 'x3', 'x2y', 'x2z', 'xy2', 'xyz', 'xz2', 'y3', 'y2z', 'yz2', 'z3']
