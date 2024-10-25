@@ -68,7 +68,7 @@ void export_molint_objects(){
 
   // Moments 
   // 1D Moments
-  double (*expt_gaussian_moment_ref)(int,double,double, int,double, double, int,double, double ) = &gaussian_moment;
+  double (*expt_gaussian_moment_ref)(int,double,double, int,double, double, int,double, double ) = &gaussian_moment_ref;
   double (*expt_gaussian_moment_1D_v1)(int,double,double, int,double,double, int,double,double ) = &gaussian_moment;
   double (*expt_gaussian_moment_1D_v2)(int,double,double, int,double,double, int,double,double, int ) = &gaussian_moment;
   boost::python::list (*expt_gaussian_moment_1D_v3)(int,double,double, int,double,double, int,double,double, int, int ) = &gaussian_moment;
