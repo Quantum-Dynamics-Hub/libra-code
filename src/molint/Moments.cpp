@@ -22,14 +22,14 @@ namespace libmolint{
 
 
 
-double gaussian_moment_ref(int nx, double alp, double X,
+double gaussian_moment_ref(int nxc, double alp_c, double Xc,
                            int nxa,double alp_a, double Xa,
                            int nxb,double alp_b, double Xb
                       ){
 /****************************************************************************
  This function computes moments:
 
- <g_a(x)|  (x-X)^nx * exp(-alp*(x-X)^2)  |g_b(x)> = <g_a | g_p>  - note, here we deal with 1D Gaussians
+ <g_a(x)|  (x-Xc)^nxc * exp(-alp_c*(x-Xc)^2)  |g_b(x)> = <g_a | g_p>  - note, here we deal with 1D Gaussians
 
  We want to express the middle expression in terms of the right Gaussian:
 
@@ -58,36 +58,39 @@ double gaussian_moment_ref(int nx, double alp, double X,
 
 ****************************************************************************/
 
-
+/*
   double gamma = alp + alp_b;
   double Xp = (alp*X + alp_b*Xb)/gamma;
   double Xp_ = Xp - X;
   double Xpb = Xp - Xb;
-
+*/
+  double gamma_cb = alp_c + alp_b;
+  double X_cb = (alp_c * Xc + alp_b * Xb)/gamma_cb;
+  double dX = X_cb - Xc;
 
   double res = 0.0;
 
-  double pwi = 1.0;
-  for(int i=0;i<=nx;i++){
-    double bini = BINOM(i,nx);
+  double pwk = 1.0;
+  for(int k=0;k<=nxc;k++){
+    double bink = BINOM(k,nxc);
 
-    double pwj = 1.0;
-    for(int j=0;j<=nxb;j++){
-      double binj = BINOM(j,nxb);
-
-
-      res += bini * binj * pwi * pwj * gaussian_overlap(nxa, alp_a, Xa, (nx-i+nxb-j), gamma, Xp );
+    //double pwj = 1.0;
+    //for(int j=0;j<=nxb;j++){
+    //  double binj = BINOM(j,nxb);
 
 
-      pwj *= Xpb;
-    }// for j
+    res += bink * pwk * gaussian_overlap_ref(nxa, alp_a, Xa, (nxc-k), gamma_cb, X_cb );
 
-    pwi *= Xp_;
+    //  pwj *= Xpb;
+    //}// for j
+
+    pwk *= dX;
   }// for i
 
-  res *= exp(-alp*alp_b*(X-Xb)*(X-Xb)/gamma);
+  res *= exp(-alp_c * alp_b * (Xc - Xb) * (Xc - Xb)/gamma_cb);
 
   return res;
+
 
 }
 

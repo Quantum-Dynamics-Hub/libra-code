@@ -23,7 +23,7 @@ namespace libmolint{
 
 
 
-double gaussian_overlap_ref(int nxa,double alp_a, double Xa, int nxb,double alp_b, double Xb ){
+double gaussian_overlap_ref(int nxa, double alp_a, double Xa, int nxb, double alp_b, double Xb ){
 /****************************************************************************
  This function computes the 1D overlap: this is the reference method, compact, but not optimized
  this version also does not implement derivatives and normalizaition
@@ -80,7 +80,7 @@ double gaussian_overlap_ref(int nxa,double alp_a, double Xa, int nxb,double alp_
     pwi *= Xpa;
   }// for i
 
-  res *= exp(-alp_a*alp_b*(Xa-Xb)*(Xa-Xb)/gamma);
+  res *= exp(-alp_a * alp_b * (Xa-Xb) * (Xa-Xb)/gamma);
 
 
   return res;
