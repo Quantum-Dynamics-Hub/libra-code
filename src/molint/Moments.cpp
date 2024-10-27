@@ -29,64 +29,24 @@ double gaussian_moment_ref(int nxc, double alp_c, double Xc,
 /****************************************************************************
  This function computes moments:
 
- <g_a(x)|  (x-Xc)^nxc * exp(-alp_c*(x-Xc)^2)  |g_b(x)> = <g_a | g_p>  - note, here we deal with 1D Gaussians
+ <g_a(x)|  (x-Xc)^nxc * exp(-alp_c*(x-Xc)^2)  |g_b(x)> = <g_a | g_p> 
 
- We want to express the middle expression in terms of the right Gaussian:
+ Where g_b(x) = (x-Xb)^nxb * exp(-alp_b*(x-Xb)^2)
 
- Remember also:
-
- exp(-alp*(x-X)^2) * exp(-alp_b*(x-Xb)^2) = exp(-alp*alp_b*(X-Xb)^2/gamma) * exp(-gamma*(x-Xp)^2)
-
- where Xp = (alp*X + alp_b * Xb)/gamma
-
- gamma = alp + alp_b
-
- So:
-                                     nx
- (x-X)^nx = (x - Xp + Xp - X)^nx =  sum  [  C_nx^i * (x-Xp)^i * (Xp-X)^(nx-i) ]
-                                   i = 0
-
-                                        nxb
- (x-Xb)^nxb = (x - Xp + Xp - Xb)^nxa =  sum  [  C_nxb^j * (x-Xp)^j * (Xp-Xb)^(nxb-j) ]
-                                       j = 0
-
-                                                                    nx      nxb
- So: | g_p > = (x-X)^nx * |g_b> = exp(-alp*alp_b*(X-Xb)^2/gamma) * sum     sum [ C_nx^i * C_nxb^j * (Xp-X)^i * (Xp-Xb)^j * { (x-Xp)^(nx-i+nxb-j) * exp(-gamma*(x-Xp)^2) } ]
-                                                                    i = 0   j=0
- =
-
+ See the revised derivations in the Moments.docx / Moments.pdf
 
 ****************************************************************************/
 
-/*
-  double gamma = alp + alp_b;
-  double Xp = (alp*X + alp_b*Xb)/gamma;
-  double Xp_ = Xp - X;
-  double Xpb = Xp - Xb;
-*/
   double gamma_cb = alp_c + alp_b;
   double X_cb = (alp_c * Xc + alp_b * Xb)/gamma_cb;
   double dX = X_cb - Xc;
-
   double res = 0.0;
-
   double pwk = 1.0;
   for(int k=0;k<=nxc;k++){
     double bink = BINOM(k,nxc);
-
-    //double pwj = 1.0;
-    //for(int j=0;j<=nxb;j++){
-    //  double binj = BINOM(j,nxb);
-
-
     res += bink * pwk * gaussian_overlap_ref(nxa, alp_a, Xa, (nxc-k), gamma_cb, X_cb );
-
-    //  pwj *= Xpb;
-    //}// for j
-
     pwk *= dX;
   }// for i
-
   res *= exp(-alp_c * alp_b * (Xc - Xb) * (Xc - Xb)/gamma_cb);
 
   return res;
@@ -95,114 +55,84 @@ double gaussian_moment_ref(int nxc, double alp_c, double Xc,
 }
 
 
-double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, double X, int nxb,double alp_b, double Xb,
-                       int is_normalize,
-                       int is_derivs, double& dI_dXa, double& dI_dX,double& dI_dXb,
+double gaussian_moment(int nxa, double alp_a, double Xa, 
+                       int nxc, double alp_c, double Xc, 
+                       int nxb, double alp_b, double Xb,
+                       int is_normalize, int is_derivs, 
+                       double& dI_dXa, double& dI_dXc, double& dI_dXb,
                        vector<double*>& aux,int n_aux ){
 /****************************************************************************
 
 ****************************************************************************/
 
 
-  int i;
-  double gamma = alp_a + alp_b;
-  double ag = alp_a/gamma;
-  double bg = alp_b/gamma;
-
-  double Xp = ag*Xa + bg*Xb;
-  double Xpa = Xp - Xa;
-  double Xpb = Xp - Xb;
-
-  // Jacobian elements:
-  double dXpa_dXa = ag - 1.0;
-  double dXpb_dXa = ag;
-  double dXpa_dXb = bg;
-  double dXpb_dXb = bg - 1.0;
-  double dXp_dXa = ag;
-  double dXp_dXb = bg;
-
+  int i,k;
+  double gamma_cb = alp_c + alp_b;
+  double Xcb = (alp_c * Xc + alp_b * Xb )/gamma_cb;
+  double dX = Xcb - Xc;
+  double dx = Xc - Xb;
+  double pref = exp( -(alp_c * alp_b / gamma_cb) * dx * dx );
 
   // Aliaces: since places [0,1,2,3] will be used in the gaussian_overlap function, 
   // we reserve next spots:
-  double* f;  f = aux[4];
-  double* dfdXpa; dfdXpa = aux[5];
-  double* dfdXpb; dfdXpb = aux[6];
-  double* g;  g = aux[7];       // will be containing S integral
-  double* dgdX;   dgdX = aux[8];
-  double* dgdXp;  dgdXp = aux[9];
 
-  // Compute binomial expansion and derivatives, if necessary - as usual
-  binomial_expansion(nxa, nxb, Xpa, Xpb, f, dfdXpa, dfdXpb, is_derivs); // (x+x1)^n1 * (x+x2)^n2 = summ_i { x^i * f_i (x1,x2,n1,n2) }
-
-  // Compute Gaussian integrals
-  for(i=0;i<=(nxa+nxb+1);i++){ 
-
-    double dS_dX, dS_dXp; 
-
-    // In this call we do not do normalization since we are working with temporary ("virtual") Gaussians
-    // normalization will be applied later to Ga an Gb
-    g[i] = gaussian_overlap(nx, alp, X,   i,gamma, Xp,  0, is_derivs, dS_dX, dS_dXp, aux, n_aux );
-
-    dgdX[i] = dS_dX;
-    dgdXp[i] = dS_dXp; 
-
-  }// for i
-
-
-  // Now we are ready to put everything together and compute the overall integral, and its derivatives w.r.t. original variables
-  double I = 0.0;
+  double Iabc = 0.0;
   dI_dXa = 0.0;
   dI_dXb = 0.0;
-  dI_dX = 0.0;
+  dI_dXc = 0.0;
+  double pwk = 1.0;
+  double pwk_prev = 0.0;
+  // Compute Gaussian integrals
+  for(k=0; k<=nxc; k++){
+    double bink = BINOM(k,nxc);
+    double g, dSdXa, dSdXcb; 
+    //============= Function itself ===============
+    // In this call we do not do normalization since we are working with temporary ("virtual") Gaussians
+    // normalization will be applied later to Ga an Gb
+    g = gaussian_overlap(nxa, alp_a, Xa,   (nxc-k),  gamma_cb, Xcb,  0, is_derivs, dSdXa, dSdXcb, aux, n_aux );
+    Iabc += bink * pwk * g;
 
+    //============ Derivatives =======================
+    if(is_derivs){ 
 
-  for(int i=0;i<=(nxa+nxb);i++){
-    I += f[i] * g[i];
+      dI_dXa += bink * pwk * dSdXa;
+      dI_dXc += bink * (k * pwk_prev * (alp_c/gamma_cb - 1.0) * g + pwk * (alp_c/gamma_cb) * dSdXcb );
+      dI_dXb += bink * (k * pwk_prev * (alp_b/gamma_cb) * g       + pwk * (alp_b/gamma_cb) * dSdXcb );
 
-    if(is_derivs){
-      // Now, unlike in overlap, the dg_dX and dg_dXp will be non-zero
-      // this is because g is the overal itself
+    }// if is_derivs
+   
+    pwk_prev = pwk;
+    pwk *= dX;
+  }// for k
 
-      dI_dXa += ( dfdXpa[i] * dXpa_dXa + dfdXpb[i] * dXpb_dXa ) * g[i] + f[i] * dgdXp[i] * dXp_dXa;
-      dI_dXb += ( dfdXpa[i] * dXpa_dXb + dfdXpb[i] * dXpb_dXb ) * g[i] + f[i] * dgdXp[i] * dXp_dXb;
-      dI_dX += f[i] * dgdX[i];
+  Iabc *= pref;
 
-    }// is_derivs
+  if(is_derivs){
+    dI_dXa *= pref; 
+    dI_dXc *= pref; dI_dXc -= 2.0*(alp_c * alp_b / gamma_cb) * dx * Iabc; 
+    dI_dXb *= pref; dI_dXc += 2.0*(alp_c * alp_b / gamma_cb) * dx * Iabc;
   }
-
-  double pref = exp(-alp_a*alp_b*(Xa-Xb)*(Xa-Xb)/gamma);
-  double res = I * pref;
-
-  if(is_derivs){  
-    dI_dXa *= pref;
-    dI_dXb *= pref;
-    dI_dX *= pref;
-
-    dI_dXa += (-2.0*alp_a*alp_b*(Xa-Xb)/gamma)*res;
-    dI_dXb -= (-2.0*alp_a*alp_b*(Xa-Xb)/gamma)*res;
-  }
-
 
   // In case we need to normalize initial Gaussians
   if(is_normalize){
-
     double nrm = gaussian_normalization_factor(nxa,alp_a) * gaussian_normalization_factor(nxb,alp_b);
-    res *= nrm;
+    Iabc *= nrm;
     dI_dXa *= nrm; 
     dI_dXb *= nrm; 
-    dI_dX *= nrm;
-
+    dI_dXc *= nrm;
   }
 
-  return res;
+  return Iabc;
 
 }// gaussian_moment - very general version
 
 
 
-double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, double X, int nxb,double alp_b, double Xb,
-                       int is_normalize,
-                       int is_derivs, double& dI_dXa, double& dI_dX,double& dI_dXb
+double gaussian_moment(int nxa, double alp_a, double Xa, 
+                       int nxc, double alp_c, double Xc, 
+                       int nxb, double alp_b, double Xb,
+                       int is_normalize, int is_derivs, 
+                       double& dI_dXa, double& dI_dXc,double& dI_dXb
                       ){
 
   // Allocate working memory
@@ -212,7 +142,7 @@ double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, doub
   for(i=0;i<10;i++){ auxd[i] = new double[n_aux]; }
 
   // Do computations
-  double res = gaussian_moment(nxa,alp_a,Xa,  nx,alp,X,  nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dX, dI_dXb, auxd, n_aux);
+  double res = gaussian_moment(nxa, alp_a, Xa,  nxc, alp_c,Xc,  nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dXc, dI_dXb, auxd, n_aux);
 
   // Clean working memory
   for(i=0;i<10;i++){ delete [] auxd[i]; }  
@@ -224,10 +154,12 @@ double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, doub
 }// gaussian_moment - without external memory allocation
 
 
-boost::python::list gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, double X, int nxb,double alp_b, double Xb,
+boost::python::list gaussian_moment(int nxa, double alp_a, double Xa, 
+                                    int nxc, double alp_c, double Xc, 
+                                    int nxb, double alp_b, double Xb,
                                     int is_normalize, int is_derivs ){
-  double dI_dXa, dI_dXb, dI_dX;
-  double I = gaussian_moment(nxa,alp_a,Xa, nx,alp,X, nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dX, dI_dXb);
+  double dI_dXa, dI_dXb, dI_dXc;
+  double I = gaussian_moment(nxa,alp_a,Xa, nxc,alp_c,Xc, nxb,alp_b,Xb, is_normalize, is_derivs, dI_dXa, dI_dXc, dI_dXb);
 
   boost::python::list res;
 
@@ -235,7 +167,7 @@ boost::python::list gaussian_moment(int nxa,double alp_a, double Xa, int nx, dou
  
   if(is_derivs){
     res.append(dI_dXa);
-    res.append(dI_dX);
+    res.append(dI_dXc);
     res.append(dI_dXb);
   }
 
@@ -245,21 +177,25 @@ boost::python::list gaussian_moment(int nxa,double alp_a, double Xa, int nx, dou
 
 
 
-double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, double X, int nxb,double alp_b, double Xb,
+double gaussian_moment(int nxa, double alp_a, double Xa, 
+                       int nxc, double alp_c, double Xc, 
+                       int nxb, double alp_b, double Xb,
                        int is_normalize
                       ){
 
-  double dI_dXa, dI_dX, dI_dXb;
-  double res = gaussian_moment(nxa,alp_a,Xa, nx,alp,X, nxb,alp_b,Xb, is_normalize, 0, dI_dXa, dI_dX, dI_dXb);
+  double dI_dXa, dI_dXc, dI_dXb;
+  double res = gaussian_moment(nxa,alp_a,Xa, nxc,alp_c,Xc, nxb,alp_b,Xb, is_normalize, 0, dI_dXa, dI_dXc, dI_dXb);
   return res;
 
 
 }// gaussian_moment - without derivatives
 
 
-double gaussian_moment(int nxa,double alp_a, double Xa, int nx, double alp, double X, int nxb,double alp_b, double Xb ){
+double gaussian_moment(int nxa, double alp_a, double Xa, 
+                       int nxc, double alp_c, double Xc, 
+                       int nxb, double alp_b, double Xb ){
 
-  double res = gaussian_moment(nxa,alp_a,Xa, nx,alp,X, nxb,alp_b,Xb, 1);
+  double res = gaussian_moment(nxa,alp_a,Xa, nxc,alp_c,Xc, nxb,alp_b,Xb, 1);
   return res;
 
 

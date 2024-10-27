@@ -78,23 +78,16 @@ def test_dipoles(a1, a2, rx, ry, rz):
     x = compute_emultipole3(s1, s2, 1)
 
     # Internal molints:
-    #mu = transition_dipole_moment(0, 0, 0, a1, o1,  0, 0, 0, a2, o1, 1)
-    sx = gaussian_overlap_ref(0, a1, 0.0, 0, a2, rx)
-    sy = gaussian_overlap_ref(0, a1, 0.0, 0, a2, ry)
-    sz = gaussian_overlap_ref(0, a1, 0.0, 0, a2, rz)
+    mu = transition_dipole_moment(0, 0, 0, a1, o1,  0, 0, 0, a2, o2, 1)
     
-    nrm = 1.0/math.sqrt( gaussian_overlap_ref(0, a1, 0.0, 0, a1, 0.0)  * gaussian_overlap_ref(0, a2, 0.0, 0, a2, 0.0) )
-    nrm = nrm**3    
-
-    mux = gaussian_moment_ref(1, 0.0, 0.0,  0, a1, 0.0,  0, a2, rx) * sy * sz * nrm
-    muy = gaussian_moment_ref(1, 0.0, 0.0,  0, a1, 0.0,  0, a2, ry) * sx * sz * nrm 
-    muz = gaussian_moment_ref(1, 0.0, 0.0,  0, a1, 0.0,  0, a2, rz) * sx * sy * nrm
-
-    assert abs( x[1].get(0,0) - mux ) < 1e-10 and abs( x[2].get(0,0) - muy ) < 1e-10 and abs( x[3].get(0,0) - muz ) < 1e-10
+    assert abs( x[1].get(0,0) - mu.x ) < 1e-10 and abs( x[2].get(0,0) - mu.y ) < 1e-10 and abs( x[3].get(0,0) - mu.z ) < 1e-10
 
 
 @pytest.mark.parametrize(('a1', 'a2', 'rx', 'ry', 'rz'), set1)
-def test_pp(a1, a2, rx, ry, rz):
+def test_dipoles2(a1, a2, rx, ry, rz):
+    """
+    More explicit calculation of the dipole moments
+    """
 
     e1 = Py2Cpp_double([a1])
     c1 = Py2Cpp_double([1.0])
@@ -111,11 +104,50 @@ def test_pp(a1, a2, rx, ry, rz):
     x = compute_emultipole3(s1, s2, 1)
 
     # Internal molints:
-    #<g_a | [C0 + C2*(r-R)^2]*exp(-alp*(r-R)^2) | g_b>
-    o = VECTOR(0.0, 0.0, 0.0)
-    pp = pseudopot02(0.0, 1.0, 0.0, o,   0, 0, 0, a1, o1,  0, 0, 0, a2, o2)
+    sx = gaussian_overlap(0, a1, 0.0, 0, a2, rx, 1)
+    sy = gaussian_overlap(0, a1, 0.0, 0, a2, ry, 1)
+    sz = gaussian_overlap(0, a1, 0.0, 0, a2, rz, 1)
 
-    assert abs( x[4].get(0,0) + x[7].get(0,0) + x[9].get(0,0) - pp ) < 1e-10
+    mux = gaussian_moment(0, a1, 0.0,  1, 0.0, 0.0,  0, a2, rx, 1)  * sy * sz
+    muy = gaussian_moment(0, a1, 0.0,  1, 0.0, 0.0,  0, a2, ry, 1)  * sx * sz
+    muz = gaussian_moment(0, a1, 0.0,  1, 0.0, 0.0,  0, a2, rz, 1)  * sx * sy
+
+    assert abs( x[1].get(0,0) - mux ) < 1e-10 and abs( x[2].get(0,0) - muy ) < 1e-10 and abs( x[3].get(0,0) - muz ) < 1e-10
+
+
+@pytest.mark.parametrize(('a1', 'a2', 'rx', 'ry', 'rz'), set1)
+def test_quadratic(a1, a2, rx, ry, rz):
+
+    e1 = Py2Cpp_double([a1])
+    c1 = Py2Cpp_double([1.0])
+    o1 = VECTOR(0.0, 0.0, 0.0)
+    s1 = initialize_shell(0, 1, e1, c1, o1)
+
+    e2 = Py2Cpp_double([a2])
+    c2 = Py2Cpp_double([1.0])
+    o2 = VECTOR(rx, ry, rz)
+    s2 = initialize_shell(0, 1, e2, c2, o2)
+
+    # Format of x:
+    # ['S', 'x', 'y', 'z', 'x2', 'xy', 'xz', 'y2', 'yz', 'z2', 'x3', 'x2y', 'x2z', 'xy2', 'xyz', 'xz2', 'y3', 'y2z', 'yz2', 'z3']
+    x = compute_emultipole3(s1, s2, 1)
+
+    # Internal molints:
+    # Internal molints:
+    sx = gaussian_overlap(0, a1, 0.0, 0, a2, rx, 1)
+    sy = gaussian_overlap(0, a1, 0.0, 0, a2, ry, 1)
+    sz = gaussian_overlap(0, a1, 0.0, 0, a2, rz, 1)
+
+    x2 = gaussian_moment(0, a1, 0.0,  2, 0.0, 0.0,  0, a2, rx, 1)  * sy * sz
+    y2 = gaussian_moment(0, a1, 0.0,  2, 0.0, 0.0,  0, a2, ry, 1)  * sx * sz
+    z2 = gaussian_moment(0, a1, 0.0,  2, 0.0, 0.0,  0, a2, rz, 1)  * sx * sy    
+
+    x3 = gaussian_moment(0, a1, 0.0,  3, 0.0, 0.0,  0, a2, rx, 1)  * sy * sz
+    y3 = gaussian_moment(0, a1, 0.0,  3, 0.0, 0.0,  0, a2, ry, 1)  * sx * sz
+    z3 = gaussian_moment(0, a1, 0.0,  3, 0.0, 0.0,  0, a2, rz, 1)  * sx * sy
+    
+    assert abs( x[4].get(0,0) - x2 ) < 1e-10 and abs( x[7].get(0,0) - y2 ) < 1e-10 and abs( x[9].get(0,0) - z2 ) < 1e-10 and \
+           abs( x[10].get(0,0) - x3 ) < 1e-10 and abs( x[16].get(0,0) - y3 ) < 1e-10 and abs( x[19].get(0,0) - z3 ) < 1e-10
 
 
 
