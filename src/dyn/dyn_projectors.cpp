@@ -838,14 +838,10 @@ vector< vector<int> > compute_permutations(dyn_control_params& prms, vector<CMAT
 }
 
 
-
+/*
 
 vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd){
-/**
-
- Computes the instantaneous projector = permutation + phase correction
-
-*/
+// Computes the instantaneous projector = permutation + phase correction
 
   int ntraj = St.size();
   // Instead of setting many of-else in the for loop we can set ntraj=1
@@ -902,6 +898,7 @@ vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Ea
   return res;
 }
 
+*/
 
 CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 /**
@@ -951,14 +948,10 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 
 
 
-
+/*
 
 vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms){
-/**
-
- Computes the instantaneous projector using already computed permutations = permutation + phase correction
-
-*/
+// Computes the instantaneous projector using already computed permutations = permutation + phase correction
 
   int ntraj = St.size();
   // Instead of setting many of-else in the for loop we can set ntraj=1
@@ -1000,7 +993,7 @@ vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St
   return res;
 }
 
-
+*/
 
 
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors){

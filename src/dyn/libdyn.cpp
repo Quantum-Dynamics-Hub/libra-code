@@ -763,7 +763,7 @@ void export_dyn_projectors_objects(){
   vector< vector<int> > (*expt_compute_permutations_v1)
   (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_permutations;
 
-
+/*
   vector<CMATRIX> (*expt_compute_projectors_v1)
   (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v1);
@@ -771,7 +771,7 @@ void export_dyn_projectors_objects(){
   vector<CMATRIX> (*expt_compute_projectors_v2)
   (dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v2);
-
+*/
   CMATRIX (*expt_compute_projector_v1)
   (dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St) = &compute_projector;
   def("compute_projector", expt_compute_projector_v1);
