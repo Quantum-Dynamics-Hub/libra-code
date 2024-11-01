@@ -2258,7 +2258,7 @@ def run_step3_sd_nacs_libint(params):
                       'apply_orthonormalization': False, 'do_state_reordering': 0,
                       'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
                       'num_occ_alpha': 1, 'num_unocc_alpha': 1,
-                      'num_occ_beta': 1, 'num_unocc_beta': 1,
+                      'num_occ_beta': 1, 'num_unocc_beta': 1, 'active_space_num_occ_orbitals': 0,
                       'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles', 'nac_algo': 0
                      }
@@ -2440,10 +2440,12 @@ def run_step3_sd_nacs_libint(params):
     if params['isUKS']:
         sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index_alpha, ks_orbital_indicies,
                                                                       sd_unique_basis, sd_format=1,
-                                                                      ks_beta_homo_index=ks_homo_index_beta)
+                                                                      ks_beta_homo_index=ks_homo_index_beta, active_space_num_occ_orbitals=params['active_space_num_occ_orbitals'])
     elif not params['isUKS']:
         sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
-                                                                      sd_unique_basis, sd_format=2 )
+                                                                      sd_unique_basis, sd_format=2 , active_space_num_occ_orbitals=params['active_space_num_occ_orbitals'])
+
+    
     # Some printings
     print('sd_unique_basis is:', sd_unique_basis)
     print('sd_states_reindexed is:', sd_states_reindexed)
@@ -2451,6 +2453,21 @@ def run_step3_sd_nacs_libint(params):
     print('ks_orbital_indicies', ks_orbital_indicies)
     params['isnap'] = start_time
     params['fsnap'] = finish_time
+
+    if ks_homo_index - min(ks_active_space) < params['active_space_num_occ_orbitals']:
+        ks_active_space_ = []
+        for i in range(ks_homo_index-params['active_space_num_occ_orbitals'], ks_homo_index):
+            ks_active_space_.append(i)
+            ks_active_space_.append(i+int(data_dim/2))
+        for i in ks_active_space:
+            if i not in ks_active_space_:
+                ks_active_space_.append(i)
+        ks_active_space_ = np.sort(ks_active_space_).tolist()
+        ks_active_space = ks_active_space_
+        params['active_space'] = ks_active_space_
+        
+
+    print('Flag ks_active_space:', ks_active_space)
 
     # The flag for phase-correction algorithm
     apply_phase_correction = params['apply_phase_correction']

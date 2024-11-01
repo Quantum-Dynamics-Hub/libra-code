@@ -616,6 +616,7 @@ def run_cp2k_libint_step2(params):
                                                      zero_mat,zero_mat.T,\
                                                      np.diag(beta_energies_1)[lowest_orbital-1:highest_orbital,lowest_orbital-1:highest_orbital])
                 E_step_sparse = scipy.sparse.csc_matrix(E_step)
+                scipy.sparse.save_npz(params['res_dir']+F'/E_ks_{step}.npz', E_step_sparse)
 
             else:
                 if params['use_emultipole']:
