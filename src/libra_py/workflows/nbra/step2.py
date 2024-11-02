@@ -419,7 +419,7 @@ def run_cp2k_libint_step2(params):
 
     # Now try to get parameters from the input
     critical_params = [ "cp2k_ot_input_template", "cp2k_diag_input_template", "trajectory_xyz_filename" ]
-    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "all_images": os.getcwd() + "/all_images", "image_format": 'bmp', "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True, 'together_mode': False, 'restart_file': True}
+    default_params = {"res_dir": os.getcwd() + "/res", "all_logfiles": os.getcwd() + "/all_logfiles", "all_pdosfiles": os.getcwd() + "/all_pdosfiles", "all_images": os.getcwd() + "/all_images", "image_format": 'bmp', "istep": 0, "fstep": 2, "lowest_orbital": 1, "highest_orbital": 2, "is_spherical": True, "isXTB": False, "isUKS": False, "remove_molden": True, "nprocs": 2, "cp2k_exe": "cp2k.psmp", "mpi_executable": "mpirun", "cube_visualization": False, "vmd_input_template": "vmd.tcl", "states_to_plot": [1], "plot_phase_corrected": True, "vmd_exe": "vmd", "tachyon_exe": "tachyon_LINIXAMD64", "x_pixels": 1024, "y_pixels": 1024, "remove_cube": True, 'together_mode': False, 'restart_file': True, 'use_emultipole': False, 'emultipole_components': ['S', 'x', 'y', 'z']}
     comn.check_input(params, default_params, critical_params)
 
 
