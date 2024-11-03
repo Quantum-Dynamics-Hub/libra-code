@@ -790,85 +790,104 @@ public:
 
 
   ///< Assignment = copying (by value)
-  void operator=(const base_matrix<T1>& ob){
+  base_matrix<T1>& operator=(const base_matrix<T1>& ob){
 
-    if(this == &ob){  return *this;    }
-    else{
-      n_rows = ob.n_rows;
-      n_cols = ob.n_cols;
-      n_elts = ob.n_elts;
+    n_rows = ob.n_rows;
+    n_cols = ob.n_cols;
+    n_elts = ob.n_elts;
+    memcpy(M, ob.M, sizeof(T1)*n_elts);
+    return *this;
+  }
+  base_matrix<T1>& operator=(const base_matrix<T1>&& ob){
 
-      memcpy(M, ob.M, sizeof(T1)*n_elts);    
-    }
+    if(this == &ob){ return *this; }
+    n_rows = ob.n_rows;
+    n_cols = ob.n_cols;
+    n_elts = ob.n_elts;
+    memcpy(M, ob.M, sizeof(T1)*n_elts);
+    return *this;
   }
 
   ///< Assignment of a scalar 
-  void operator=(int f){
+  base_matrix<T1>& operator=(int f){
     for(int i=0;i<n_elts;i++){ M[i] = (T1)f;  }
+    return *this;
   }
 
-  void operator=(double f){
+  base_matrix<T1>& operator=(double f){
     for(int i=0;i<n_elts;i++){ M[i] = (T1)f;  }
+    return *this;
   }
 
-  void operator=(complex<double> f){
+  base_matrix<T1>& operator=(complex<double> f){
     for(int i=0;i<n_elts;i++){ M[i] = (T1)f;  }
+    return *this;
   }
 
 
 
 
   ///< Increment by a matrix
-  void operator+=(const base_matrix<T1>& ob){
+  base_matrix<T1>& operator+=(const base_matrix<T1>& ob){
     for(int i=0;i<n_elts;i++) { M[i] += ob.M[i]; }
+    return *this;
   }
 
   ///< Increment by a numeric type
-  void operator+=(int f){  
+  base_matrix<T1>& operator+=(int f){  
     for(int i=0;i<n_elts;i++) { M[i] += (T1)f; }
+    return *this;
   }
 
-  void operator+=(double f){  
+  base_matrix<T1>& operator+=(double f){  
     for(int i=0;i<n_elts;i++) { M[i] += (T1)f; }
+    return *this;
   }
 
 
 
   ///< Decrement by a matrix type
-  void operator-=(const base_matrix<T1>& ob){
+  base_matrix<T1>& operator-=(const base_matrix<T1>& ob){
     for(int i=0;i<n_elts;i++) { M[i] -= ob.M[i]; }
+    return *this;
   }
 
   ///< Decrement by a numeric type
-  void operator-=(int f){  
+  base_matrix<T1>& operator-=(int f){  
     for(int i=0;i<n_elts;i++) { M[i] -= (T1)f; }
+    return *this;
   }
 
-  void operator-=(double f){  
+  base_matrix<T1>& operator-=(double f){  
     for(int i=0;i<n_elts;i++) { M[i] -= (T1)f; }
+    return *this;
   }
 
 
 
   ///< Multiplicative scaling scaling by a scalar
-  void operator*=(int f){ 
+  base_matrix<T1>& operator*=(int f){ 
     for(int i=0; i<n_elts; i++){  M[i] *= (T1)f;  }
+    return *this;
   }
 
-  void operator*=(double f){ 
+  base_matrix<T1>& operator*=(double f){ 
     for(int i=0; i<n_elts; i++){  M[i] *= (T1)f;  }
+    return *this;
   }
 
 
 
 
   ///< Divisional scaling by a scalar
-  void operator/=(int f){ 
+  base_matrix<T1>& operator/=(int f){ 
     for(int i=0; i<n_elts; i++){  M[i] = M[i] / (T1)f;  }
+    return *this;
   }
 
-  void operator/=(double f){ 
+  base_matrix<T1>& operator/=(double f){ 
     for(int i=0; i<n_elts; i++){  M[i] = M[i] / (T1)f;  }
+    return *this;
   }
 
 
