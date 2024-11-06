@@ -392,7 +392,7 @@ def compute_cube_ks_overlaps( cubefiles_prev, params):
 
 
 
-def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2, ks_beta_homo_index=0):
+def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis_states, sd_format=2, ks_beta_homo_index=0, active_space_num_occ_orbitals=0):
     """
     ks_orbital_homo_index: Index of the homo ks orbital, from 1
     ks_orbital_indicies: Range of the considered ks orbtials. Ex) [8,9,10,11], where 9 is homo orbtial index (from 1)
@@ -503,6 +503,32 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
             else:
                 sd_excitation.append(sd_state)
         sd_basis.append( sd_excitation )
+
+    # Here we extend the Slater determinants based on the number 
+    # of occupied orbitals specified by the user using 
+    # `active_space_num_occ_orbitals` keyword
+    # We first compute the difference between the current number of occupied orbitals
+    # and the number of orbitals specified by the user 
+    active_space_diff = int(active_space_num_occ_orbitals - len(sd_basis[0])/2)
+    if active_space_diff>0:
+        sd_basis_ = []
+        # Then, for each SD we shift the orbitals so that all occupied 
+        # orbitals specified by the user are involved in them
+        for i in range(len(sd_basis)):
+            sd_i = []
+            for j in range(1, active_space_diff):
+                sd_i.append(j)
+                sd_i.append(-j)
+            for j in range(len(sd_basis[i])):
+                # For alpha spin channel
+                if sd_basis[i][j]>0:
+                    sd_i.append(sd_basis[i][j]+active_space_diff)
+                # For beta spin channel
+                else:
+                    sd_i.append(sd_basis[i][j]-active_space_diff)
+            sd_basis_.append(sd_i)
+        sd_basis = sd_basis_
+
     
     return sd_basis
 
