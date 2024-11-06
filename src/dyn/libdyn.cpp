@@ -802,6 +802,15 @@ void export_dyn_projectors_objects(){
   def("get_stochastic_reordering3", expt_get_stochastic_reordering3_v2);
 
 
+  CMATRIX (*expt_compute_F_cost_matrix_v1)
+  (CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, 
+  MATRIX& p, MATRIX& iM, double dt, int act_state) = &compute_F_cost_matrix;
+  def("compute_F_cost_matrix", expt_compute_F_cost_matrix_v1);
+
+  vector<MATRIX> (*expt_compute_F_cost_matrix_dof_resolved_v1)
+  (CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev,
+  MATRIX& _p, MATRIX& iM, double dt, int act_state) = &compute_F_cost_matrix_dof_resolved;
+  def("compute_F_cost_matrix_dof_resolved", expt_compute_F_cost_matrix_dof_resolved_v1);
 
 }
 

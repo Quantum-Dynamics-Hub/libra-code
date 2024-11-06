@@ -71,6 +71,7 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 */ 
 
   int nadi = ham.nadi;
+  int ndof = dyn_var.ndof;
   int ntraj = ham.children.size();
 
   MATRIX& q = *dyn_var.q;
@@ -146,6 +147,44 @@ void update_Hamiltonian_variables(dyn_control_params& prms, dyn_variables& dyn_v
 
 
   if(update_type==0 || update_type==1){
+
+
+    // Derivative NAC correction option:
+    if(prms.do_nac_phase_correction==2){  // Experimental option to fix the phase of NACVs
+
+      vector<int> traj_id(1,0);
+      for(int traj=0; traj<ntraj; traj++){
+        traj_id[0] = traj;
+        CMATRIX Eadi(ham.children[traj]->get_ham_adi());
+        MATRIX e_curr(ham.children[traj]->get_ham_adi().real());
+        MATRIX e_prev(ham_prev.children[traj]->get_ham_adi().real());
+        CMATRIX f_curr = ham.children[traj]->all_forces_adi(traj_id);
+        CMATRIX f_prev = ham_prev.children[traj]->all_forces_adi(traj_id);
+        //ham->get_hvib_adi().show_matrix();
+        MATRIX pp(dyn_var.ndof, 1); 
+        double dt = prms.dt;
+        pp = p.col(traj);
+        int act_state = dyn_var.act_states[traj];
+
+        //vector<MATRIX> T_new(compute_F_cost_matrix_dof_resolved(f_curr, f_prev, e_curr, e_prev, pp, iM, dt, act_state));
+        MATRIX T_new(compute_F_cost_matrix(f_curr, f_prev, e_curr, e_prev, pp, iM, dt, act_state).real() );
+
+        for(int k=0; k<ndof;k++){
+          for(int i=0; i<nadi;i++){
+            for(int j=i+1; j<nadi; j++){
+              //double sgn = T_new[k].get(i,j);
+              double sgn = T_new.get(i,j);
+              if(sgn > 0.5){ sgn = -1; } // change sign
+              else{ sgn = 1.0; }
+              
+              ham.children[traj]->dc1_adi[k]->scale(i,j, sgn);
+              ham.children[traj]->dc1_adi[k]->scale(j,i, sgn);
+            }// for j
+          }// for i
+
+        }// for k
+      }// for traj
+    }// if correction
 
     //========================== Couplings ===============================
     // Don't update NACs - they may have been read in step 1
