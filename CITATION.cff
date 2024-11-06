@@ -1,0 +1,86 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Libra
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: 'Alexey, V.'
+    family-names: Akimov
+    email: alexvakimov@gmail.com
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: 'https://orcid.org/0000-0002-7815-3731'
+  - given-names: Mohammad
+    family-names: Shakiba
+    affiliation: 'University at Buffalo, State University of New York'
+    email: mshakiba@buffalo.edu
+  - given-names: Brendan
+    family-names: Smit
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: 'https://orcid.org/0000-0003-3460-9984'
+  - given-names: Daeho
+    family-names: Han
+    email: daehohan@buffalo.edu
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: 'https://orcid.org/0000-0003-2853-6571'
+  - given-names: Matthew
+    family-names: Dutra
+    affiliation: University of South Carolina
+    orcid: 'https://orcid.org/0000-0001-5240-3547'
+  - given-names: Kosuke
+    family-names: Sato
+    affiliation: Toyota Central Research and Development Laboratories
+    orcid: 'https://orcid.org/0000-0003-3293-2809'
+  - given-names: Story
+    family-names: Temen
+    affiliation: 'University at Buffalo, State University of New York'
+  - given-names: Wei
+    family-names: Li
+    orcid: 'https://orcid.org/0000-0002-9999-5081'
+    affiliation: Hunan Agricultural University
+    email: liwei0099@gmail.com
+  - given-names: Taras
+    family-names: Khvorost
+    affiliation: 'University of California, Los Angeles'
+    email: xbopoctt@gmail.com
+  - given-names: Xiang
+    family-names: Sun
+    orcid: 'https://orcid.org/0000-0002-2846-8532'
+    affiliation: New York University Shanghai
+    email: xiang.sun@nyu.edu
+  - given-names: Elizabeth
+    family-names: Stippell
+    affiliation: University of Southern California
+  - given-names: 'Igor, S.'
+    family-names: Gerasimov
+repository-code: 'https://github.com/Quantum-Dynamics-Hub/libra-code'
+repository: 'https://github.com/compchem-cybertraining/Tutorials_Libra'
+abstract: >-
+  Libra is a modular software for quantum nonadiabatic
+  dynamics methodology development and applications. It
+  implements a range of quantum, quantum-classical, and
+  semiclassical methodologies for modeling excited states
+  and quantum nonadiabatic processes, including but not
+  limited to a variety of trajectory surface hopping,
+  Ehrenfest, HEOM, and other methodologies. It can be
+  applied to abstract and atomistic systems with thousands
+  of atoms. 
+keywords:
+  - trajectory surface hopping
+  - nonadiabatic dynamics
+  - quantum dynamics
+  - excited states
+  - solar energy materials
+  - exact factorization
+  - quantum trajectories
+  - HEOM
+  - DVR
+  - Ehrenfest
+license: GPL-3.0+
+version: 5.8.1
+date-released: '2024-11-05'
+
+
