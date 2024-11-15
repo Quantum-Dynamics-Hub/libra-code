@@ -135,17 +135,17 @@ def Pollien_Arribas_Agostini(q, _params, full_id=None):
     rCH = 1.08441 * units.Angst
     alpha = 109.1333 # degree
 
-    mu_OH = 1.57456e-27 / units.m_e 
-
-    # moments of inertia
-    m_H = units.amu
-    m_C = 12.0*units.amu
-
-    I_1 = mu_OH * (r1 * math.sin(alpha*math.pi/180))**2
-    I_2 = 4 * m_C * (rCC * math.sin(math.pi/3))**2 + 4 * m_H * ((rCC + rCH)*math.sin(math.pi/3))**2
-    I = 1/(1/I_1 + 1/I_2)
-
-    params["mass"] = [mu_OH, I]
+    #mu_OH = 1.57456e-27 / units.m_e 
+    #
+    ## moments of inertia
+    #m_H = units.amu
+    #m_C = 12.0*units.amu
+    #
+    #I_1 = mu_OH * (r1 * math.sin(alpha*math.pi/180))**2
+    #I_2 = 4 * m_C * (rCC * math.sin(math.pi/3))**2 + 4 * m_H * ((rCC + rCH)*math.sin(math.pi/3))**2
+    #I = 1/(1/I_1 + 1/I_2)
+    #
+    #params["mass"] = [mu_OH, I]
 
     # Get the coordinates:
     indx = 0
