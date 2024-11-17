@@ -792,6 +792,7 @@ public:
   ///< Assignment = copying (by value)
   base_matrix<T1>& operator=(const base_matrix<T1>& ob){
 
+    if(this == &ob){ return *this; }
     n_rows = ob.n_rows;
     n_cols = ob.n_cols;
     n_elts = ob.n_elts;
