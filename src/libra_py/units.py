@@ -42,6 +42,7 @@ wavn2au = 4.5563995075520960186520193771085E-6     # 1/au2wavn
 
 # Mass units
 amu = 1836.0                                       # chemical mass unit in masses of electron
+m_e = 9.109383713928e-31                        # electron mass in kg = 1 amu
 
 # Fundamental constants
 boltzmann = 1.9872065E-3                           # in kcal/mol*K
