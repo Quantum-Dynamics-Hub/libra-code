@@ -620,6 +620,7 @@ class dyn_variables{
   vector<double> compute_average_sh_pop_TR(int rep);
   vector<double> compute_average_mash_pop(int rep);
 
+  MATRIX compute_coherence_indicator(int rep);
 
   double compute_tcnbra_ekin();
   double compute_tcnbra_thermostat_energy();
