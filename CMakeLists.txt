@@ -72,7 +72,7 @@ FIND_PACKAGE(Boost 1.82.0 REQUIRED)
 #FIND_PACKAGE(Boost REQUIRED)
 IF(Boost_FOUND)
   MESSAGE("Success!")
-  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}") 
+  INCLUDE_DIRECTORIES("${Boost_INCLUDE_DIRS}")
   # Adapt it based on your system
   #FIND_PACKAGE(Boost COMPONENTS python36 regex) # it seems that it is important to find sub-packages too!!!
   FIND_PACKAGE(Boost COMPONENTS python39 regex)
@@ -90,7 +90,7 @@ MESSAGE("${Boost_INCLUDE_DIRS}")
 
 FIND_PACKAGE(Eigen3)
 IF(EIGEN3_FOUND)
-  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")   
+  INCLUDE_DIRECTORIES("${EIGEN3_INCLUDE_DIR}")
   MESSAGE("Found Eigen3 include directory: ")
   MESSAGE("${EIGEN3_INCLUDE_DIR}")
 ELSEIF(NOT EIGEN3_FOUND)
@@ -100,7 +100,7 @@ ENDIF()
 
 SET(EIGEN3_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
 
-# Remove CMakeCache.txt from the previous build, if you get an error finding libint2 due to problems 
+# Remove CMakeCache.txt from the previous build, if you get an error finding libint2 due to problems
 # in finding Eigen3
 
 # Libint2 2.7.0 CONFIG REQUIRED COMPONENTS shared gss e5 g5
@@ -108,8 +108,8 @@ SET(EIGEN3_INCLUDE_DIRS "${EIGEN3_INCLUDE_DIR}")
 #find_package(Libint2)
 FIND_PACKAGE(Libint2 CONFIG 2.7.1 REQUIRED COMPONENTS shared gss impure_sh onebody_d0_l6 g12_d0_l4 g12_d1_l4 eri_c4_d0_l5 eri_c4_d1_l4) #gss e5 g5)
 IF(Libint2_FOUND)
-  #INCLUDE_DIRECTORIES("${Libint2_INCLUDE_DIRS}")   
-  INCLUDE_DIRECTORIES(Libint2::int2 Libint2::cxx Libint2::int2-cxx Libint2::impure_sh Libint2::gss Libint2::onebody_d0_l6 Libint::g12_d0_l4 Libint2::g12_d1_l4 Libint2::shared Libint2::cxx_ho Libint2::c  Libint2::eri_c4_d0_l5  Libint2::eri_c4_d1_l4)   
+  #INCLUDE_DIRECTORIES("${Libint2_INCLUDE_DIRS}")
+  INCLUDE_DIRECTORIES(Libint2::int2 Libint2::cxx Libint2::int2-cxx Libint2::impure_sh Libint2::gss Libint2::onebody_d0_l6 Libint::g12_d0_l4 Libint2::g12_d1_l4 Libint2::shared Libint2::cxx_ho Libint2::c  Libint2::eri_c4_d0_l5  Libint2::eri_c4_d1_l4)
   MESSAGE("${LIBINT2_INCLUDE_DIR}")
   MESSAGE("Found Libint2 include directory: ")
   MESSAGE("${Libint2_INCLUDE_DIRS}")
@@ -149,8 +149,8 @@ ENDIF()
 
 #
 # Set the libraries
-# 
-SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) 
+#
+SET( ext_libs ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 
 
