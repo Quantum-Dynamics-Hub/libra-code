@@ -114,6 +114,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= QTSH ====================
   qtsh_vars_status = 0;
 
+  ///================= KC-RPMD ====================
+  kcrpmd_vars_status = 0;
+
 }
 
 
@@ -296,6 +299,18 @@ void dyn_variables::allocate_qtsh(){
   }
 }
 
+
+void dyn_variables::allocate_kcrpmd(){
+
+  if(kcrpmd_vars_status==0){
+    
+    auxiliary_y = vector<double>(1, -1.0);
+
+    kcrpmd_vars_status = 1;
+  }
+}// allocate_kcrpmd
+
+
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
@@ -440,6 +455,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *qtsh_f_nc = *x.qtsh_f_nc;
 
   }// if QTSH vars
+
+
+  // KC-RPMD vars - only if initialized
+  if(x.kcrpmd_vars_status==1){
+    allocate_kcrpmd();
+    
+    // Copy content
+    auxiliary_y = x.auxiliary_y;
+
+  }// if KCRPMD vars
 
 }// dyn_variables cctor
 
@@ -590,6 +615,12 @@ dyn_variables::~dyn_variables(){
     delete qtsh_f_nc;
 
     qtsh_vars_status = 0;
+  }
+
+  if(kcrpmd_vars_status==1){
+    auxiliary_y.clear(); 
+
+    kcrpmd_vars_status = 0;
   }
 
 }
