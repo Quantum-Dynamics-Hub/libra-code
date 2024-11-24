@@ -114,6 +114,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= QTSH ====================
   qtsh_vars_status = 0;
 
+  ///================= KC-RPMD ====================
+  kcrpmd_vars_status = 0;
+
 }
 
 
@@ -285,7 +288,6 @@ void dyn_variables::allocate_tcnbra(){
 }// allocate_tcnbra
 
 
-
 void dyn_variables::allocate_qtsh(){
 
   if(qtsh_vars_status==0){
@@ -295,6 +297,16 @@ void dyn_variables::allocate_qtsh(){
     qtsh_vars_status = 1;
   }
 }
+
+void dyn_variables::allocate_kcrpmd(){
+
+  if(kcrpmd_vars_status==0){
+    
+    auxiliary_y = vector<double>(1, -1.0);
+
+    kcrpmd_vars_status = 1;
+  }
+}// allocate_kcrpmd
 
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
@@ -440,6 +452,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *qtsh_f_nc = *x.qtsh_f_nc;
 
   }// if QTSH vars
+
+
+  // KC-RPMD vars - only if initialized
+  if(x.kcrpmd_vars_status==1){
+    allocate_kcrpmd();
+    
+    // Copy content
+    auxiliary_y = x.auxiliary_y;
+
+  }// if KCRPMD vars
 
 }// dyn_variables cctor
 
@@ -592,6 +614,12 @@ dyn_variables::~dyn_variables(){
     qtsh_vars_status = 0;
   }
 
+  if(kcrpmd_vars_status==1){
+    auxiliary_y.clear(); 
+
+    kcrpmd_vars_status = 0;
+  }
+
 }
 
 
@@ -615,7 +643,7 @@ vector< vector<double> > dyn_variables::get_fssh3_errors(){
 vector<double> dyn_variables::get_fssh3_average_errors(){
   int itraj, k;
   vector<double> res(5,0.0);
-  for(itraj=0;itraj<ntraj;itraj++){
+  for(itraj;itraj<ntraj;itraj++){
     for(k=0;k<5;k++){  res[k] += fssh3_errors[itraj][k];   }
   }
   for(k=0;k<5;k++){ res[k] /= ntraj; }
