@@ -509,6 +509,21 @@ class dyn_variables{
   MATRIX* qtsh_f_nc;
   
 
+  ///========= For kinetic-constrained RPMD ======================
+  /**
+    Status of the KC-RPMD vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int kcrpmd_vars_status;
+  
+  /** 
+    The classical auxiliary electronic variable(s)
+  */ 
+  vector<double> auxiliary_y;
+
+
 
   ///================= Misc ===================
   /**
@@ -530,6 +545,7 @@ class dyn_variables{
   void allocate_tcnbra();
   void allocate_mqcxf();
   void allocate_qtsh();
+  void allocate_kcrpmd();
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 
