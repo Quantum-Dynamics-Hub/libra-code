@@ -1387,6 +1387,29 @@ vector<double> dyn_variables::compute_average_sh_pop_TR(int rep){
 }
 
 
+MATRIX dyn_variables::compute_coherence_indicator(int rep){
+
+  int sz;
+  if(rep==0 || rep==2){ sz = ndia; }
+  else if(rep==1 || rep==3){ sz = nadi; }
+
+  MATRIX res(sz, sz);
+  
+  CMATRIX dm(sz, sz); MATRIX temp(sz, ntraj);
+
+  // Making a temporary matrix collecting trajectory-wise population elements
+  for(int traj=0; traj<ntraj; traj++){
+    if(rep==0 || rep==2){   dm = *dm_dia[traj]; }
+    else if(rep==1 || rep==3){ dm = *dm_adi[traj]; }
+  
+    for(int i=0; i<sz; i++){temp.set(i, traj, dm.get(i,i).real() );}
+  }
+
+  res = temp * temp.T() / (float)ntraj;
+
+  return res;
+}
+
 
 void dyn_variables::save_curr_dm_into_prev(){
 

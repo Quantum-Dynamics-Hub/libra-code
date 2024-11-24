@@ -188,6 +188,12 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "D_dia_raw" in saver.keywords: # and "D_dia_raw" in saver.np_data.keys():
             saver.add_dataset("D_dia_raw", (_nsteps, _ndia, _ndia), "C") 
 
+        # Average coherence indicator matrices
+        if "coherence_adi" in saver.keywords: # and "D_adi" in saver.np_data.keys():
+            saver.add_dataset("coherence_adi", (_nsteps, _nadi, _nadi), "R") 
+        
+        if "coherence_dia" in saver.keywords: # and "D_adi" in saver.np_data.keys():
+            saver.add_dataset("coherence_dia", (_nsteps, _ndia, _ndia), "R") 
 
 
         # Trajectory-resolved coordinates
@@ -712,6 +718,18 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
         Cdia = dyn_var.get_ampl_dia()
         saver.save_matrix(t, "Cdia", Cdia.T()) 
+    
+    # Average adiabatic coherence indicator matrices
+    # Format: saver.add_dataset("coherence_adi", (_nsteps, _nadi, _nadi), "R") 
+    if "coherence_adi" in saver.keywords and "coherence_adi" in saver.np_data.keys():
+        coh_adi = dyn_var.compute_coherence_indicator(1)
+        saver.save_matrix(t, "coherence_adi", coh_adi) 
+    
+    # Average diabatic coherence indicator matrices
+    # Format: saver.add_dataset("coherence_dia", (_nsteps, _ndia, _ndia), "R") 
+    if "coherence_dia" in saver.keywords and "coherence_dia" in saver.np_data.keys():
+        coh_dia = dyn_var.compute_coherence_indicator(0)
+        saver.save_matrix(t, "coherence_dia", coh_dia) 
     
     # Wavepacket width
     # Format: saver.add_dataset("wp_width", (_nsteps, _ntraj, _dof), "R")
