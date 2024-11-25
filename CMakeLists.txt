@@ -40,8 +40,12 @@ endif()
 #  Python library
 #
 MESSAGE(STATUS "Looking for Python libraries...")
-FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Interpreter Development)
+#FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Interpreter Development)
+FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
 
+#IF(Python3_FOUND)
+#  MESSAGE("Success!")
+#  INCLUDE_DIRECTORIES("${PYTHON_INCLUDE_DIRS}")
 IF(NOT Python3_FOUND)
   MESSAGE(STATUS "Unable to find correct Python version. If your Python include/libraries are installed in a non-standard location")
   MESSAGE(STATUS "Try using -DPython3_ROOT_DIR=\${path_to_the_python_root_dir}")

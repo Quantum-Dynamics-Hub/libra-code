@@ -30,13 +30,13 @@ endif()
 
 
 
-target_link_libraries(libint2_wrappers PRIVATE Libint2::int2)
-target_link_libraries(libint2_wrappers_stat PRIVATE Libint2::int2)
+#target_link_libraries(libint2_wrappers PRIVATE Libint2::int2)
+#target_link_libraries(libint2_wrappers_stat PRIVATE Libint2::int2)
 
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(libint2_wrappers      util_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs} ${Libint2_LIBRARY})
-TARGET_LINK_LIBRARIES(libint2_wrappers_stat util_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs} ${Libint2_LIBRARY})
+TARGET_LINK_LIBRARIES(libint2_wrappers      util_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs} ${Libint2_LIBRARY} Libint2::int2)
+TARGET_LINK_LIBRARIES(libint2_wrappers_stat util_stat linalg_stat meigen_stat specialfunctions_stat ${ext_libs} ${Libint2_LIBRARY} Libint2::int2)
 
 
