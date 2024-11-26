@@ -631,6 +631,10 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double
 MATRIX ETHD3_friction(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet); // dH_{ETHD3}/dP
 
 
+///< In nHamiltonian_compute_KCRPMD.cpp
+double KCRPMD_effective_potential(vector<double>& auxiliary_y);
+
+
 
 
 }// namespace libnhamiltonian
