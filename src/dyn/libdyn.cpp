@@ -244,6 +244,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
       .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
       .def_readwrite("qtsh_vars_status", &dyn_variables::qtsh_vars_status)
+      .def_readwrite("kcrpmd_vars_status", &dyn_variables::kcrpmd_vars_status)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -257,6 +258,7 @@ void export_dyn_variables_objects(){
       .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
       .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
       .def("allocate_qtsh", &dyn_variables::allocate_qtsh)
+      .def("allocate_kcrpmd", &dyn_variables::allocate_kcrpmd)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
