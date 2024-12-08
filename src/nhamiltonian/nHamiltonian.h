@@ -594,6 +594,10 @@ public:
   CMATRIX QTSH_forces_adi(CMATRIX& ampl_adi, int lvl);              ///< QTSH forces in adiabatic basis
 
 
+///< In nHamiltonian_compute_KCRPMD.cpp
+double kcrpmd_effective_potential(vector<double>& auxiliary_y);
+
+
 
 
   friend bool operator == (const nHamiltonian& h1, const nHamiltonian& h2){
@@ -629,10 +633,6 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp);           
 MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet);   // -dH_{ETHD3}/dQ
 
 MATRIX ETHD3_friction(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet); // dH_{ETHD3}/dP
-
-
-///< In nHamiltonian_compute_KCRPMD.cpp
-double KCRPMD_effective_potential(vector<double>& auxiliary_y);
 
 
 

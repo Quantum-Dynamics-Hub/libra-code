@@ -39,7 +39,7 @@ using namespace libmeigen;
 
 
 
-double KCRPMD_effective_potential(vector<double>& auxiliary_y){
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y){
 /**
   Compute the KC-RPMD effective potential energy
 
