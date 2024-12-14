@@ -270,7 +270,14 @@ CMATRIX nHamiltonian::QTSH_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRI
       //  }
       //}
     }
-    else if(option==1){ // Options that disregard the NACs - appropriate for the LD integrators
+    else if(option==1){ // Including the 2nd order force
+
+      tmp = (T.H() * (*dc1_adi[n]) * T ).H() *  (T.H() * (*hvib_adi) * T);      
+      tmp = tmp + tmp.H();
+      
+      res.M[n] = ( ampl_adi.H() * tmp * ampl_adi ).M[0];
+    }
+    else if(option==2){ // Options that disregard the NACs - appropriate for the LD integrators
       res.M[n] = 0.0; 
     }
 

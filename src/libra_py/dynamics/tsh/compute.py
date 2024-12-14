@@ -362,6 +362,11 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 0: don't apply [ default ]
                 - 1: use it 
 
+            * **dyn_params["qtsh_force_option"]** ( int ): Nonclassical force options in the adiabatic QTSH
+
+                - 0: Considering only the first-order force, i.e., off-diagonal Ehrenfest force
+                - 1: The whole force including the second-order term is used [default]
+
             ///===============================================================================
             ///================= Decoherence options =========================================
             ///===============================================================================
@@ -815,7 +820,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                            } )
     
     #================= QTSH specific ====================
-    default_params.update( {"use_qtsh":0 } )
+    default_params.update( {"use_qtsh":0, "qtsh_force_option":1 } )
 
     #================= Decoherence options =========================================
     default_params.update( { "decoherence_algo":-1, "sdm_norm_tolerance":0.0,
@@ -881,6 +886,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     thermally_corrected_nbra = dyn_params["thermally_corrected_nbra"]
     total_energy = dyn_params["total_energy"]
     use_qtsh = dyn_params["use_qtsh"]
+    qtsh_force_option = dyn_params["qtsh_force_option"]
  
 
     states = intList()
