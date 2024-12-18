@@ -102,6 +102,7 @@ void export_dyn_control_params_objects(){
 
       ///================= QTSH specific ====================
       .def_readwrite("use_qtsh", &dyn_control_params::use_qtsh)
+      .def_readwrite("qtsh_force_option", &dyn_control_params::qtsh_force_option)
       
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
