@@ -65,10 +65,10 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
       double V0 = (children[traj]->ham_dia->get(0,0)).real(); 
       double V1 = (children[traj]->ham_dia->get(1,1)).real(); 
       double K = abs(children[traj]->ham_dia->get(0,1));
-      res[traj].set(0,0, exp(-beta * V0));
-      res[traj].set(0,1, -beta * K * exp(-beta * V0));
-      res[traj].set(1,0, -beta * K * exp(-beta * V1));
-      res[traj].set(1,1, exp(-beta * V1));
+      res[traj].set(0,0, exp(-beta / children.size() * V0));
+      res[traj].set(0,1, -beta / children.size() * K * exp(-beta / children.size() * V0));
+      res[traj].set(1,0, -beta / children.size() * K * exp(-beta / children.size() * V1));
+      res[traj].set(1,1, exp(-beta / children.size() * V1));
     }
   }
   return res;
