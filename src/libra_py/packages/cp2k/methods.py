@@ -321,7 +321,7 @@ def read_cp2k_tddfpt_log_file( params ):
 
                 ci_coefficient = float( tmp_splitted_line[4] )
                 if ci_coefficient**2 > tolerance:
-                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[1])<=params["highest_orbital"]:
+                    if int(tmp_splitted_line[0])>=params["lowest_orbital"] and int(tmp_splitted_line[2])<=params["highest_orbital"]:
                         # We need to remove the paranthesis from the 2nd element of the temporary splitted line
                         tmp_spin.append( tmp_splitted_line[1].replace('(','').replace(')','') )
                         tmp_state.append( [ int( tmp_splitted_line[0] ), int( tmp_splitted_line[2] ) ]  )
