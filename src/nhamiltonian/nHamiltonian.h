@@ -595,7 +595,8 @@ public:
 
 
 ///< In nHamiltonian_compute_KCRPMD.cpp
-double kcrpmd_effective_potential(vector<double>& auxiliary_y);
+  vector<CMATRIX> generate_m_matrices(double beta);
+  double kcrpmd_effective_potential(vector<double>& auxiliary_y);
 
 
 

@@ -36,7 +36,24 @@ using namespace liblinalg;
 using namespace libmeigen;
 
 
+vector<CMATRIX> nHamiltonian::generate_m_matrices(double beta){
+/**
+  Generate set of M matrices for each trajectory
 
+  beta - the inverse temperature Boltzmann factor in atomic units
+*/
+
+  vector<CMATRIX> res; res = vector<CMATRIX>(children.size(), CMATRIX(ndia,ndia));
+
+  for(int traj=0; traj<children.size(); traj++){
+    //std::cout << children[traj]->ham_dia->get(0,1) << std::endl;
+    res[traj] = *(children[traj]->ham_dia);
+
+  }// traj
+
+  return res;
+
+}
 
 
 double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y){
