@@ -42,17 +42,18 @@ vector<CMATRIX> nHamiltonian::generate_m_matrices(double beta){
 
   beta - the inverse temperature Boltzmann factor in atomic units
 */
-
-  vector<CMATRIX> res; res = vector<CMATRIX>(children.size(), CMATRIX(ndia,ndia));
-
-  for(int traj=0; traj<children.size(); traj++){
-    //std::cout << children[traj]->ham_dia->get(0,1) << std::endl;
-    res[traj] = *(children[traj]->ham_dia);
-
-  }// traj
-
+  vector<CMATRIX> res;
+  if(children.size()==0){
+    res = vector<CMATRIX>(1, CMATRIX(ndia,ndia));
+    res[0] = *(this->ham_dia);
+  }
+  else{
+    res = vector<CMATRIX>(children.size(), CMATRIX(ndia,ndia));
+    for(int traj=0; traj<children.size(); traj++){
+      res[traj] = *(children[traj]->ham_dia);
+    }
+  }
   return res;
-
 }
 
 
@@ -63,14 +64,9 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y){
   auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
 
 */
-
   double en = 0.0;
-
   en = 0.1 * auxiliary_y[0];
-
   return en;
-
-
 }
 
 
