@@ -24,7 +24,6 @@
 #include "nHamiltonian.h"
 #include "../math_meigen/libmeigen.h"
 
-
 /// liblibra namespace
 namespace liblibra{
 
@@ -36,33 +35,53 @@ using namespace liblinalg;
 using namespace libmeigen;
 
 
-vector<CMATRIX> nHamiltonian::generate_m_matrices(double beta){
+vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 /**
   Generate set of M matrices for each trajectory
 
   beta - the inverse temperature Boltzmann factor in atomic units
 */
-  vector<CMATRIX> res;
+
+  if(ham_dia_mem_status==0){ cout<<"Error in generate_m_matrices(): the diabatic Hamiltonian matrix is not allocated \
+  but it is needed for the calculations\n"; exit(0); }
+
+  if(ndia!=2){ cout<<"Error in generate_m_matrices(): implementation only for ndia=2\n"; exit(0); }
+
+  vector<MATRIX> res;
+
   if(children.size()==0){
-    res = vector<CMATRIX>(1, CMATRIX(ndia,ndia));
-    res[0] = *(this->ham_dia);
+    res = vector<MATRIX>(1, MATRIX(2,2));
+    double V0 = (this->ham_dia->get(0,0)).real(); 
+    double V1 = (this->ham_dia->get(1,1)).real(); 
+    double K = abs(this->ham_dia->get(0,1)); 
+    res[0].set(0,0, exp(-beta * V0));
+    res[0].set(0,1, -beta * K * exp(-beta * V0));
+    res[0].set(1,0, -beta * K * exp(-beta * V1));
+    res[0].set(1,1, exp(-beta * V1));
   }
   else{
-    res = vector<CMATRIX>(children.size(), CMATRIX(ndia,ndia));
+    res = vector<MATRIX>(children.size(), MATRIX(2,2));
     for(int traj=0; traj<children.size(); traj++){
-      res[traj] = *(children[traj]->ham_dia);
+      double V0 = (children[traj]->ham_dia->get(0,0)).real(); 
+      double V1 = (children[traj]->ham_dia->get(1,1)).real(); 
+      double K = abs(children[traj]->ham_dia->get(0,1));
+      res[traj].set(0,0, exp(-beta * V0));
+      res[traj].set(0,1, -beta * K * exp(-beta * V0));
+      res[traj].set(1,0, -beta * K * exp(-beta * V1));
+      res[traj].set(1,1, exp(-beta * V1));
     }
   }
   return res;
 }
 
 
-double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y){
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, double a, double b){
 /**
   Compute the KC-RPMD effective potential energy
 
   auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
-
+  a - is the kinetic constraint ad-hoc parameter
+  b - is the heavyside functional limit parameter
 */
   double en = 0.0;
   en = 0.1 * auxiliary_y[0];
