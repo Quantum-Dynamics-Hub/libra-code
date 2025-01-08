@@ -729,21 +729,46 @@ def make_active_space(num_occ,
         new_ks_homo_index = num_occ
         return new_active_space, new_ks_homo_index
     elif isUKS:
+        #print('active_space_homo_alpha = '+ str(homo_alpha))
+        #print('active_space_num_unocc = '+ str(num_unocc))
+        #print('active_space_num_occ = '+ str(num_occ))
+        #print('active_space_num_states = '+ str(num_states))
+        #print('active_space_num_unocc_alpha = '+ str(num_unocc_alpha))
+        #print('active_space_num_occ_alpha = '+ str(num_occ_alpha))        
+        #print('active_space_num_unocc_beta = '+ str(num_unocc_beta))
+        #print('active_space_num_occ_beta = '+ str(num_occ_beta))
         if (homo_alpha + num_unocc) > num_states or (num_occ + num_unocc) > num_states:
             raise Exception('Error: The number of states should not exceed the data dimension. Exiting now!')
-        if not num_occ_alpha + num_unocc_alpha == num_occ_beta + num_unocc_beta:
-            raise Exception('Number of orbitals in both channels should be the same!')
+        #if not num_occ_alpha + num_unocc_alpha == num_occ_beta + num_unocc_beta:
+            #raise Exception('Number of orbitals in both channels should be the same!')
         # Alpha channel
         occ_indicies_alp = range(homo_alpha - num_occ_alpha, homo_alpha)
         unocc_indices_alp = range(homo_alpha, homo_alpha + num_unocc_alpha)
-        new_active_space = list(occ_indicies_alp) + list(unocc_indices_alp)
+        new_active_space_alp = list(occ_indicies_alp) + list(unocc_indices_alp)
+        
         # Beta channel
         occ_indicies_bet = range(homo_beta - num_occ_beta + num_states, homo_beta + num_states)
         unocc_indices_bet = range(homo_beta + num_states, homo_beta + num_unocc_beta + num_states)
-        new_active_space += list(occ_indicies_bet) + list(unocc_indices_bet)
-        new_ks_homo_alpha_index = num_occ_alpha 
-        new_ks_homo_beta_index = num_occ_beta
-        return new_active_space, new_ks_homo_alpha_index, new_ks_homo_beta_index
+        new_active_space_bet = list(occ_indicies_bet) + list(unocc_indices_bet)
+        #print('new_active_space_bet = ' + str(new_active_space))
+        if len(new_active_space_alp) < 2 and len(new_active_space_bet) < 2:
+            print('No activate space')
+            return
+        else:
+            if len(new_active_space_alp) >= 2 and len(new_active_space_bet) >= 2:
+                new_active_space = new_active_space_alp + new_active_space_bet
+                           
+            elif len(new_active_space_alp) >= 2:
+                new_active_space = new_active_space_alp
+                                
+            elif len(new_active_space_bet) >= 2:
+                new_active_space = new_active_space_bet
+            
+            new_ks_homo_alpha_index = num_occ_alpha
+            new_ks_homo_beta_index = num_occ_beta
+            #print('active_space_new_ks_homo_alpha_index = '+ str(new_ks_homo_alpha_index))
+            #print('active_space_new_ks_homo_beta_index = '+ str(new_ks_homo_beta_index))
+            return new_active_space, new_ks_homo_alpha_index, new_ks_homo_beta_index
 
 
 def make_cost_mat(orb_mat_inp, en_mat_inp, alpha):
@@ -2258,13 +2283,13 @@ def run_step3_sd_nacs_libint(params):
                       'apply_orthonormalization': False, 'do_state_reordering': 0,
                       'state_reordering_alpha': 0, 'is_many_body': False, 'num_occ_states': 1,
                       'num_occ_alpha': 1, 'num_unocc_alpha': 1,
-                      'num_occ_beta': 1, 'num_unocc_beta': 1, 'active_space_num_occ_orbitals': 0,
+                      'num_occ_beta': 1, 'num_unocc_beta': 1, #'active_space_num_occ_orbitals': 0,
                       'num_unocc_states': 1, 'verbosity': 0, 'isUKS': 0, 'es_software': 'cp2k',
                       'use_multiprocessing': False, 'logfile_directory': os.getcwd()+'/all_logfiles', 'nac_algo': 0
                      }
 
-    if params['is_many_body'] and params['isUKS']:
-        raise Exception('Unrestricted-spin calculations are not supported for many-body basis yet!') #TODO
+    #if params['is_many_body'] and params['isUKS']:
+    #    raise Exception('Unrestricted-spin calculations are not supported for many-body basis yet!') #TODO
 
     # Check input, set output dirs
     comn.check_input(params, default_params, critical_params)
@@ -2297,7 +2322,170 @@ def run_step3_sd_nacs_libint(params):
     except:
         print(F'The directory {res_dir_2} already exists.')
 
-    if params['is_many_body']:
+    #TODO checkpoint modified
+    if params['is_many_body'] and params['isUKS']:
+        #raise Exception('Unrestricted-spin calculations are not supported for many-body basis yet!') #TODO
+        params['isnap'] = params['start_time']
+        params['fsnap'] = params['finish_time']
+
+        # The KS HOMO index specified by the user
+        #ks_homo_index = params['homo_index']
+        ks_homo_index_alpha = params['homo_alpha_index']
+        ks_homo_index_beta = params['homo_beta_index']
+        #print('ks_homo_index_alpha_beginning = ' + str(ks_homo_index_alpha))
+        #print('ks_homo_index_beta_beginning = ' + str(ks_homo_index_beta))
+
+
+
+        # Generate the excitation data
+        res = step3_many_body.get_step2_mb_sp_properties( params ) #TODO check with file
+
+        # The unique SDs in the TD-DFT results in all logfiles
+        sd_unique_basis = res[0]
+
+        # The ci_basis_states
+        ci_basis_states = res[1]
+
+        # The CI coefficients
+        ci_coefficients = res[2]
+
+        # The TD-DFT excitation energies
+        ci_energies = res[3]
+
+        # And their spin-components (alpha and beta)
+        spin_components = res[4]
+
+        # Now we need to generate the active space and KS HOMO index in that
+        # active space for use in reading the npz files
+        # The target KS states in TD-DFT
+        sd_fstates = []
+
+        # The initial KS states in TD-DFT
+        sd_tstates = []
+        for i in range(len(sd_unique_basis)):
+            sd_fstates.append(sd_unique_basis[i][0][0])
+            sd_tstates.append(sd_unique_basis[i][0][1])
+
+        # The min_band present in the excitation
+        min_band = min(sd_fstates)
+
+        # The max_band present in the excitation
+        max_band = max(sd_tstates)
+
+
+        min_band_alpha = ks_homo_index_alpha
+        max_band_alpha = ks_homo_index_alpha
+
+        min_band_beta = ks_homo_index_beta
+        max_band_beta = ks_homo_index_beta 
+
+        if ks_homo_index_alpha in range(min_band, max_band):
+            min_band_alpha, max_band_alpha = min_band, max_band
+        if ks_homo_index_beta in range(min_band, max_band):
+            min_band_beta, max_band_beta = min_band, max_band
+
+
+
+
+
+        num_occ_alpha = ks_homo_index_alpha - min_band_alpha + 1
+        num_unocc_alpha = max_band_alpha-ks_homo_index_alpha #+ 1
+
+        num_occ_beta = ks_homo_index_beta - min_band_beta + 1
+        num_unocc_beta = max_band_beta-ks_homo_index_beta #+ 1
+
+        #print('min_band = ' + str(min_band))
+        #print('max_band = ' + str(max_band))
+
+        #print('min_band_alpha = ' + str(min_band_alpha))
+        #print('max_band_alpha = ' + str(max_band_alpha))
+
+        #print('min_band_beta = ' + str(min_band_beta))
+        #print('max_band_beta = ' + str(max_band_beta))
+
+        #print('num_occ_alpha = ' + str(num_occ_alpha))
+        #print('num_unocc_alpha = ' + str(num_unocc_alpha))
+        #print('num_occ_beta = ' + str(num_occ_beta))
+        #print('num_unocc_beta = ' + str(num_unocc_beta))
+
+
+
+
+        alpha, beta = params['npz_file_ks_homo_alpha_index'], params['npz_file_ks_homo_beta_index']
+        #print('npz_file_ks_homo_alpha_index = ' + str(alpha))
+        #print('npz_file_ks_homo_beta_index = ' + str(beta))
+        ks_active_space, ks_homo_index_alpha, ks_homo_index_beta = make_active_space(params['num_occ_states'],
+                                                                                     params['num_unocc_states'],
+                                                                                     params['data_dim'],
+                                                                                     [alpha, beta],
+                                                                                     isUKS=1,
+                                                                                     num_occ_alpha=num_occ_alpha,
+                                                                                     num_occ_beta=num_occ_beta,
+                                                                                     num_unocc_alpha=num_unocc_alpha,
+                                                                                     num_unocc_beta=num_unocc_beta)
+
+
+        ks_homo_index = ks_homo_index_alpha  # TODO ??? why homo_index is homo_index_alpha ?
+
+
+        """
+        # Alpha channel
+        min_band_alpha = ks_homo_index_alpha + 1
+        max_band_alpha = ks_homo_index_alpha + params['num_unocc_alpha']
+        '''
+        for occ_state in range(ks_homo_index_alpha - params['num_occ_alpha'] + 1, ks_homo_index_alpha + 1):
+            for unocc_state in range(min_band_alpha, max_band_alpha + 1):
+                sd_tmp = [[occ_state, unocc_state], 'alp']
+                if sd_tmp not in sd_unique_basis:
+                    sd_unique_basis.append(sd_tmp)
+        '''
+        # Beta channel
+        min_band_beta = ks_homo_index_beta + 1
+        max_band_beta = ks_homo_index_beta + params['num_unocc_beta']
+        '''
+        for occ_state in range(ks_homo_index_beta - params['num_occ_beta'] + 1, ks_homo_index_beta + 1):
+            for unocc_state in range(min_band_beta, max_band_beta + 1):
+                sd_tmp = [[occ_state, unocc_state], 'bet']
+                if sd_tmp not in sd_unique_basis:
+                    sd_unique_basis.append(sd_tmp)
+        '''
+        """
+
+
+
+
+
+        params['active_space'] = ks_active_space
+        #print('active_space = ' +str(ks_active_space))
+        # The KS orbital indices
+        ks_orbital_indicies_alpha = range(min_band_alpha, max_band_alpha + 1)
+        ks_orbital_indicies_beta = range(min_band_beta, max_band_beta + 1)
+        # TODO Separate alpha and beta? or the maximum value?
+
+        #if min_band_alpha < min_band_beta and max_band_alpha > max_band_alpha:
+        #    ks_orbital_indicies = ks_orbital_indicies_alpha
+        #else:
+        #    ks_orbital_indicies = ks_orbital_indicies_beta
+
+        ks_orbital_indicies = list(ks_orbital_indicies_alpha) + list(ks_orbital_indicies_beta)
+        #if ks_orbital_indicies_alpha == ks_orbital_indicies_beta:
+        #    ks_orbital_indicies = ks_orbital_indicies_alpha
+        #else:
+        #    ks_orbital_indicies = list(ks_orbital_indicies_alpha) + list(ks_orbital_indicies_beta)
+
+        # This parameter will be used in the reindexing of the SDs
+        params['orbital_indices'] = ks_orbital_indicies
+
+
+        #ks_homo_index = params['homo_index']
+
+
+        #print('ks_homo_index_alpha_ending = ' + str(ks_homo_index_alpha))
+        #print('ks_homo_index_beta_ending = ' + str(ks_homo_index_beta))        
+
+
+
+    elif params['is_many_body'] and not params['isUKS']:
         params['isnap'] = params['start_time']
         params['fsnap'] = params['finish_time']
 
@@ -2438,36 +2626,41 @@ def run_step3_sd_nacs_libint(params):
 
     # Reindex the SD basis
     if params['isUKS']:
-        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index_alpha, ks_orbital_indicies,
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( params['homo_alpha_index'], ks_orbital_indicies,
                                                                       sd_unique_basis, sd_format=1,
-                                                                      ks_beta_homo_index=ks_homo_index_beta, active_space_num_occ_orbitals=params['active_space_num_occ_orbitals'])
+                                                                      ks_beta_homo_index=params['homo_beta_index'])
     elif not params['isUKS']:
         sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( ks_homo_index, ks_orbital_indicies,
-                                                                      sd_unique_basis, sd_format=2 , active_space_num_occ_orbitals=params['active_space_num_occ_orbitals'])
+                                                                      sd_unique_basis, sd_format=2 ) #, active_space_num_occ_orbitals=params['active_space_num_occ_orbitals'])
 
     
     # Some printings
     print('sd_unique_basis is:', sd_unique_basis)
     print('sd_states_reindexed is:', sd_states_reindexed)
-    print('ks_homo_index', ks_homo_index)
+    #TODO checkpoint modified
+    if not params['isUKS']:
+        print('ks_homo_index', ks_homo_index)
+    elif params['isUKS']:
+        print('ks_homo_index_alpha', params['homo_alpha_index'])
+        print('ks_homo_index_beta', params['homo_beta_index'])
     print('ks_orbital_indicies', ks_orbital_indicies)
     params['isnap'] = start_time
     params['fsnap'] = finish_time
 
-    if ks_homo_index - min(ks_active_space) < params['active_space_num_occ_orbitals']:
-        ks_active_space_ = []
-        for i in range(ks_homo_index-params['active_space_num_occ_orbitals'], ks_homo_index):
-            ks_active_space_.append(i)
-            ks_active_space_.append(i+int(data_dim/2))
-        for i in ks_active_space:
-            if i not in ks_active_space_:
-                ks_active_space_.append(i)
-        ks_active_space_ = np.sort(ks_active_space_).tolist()
-        ks_active_space = ks_active_space_
-        params['active_space'] = ks_active_space_
-        
-
-    print('Flag ks_active_space:', ks_active_space)
+#    if ks_homo_index - min(ks_active_space) < params['active_space_num_occ_orbitals']:
+#        ks_active_space_ = []
+#        for i in range(ks_homo_index-params['active_space_num_occ_orbitals'], ks_homo_index):
+#            ks_active_space_.append(i)
+#            ks_active_space_.append(i+int(data_dim/2))
+#        for i in ks_active_space:
+#            if i not in ks_active_space_:
+#                ks_active_space_.append(i)
+#        ks_active_space_ = np.sort(ks_active_space_).tolist()
+#        ks_active_space = ks_active_space_
+#        params['active_space'] = ks_active_space_
+#        
+#
+#    print('Flag ks_active_space:', ks_active_space)
 
     # The flag for phase-correction algorithm
     apply_phase_correction = params['apply_phase_correction']

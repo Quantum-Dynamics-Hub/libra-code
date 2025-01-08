@@ -427,17 +427,49 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
 
     # We need to update the indexing of the sd_basis - in terms of the rows and cols of St_KS
     # reindex ks orbs according to the matrix size
-    n_alp_ks_orbs = len(ks_orbital_indicies)
-    alp_homo_matrix_index = 0
-    for i in range(n_alp_ks_orbs):
-        if ks_orbital_indicies[i] == ks_orbital_homo_index:
-            alp_homo_matrix_index = i
+    if sd_format == 2: # isUKS=False
+        #print("sd_format = KS")
+        n_alp_ks_orbs = len(ks_orbital_indicies)
+        #print('ks_orbital_homo_index_reindex = ' + str(ks_orbital_homo_index))
+        #print('ks_orbital_indicies = ' + str(ks_orbital_indicies))
+        alp_homo_matrix_index = 0
+        for i in range(n_alp_ks_orbs):
+            # print(ks_orbital_indicies[i])
+            # print(ks_orbital_homo_index)
+            if ks_orbital_indicies[i] == ks_orbital_homo_index:
+                alp_homo_matrix_index = i
+        #print('alp_homo_matrix_index_setting = ' + str(alp_homo_matrix_index))
+
     if sd_format == 1: # isUKS=True
-        n_beta_ks_orbs = len(ks_orbital_indicies)
+        #print("sd_format = UKS")
+        # Split ks_orbital_indicies into alpha and beta.
+        # Note that there is a problem when max(ks_orbital_indicies_alpha) - min(ks_orbital_indicies_beta) == -1
+        for i in range(1, len(ks_orbital_indicies)):
+            if ks_orbital_indicies[i] - ks_orbital_indicies[i - 1] != 1:
+                ks_orbital_indicies_alpha = ks_orbital_indicies[:i]
+                ks_orbital_indicies_beta = ks_orbital_indicies[i:]
+                break
+
+        n_alp_ks_orbs = len(ks_orbital_indicies_alpha)
+        #print('ks_orbital_homo_index_reindex = ' + str(ks_orbital_homo_index))
+        #print('ks_orbital_indicies_alpha = ' + str(ks_orbital_indicies_alpha))
+        alp_homo_matrix_index = 0
+        for i in range(n_alp_ks_orbs):
+            # print(ks_orbital_indicies[i])
+            # print(ks_orbital_homo_index)
+            if ks_orbital_indicies_alpha[i] == ks_orbital_homo_index:
+                alp_homo_matrix_index = i
+                break
+        #print('alp_homo_matrix_index_setting = ' + str(alp_homo_matrix_index))
+
+
+        #print('ks_beta_homo_index_reindex = ' + str(ks_beta_homo_index))
+        n_beta_ks_orbs = len(ks_orbital_indicies_beta)
         beta_homo_matrix_index = 0
         for i in range(n_beta_ks_orbs):
-            if ks_orbital_indicies[i] == ks_beta_homo_index:
+            if ks_orbital_indicies_beta[i] == ks_beta_homo_index:
                 beta_homo_matrix_index = i
+        #print('beta_homo_matrix_index = ' + str(beta_homo_matrix_index))
 
     #print("alp_homo_matrix_index",alp_homo_matrix_index)
 
@@ -476,10 +508,16 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
 
     # Form ground-state SD first
     sd_basis = [ [] ]
+    #print('len( ks_orbital_indicies ) = ' + str(len( ks_orbital_indicies )))
+    #print('alp_homo_matrix_index = ' + str(alp_homo_matrix_index))
+    if sd_format == 1: # isUKS=True
+        #print('beta_homo_matrix_index = ' + str(beta_homo_matrix_index))
+    
     if sd_format == 1:
         for i in range( 1, len( ks_orbital_indicies ) ):
             if i < alp_homo_matrix_index + 2:
                 sd_basis[0].append(  i )
+        for i in range(1, len(ks_orbital_indicies)):
             if i < beta_homo_matrix_index + 2:
                 sd_basis[0].append(  -i )
         #for i in range( 1, num_occ_alpha ):
@@ -503,31 +541,31 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
             else:
                 sd_excitation.append(sd_state)
         sd_basis.append( sd_excitation )
-
-    # Here we extend the Slater determinants based on the number 
-    # of occupied orbitals specified by the user using 
-    # `active_space_num_occ_orbitals` keyword
-    # We first compute the difference between the current number of occupied orbitals
-    # and the number of orbitals specified by the user 
-    active_space_diff = int(active_space_num_occ_orbitals - len(sd_basis[0])/2)
-    if active_space_diff>0:
-        sd_basis_ = []
-        # Then, for each SD we shift the orbitals so that all occupied 
-        # orbitals specified by the user are involved in them
-        for i in range(len(sd_basis)):
-            sd_i = []
-            for j in range(1, active_space_diff):
-                sd_i.append(j)
-                sd_i.append(-j)
-            for j in range(len(sd_basis[i])):
-                # For alpha spin channel
-                if sd_basis[i][j]>0:
-                    sd_i.append(sd_basis[i][j]+active_space_diff)
-                # For beta spin channel
-                else:
-                    sd_i.append(sd_basis[i][j]-active_space_diff)
-            sd_basis_.append(sd_i)
-        sd_basis = sd_basis_
+#
+#    # Here we extend the Slater determinants based on the number 
+#    # of occupied orbitals specified by the user using 
+#    # `active_space_num_occ_orbitals` keyword
+#    # We first compute the difference between the current number of occupied orbitals
+#    # and the number of orbitals specified by the user 
+#    active_space_diff = int(active_space_num_occ_orbitals - len(sd_basis[0])/2)
+#    if active_space_diff>0:
+#        sd_basis_ = []
+#        # Then, for each SD we shift the orbitals so that all occupied 
+#        # orbitals specified by the user are involved in them
+#        for i in range(len(sd_basis)):
+#            sd_i = []
+#            for j in range(1, active_space_diff):
+#                sd_i.append(j)
+#                sd_i.append(-j)
+#            for j in range(len(sd_basis[i])):
+#                # For alpha spin channel
+#                if sd_basis[i][j]>0:
+#                    sd_i.append(sd_basis[i][j]+active_space_diff)
+#                # For beta spin channel
+#                else:
+#                    sd_i.append(sd_basis[i][j]-active_space_diff)
+#            sd_basis_.append(sd_i)
+#        sd_basis = sd_basis_
 
     
     return sd_basis

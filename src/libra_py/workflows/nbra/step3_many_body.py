@@ -600,8 +600,12 @@ def run(_params):
 
 
     # 2.2. Reindex the single-particle excitations into a format expected by Libra: keeping in mind Slater Determinants notation
-    sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( homo_index, orbital_indices,  sd_basis_states_unique, sd_format=2 )
-    
+    if params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( homo_index, orbital_indices,  sd_basis_states_unique, sd_format=1 )
+        #print('UKS')
+    if not params['isUKS']:
+        sd_states_reindexed = step2_many_body.reindex_cp2k_sd_states( homo_index, orbital_indices,  sd_basis_states_unique, sd_format=2 )
+        #print('KS')
 
     res1 = step3.sort_unique_SD_basis( E[0], sd_basis_states_unique, sd_states_reindexed, params )
 
