@@ -510,7 +510,7 @@ def reindex_cp2k_sd_states( ks_orbital_homo_index, ks_orbital_indicies, sd_basis
     sd_basis = [ [] ]
     #print('len( ks_orbital_indicies ) = ' + str(len( ks_orbital_indicies )))
     #print('alp_homo_matrix_index = ' + str(alp_homo_matrix_index))
-    if sd_format == 1: # isUKS=True
+    #if sd_format == 1: # isUKS=True
         #print('beta_homo_matrix_index = ' + str(beta_homo_matrix_index))
     
     if sd_format == 1:

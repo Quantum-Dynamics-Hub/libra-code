@@ -265,7 +265,7 @@ def read_cp2k_tddfpt_log_file( params ):
 
     for i in range(len(lines)):
         if 'TDDFPT|' in lines[i]:
-            if 'Molecular' not in lines[i-1]:
+            if 'Molecular' not in lines[i-2] and 'Molecular' not in lines[i-1]:
                 try:
                     tmp = lines[i].split()
                     exc_ener = float(tmp[2])
