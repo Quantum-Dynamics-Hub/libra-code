@@ -314,7 +314,8 @@ void export_nhamiltonian_objects(){
 //  = &nHamiltonian::QTSH_forces_dia;
 
 
-  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& auxiliary_y) = &nHamiltonian::kcrpmd_effective_potential;
+  vector<MATRIX> (nHamiltonian::*expt_generate_m_matrices_v1)(double beta) = &nHamiltonian::generate_m_matrices;
+  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& auxiliary_y, double a, double b) = &nHamiltonian::kcrpmd_effective_potential;
 
 
   void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;
@@ -583,6 +584,7 @@ void export_nhamiltonian_objects(){
 //      .def("QTSH_forces_dia", expt_QTSH_forces_dia_v2)
 
 
+      .def("generate_m_matrices", expt_generate_m_matrices_v1)
       .def("kcrpmd_effective_potential", expt_kcrpmd_effective_potential_v1)
 
   ;
