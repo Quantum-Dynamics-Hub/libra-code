@@ -314,8 +314,12 @@ void export_nhamiltonian_objects(){
 //  = &nHamiltonian::QTSH_forces_dia;
 
 
+  double (nHamiltonian::*expt_internal_ring_polymer_potential_v1)(const MATRIX& q, const MATRIX& invM, double beta) = &nHamiltonian::internal_ring_polymer_potential;
   vector<MATRIX> (nHamiltonian::*expt_generate_m_matrices_v1)(double beta) = &nHamiltonian::generate_m_matrices;
-  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& auxiliary_y, double a, double b) = &nHamiltonian::kcrpmd_effective_potential;
+  double (nHamiltonian::*expt_kinked_pair_electronic_potential_v1)(double beta) = &nHamiltonian::kinked_pair_electronic_potential;
+  double (nHamiltonian::*expt_kinetic_constraint_potential_v1)(double beta, double eta, double b) = &nHamiltonian::kinetic_constraint_potential;
+  double (nHamiltonian::*expt_heavy_side_potential_v1)(vector<double>& auxiliary_y, int theta, double beta, double b) = &nHamiltonian::heavy_side_potential;
+  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b) = &nHamiltonian::kcrpmd_effective_potential;
 
 
   void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;
@@ -584,7 +588,11 @@ void export_nhamiltonian_objects(){
 //      .def("QTSH_forces_dia", expt_QTSH_forces_dia_v2)
 
 
+      .def("internal_ring_polymer_potential", expt_internal_ring_polymer_potential_v1)
       .def("generate_m_matrices", expt_generate_m_matrices_v1)
+      .def("kinked_pair_electronic_potential", expt_kinked_pair_electronic_potential_v1)
+      .def("kinetic_constraint_potential", expt_kinetic_constraint_potential_v1)
+      .def("heavy_side_potential", expt_heavy_side_potential_v1)
       .def("kcrpmd_effective_potential", expt_kcrpmd_effective_potential_v1)
 
   ;
