@@ -600,9 +600,12 @@ public:
   double donor_electronic_potential(double beta);
   double acceptor_electronic_potential(double beta);
   double kinked_pair_electronic_potential(double beta);
-  double kinetic_constraint_potential(double beta, double eta, double a);
   double heavy_side_potential(vector<double>& auxiliary_y, int theta, double beta, double b);
-  double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b);
+  double kinetic_constraint_potential(double beta, double eta, double a, double c, double d);
+  double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
+  MATRIX internal_ring_polymer_force(const MATRIX& q, const MATRIX& invM, double beta);
+  MATRIX donor_electronic_force(double beta);
+  MATRIX kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
 
 
 

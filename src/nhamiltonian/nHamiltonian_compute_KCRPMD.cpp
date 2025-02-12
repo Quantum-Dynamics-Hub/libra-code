@@ -37,16 +37,21 @@ using namespace libmeigen;
 
 double nHamiltonian::internal_ring_polymer_potential(const MATRIX& q, const MATRIX& invM, double beta){
 /**
-  Compute the ETHD energy
+  Compute the ring polymer internal potential Uint
 
   q - is a ndof x ntraj matrix of coordinates
   invM - is a ndof x 1 matrix of inverse masses of all DOFs
   beta - the inverse temperature Boltzmann factor in atomic units
 */
 
-  double en = 0.0;
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
 
-  if(children.size()==0){
+  int dof, traj;
+
+  double en;
+
+  if(ntraj==1){
     en = 0.0;
   }
   else{ cout<<"Error in internal_ring_polymer_potential(), not implemented for quantum nuclei\n"; exit(0); }
@@ -71,9 +76,9 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 
   if(children.size()==0){
     res = vector<MATRIX>(1, MATRIX(2,2));
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
+    double V0 = (ham_dia->get(0,0)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
     res[0].set(0,0, exp(-beta * V0));
     res[0].set(0,1, -beta * K * exp(-beta * V0));
     res[0].set(1,0, -beta * K * exp(-beta * V1));
@@ -110,7 +115,7 @@ double nHamiltonian::donor_electronic_potential(double beta){
   double en = 0.0;
 
   if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
+    double V0 = (ham_dia->get(0,0)).real(); 
     en = V0;
   }
   else{ cout<<"Error in donor_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
@@ -134,7 +139,7 @@ double nHamiltonian::acceptor_electronic_potential(double beta){
   double en = 0.0;
 
   if(children.size()==0){
-    double V1 = (this->ham_dia->get(1,1)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
     en = V1;
   }
   else{ cout<<"Error in acceptor_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
@@ -158,9 +163,9 @@ double nHamiltonian::kinked_pair_electronic_potential(double beta){
   double en = 0.0;
 
   if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
+    double V0 = (ham_dia->get(0,0)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
     if(beta * K > 1e-3){
       double Vg = 0.5 * (V0 + V1) - 0.5 * sqrt((V0 - V1) * (V0 - V1) + 4 * K * K);
       double Ve = 0.5 * (V0 + V1) + 0.5 * sqrt((V0 - V1) * (V0 - V1) + 4 * K * K);
@@ -174,29 +179,6 @@ double nHamiltonian::kinked_pair_electronic_potential(double beta){
     }
   }
   else{ cout<<"Error in kinked_pair_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
-double nHamiltonian::kinetic_constraint_potential(double beta, double eta, double a){
-/**
-  Additional potential constraint added to the kinked-pair electronic contributions as defined in original KC-RPMD paper
-
-  beta - the inverse temperature Boltzmann factor in atomic units
-  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
-  a - is the gaussian functional limit parameter
-*/
-  double en = 0.0;
-
-  if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
-    double w = (V0 - V1) / K;
-    en = (a * w * w - log(sqrt(a / 3.1415) * eta)) / beta;
-  } 
-  else{ cout<<"Error in kinetic_constraint_potential() not implemented for quantum nuclei\n"; exit(0); }
 
   return en;
 }
@@ -223,7 +205,35 @@ double nHamiltonian::heavy_side_potential(vector<double>& auxiliary_y, int theta
   return en;
 }
 
-double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b){
+
+double nHamiltonian::kinetic_constraint_potential(double beta, double eta, double a, double c, double d){
+/**
+  Additional potential constraint added to the kinked-pair electronic contributions as defined in third KC-RPMD paper
+
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the gaussian functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+  double en = 0.0;
+
+  if(children.size()==0){
+    double V0 = (ham_dia->get(0,0)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    en = (A * w * w - log(C)) / beta;
+  } 
+  else{ cout<<"Error in kinetic_constraint_potential() not implemented for quantum nuclei\n"; exit(0); }
+
+  return en;
+}
+
+
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
 /**
   Compute the KC-RPMD effective potential energy
 
@@ -234,11 +244,13 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
   eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
   a - is the kinetic constraint ad-hoc parameter
   b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
 */
   double en = 0.0;
 
   double V0 = donor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,-1,beta,b); 
-  double VKP = kinked_pair_electronic_potential(beta) + heavy_side_potential(auxiliary_y,0,beta,b) + kinetic_constraint_potential(beta,eta,a); 
+  double VKP = kinked_pair_electronic_potential(beta) + heavy_side_potential(auxiliary_y,0,beta,b) + kinetic_constraint_potential(beta,eta,a,c,d); 
   double V1 = acceptor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,1,beta,b); 
   double Vshift = min({V0, VKP, V1});
 
@@ -247,6 +259,164 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
   return en;
 }
 
+
+MATRIX nHamiltonian::internal_ring_polymer_force(const MATRIX& q, const MATRIX& invM, double beta){
+/**
+  Compute the ring polymer internal potential Uint
+
+  q - is a ndof x ntraj matrix of coordinates
+  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  beta - the inverse temperature Boltzmann factor in atomic units
+
+  Returns:
+  f - is a ndof x ntraj matrix that will contain the forces due to Uint
+
+*/
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+
+  int dof, traj;
+
+  MATRIX f(ndof, ntraj);
+
+  if(ntraj==1){
+    for(dof=0; dof<ndof; dof++){   
+      f.set(dof, 0, 0.0);
+    }// for dof
+  }
+  else{ cout<<"Error in internal_ring_polymer_force(), not implemented for quantum nuclei\n"; exit(0); }
+
+  return f;
+}
+
+
+MATRIX nHamiltonian::donor_electronic_force(double beta){
+/**
+  Compute the Donor electronic force contribution of the effective force
+
+  beta - the inverse temperature Boltzmann factor in atomic units
+*/
+
+  int ndof = nnucl;
+  int ntraj;
+  if(children.size()==0){ ntraj = 1; }
+  else{ ntraj = children.size(); } 
+
+  int dof, traj;
+
+  MATRIX f(ndof, ntraj);
+
+  if(ntraj==1){
+    for(dof=0; dof<nnucl; dof++){   
+      f.set(dof, 0, -(d1ham_dia[dof]->get(0,0)).real());
+    }// for dof
+  }
+  else{ cout<<"Error in donor_electronic_force() not implemented for quantum nuclei\n"; exit(0); }
+
+  return f;
+}
+
+
+MATRIX nHamiltonian::acceptor_electronic_force(double beta){
+/**
+  Compute the Acceptor electronic force contribution of the effective force
+
+  beta - the inverse temperature Boltzmann factor in atomic units
+*/
+
+  int ndof = nnucl;
+  int ntraj;
+  if(children.size()==0){ ntraj = 1; }
+  else{ ntraj = children.size(); } 
+
+  int dof, traj;
+
+  MATRIX f(ndof, ntraj);
+
+  if(ntraj==1){
+    for(dof=0; dof<nnucl; dof++){   
+      f.set(dof, 0, -(d1ham_dia[dof]->get(1,1)).real());
+    }// for dof
+  }
+  else{ cout<<"Error in acceptor_electronic_force() not implemented for quantum nuclei\n"; exit(0); }
+
+  return f;
+}
+
+
+MATRIX nHamiltonian::kinetic_constraint_force(double beta, double eta, double a, double c, double d){
+/**
+  Additional potential constraint added to the kinked-pair electronic contributions as defined in third KC-RPMD paper
+
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the gaussian functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+
+  int ndof = nnucl;
+  int ntraj;
+  if(children.size()==0){ ntraj = 1; }
+  else{ ntraj = children.size(); } 
+
+  int dof, traj;
+
+  MATRIX f(ndof, ntraj);
+
+  if(ntraj==1){
+    double V0 = (ham_dia->get(0,0)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    for(dof=0; dof<nnucl; dof++){   
+      f.set(dof, 0, -(d1ham_dia[dof]->get(0,1)).real());
+    }// for dof
+  }
+
+    else{ cout<<"Error in kinetic_constraint_potential() not implemented for quantum nuclei\n"; exit(0); }
+
+  return f;
+}
+
+
+
+
+
+MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+/**
+  Compute the KC-RPMD effective nuclear force
+
+  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  q - is a ndof x ntraj matrix of coordinates
+  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the kinetic constraint ad-hoc parameter
+  b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+
+  MATRIX f(ndof, ntraj);
+
+  double V0 = donor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,-1,beta,b); 
+  double VKP = kinked_pair_electronic_potential(beta) + heavy_side_potential(auxiliary_y,0,beta,b) + kinetic_constraint_potential(beta,eta,a,c,d); 
+  double V1 = acceptor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,1,beta,b); 
+  double Vshift = min({V0, VKP, V1});
+
+  MATRIX F0 = donor_electronic_force(beta);
+
+  f = internal_ring_polymer_force(q,invM,beta) + (exp(-beta * (V0 - Vshift)) * F0) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift)));
+
+  return f;
+}
 
 
 
