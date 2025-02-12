@@ -605,6 +605,8 @@ public:
   double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
   MATRIX internal_ring_polymer_force(const MATRIX& q, const MATRIX& invM, double beta);
   MATRIX donor_electronic_force(double beta);
+  MATRIX acceptor_electronic_force(double beta);
+  MATRIX kinetic_constraint_force(double beta, double eta, double a, double c, double d);
   MATRIX kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
 
 
