@@ -203,6 +203,30 @@ Installation instruction of Scikit-learn from its official website:
    And you should be ready to use Libra.
 
 
+## Useful notes:
+
+### 1. 2/15/2025 (from Liz Stippell):
+
+Notes on making Libra if you have python v3.7+ installed anywhere on your system (Linux):
+Although the libra environment is made with python 3.7, during the `cmake ../` step it will search for any python, 
+including versions outside of the libra environment. (Ex: my system kept finding python v3.9 in my 
+Miniconda here: `/path/to/Conda/Miniconda3/include/python3.9` instead of searching within the libra 
+environment: `/path/to/Conda/Miniconda3/envs/libra` )
+
+To avoid this issue, you can add the following lines in the CMakeLists.txt file in your libra source code directory around line 44:
+
+"""
+set(Python3_ROOT_DIR "/path/to/Conda/Miniconda3/envs/libra")
+set(Python3_EXECUTABLE "/path/to/Conda/Miniconda3/envs/libra/bin/python3")
+set(Python3_LIBRARY "/path/to/Conda/Miniconda3/envs/libra/lib/libpython3.7m.so")
+set(Python3_INCLUDE_DIR "/path/to/Conda/Miniconda3/envs/libra/include/python3.7m")
+FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
+"""
+
+This will force the make to search within the libra environment in the specified locations where you know the files exist. 
+
+ 
+
 
 
 ## Developers and Contributors
