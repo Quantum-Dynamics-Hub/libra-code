@@ -233,6 +233,10 @@ This will force the make to search within the libra environment in the specified
 
   * Dr. Alexey Akimov (University at Buffalo, [link](https://akimovlab.github.io/index.html) )  
       The main developer and maintainer of the code
+  
+  * Dr. Daeho Han (University at Buffalo)
+      Implementation of the exact-factorization (XF) methods, quantum trajectories surface hopping (QTSH),
+      validating and testing Ehrenfest dynamics and other internals, implementing some model Hamiltonians 
 
   * Mr. Brendan Smith (University at Buffalo) 
       Entangled trajectories Hamiltonian, NA-MD with spin-orbit coupling, NBRA workflows, BL-LZ NA-MD tutorials and examples, 
