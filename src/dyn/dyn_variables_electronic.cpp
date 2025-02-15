@@ -1041,10 +1041,12 @@ void dyn_variables:: update_active_states(int direction, int property){
 
       //coeff.max_col_elt(0, max_val, act_states[itraj]);
       rho_tmp = (coeff * coeff.H()).real();
-      double max_val = fabs(rho_tmp.get(0,0)); 
-      int max_val_indx = 0;
-      for(int j=1;j<nst;j++){ 
+      //double max_val = fabs(rho_tmp.get(0,0)); 
+      int max_val_indx = act_states[itraj];
+      double max_val = fabs(rho_tmp.get(max_val_indx, max_val_indx));
+      for(int j=0;j<nst;j++){ 
         // >= is important !!! not just >
+        // on 2/15/2025:  actually, we need ">"
         if( fabs(rho_tmp.get(j,j)) > max_val){  max_val_indx = j; max_val = fabs(rho_tmp.get(j,j)); } 
       }
       act_states[itraj] = max_val_indx;
