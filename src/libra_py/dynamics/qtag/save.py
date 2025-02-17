@@ -1,12 +1,12 @@
-#*********************************************************************************
-#* Copyright (C) 2021-2022 Matthew Dutra, Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 3 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2021-2022 Matthew Dutra, Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 """
 ..module:: save
   :platform: Unix, Windows
@@ -25,16 +25,17 @@ from liblibra_core import *
 import util.libutil as comn
 import libra_py.data_savers as data_savers
 
+
 def init_qtag_data(saver, output_level, _nsteps, _ntraj, _ndof, _nstates):
     """
     saver - can be either hdf5_saver or mem_saver
 
     """
 
-    if output_level>=1:
+    if output_level >= 1:
 
         # Time axis
-        saver.add_dataset("time", (_nsteps,) , "R")
+        saver.add_dataset("time", (_nsteps,), "R")
 
         # Kinetic energy
 #        saver.add_dataset("Ekin", (_nsteps,) , "R")
@@ -43,7 +44,7 @@ def init_qtag_data(saver, output_level, _nsteps, _ntraj, _ndof, _nstates):
 #        saver.add_dataset("Epot", (_nsteps,) , "R")
 
         # Total energy
-        saver.add_dataset("Etot", (_nsteps,) , "R")
+        saver.add_dataset("Etot", (_nsteps,), "R")
 
         # Fluctuation of kinetic energy
 #        saver.add_dataset("dEkin", (_nsteps,) , "R")
@@ -52,40 +53,41 @@ def init_qtag_data(saver, output_level, _nsteps, _ntraj, _ndof, _nstates):
 #        saver.add_dataset("dEpot", (_nsteps,) , "R")
 
         # Fluctuation of total energy
-        saver.add_dataset("dEtot", (_nsteps,) , "R")
+        saver.add_dataset("dEtot", (_nsteps,), "R")
 
-    if output_level>=2:
+    if output_level >= 2:
 
         # State populations
-        if "pops" in saver.keywords: # and "pops" in saver.np_data.keys():
+        if "pops" in saver.keywords:  # and "pops" in saver.np_data.keys():
             saver.add_dataset("pops", (_nsteps, _nstates), "R")
 
         # Trajectory basis coefficients
-        if "coeffs" in saver.keywords: # and "coeffs" in saver.np_data.keys():
+        if "coeffs" in saver.keywords:  # and "coeffs" in saver.np_data.keys():
             saver.add_dataset("coeffs", (_nsteps, 1, _ntraj), "C")
 
-    if output_level>=3:
+    if output_level >= 3:
 
         # Trajectory positions
-        if "q" in saver.keywords: # and "q" in saver.np_data.keys():
+        if "q" in saver.keywords:  # and "q" in saver.np_data.keys():
             saver.add_dataset("q", (_nsteps, _ntraj, _ndof), "R")
 
         # Trajectory x-dependent phases
-        if "p" in saver.keywords: # and "p" in saver.np_data.keys():
+        if "p" in saver.keywords:  # and "p" in saver.np_data.keys():
             saver.add_dataset("p", (_nsteps, _ntraj, _ndof), "R")
 
         # Trajectory widths
-        if "a" in saver.keywords: # and "a" in saver.np_data.keys():
+        if "a" in saver.keywords:  # and "a" in saver.np_data.keys():
             saver.add_dataset("a", (_nsteps, _ntraj, _ndof), "R")
 
         # Trajectory x-independent phases
-        if "s" in saver.keywords: # and "s" in saver.np_data.keys():
+        if "s" in saver.keywords:  # and "s" in saver.np_data.keys():
             saver.add_dataset("s", (_nsteps, _ntraj, _ndof), "R")
 
+
 def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
-    #====== CREATE DIRECTORIES ========
+    # ====== CREATE DIRECTORIES ========
     if params["txt2_output_level"] > 0 or params["hdf5_output_level"] > 0 or params["mem_output_level"] > 0:
-        
+
         prefix = params["prefix"]
         properties_to_save = params["properties_to_save"]
 
@@ -93,25 +95,27 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         if not os.path.isdir(prefix):
             os.mkdir(prefix)
         else:
-            if os.path.isdir(prefix+"/wfc"):
-                subdir=prefix+"/wfc"
+            if os.path.isdir(prefix + "/wfc"):
+                subdir = prefix + "/wfc"
                 for file in os.listdir(subdir):
-                    os.remove(os.path.join(subdir,file))
+                    os.remove(os.path.join(subdir, file))
                 os.rmdir(subdir)
 
             for file in os.listdir(prefix):
-                os.remove(os.path.join(prefix,file))
+                os.remove(os.path.join(prefix, file))
 
         # Simulation parameters
-        f = open(F"{prefix}/_dyn_params.txt","w")
-        f.write( str(params) );  f.close()
+        f = open(F"{prefix}/_dyn_params.txt", "w")
+        f.write(str(params))
+        f.close()
 
-        f = open(F"{prefix}/_model_params.txt","w")
-        f.write( str(model_params) );  f.close()
+        f = open(F"{prefix}/_model_params.txt", "w")
+        f.write(str(model_params))
+        f.close()
 
-        _savers = {"txt2_saver":None, "hdf5_saver":None, "mem_saver":None}
+        _savers = {"txt2_saver": None, "hdf5_saver": None, "mem_saver": None}
 
-    #====== txt2 ========
+    # ====== txt2 ========
 
     txt2_output_level = params["txt2_output_level"]
 
@@ -122,7 +126,7 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         # not all the timesteps - that would be too consuming
         init_qtag_data(_savers["txt2_saver"], txt2_output_level, 1, ntraj, ndof, nstates)
 
-    #====== HDF5 ========
+    # ====== HDF5 ========
 
     hdf5_output_level = params["hdf5_output_level"]
 
@@ -131,87 +135,88 @@ def init_qtag_savers(params, model_params, nsteps, ntraj, ndof, nstates):
         _savers["hdf5_saver"].set_compression_level(params["use_compression"], params["compression_level"])
         init_qtag_data(_savers["hdf5_saver"], hdf5_output_level, nsteps, ntraj, ndof, nstates)
 
-    return(_savers)
+    return (_savers)
 
-def save_qtag_hdf5_1D(saver,dt,step,Etot,dEtot,txt_type=0):
 
+def save_qtag_hdf5_1D(saver, dt, step, Etot, dEtot, txt_type=0):
 
     t = 0
-    if txt_type==0:
+    if txt_type == 0:
         t = step
 
-    #Time
-    saver.save_scalar(t, "time", dt*step)
+    # Time
+    saver.save_scalar(t, "time", dt * step)
 
-    #Energy
+    # Energy
     saver.save_scalar(t, "Etot", Etot)
 
-    #Energy difference from t=0
+    # Energy difference from t=0
     saver.save_scalar(t, "dEtot", dEtot)
 
-def save_qtag_hdf5_2D(saver,nstates,step,pops,coeffs,txt_type=0):
+
+def save_qtag_hdf5_2D(saver, nstates, step, pops, coeffs, txt_type=0):
 
     t = 0
-    if txt_type==0:
+    if txt_type == 0:
         t = step
 
-    #Surface populations
+    # Surface populations
     for state in range(nstates):
         saver.save_multi_scalar(t, state, "pops", pops[state])
 
-    #Trajectory coefficients
+    # Trajectory coefficients
     saver.save_matrix(t, "coeffs", coeffs.T())
 
-def save_qtag_hdf5_3D(saver,step,qvals,pvals,avals,svals,txt_type=0):
+
+def save_qtag_hdf5_3D(saver, step, qvals, pvals, avals, svals, txt_type=0):
 
     t = 0
-    if txt_type==0:
+    if txt_type == 0:
         t = step
 
-    #Trajectory positions
+    # Trajectory positions
     saver.save_matrix(t, "q", qvals.T())
 
-    #print("In save_qtag_hdf5_3D")
-    #print(type(qvals), qvals.num_of_cols, qvals.num_of_rows )
+    # print("In save_qtag_hdf5_3D")
+    # print(type(qvals), qvals.num_of_cols, qvals.num_of_rows )
 
-    #Trajectory momenta
+    # Trajectory momenta
     saver.save_matrix(t, "p", pvals.T())
 
-    #Trajectory widths
+    # Trajectory widths
     saver.save_matrix(t, "a", avals.T())
 
-    #Trajectory phases
+    # Trajectory phases
     saver.save_matrix(t, "s", svals.T())
 
+
 def save_qtag_data(_savers, params,
-                      step, Etot, dEtot, pops, coeffs, qvals, pvals, avals, svals):
+                   step, Etot, dEtot, pops, coeffs, qvals, pvals, avals, svals):
 
     hdf5_output_level = params["hdf5_output_level"]
     txt2_output_level = params["txt2_output_level"]
 
     nsteps = params["nsteps"]
     nstates = len(params["states"])
-    print_freq = int(params["progress_frequency"]*nsteps)
+    print_freq = int(params["progress_frequency"] * nsteps)
 
-    #======LEVEL 1======
-    if hdf5_output_level>=1 and _savers["hdf5_saver"]!=None:
+    # ======LEVEL 1======
+    if hdf5_output_level >= 1 and _savers["hdf5_saver"] is not None:
         save_qtag_hdf5_1D(_savers["hdf5_saver"], params['dt'], step, Etot, dEtot)
 
-    if txt2_output_level>=1 and _savers["txt2_saver"]!=None:
+    if txt2_output_level >= 1 and _savers["txt2_saver"] is not None:
         save_qtag_hdf5_1D(_savers["txt2_saver"], params['dt'], step, Etot, dEtot, 1)
 
-    #======LEVEL 2======
-    if hdf5_output_level>=2 and _savers["hdf5_saver"]!=None:
+    # ======LEVEL 2======
+    if hdf5_output_level >= 2 and _savers["hdf5_saver"] is not None:
         save_qtag_hdf5_2D(_savers["hdf5_saver"], nstates, step, pops, coeffs)
 
-    if txt2_output_level>=2 and _savers["txt2_saver"]!=None:
+    if txt2_output_level >= 2 and _savers["txt2_saver"] is not None:
         save_qtag_hdf5_2D(_savers["txt2_saver"], nstates, step, pops, coeffs, 1)
 
-    #======LEVEL 3======
-    if hdf5_output_level>=3 and _savers["hdf5_saver"]!=None:
+    # ======LEVEL 3======
+    if hdf5_output_level >= 3 and _savers["hdf5_saver"] is not None:
         save_qtag_hdf5_3D(_savers["hdf5_saver"], step, qvals, pvals, avals, svals)
 
-    if txt2_output_level>=3 and _savers["txt2_saver"]!=None:
+    if txt2_output_level >= 3 and _savers["txt2_saver"] is not None:
         save_qtag_hdf5_3D(_savers["txt2_saver"], step, qvals, pvals, avals, svals, 1)
-
-

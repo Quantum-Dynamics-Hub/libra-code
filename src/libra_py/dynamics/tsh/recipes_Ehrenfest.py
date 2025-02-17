@@ -1,12 +1,12 @@
-#*********************************************************************************                     
-#* Copyright (C) 2019-2022 Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 3 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2019-2022 Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 """
 .. module:: dynamics_recipes_Ehrenfest
    :platform: Unix, Windows
@@ -39,16 +39,15 @@ import sys
 import math
 import copy
 
-if sys.platform=="cygwin":
+if sys.platform == "cygwin":
     from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
+elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
 import util.libutil as comn
 import libra_py.units as units
 import libra_py.data_outs as data_outs
 from . import compute
-
 
 
 def Ehrenfest_dia0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -63,14 +62,12 @@ def Ehrenfest_dia0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 0})
+    dyn_params.update({"force_method": 2, "rep_ham": 0, "rep_force": 0,
+                      "rep_tdse": 0, "nac_update_method": 0, "tsh_method": -1})
+    dyn_params.update({"do_phase_correction": 0, "state_tracking_algo": 0})
 
-    init_elec.update({"rep":0})
-    dyn_params.update({"force_method":2, "rep_ham":0, "rep_force":0, "rep_tdse":0, "nac_update_method":0, "tsh_method":-1})
-    dyn_params.update({"do_phase_correction": 0, "state_tracking_algo":0})
-
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)
 
 
 def Ehrenfest_adi0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -85,14 +82,12 @@ def Ehrenfest_adi0_dia_diah(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 1})
+    dyn_params.update({"force_method": 2, "rep_ham": 0, "rep_force": 0,
+                      "rep_tdse": 0, "nac_update_method": 0, "tsh_method": -1})
+    dyn_params.update({"do_phase_correction": 0, "state_tracking_algo": 0})
 
-    init_elec.update({"rep":1})
-    dyn_params.update({"force_method":2, "rep_ham":0, "rep_force":0, "rep_tdse":0, "nac_update_method":0, "tsh_method":-1})
-    dyn_params.update({"do_phase_correction": 0, "state_tracking_algo":0})
-
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)
 
 
 def Ehrenfest_dia0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -107,12 +102,11 @@ def Ehrenfest_dia0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 0})
+    dyn_params.update({"force_method": 2, "rep_ham": 1, "rep_force": 1,
+                      "rep_tdse": 1, "nac_update_method": 1, "tsh_method": -1})
 
-    init_elec.update({"rep":0})
-    dyn_params.update({"force_method":2, "rep_ham":1, "rep_force":1, "rep_tdse":1, "nac_update_method":1, "tsh_method":-1})
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)
 
 
 def Ehrenfest_adi0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -127,16 +121,11 @@ def Ehrenfest_adi0_adi_adih(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 1})
+    dyn_params.update({"force_method": 2, "rep_ham": 1, "rep_force": 1,
+                      "rep_tdse": 1, "nac_update_method": 1, "tsh_method": -1})
 
-    init_elec.update({"rep":1})
-    dyn_params.update({"force_method":2, "rep_ham":1, "rep_force":1, "rep_tdse":1, "nac_update_method":1, "tsh_method":-1})
-
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
-
-
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)
 
 
 def Ehrenfest_dia0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -151,12 +140,11 @@ def Ehrenfest_dia0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 0})
+    dyn_params.update({"force_method": 2, "rep_ham": 0, "rep_force": 1,
+                      "rep_tdse": 1, "nac_update_method": 1, "tsh_method": -1})
 
-    init_elec.update({"rep":0})
-    dyn_params.update({"force_method":2, "rep_ham":0, "rep_force":1, "rep_tdse":1, "nac_update_method":1, "tsh_method":-1})
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)
 
 
 def Ehrenfest_adi0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params, _init_elec, rnd):
@@ -171,11 +159,8 @@ def Ehrenfest_adi0_adi_diah(q, p, iM, _dyn_params, compute_model, _model_params,
     dyn_params = dict(_dyn_params)
     model_params = dict(_model_params)
 
+    init_elec.update({"rep": 1})
+    dyn_params.update({"force_method": 2, "rep_ham": 0, "rep_force": 1,
+                      "rep_tdse": 1, "nac_update_method": 1, "tsh_method": -1})
 
-    init_elec.update({"rep":1})
-    dyn_params.update({"force_method":2, "rep_ham":0, "rep_force":1, "rep_tdse":1, "nac_update_method":1, "tsh_method":-1})
-
-    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)        
-
-
-
+    return compute.generic_recipe(q, p, iM, dyn_params, compute_model, model_params, init_elec, rnd)

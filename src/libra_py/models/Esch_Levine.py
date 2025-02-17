@@ -1,12 +1,12 @@
-#*********************************************************************************
-#* Copyright (C) 2021 Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 3 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2021 Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 """
 .. module:: models_Esch_Levine
    :platform: Unix, Windows
@@ -20,9 +20,9 @@ import sys
 import math
 import copy
 
-if sys.platform=="cygwin":
+if sys.platform == "cygwin":
     from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
+elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 import util.libutil as comn
 import libra_py.units as units
@@ -30,7 +30,6 @@ import libra_py.units as units
 
 class tmp:
     pass
-
 
 
 def get_JCP_2020_params(set_indx):
@@ -53,28 +52,25 @@ def get_JCP_2020_params(set_indx):
     """
     params = {}
 
-    if set_indx==1:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":0, "nstates":9, "delta":0.01 }
-    elif set_indx==2:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.08, "i_crit":5, "nstates":9, "delta":0.01 }
-    elif set_indx==3:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":0, "nstates":17, "delta":0.005 }
-    elif set_indx==4:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":0, "nstates":17, "delta":0.0025 }
-    elif set_indx==5:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":0, "nstates":17, "delta":0.00125 }
-    elif set_indx==6:
-        params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":0, "nstates":17, "delta":0.000625 }
-
-
+    if set_indx == 1:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 9, "delta": 0.01}
+    elif set_indx == 2:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.08, "i_crit": 5, "nstates": 9, "delta": 0.01}
+    elif set_indx == 3:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 17, "delta": 0.005}
+    elif set_indx == 4:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 17, "delta": 0.0025}
+    elif set_indx == 5:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 17, "delta": 0.00125}
+    elif set_indx == 6:
+        params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 17, "delta": 0.000625}
 
     return params
 
 
-
 def JCP_2020(q, params, full_id):
     """
-    The models from 
+    The models from
     Esch, M. P.; Levine, B. G. J. Chem. Phys. 153, 114104 (2020); doi: 10.1063/5.0022529
 
     M-state model
@@ -82,7 +78,7 @@ def JCP_2020(q, params, full_id):
     H_00 = -w0 * x,  w0 >0
     H_ii = w1 * x  - i * delta - eps_i ,  0 < i <= M-1,  w1 > 0, delta > 0
     where eps_i = eps, for i >= i_crit
-    
+
     H_0,n = H_n,0 = V,  0 < n <= M-1
     H_n,m = 0, otherwise
 
@@ -109,8 +105,8 @@ def JCP_2020(q, params, full_id):
 
     """
 
-    critical_params = [ ]
-    default_params = { "w0":0.25, "w1":0.025, "V":0.005, "eps":0.0, "i_crit":2, "nstates":2, "delta":0.01 }
+    critical_params = []
+    default_params = {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 2, "nstates": 2, "delta": 0.01}
     comn.check_input(params, default_params, critical_params)
 
     w0 = params["w0"]
@@ -121,10 +117,12 @@ def JCP_2020(q, params, full_id):
     eps = params["eps"]
     i_crit = params["i_crit"]
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -133,23 +131,22 @@ def JCP_2020(q, params, full_id):
 
     Sdia.identity()
 
-    Hdia.set(0,0,  -w0 * x * (1.0+0.0j) )
-    for i in range(1,n):
+    Hdia.set(0, 0, -w0 * x * (1.0 + 0.0j))
+    for i in range(1, n):
         shift = 0.0
-        if i>=i_crit:
+        if i >= i_crit:
             shift = eps
-        Hdia.set(i,i,  (w1 * x - i * delta - shift) * (1.0+0.0j) )
+        Hdia.set(i, i, (w1 * x - i * delta - shift) * (1.0 + 0.0j))
 
-    for i in range(1,n):
-        Hdia.set(0,i,  V * (1.0+0.0j) )
-        Hdia.set(i,0,  V * (1.0+0.0j) )
+    for i in range(1, n):
+        Hdia.set(0, i, V * (1.0 + 0.0j))
+        Hdia.set(i, 0, V * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
-        d1ham_dia[k].set(0,0, -w0 * (1.0+0.0j) )
+        d1ham_dia[k].set(0, 0, -w0 * (1.0 + 0.0j))
         for i in range(1, n):
-            d1ham_dia[k].set(i,i, w1*(1.0+0.0j) )
-
+            d1ham_dia[k].set(i, i, w1 * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -161,10 +158,10 @@ def JCP_2020(q, params, full_id):
 
 
 def general(q, params, full_id):
-    """    
+    """
     M-state linear crossing model
 
-    H_ii =  V_ij +  w_ij * x 
+    H_ii =  V_ij +  w_ij * x
 
     Args:
         q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
@@ -185,18 +182,20 @@ def general(q, params, full_id):
 
     """
 
-    critical_params = [ ]
-    default_params = { "nstates":2, "V":[[0.00,0.00], [0.00, 0.00]], "w":[[0.00,0.00], [0.00, 0.00]] }
+    critical_params = []
+    default_params = {"nstates": 2, "V": [[0.00, 0.00], [0.00, 0.00]], "w": [[0.00, 0.00], [0.00, 0.00]]}
     comn.check_input(params, default_params, critical_params)
 
     w = params["w"]
     V = params["V"]
     n = params["nstates"]
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -207,13 +206,13 @@ def general(q, params, full_id):
 
     for i in range(n):
         for j in range(n):
-            Hdia.set(i,j,  (V[i][j] + w[i][j] * x) * (1.0+0.0j) )
+            Hdia.set(i, j, (V[i][j] + w[i][j] * x) * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
         for i in range(n):
             for j in range(n):
-                d1ham_dia[k].set(i,j, w[i][j]*(1.0+0.0j) )
+                d1ham_dia[k].set(i, j, w[i][j] * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia

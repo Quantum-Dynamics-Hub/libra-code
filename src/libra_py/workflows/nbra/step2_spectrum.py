@@ -1,13 +1,13 @@
-#*********************************************************************************
-#* Copyright (C) 2024 Qingxin Zhang, Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 3 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#*
-#*********************************************************************************/
+# *********************************************************************************
+# * Copyright (C) 2024 Qingxin Zhang, Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# *
+# *********************************************************************************/
 #
 #
 #
@@ -26,6 +26,7 @@ import matplotlib.pyplot as plt
 import glob
 import os
 
+
 def parse_spectrum_data_from_log(file_path):
     energy_levels, intensities = [], []
     with open(file_path, 'r') as file:
@@ -39,18 +40,20 @@ def parse_spectrum_data_from_log(file_path):
                     continue
     return np.array(energy_levels), np.array(intensities)
 
+
 def gaussian_broadening(energy_levels, intensities, fwhm, num_points=1000):
     if len(energy_levels) == 0 or len(intensities) == 0:
         raise ValueError("Energy levels or intensities array is empty. Check input data.")
     x = np.linspace(np.min(energy_levels) - 5 * fwhm, np.max(energy_levels) + 5 * fwhm, num_points)
-    y = np.sum([intensity * np.exp(-((x - energy) ** 2) / (2 * (fwhm / 2.35482) ** 2)) 
+    y = np.sum([intensity * np.exp(-((x - energy) ** 2) / (2 * (fwhm / 2.35482) ** 2))
                 for energy, intensity in zip(energy_levels, intensities)], axis=0)
     return x, y
+
 
 def generate_and_save_spectra(log_file_pattern, output_folder, fwhm=0.1, num_points=1000):
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    
+
     log_files = glob.glob(log_file_pattern)
     if not log_files:
         raise FileNotFoundError(f"No files matched the pattern: {log_file_pattern}")
@@ -63,6 +66,7 @@ def generate_and_save_spectra(log_file_pattern, output_folder, fwhm=0.1, num_poi
         output_file_path = os.path.join(output_folder, base_name)
         np.savetxt(output_file_path, np.column_stack((x, y)), header="Energy (eV)\tIntensity (a.u.)")
         print(f"Spectrum data saved to: {output_file_path}")
+
 
 def process_spectra(log_file_pattern, output_folder, fwhm=0.1, num_points=1000):
     generate_and_save_spectra(log_file_pattern, output_folder, fwhm, num_points)
@@ -79,7 +83,7 @@ def process_spectra(log_file_pattern, output_folder, fwhm=0.1, num_points=1000):
     file_list = [os.path.join(data_dir, f) for f in file_list]
     x_values_list = []
     y_values_list = []
-    
+
     for file_name in file_list:
         try:
             print(f"Processing file: {file_name}")
@@ -88,7 +92,7 @@ def process_spectra(log_file_pattern, output_folder, fwhm=0.1, num_points=1000):
             y_values_list.append(data[:, 1])
         except (FileNotFoundError, ValueError) as e:
             print(f"Error processing {file_name}: {e}")
-    
+
     if x_values_list and y_values_list:
         x_values_avg = np.mean(x_values_list, axis=0)
         y_values_avg = np.mean(y_values_list, axis=0)

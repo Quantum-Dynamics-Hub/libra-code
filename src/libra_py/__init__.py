@@ -1,11 +1,11 @@
-#***********************************************************
+# ***********************************************************
 # * Copyright (C) 2016-2021 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
 # * License, or (at your option) any later version.
 # * http://www.gnu.org/copyleft/gpl.txt
-#***********************************************************/
+# ***********************************************************/
 
 __all__ = ["dynamics",
            "models",
@@ -31,7 +31,7 @@ __all__ = ["dynamics",
            "hpc_utils",
            "hungarian",
            "init_ensembles",
-           "init_system", 
+           "init_system",
            "influence_spectrum",
            "libra_executable",
            "md_align",
@@ -58,5 +58,4 @@ __all__ = ["dynamics",
            "unavoided",
            "units",
            "vesta2qe"
-          ]
-
+           ]
