@@ -16,7 +16,6 @@
 
 .. moduleauthor:: Kosar Yasin, Alexey V. Akimov
 """
-get_ipython().run_line_magic('matplotlib', 'inline')
 import os
 import glob
 import matplotlib.pyplot as plt
@@ -27,11 +26,9 @@ import h5py
 import warnings
 from scipy.constants import physical_constants
 from libra_py import units
+from libra_py.units import au2ev, au2fs
 from libra_py.workflows.nbra import lz, step4
 from libra_py import data_outs, data_conv
-
-au2ev = physical_constants['hartree-electron volt relationship'][0]
-au2fs = physical_constants['atomic unit of time'][0] * 1e15
 
 def exponential_fit(t, A, tau, beta):
     """Fit an exponential decay function.
@@ -265,9 +262,19 @@ def plot(params, Hvib_params, BLLZ_params, log_file_pattern, output_folder):
     """Create plots for excess energy, density of states, and UV-VIS spectrum.
 
     Args:
-        params (dict): Parameters for plotting.
-        Hvib_params (dict): Parameters for vibrational Hamiltonian.
-        BLLZ_params (dict): Parameters for BLLZ method.
+        params (dict): Parameters for plotting. Expected keys include:
+            - "start_step": Starting step for adiabatic energies (int)
+            - "end_step": Ending step for adiabatic energies (int)
+            - "path_template": Path template for energy files (str)
+            - "methods": List of methods to calculate excess energies (list)
+            - "icond_start", "icond_end", "icond_step": Indices for the calculation (int)
+            - "method_dir_prefix", "method_dir_suffix": Parts of file name for methods (str)
+            - "colors": Colors for plotting (list of str)
+        Hvib_params (dict): Parameters for vibrational Hamiltonian. Expected keys include:
+            - "nstates": Number of vibrational states (int)
+            - Other parameters specific to the vibrational model
+        BLLZ_params (dict): Parameters for BLLZ method. Expected keys include:
+            - Any relevant parameters for the BLLZ method
         log_file_pattern (str): Pattern for log files to process.
         output_folder (str): Directory to save plots.
 
@@ -317,8 +324,9 @@ def plot(params, Hvib_params, BLLZ_params, log_file_pattern, output_folder):
 
     handles2, labels2 = ax1.get_legend_handles_labels()
     ax1.legend(handles2, labels2, fontsize=26, loc='lower right', bbox_to_anchor=(1.0, 0.0), frameon=False)
+    plt.savefig('spectra_dynamics.png', dpi=500)
     plt.show()
-    
+   
     return None
 
 
