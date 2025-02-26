@@ -27,6 +27,7 @@ from matplotlib.ticker import FormatStrFormatter
 
 from liblibra_core import *
 from libra_py import units
+import libra_py.packages.cp2k.methods as cp2k
 import util.libutil as comn
 
 #%matplotlib inline
@@ -36,8 +37,19 @@ def compute_trpes(_params):
     Args:
         params (dict): control parameters. Can contain keywords:
 
-        - istep (int): the first timestep to read [default: 1]
-        - fstep (int): the last timestep to read [default: 10]
+        - istep ( int ): the first file to read, should be the same as used in NAMD [default: 1]
+        - fstep ( int ): the last file to read, should be the same as used in NAMD [default: 10]
+        - dt ( int ): time step in fs [ default: 1.0 ]
+        - namd_nsteps ( int ): how many NAMD steps were computed in the dynamics. This may be 
+          larger than the number of files read - in this case the (fsteps - istep) files will be
+          repeated until the desired number of steps, `namd_nsteps` is met [ default: fstep - istep - 1]
+        - input_file_type ( int ): the kind of files to get the energy from:
+           - 0 : matrix-like Hvib files [ default ]
+           - 1 : CP2K logfiles
+           - 2 : .npz matrix-like Hvib files 
+        - logfile_read_params ( dict ) : additional parameters to read the logfiles (only if input_file_type == 1)
+           [default : {} ]
+        - units (string): the units of the energy [ default: "Ha"]. Possible: "Ha", "eV"
         - eprefix (string): the common prefix of the energy files to read [default: "Hvib_ci_"]
         - esuffix (string): the common suffix of the energy files to read [default: "_re"]        
         - dprefix (string): the common prefix of all the dynamics simulation results (the .hdf file) [default: "icond_"]
@@ -57,56 +69,115 @@ def compute_trpes(_params):
     """
 
     params = dict(_params)
-    comn.check_input(params, {"istep": 1, "fstep": 10, "eprefix":"Hvib_ci_", "esuffix":"_re",
+    comn.check_input(params, {"istep": 1, "fstep": 10, "dt":1.0, "namd_nsteps":9,
+                              "eprefix":"Hvib_ci_", "esuffix":"_re",
+                              "input_file_type":0, "logfile_read_params": {},
+                              "units":"Ha",
                               "iconds":[1], "dprefix":"icond_", "dsuffix":"/mem_data.hdf",
-                              "de":0.01, "emin":0.0, "emax":6.0, "sigma_e":0.1
+                              "de":0.01, "emin":0.0, "emax":6.0, "sigma_e":0.1,
                              }, [])
     
     # ============ Read the parameters ======================
     istep = params["istep"]
     fstep = params["fstep"]
+    nsteps = fstep - istep
+    namd_nsteps = params["namd_nsteps"]
+    dt = params["dt"]
     eprefix = params["eprefix"]
     esuffix = params["esuffix"]
+    input_file_type = params["input_file_type"]
+    logfile_read_params = dict(params["logfile_read_params"])
+    eunits = params["units"]
     iconds = params["iconds"]
     dprefix = params["dprefix"]
     dsuffix = params["dsuffix"]
     de = params["de"]
     emin = params["emin"]
     emax = params["emax"]
-    sigma_e = params["sigma_e"]
-    nsteps = fstep - istep  
+    sigma_e = params["sigma_e"]  
 
     print(params)
+   
+    # ================== Read energies =====================
+    E = []
+    for step in range(istep, fstep):
+        if input_file_type == 0:
+            energy_filename = F"{eprefix}{step}{esuffix}"
+            energy_mat = np.loadtxt(energy_filename)
+            E.append(np.array(np.diag(energy_mat)))
+        elif input_file_type == 1:
+            logfile_read_params.update({"logfile_name":F"{eprefix}{step}{esuffix}"})
+            e, _, _, _ = cp2k.read_cp2k_tddfpt_log_file(logfile_read_params)
+            x = [0.0]
+            for e_val in e:
+                x.append(e_val)
+            E.append(np.array(x))
+        elif input_file_type == 2:
+            energy_filename = F"{eprefix}{step}{esuffix}"
+            energy_mat = sp.load_npz(energy_filename)
+            E.append( np.array( np.diag( energy_mat.todense() ) ) )
+
+    E = np.array(E)
+    if eunits=="Ha":
+        pass
+    elif eunits=="eV":
+        E = np.multiply(E, units.ev2Ha)
+       
+    #nsteps = E.shape[0]
+    nstates = E.shape[1]
+
+    # ================== Determine the time length ===============
+    nstps = 0
+    with h5py.File(F'{dprefix}{iconds[0]}{dsuffix}', 'r') as F:
+        sh_pop = np.array(F['sh_pop_adi/data'])
+        nstps = sh_pop.shape[0] # how many time-points
+
+    print(F"Trajectory data contains {nstps}, while we only want {namd_nsteps}")
+    nsteps = min(nstps, namd_nsteps)
+    print(F"The TRPES plot will be of the time legnth of {namd_nsteps} points")
+
+    max_icond = max(iconds)
+    nfiles = fstep - istep
+    mult = int( (max_icond - istep + nsteps) / nfiles) + 1   # how many times we need to repeat the initially read files 
+                                                             # to ensure we have the energies for at least as long as 
+                                                             # the namd trajectory    
+    print(F"The multiplication factor is {mult}")
+    E_ext = np.array(E)
+    for _ in range(mult):
+        E_ext = np.concatenate( (E_ext, E))
+    E_ext = E_ext[:nsteps]
+    print(F"The shape of the effective E array is {E_ext.shape}")
     
+    # ================ Initialize all the grids =============
+
     n_e_grid_pts = int((emax - emin)/de)+1
 
     t_grid = np.linspace(0, nsteps, nsteps)
     e_grid = np.linspace(emin, emax, n_e_grid_pts)
 
-    # ================== Read energies =====================
-    E = []
-    for step in range(istep, fstep):
-        energy_filename = F"{eprefix}{step}{esuffix}"
-        energy_mat = np.loadtxt(energy_filename)
-        E.append(np.array(np.diag(energy_mat)))
-    E = np.array(E)
-    
-    #nsteps = E.shape[0]
-    nstates = E.shape[1]
     TRPES = np.zeros((nsteps, n_e_grid_pts))
     TRPES_traj = np.zeros((nsteps, n_e_grid_pts))
 
+
     # =============== Average over all iconds ===============
+    print(F"Initial iconds = {iconds}")
+    print(F"Renormalizing iconds for istep = {istep}, fstep = {fstep} and nsteps = {nsteps}...")
+    iconds_eff = []
+    for icond in iconds:
+        if icond < fstep:
+            iconds_eff.append(icond)
+    print(F"The effective iconds are = {iconds_eff} (dropping off meaningless iconds)")
+ 
     count = 0
-    for icond_indx, icond in enumerate(iconds):
+    for icond_indx, icond in enumerate(iconds_eff):
         try:
             sh_pop = np.array([])
             print(F"Reading the file {dprefix}{icond}{dsuffix}")
             with h5py.File(F'{dprefix}{icond}{dsuffix}', 'r') as F:
                 sh_pop = np.array(F['sh_pop_adi/data'])
 
-            E_eff = np.roll(E, -icond, 0)
-            for i, t in enumerate(range(istep, fstep)):                
+            E_eff = np.roll(E_ext, -(icond-istep), 0)
+            for i in range(nsteps):                
                 for j, e_j in enumerate(e_grid):
                     for state in range(nstates):
                         e = E_eff[i, state] * units.au2ev
@@ -123,7 +194,7 @@ def compute_trpes(_params):
 
     TRPES /= np.max(TRPES) 
 
-    return t_grid, e_grid, TRPES
+    return t_grid * dt, e_grid, TRPES
     
 
 def plot_trpes(t_grid, e_grid, trpes, _plt_params):
