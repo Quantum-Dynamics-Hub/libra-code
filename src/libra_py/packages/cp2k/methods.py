@@ -1662,6 +1662,29 @@ def cp2k_find_excitation_energies(filename):
                 F.append(f)
 
     return E, F
+    
+    
+def parse_spectrum_data_from_log(file_path):
+    """Parse energy levels and intensities from a CP2K log file.
+
+    Args:
+        file_path (str): Path to the log file.
+
+    Returns:
+        tuple: Arrays of energy levels and intensities.
+    """
+    energy_levels, intensities = [], []
+    with open(file_path, 'r') as file:
+        for line in file:
+            if line.startswith(' TDDFPT|') and len(line.split()) >= 7:
+                parts = line.split()
+                try:
+                    energy_levels.append(float(parts[2]))
+                    intensities.append(float(parts[-1]))
+                except ValueError:
+                    continue
+    return np.array(energy_levels), np.array(intensities)
+
 
 
 def gaussian_function(a, mu, sigma, num_points, x_min, x_max):

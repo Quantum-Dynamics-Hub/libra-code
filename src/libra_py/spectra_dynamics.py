@@ -30,33 +30,7 @@ from libra_py.units import au2ev, au2fs
 from libra_py.workflows.nbra import lz, step4
 from libra_py import data_outs, data_conv
 
-def exponential_fit(t, A, tau, beta):
-    """Fit an exponential decay function.
 
-    Args:
-        t (np.ndarray): Time vector.
-        A (float): Amplitude of the decay.
-        tau (float): Time constant for decay.
-        beta (float): Exponential power.
-
-    Returns:
-        np.ndarray: Fitted values.
-    """
-    return A * np.exp(-np.power(t / tau, beta))
-
-def energy_fit(t, E0, Einf, tau):
-    """Fit an energy decay function.
-
-    Args:
-        t (np.ndarray): Time vector.
-        E0 (float): Initial energy.
-        Einf (float): Energy at infinite time.
-        tau (float): Time constant for decay.
-
-    Returns:
-        np.ndarray: Fitted energy values.
-    """
-    return Einf + (E0 - Einf) * np.exp(-t / tau)
 
 def load_adiabatic_energies(start_step, end_step, path_template, scale=au2ev, time_scale=units.au2fs):
     """Load adiabatic energies from files.
@@ -177,48 +151,8 @@ def density_of_states(Hvib_params, BLLZ_params):
         energy_levels.extend(res0[:, 3 * i + 1] * units.au2ev)
     return np.array(energy_levels)
 
-def parse_spectrum_data_from_log(file_path):
-    """Parse energy levels and intensities from a CP2K log file.
 
-    Args:
-        file_path (str): Path to the log file.
 
-    Returns:
-        tuple: Arrays of energy levels and intensities.
-    """
-    energy_levels, intensities = [], []
-    with open(file_path, 'r') as file:
-        for line in file:
-            if line.startswith(' TDDFPT|') and len(line.split()) >= 7:
-                parts = line.split()
-                try:
-                    energy_levels.append(float(parts[2]))
-                    intensities.append(float(parts[-1]))
-                except ValueError:
-                    continue
-    return np.array(energy_levels), np.array(intensities)
-
-def gaussian_broadening(energy_levels, intensities, fwhm, num_points=3500):
-    """Apply Gaussian broadening to spectral data.
-
-    Args:
-        energy_levels (np.ndarray): Array of energy levels.
-        intensities (np.ndarray): Array of corresponding intensities.
-        fwhm (float): Full width at half maximum for Gaussian.
-        num_points (int): Number of points for the broadened spectrum.
-
-    Returns:
-        tuple: Broadened energy and intensity arrays.
-
-    Raises:
-        ValueError: If input arrays are empty.
-    """
-    if len(energy_levels) == 0 or len(intensities) == 0:
-        raise ValueError("Energy levels or intensities array is empty. Check input data.")
-    x = np.linspace(np.min(energy_levels) - 5 * fwhm, np.max(energy_levels) + 5 * fwhm, num_points)
-    y = np.sum([intensity * np.exp(-((x - energy) ** 2) / (2 * (fwhm / 2.35482) ** 2)) 
-                for energy, intensity in zip(energy_levels, intensities)], axis=0)
-    return x, y
 
 def process_spectra(log_file_pattern, output_folder, fwhm=0.1, num_points=1000):
     """Process multiple log files to generate an average UV-VIS spectrum.

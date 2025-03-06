@@ -32,6 +32,29 @@ import util.libutil as comn
 import numpy as np
 
 
+def gaussian_broadening(energy_levels, intensities, fwhm, num_points=3500):
+    """Apply Gaussian broadening to spectral data.
+
+    Args:
+        energy_levels (np.ndarray): Array of energy levels.
+        intensities (np.ndarray): Array of corresponding intensities.
+        fwhm (float): Full width at half maximum for Gaussian.
+        num_points (int): Number of points for the broadened spectrum.
+
+    Returns:
+        tuple: Broadened energy and intensity arrays.
+
+    Raises:
+        ValueError: If input arrays are empty.
+    """
+    if len(energy_levels) == 0 or len(intensities) == 0:
+        raise ValueError("Energy levels or intensities array is empty. Check input data.")
+    x = np.linspace(np.min(energy_levels) - 5 * fwhm, np.max(energy_levels) + 5 * fwhm, num_points)
+    y = np.sum([intensity * np.exp(-((x - energy) ** 2) / (2 * (fwhm / 2.35482) ** 2)) 
+                for energy, intensity in zip(energy_levels, intensities)], axis=0)
+    return x, y
+    
+
 def cp2k_spectrum(_params):
     """Computes various absorption using outputs of the CP2K software
 

@@ -1,5 +1,5 @@
 # *********************************************************************************
-# * Copyright (C) 2020 Alexey V. Akimov
+# * Copyright (C) 2020-2025 Alexey V. Akimov
 # *
 # * This file is distributed under the terms of the GNU General Public License
 # * as published by the Free Software Foundation, either version 3 of
@@ -9,7 +9,7 @@
 # *
 # *********************************************************************************/
 """
-.. module:: psi4_methods
+.. module:: methods
    :platform: Unix, Windows
    :synopsis: This module implements functions for interfacing Psi4 and Libra codes
 
@@ -35,8 +35,8 @@ elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 import util.libutil as comn
 
-from . import units
-from . import scan
+from libra_py import units
+from libra_py import scan
 
 
 class tmp:

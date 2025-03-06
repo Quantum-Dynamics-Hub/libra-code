@@ -16,6 +16,59 @@
 """
 
 import math
+import numpy as np
+
+
+    
+def stretched_exponential_fit_1(t, A, B, tau, beta):
+    """Fit an exponential decay function.
+
+    Args:
+        t (np.ndarray): Time vector.
+        A (float): Amplitude of the decay.
+        B (float): baseline
+        tau (float): Time constant for decay.
+        beta (float): Exponential power.
+
+    Returns:
+        np.ndarray: Fitted values.
+    """
+    
+    return A * np.exp(-np.power(t / tau, beta)) + B
+    
+    
+def exponential_fit_1(t, A, B, tau):
+    """Fit an exponential decay function.
+
+    Args:
+        t (np.ndarray): Time vector.
+        A (float): Amplitude of the decay.
+        B (float): baseline
+        tau (float): Time constant for decay.
+
+    Returns:
+        np.ndarray: Fitted values.
+    """
+    
+    return A * np.exp(-(t / tau) ) + B
+
+
+def gaussian_fit_1(t, A, B, tau):
+    """Fit an exponential decay function.
+
+    Args:
+        t (np.ndarray): Time vector.
+        A (float): Amplitude of the decay.
+        B (float): baseline
+        tau (float): Time constant for decay.
+
+    Returns:
+        np.ndarray: Fitted values.
+    """
+    
+    return A * np.exp( - np.power( (t / tau), 2) ) + B
+
+
 
 
 def Regression(X, Y, opt=0):
@@ -217,6 +270,7 @@ def fit_gau(X, Y, x0=0.0, verbose=0, linreg_opt=0):
                 1.0 / B))
 
     return predy, A, B
+
 
 
 # Example of usage:
