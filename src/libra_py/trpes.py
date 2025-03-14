@@ -22,6 +22,7 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib import cm
+import scipy.sparse as sp
 from scipy.optimize import curve_fit
 from matplotlib.ticker import FormatStrFormatter
 
