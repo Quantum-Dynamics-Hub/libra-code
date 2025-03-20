@@ -31,6 +31,8 @@ void dyn_variables::allocate_electronic_vars(){
 
     ampl_dia = new CMATRIX(ndia, ntraj);
     ampl_adi = new CMATRIX(nadi, ntraj);
+    q_mm = new MATRIX(nadi, ntraj);
+    p_mm = new MATRIX(nadi, ntraj);
     proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
@@ -327,6 +329,8 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
     *ampl_dia = *x.ampl_dia;
     *ampl_adi = *x.ampl_adi;
+    *q_mm = *x.q_mm;
+    *p_mm = *x.p_mm;
     for(itraj=0; itraj<ntraj; itraj++){
       *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
@@ -495,6 +499,8 @@ dyn_variables::~dyn_variables(){
     
     delete ampl_dia;
     delete ampl_adi;
+    delete q_mm;
+    delete p_mm;
 
     act_states.clear();
     act_states_dia.clear();

@@ -211,6 +211,14 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "Cdia" in saver.keywords:  # and "Cdia" in saver.np_data.keys():
             saver.add_dataset("Cdia", (_nsteps, _ntraj, _ndia), "C")
 
+        # Trajectory-resolved adiabatic MMST electronic "coordinates"
+        if "q_mm" in saver.keywords:  # and "q_mm" in saver.np_data.keys():
+            saver.add_dataset("q_mm", (_nsteps, _ntraj, _nadi), "R")
+
+        # Trajectory-resolved adiabatic MMST electronic "momenta"
+        if "p_mm" in saver.keywords:  # and "p_mm" in saver.np_data.keys():
+            saver.add_dataset("p_mm", (_nsteps, _ntraj, _nadi), "R")
+
         # Trajectory-resolved quantum momenta
         if "wp_width" in saver.keywords:  # and "p_quant" in saver.np_data.keys():
             saver.add_dataset("wp_width", (_nsteps, _ntraj, _ndof), "R")
@@ -638,6 +646,7 @@ def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_ra
         saver.save_matrix(t, "Cdia", Cdia.T())
 
 
+
 def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     """
     saver - can be either hdf5_saver or mem_saver
@@ -691,6 +700,18 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     if "Cdia" in saver.keywords and "Cdia" in saver.np_data.keys():
         Cdia = dyn_var.get_ampl_dia()
         saver.save_matrix(t, "Cdia", Cdia.T())
+
+    # Trajectory-resolved MMST electronic "coordinate"
+    # Format: saver.add_dataset("q_mm", (_nsteps, _ntraj, _nadi), "C")
+    if "q_mm" in saver.keywords and "q_mm" in saver.np_data.keys():
+        q_mm = dyn_var.get_q_mm()
+        saver.save_matrix(t, "q_mm", q_mm.T())
+
+    # Trajectory-resolved MMST electronic "momentum"
+    # Format: saver.add_dataset("p_mm", (_nsteps, _ntraj, _nadi), "C")
+    if "p_mm" in saver.keywords and "p_mm" in saver.np_data.keys():
+        p_mm = dyn_var.get_p_mm()
+        saver.save_matrix(t, "p_mm", p_mm.T())
 
     # Average adiabatic coherence indicator matrices
     # Format: saver.add_dataset("coherence_adi", (_nsteps, _nadi, _nadi), "R")

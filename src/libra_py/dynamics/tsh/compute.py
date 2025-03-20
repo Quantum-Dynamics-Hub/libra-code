@@ -75,6 +75,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 1: adiabatic representation, wfc [ default ]
                 - 2: diabatic representation, density matrix (e.g. Liouville's picture)
                 - 3: adiabatic representation, density matrix (e.g. Liouville's picture)
+                - 4: MMST adiabatic representation, wfc
 
             * **dyn_params["ham_update_method"]** ( int ): How to update Hamiltonian and which type of
                 Hamiltonian to update
@@ -717,11 +718,16 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - -1: all returned values are None [ default ]
                 - 0: also, all return values are none
                 - 1: 1-D info - Relevant variables to request to save: ["timestep", "time", "Ekin_ave", "Epot_ave", "Etot_ave",
-                    "Etherm", "E_NHC", "dEkin_ave", "dEpot_ave", "dEtot_ave"]
-                - 2: 2-D info - Relevant variables to request to save: ["states"]
-                - 3: 3-D info - Relevant variables to request to save: [ "SH_pop", "SH_pop_raw",
-                    "D_adi", "D_adi_raw", "D_dia", "D_dia_raw", "q", "p", "Cadi", "Cdia" ]
-                - 4: 4-D info - Relevant variables to request to save: ["hvib_adi", "hvib_dia", "St", "basis_transform", "projector"]
+                    "Etherm", "E_NHC", "dEkin_ave", "dEpot_ave", "dEtot_ave", "tcnbra_thermostat_energy", "Ekin_ave_qtsh" ]
+                - 2: 2-D info - Relevant variables to request to save: ["states", "states_dia", "se_pop_adi", "se_pop_dia",
+                    "sh_pop_adi", "sh_pop_dia", "sh_pop_adi_TR", "sh_pop_dia_TR", "mash_pop_adi", "mash_pop_dia", 
+                    "fssh3_average_errors"]
+                - 3: 3-D info - Relevant variables to request to save: [ "SH_pop", "SH_pop_raw", "D_adi", "D_adi_raw", 
+                    "D_dia", "D_dia_raw", "q", "p", "f", "Cadi", "Cdia", "coherence_adi", "coherence_dia", "q_mm", "p_mm",
+                    "wp_width", "p_quant", "VP", "f_xf", "qtsh_f_nc" ]
+                - 4: 4-D info - Relevant variables to request to save: ["hvib_adi", "hvib_dia", "St", "basis_transform", 
+                    "projector", "q_aux", "p_aux", "nab_phase"]
+                - 5: 5-D info - Relevat variables to request to save: ["dc1_adi"]
 
 
             * **dyn_params["mem_output_level"]** ( int ): controls what info to save into HDF5 files (all at the end)
@@ -904,6 +910,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                                                   "f",
                                                   "Cadi",
                                                   "Cdia",
+                                                  "q_mm",
+                                                  "p_mm",
                                                   "hvib_adi",
                                                   "hvib_dia",
                                                   "St",

@@ -58,6 +58,7 @@ class dyn_control_params{
      - 1: adiabatic representation, wfc [ default ]
      - 2: diabatic representation, density matrix (e.g. Liouville's picture)
      - 3: adiabatic representation, density matrix (e.g. Liouville's picture)
+     - 4: MMST adiabatic representation, wfc
   */
   int rep_tdse;
 
