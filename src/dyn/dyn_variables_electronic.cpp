@@ -476,12 +476,12 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
 
   int i, traj;
   double ksi;
-  int init_type;
-  int istate;
+  int init_type = -1;
+  int istate = -1;
   vector<double> istates;
-  int rep;
-  int is_nbra; 
-  int verbosity;
+  int rep = -1;
+  //int is_nbra = -1; 
+  int verbosity = 0;
 
   std::string key;
   for(int i=0;i<len(params.values());i++){
@@ -492,7 +492,7 @@ void dyn_variables::init_amplitudes(bp::dict _params, Random& rnd){
     else if(key=="istate") {  istate = bp::extract<int>(params.values()[i]); }
     else if(key=="istates") {  istates = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
     else if(key=="rep") {  rep = bp::extract<int>(params.values()[i]); }
-    else if(key=="is_nbra") {  is_nbra = bp::extract<int>(params.values()[i]); }
+    //else if(key=="is_nbra") {  is_nbra = bp::extract<int>(params.values()[i]); }
     else if(key=="verbosity") {  verbosity = bp::extract<int>(params.values()[i]); }
 
   }
@@ -655,9 +655,9 @@ void dyn_variables::init_density_matrix(bp::dict _params){
 
   int i, traj;
   double ksi;
-  int init_dm_type;
-  int rep;
-  int verbosity;
+  int init_dm_type = -1;
+  int rep = -1;
+  int verbosity = 0;
   //CMATRIX extern_dm_dia();
 
   std::string key;
@@ -759,11 +759,11 @@ void dyn_variables::init_active_states(bp::dict _params, Random& rnd){
 
   int i, traj;
   double ksi;
-  int init_type;
-  int istate;
+  int init_type = -1;
+  int istate = -1;
   vector<double> istates;
-  int rep;
-  int verbosity;
+  int rep = -1;
+  int verbosity = 0;
 
 
   std::string key;
@@ -886,11 +886,11 @@ void dyn_variables::init_active_states_dia(bp::dict _params, Random& rnd){
 
   int i, traj;
   double ksi;
-  int init_type;
-  int istate;
+  int init_type = -1;
+  int istate = -1;
   vector<double> istates;
-  int rep;
-  int verbosity;
+  int rep = -1;
+  int verbosity = 0;
 
 
   std::string key;
@@ -1223,7 +1223,8 @@ CMATRIX dyn_variables::compute_average_dm(int rep){
 
   int sz;
   if(rep==0 || rep==2){ sz = ndia; }
-  else if(rep==1 || rep==3){ sz = nadi; }
+  else if(rep==1 || rep==3 || rep == 4){ sz = nadi; }
+  else{ cout<<"Error in dyn_variables::compute_average_dm: rep is not allowed. Exiting...\n"; exit(0); }
 
   CMATRIX res(sz, sz);
 
@@ -1242,7 +1243,8 @@ vector<double> dyn_variables::compute_average_se_pop(int rep){
 
   int sz; 
   if(rep==0 || rep==2){ sz = ndia; }
-  else if(rep==1 || rep==3){ sz = nadi; }
+  else if(rep==1 || rep==3 || rep==4){ sz = nadi; }
+  else{ cout<<"Error in dyn_variables::compute_average_se_pop: rep is not allowed. Exiting...\n"; exit(0); }
 
   MATRIX ave(sz, sz);
   ave = compute_average_dm(rep).real();  
@@ -1268,7 +1270,8 @@ vector<double> dyn_variables::compute_average_mash_pop(int rep){
   int sz,i;
 
   if(rep==0 || rep==2){ sz = ndia; }
-  else if(rep==1 || rep==3){ sz = nadi; }
+  else if(rep==1 || rep==3 || rep == 4){ sz = nadi; }
+  else{ cout<<"Error in dyn_variables::compute_average_mash_pop: rep is not allowed. Exiting...\n"; exit(0); }
 
   MATRIX ave(sz, sz);
   ave = compute_average_dm(rep).real();
@@ -1393,7 +1396,8 @@ MATRIX dyn_variables::compute_coherence_indicator(int rep){
 
   int sz;
   if(rep==0 || rep==2){ sz = ndia; }
-  else if(rep==1 || rep==3){ sz = nadi; }
+  else if(rep==1 || rep==3 || rep==4 ){ sz = nadi; }
+  else{ cout<<"Error in dyn_variables::compute_coherence_indicator: rep is not allowed. Exiting...\n"; exit(0); }
 
   MATRIX res(sz, sz);
   

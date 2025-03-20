@@ -145,11 +145,11 @@ void apply_afssh(dyn_variables& dyn_var, CMATRIX& C, vector<int>& act_states, MA
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
-  int i,j;
+  int i;
   int ndof = invM.n_rows;
   int nst = C.n_rows;    
   int ntraj = C.n_cols;
-  int traj, dof, idof;
+  int traj, idof;
   int num_el = prms.num_electronic_substeps;
   double dt_el = prms.dt / num_el;
 
@@ -431,9 +431,10 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamilt
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
-  int nst, a,b;
+  int nst, a, b;
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
-  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 || prms.rep_tdse == 4 ){ nst = nadi; }
+  else{ nst = -1; } // to throw an error
 
 
   for(int itraj=0; itraj<ntraj; itraj++){
@@ -501,7 +502,6 @@ void apply_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, nHamilt
 
 void remove_thermal_correction(dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms){
 
-  int ndof = dyn_var.ndof;
   int ntraj = dyn_var.ntraj;
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
@@ -562,7 +562,7 @@ void update_wp_width(dyn_variables& dyn_var, dyn_control_params& prms){
   else if (prms.use_td_width == 2){
     double elapsed_time, s2;
 
-    elapsed_time = prms.dt*dyn_var.timestep;
+    //elapsed_time = prms.dt*dyn_var.timestep;
     
     for(int itraj=0; itraj<ntraj; itraj++){
       for(int idof=0; idof<ndof; idof++){
@@ -646,7 +646,7 @@ int need_active_states_diff_rep(dyn_control_params& prms){
 
 void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonian* Ham_prev, dyn_control_params& prms){
 
-  int itraj, i, j;
+  int itraj;
 
   int num_el = prms.num_electronic_substeps;
   double dt = prms.dt / num_el;
@@ -655,16 +655,17 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
   int is_ssy = prms.do_ssy;
 
   //======= Parameters of the dyn variables ==========
-  int ndof = dyn_var.ndof;
+  //int ndof = dyn_var.ndof;
   int ntraj = dyn_var.ntraj;
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
   int nst;
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
-  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 || prms.rep_tdse == 4 ){ nst = nadi; }
+  else{ nst = -1; } // to throw an error 
 
-  int ampl_transformation_method = prms.ampl_transformation_method;
+  //int ampl_transformation_method = prms.ampl_transformation_method;
 
 
   CMATRIX C(nst, 1);
@@ -1150,14 +1151,13 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 //  cout<<"In compute_dynamics\n";
   //======== General variables =======================
-  int i,j, cdof, traj, dof, idof, ntraj1, n_therm_dofs, nst;
+  int i, cdof, traj, dof, idof, ntraj1;
 
   //========= Control parameters variables ===========
   dyn_control_params prms;
   prms.set_parameters(dyn_params);
 
   int num_el = prms.num_electronic_substeps;
-  double dt_el = prms.dt / num_el;
 
   //======= Parameters of the dyn variables ==========
   int ndof = dyn_var.ndof; 
@@ -1165,9 +1165,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   int nadi = dyn_var.nadi;
   int ndia = dyn_var.ndia;
 
-
+  int nst; 
   if(prms.rep_tdse==0 || prms.rep_tdse==2 ){ nst = ndia; }
-  else if(prms.rep_tdse==1 || prms.rep_tdse==3 ){ nst = nadi; }
+  else if(prms.rep_tdse==1 || prms.rep_tdse==3 || prms.rep_tdse == 4 ){ nst = nadi; }
+  else{ nst = -1; } // to throw an error
 
 
   vector<int> act_states(dyn_var.act_states); // = dyn_var.act_states;
@@ -1196,6 +1197,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   vector<int> t3(nst, 0); for(i=0;i<nst;i++){  t3[i] = i; }
 
   //============ Sanity checks ==================
+  int n_therm_dofs = 1; // default 
   if(prms.ensemble==1){  
     n_therm_dofs = therm[0].Nf_t + therm[0].Nf_r;
     if(n_therm_dofs != prms.thermostat_dofs.size()){
