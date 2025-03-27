@@ -789,6 +789,81 @@ def add_populations(plt, hdf_file, plot_params_, pop_type ):
 
 
 
+def add_coherence_indicators(plt, hdf_file, plot_params_, coh_type):
+    """
+    Adds the plotting of the time-overlaps or projectors vs. time    
+    This function does not plot it though
+        
+    pop_type (string): selector of the type of the population to plot
+    
+        - "coherence_adi"
+        - "coherence_dia"
+    
+    Call it after adding a sub-plot
+    """
+    
+    possible_options = ["coherence_adi", "coherence_dia"]
+    if coh_type not in possible_options:
+        print(F"Error in add_coherence_indicators - the coh_type argument {coh_type} is invalid\n")
+        print(F"Must be one of the following options: {possible_options}\nExiting")
+        sys.exit(0)            
+    
+    plot_params = common_defaults(plot_params_)
+            
+    axes_fontsize = plot_params["axes_fontsize"]
+    axes_label_fontsize = plot_params["axes_label_fontsize"]
+    legend_fontsize = plot_params["legend_fontsize"]
+    title_fontsize = plot_params["title_fontsize"]
+    xlim = plot_params["xlim"]
+    ylim = plot_params["ylim"]
+    Lw = plot_params["linewidth"]
+    colors = plot_params["colors"]
+    clrs_index = plot_params["clrs_index"]   
+    
+    which_states = plot_params["which_adi_states"]
+    
+    nstates = hdf_file[F"{coh_type}/data"].shape[1] 
+                    
+    titles = { "coherence_adi": "Adibatic coherence indicators",
+               "coherence_dia": "Diabatic coherence indicators",               
+             }
+    
+    if xlim!=None:
+        plt.xlim( xlim[0], xlim[1])
+    if ylim!=None:
+        plt.ylim( ylim[0], ylim[1])
+        
+            
+    plt.title(titles[coh_type], fontsize=title_fontsize)
+    plt.xticks(fontsize=axes_fontsize[0])
+    plt.yticks(fontsize=axes_fontsize[1])                            
+    plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
+    plt.ylabel('Magnitude', fontsize=axes_label_fontsize[1])   
+
+    
+    res = 0
+    indx = -1
+    for istate in range(nstates):
+        if istate in which_states:
+            for istate2 in range(nstates):
+                if istate2 in which_states and istate > istate2:
+                            
+                    indx = indx + 1
+                    
+                    lbl=rF"$\langle |\rho_{{{istate2}{istate}}}|^{2} \rangle $"
+                    
+                    if "time/data" in hdf_file.keys() and F"{coh_type}/data" in hdf_file.keys():
+                        plt.plot(hdf_file["time/data"][:]/units.fs2au, hdf_file[F"{coh_type}/data"][:, istate2, istate], 
+                                         label=lbl, linewidth=Lw, color = colors[ clrs_index[indx] ])     
+                        res = 1
+                    
+    plt.legend(fontsize=legend_fontsize)
+    plt.tight_layout()   
+    
+    return res
+
+
+
 def add_time_overlaps_projectors(plt, hdf_file, plot_params_, prop_type):
     """
     Adds the plotting of the time-overlaps or projectors vs. time    
@@ -1085,12 +1160,30 @@ def plot_dynamics(plot_params_):
             res = add_populations(plt, f, plot_params_, "sh_pop_dia_TR")
             if plot_params["save_figures"]==1 and res==1:
                 plt.savefig(F"{out_prefix}/sh_pop_dia_TR.png", dpi=plot_params["dpi"])
+        
+
+        #====== Coherences ================
+        if "coherence_adi" in what_to_plot:
+            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_coherence_indicators(plt, f, plot_params_, "coherence_adi")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/coherence_adi.png", dpi=plot_params["dpi"])
+        
+        if "coherence_dia" in what_to_plot:
+            plt.figure(num=16, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+                       edgecolor='black', frameon=plot_params["frameon"])        
+            plt.subplot(1,1,1)            
+            res = add_coherence_indicators(plt, f, plot_params_, "coherence_dia")
+            if plot_params["save_figures"]==1 and res==1:
+                plt.savefig(F"{out_prefix}/coherence_dia.png", dpi=plot_params["dpi"])
 
                                        
                        
         #===== Trajectory-resolved adiabatic energies =========
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=13, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=17, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_adi")
@@ -1098,7 +1191,7 @@ def plot_dynamics(plot_params_):
                 plt.savefig(F"{out_prefix}/hvib_adi.png", dpi=plot_params["dpi"])
 
         if "traj_resolved_adiabatic_ham" in what_to_plot:
-            plt.figure(num=14, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=18, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_trajectory_resolved_ham_property(plt, f, plot_params, "hvib_dia")
@@ -1108,7 +1201,7 @@ def plot_dynamics(plot_params_):
 
         #===== Time-overlaps and projectors =========
         if "time_overlaps" in what_to_plot:
-            plt.figure(num=15, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=19, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "St")
@@ -1117,7 +1210,7 @@ def plot_dynamics(plot_params_):
 
 
         if "projector" in what_to_plot:
-            plt.figure(num=16, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
+            plt.figure(num=20, figsize=plot_params["figsize"], dpi=plot_params["dpi"],
                        edgecolor='black', frameon=plot_params["frameon"])
             plt.subplot(1,1,1)
             res = add_time_overlaps_projectors(plt, f, plot_params, "projector")
@@ -1127,7 +1220,7 @@ def plot_dynamics(plot_params_):
 
         #===== Basis transforms =========
         if "basis_transform" in what_to_plot:
-            plt.figure(num=17, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
+            plt.figure(num=21, figsize=plot_params["figsize"], dpi=plot_params["dpi"], 
                        edgecolor='black', frameon=plot_params["frameon"])          
             plt.subplot(1,1,1)
             res = add_basis_transform(plt, f, plot_params)                   

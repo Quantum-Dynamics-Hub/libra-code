@@ -1041,10 +1041,12 @@ void dyn_variables:: update_active_states(int direction, int property){
 
       //coeff.max_col_elt(0, max_val, act_states[itraj]);
       rho_tmp = (coeff * coeff.H()).real();
-      double max_val = fabs(rho_tmp.get(0,0)); 
-      int max_val_indx = 0;
-      for(int j=1;j<nst;j++){ 
+      //double max_val = fabs(rho_tmp.get(0,0)); 
+      int max_val_indx = act_states[itraj];
+      double max_val = fabs(rho_tmp.get(max_val_indx, max_val_indx));
+      for(int j=0;j<nst;j++){ 
         // >= is important !!! not just >
+        // on 2/15/2025:  actually, we need ">"
         if( fabs(rho_tmp.get(j,j)) > max_val){  max_val_indx = j; max_val = fabs(rho_tmp.get(j,j)); } 
       }
       act_states[itraj] = max_val_indx;
@@ -1386,6 +1388,29 @@ vector<double> dyn_variables::compute_average_sh_pop_TR(int rep){
   return res;
 }
 
+
+MATRIX dyn_variables::compute_coherence_indicator(int rep){
+
+  int sz;
+  if(rep==0 || rep==2){ sz = ndia; }
+  else if(rep==1 || rep==3){ sz = nadi; }
+
+  MATRIX res(sz, sz);
+  
+  CMATRIX dm(sz, sz); MATRIX temp(sz, ntraj);
+
+  // Making a temporary matrix collecting trajectory-wise population elements
+  for(int traj=0; traj<ntraj; traj++){
+    if(rep==0 || rep==2){   dm = *dm_dia[traj]; }
+    else if(rep==1 || rep==3){ dm = *dm_adi[traj]; }
+  
+    for(int i=0; i<sz; i++){temp.set(i, traj, dm.get(i,i).real() );}
+  }
+
+  res = temp * temp.T() / (float)ntraj;
+
+  return res;
+}
 
 
 void dyn_variables::save_curr_dm_into_prev(){

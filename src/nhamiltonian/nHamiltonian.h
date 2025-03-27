@@ -594,6 +594,17 @@ public:
   CMATRIX QTSH_forces_adi(CMATRIX& ampl_adi, int lvl);              ///< QTSH forces in adiabatic basis
 
 
+///< In nHamiltonian_compute_KCRPMD.cpp
+  double internal_ring_polymer_potential(const MATRIX& q, const MATRIX& invM, double beta);
+  vector<MATRIX> generate_m_matrices(double beta);
+  double donor_electronic_potential(double beta);
+  double acceptor_electronic_potential(double beta);
+  double kinked_pair_electronic_potential(double beta);
+  double kinetic_constraint_potential(double beta, double eta, double a);
+  double heavy_side_potential(vector<double>& auxiliary_y, int theta, double beta, double b);
+  double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b);
+
+
 
 
   friend bool operator == (const nHamiltonian& h1, const nHamiltonian& h2){

@@ -102,6 +102,7 @@ void export_dyn_control_params_objects(){
 
       ///================= QTSH specific ====================
       .def_readwrite("use_qtsh", &dyn_control_params::use_qtsh)
+      .def_readwrite("qtsh_force_option", &dyn_control_params::qtsh_force_option)
       
       ///================= Decoherence options =========================================
       .def_readwrite("decoherence_algo", &dyn_control_params::decoherence_algo)
@@ -244,6 +245,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("tcnbra_thermostats", &dyn_variables::tcnbra_thermostats)
       .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
       .def_readwrite("qtsh_vars_status", &dyn_variables::qtsh_vars_status)
+      .def_readwrite("kcrpmd_vars_status", &dyn_variables::kcrpmd_vars_status)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -257,6 +259,7 @@ void export_dyn_variables_objects(){
       .def("allocate_tcnbra", &dyn_variables::allocate_tcnbra)
       .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
       .def("allocate_qtsh", &dyn_variables::allocate_qtsh)
+      .def("allocate_kcrpmd", &dyn_variables::allocate_kcrpmd)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
@@ -322,6 +325,7 @@ void export_dyn_variables_objects(){
       .def("compute_average_sh_pop", &dyn_variables::compute_average_sh_pop)
       .def("compute_average_mash_pop", &dyn_variables::compute_average_mash_pop)
       .def("compute_average_sh_pop_TR", &dyn_variables::compute_average_sh_pop_TR)
+      .def("compute_coherence_indicator", &dyn_variables::compute_coherence_indicator)
 
       .def("compute_tcnbra_ekin", &dyn_variables::compute_tcnbra_ekin)
       .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
@@ -763,7 +767,7 @@ void export_dyn_projectors_objects(){
   vector< vector<int> > (*expt_compute_permutations_v1)
   (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_permutations;
 
-
+/*
   vector<CMATRIX> (*expt_compute_projectors_v1)
   (dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v1);
@@ -771,7 +775,7 @@ void export_dyn_projectors_objects(){
   vector<CMATRIX> (*expt_compute_projectors_v2)
   (dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms) = &compute_projectors;
   def("compute_projectors", expt_compute_projectors_v2);
-
+*/
   CMATRIX (*expt_compute_projector_v1)
   (dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St) = &compute_projector;
   def("compute_projector", expt_compute_projector_v1);
@@ -802,6 +806,15 @@ void export_dyn_projectors_objects(){
   def("get_stochastic_reordering3", expt_get_stochastic_reordering3_v2);
 
 
+  CMATRIX (*expt_compute_F_cost_matrix_v1)
+  (CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, 
+  MATRIX& p, MATRIX& iM, double dt, int act_state) = &compute_F_cost_matrix;
+  def("compute_F_cost_matrix", expt_compute_F_cost_matrix_v1);
+
+  vector<MATRIX> (*expt_compute_F_cost_matrix_dof_resolved_v1)
+  (CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev,
+  MATRIX& _p, MATRIX& iM, double dt, int act_state) = &compute_F_cost_matrix_dof_resolved;
+  def("compute_F_cost_matrix_dof_resolved", expt_compute_F_cost_matrix_dof_resolved_v1);
 
 }
 

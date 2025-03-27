@@ -469,6 +469,16 @@ class dyn_control_params{
   */
   int use_qtsh;
   
+  
+  /**
+    Nonclassical force options in the adiabatic QTSH. Only used with `use_qtsh == 1`
+
+  Options:
+      - 0: Considering only the first-order force, i.e., off-diagonal Ehrenfest force
+      - 1: The whole force including the second-order term is used [default]
+
+  */
+  int qtsh_force_option;
 
   
   ///===============================================================================

@@ -838,14 +838,10 @@ vector< vector<int> > compute_permutations(dyn_control_params& prms, vector<CMAT
 }
 
 
-
+/*
 
 vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd){
-/**
-
- Computes the instantaneous projector = permutation + phase correction
-
-*/
+// Computes the instantaneous projector = permutation + phase correction
 
   int ntraj = St.size();
   // Instead of setting many of-else in the for loop we can set ntraj=1
@@ -902,6 +898,7 @@ vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Ea
   return res;
 }
 
+*/
 
 CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 /**
@@ -951,14 +948,10 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 
 
 
-
+/*
 
 vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms){
-/**
-
- Computes the instantaneous projector using already computed permutations = permutation + phase correction
-
-*/
+// Computes the instantaneous projector using already computed permutations = permutation + phase correction
 
   int ntraj = St.size();
   // Instead of setting many of-else in the for loop we can set ntraj=1
@@ -1000,7 +993,7 @@ vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St
   return res;
 }
 
-
+*/
 
 
 CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors){
@@ -1122,52 +1115,100 @@ CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr,
 
   MATRIX vel(ndof, 1);  vel.dot_product(iM, p);  
   MATRIX tmp(ndof, 1);
-  tmp = fi_curr.T(); ai.dot_product(iM, tmp);
-  tmp = fj_curr.T(); aj.dot_product(iM, tmp); 
 
   double val = 0.0;
   for(i=0; i<nst; i++){
-    double sum = 1.0; 
+
+    fi_curr = F_curr.row(i).real();
+    fi_prev = F_prev.row(i).real();
+    tmp = fi_curr.T(); ai.dot_product(iM, tmp);
+    dq_i = (vel * dt + 0.5 * ai * dt * dt);
+    double dE_i = -(fi_prev * dq_i).get(0,0);
 
     for(j=0;j<nst; j++){
 
-      fi_curr = F_curr.row(i).real();
-      fi_prev = F_prev.row(i).real();
-
       fj_curr = F_curr.row(j).real();
       fj_prev = F_prev.row(j).real();
-
-      dq_i = (vel * dt + 0.5 * ai * dt * dt); 
-      double dE = e_prev.get(j,j) - e_prev.get(i,i);
-      double dE_i = -(fi_prev * dq_i).get(0,0);
-
+      tmp = fj_curr.T(); aj.dot_product(iM, tmp);
       dq_j = (vel * dt + 0.5 * aj * dt * dt);
       double dE_j = -(fj_prev * dq_j).get(0,0);
+
+      double dE = e_prev.get(j,j) - e_prev.get(i,i);
       double dE_new = dE + dE_j - dE_i;
 
       val = 0.5*(1.0 - SIGN( dE ) * SIGN( dE_new )) ;
-/*
-      if(i==j){ val = 0.0; }
-      //else{ val = 1.0 - SIGN( dE ) * SIGN( dE_new );  sum -= val; } 
-      else{ 
-         double val1;
-         val = SIGN( dE ) * SIGN( dE_new );  
-         if(val<0.0){ val1 = 1.0;  }
-         else{ val1 = 0.0; }
-         val = val1;
-         //sum -= val;
-      }
-*/
 
       res.set(i, j, complex<double>( val, 0.0) );
     }// for j
-
-    //if(sum<=0.0){ sum = 0.0; }
-    //res.set(i, i, complex<double>(sum, 0.0) );
   }// for i
 
   return res;
 }
+
+
+
+vector<MATRIX> compute_F_cost_matrix_dof_resolved(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& _p, MATRIX& iM, double dt, int act_state){
+/**  F_curr, F_prev - CMATRIX(nadi, ndof)
+     p - MATRIX(ndof, 1) - current momentum
+     iM - MATRIX(ndof, 1) - inverse matrices
+     dt - time step
+     act_state - the current active state
+*/
+  int i,j;
+  int ndof = F_curr.n_cols;
+  int nst = F_curr.n_rows;
+  vector<MATRIX> res(ndof, MATRIX(nst, nst) );
+  //MATRIX fi_curr(1, ndof);
+  //MATRIX fj_curr(1, ndof);
+  //MATRIX fi_prev(1, ndof);
+  //MATRIX fj_prev(1, ndof);
+  //MATRIX ai(ndof, 1);
+  //MATRIX aj(ndof, 1);
+  //MATRIX dq_i(ndof,1);
+  //MATRIX dq_j(ndof,1);
+  MATRIX p(_p);
+
+  // correction, because the current p is already a half-step propagated using old forces
+  //p -= dt * F_prev.row(act_state).real().T();
+
+  MATRIX vel(ndof, 1);  vel.dot_product(iM, p);
+  MATRIX tmp(ndof, 1);
+
+  double val = 0.0;
+  for(int idof=0; idof<ndof; idof++){
+
+    double vel = p.get(idof, 0) * iM.get(idof, 0);
+
+    for(i=0; i<nst; i++){
+
+      double fi_curr = F_curr.get(i,idof).real();
+      double fi_prev = F_prev.get(i,idof).real();
+      double ai = fi_curr * iM.get(idof,0);
+      double dq_i = vel * dt + 0.5 * ai * dt * dt;
+      double dE_i = -fi_prev * dq_i;
+
+      for(j=0;j<nst; j++){
+
+        double fj_curr = F_curr.get(j,idof).real();
+        double fj_prev = F_prev.get(j,idof).real();
+        double aj = fj_curr * iM.get(idof,0);
+        double dq_j = vel * dt + 0.5 * ai * dt * dt;
+        double dE_j = -fj_prev * dq_j;
+
+        double dE = e_prev.get(j,j) - e_prev.get(i,i);
+        double dE_new = dE + dE_j - dE_i;
+
+        val =  SIGN( dE ) * SIGN( dE_new ) ;
+        res[idof].set(i, j, val);
+
+      }// for j
+    }// for i
+  }// for idof
+
+  return res;
+}
+
+
 
 
 CMATRIX compute_F_cost_matrix2(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& _p, MATRIX& iM, double dt, int act_state){
@@ -1176,6 +1217,9 @@ CMATRIX compute_F_cost_matrix2(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr
      iM - MATRIX(ndof, 1) - inverse matrices
      dt - time step
      act_state - the current active state
+
+   This is an experimental function - merely a placeholder - not used anywhere yet!
+
 */
   int i,j;
   int ndof = F_curr.n_cols;

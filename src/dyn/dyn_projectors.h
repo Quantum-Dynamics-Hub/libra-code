@@ -55,8 +55,8 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
   vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
 
 vector< vector<int> > compute_permutations(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
-vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
-vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms);
+//vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& Eadi, vector<CMATRIX>& St, Random& rnd);
+//vector<CMATRIX> compute_projectors(dyn_control_params& prms, vector<CMATRIX>& St, vector<vector<int> >& perms);
 
 CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St);
 
@@ -64,6 +64,9 @@ CMATRIX raw_to_dynconsyst(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
 CMATRIX dynconsyst_to_raw(CMATRIX& amplitudes, vector<CMATRIX>& projectors);
 
 CMATRIX compute_F_cost_matrix(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, MATRIX& p, MATRIX& iM, double dt, int act_state);
+vector<MATRIX> compute_F_cost_matrix_dof_resolved(CMATRIX& F_curr,  CMATRIX& F_prev, MATRIX& e_curr, MATRIX& e_prev, 
+MATRIX& _p, MATRIX& iM, double dt, int act_state);
+
 
 }// namespace libdyn
 }// liblibra
