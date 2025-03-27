@@ -35,9 +35,9 @@ elif sys.platform=="linux" or sys.platform=="linux2":
     from liblibra_core import *
 import util.libutil as comn   
 
-from libra_py import data_outs, data_stat
+from libra_py import data_outs, data_stat, data_conv
 from libra_py import units
-
+from libra_py import molden_methods
 
 
 def ndigits( integer_number: int ):
@@ -2325,4 +2325,44 @@ def atom_components_cp2k(filename):
         indices.append(index)
     return indices
 
+def compute_mo_overlap(params):
+    """
+    This function computes the molecular orbital overlap calculations between
+    two geometries: $\langle\Phi_{i,R}\|\Phi_{j,R'}\rangle$. It takes a dictionary as parameters.
+    Args:
+        params (dictionary):
+            molden_file_1 (string): The path to the first geometry molden file
+            molden_file_2 (string): The path to the second geometry molden file
+            is_spherical (bool): The spherical coordinate boolean flga
+            nprocs (integer): The number of pocessors
+    Returns:
+        mo_overlap_matrix (numpy array): The overlap between molecular orbitals
+    """
+    # Create Libint integral shells for each molden file
+    shell_1, l_vals_1 = molden_methods.molden_file_to_libint_shell(params['molden_file_1'], params['is_spherical'])
+    shell_2, l_vals_2 = molden_methods.molden_file_to_libint_shell(params['molden_file_2'], params['is_spherical'])
+    # Reindexing the eigenvectors outputted by CP2K
+    new_indices = resort_molog_eigenvectors(l_vals_1)
+    eig_vect_1, energies_1 = molden_methods.eigenvectors_molden(params['molden_file_1'], nbasis(shell_1), l_vals_1)
+    eig_vect_2, energies_2 = molden_methods.eigenvectors_molden(params['molden_file_2'], nbasis(shell_2), l_vals_2)
+    
+    # The new eigenvectors
+    resortted_eig_vect_1 = []
+    resortted_eig_vect_2 = []
+    for j in range(len(eig_vect_1)):
+        # the new and sorted eigenvector
+        eigenvector1 = eig_vect_1[j]
+        eigenvector1 = eigenvector1[new_indices]
+        eigenvector2 = eig_vect_2[j]
+        eigenvector2 = eigenvector2[new_indices]
+        # append it to the eigenvectors list
+        resortted_eig_vect_1.append(eigenvector1)
+        resortted_eig_vect_2.append(eigenvector2)
+    resortted_eig_vect_1 = np.array(resortted_eig_vect_1)
+    resortted_eig_vect_2 = np.array(resortted_eig_vect_2)
+    ao_matrix = compute_overlaps(shell_1, shell_2, params['nprocs'])
+    ao_matrix = data_conv.MATRIX2nparray(ao_matrix)
+    mo_overlap_matrix = np.linalg.multi_dot([resortted_eig_vect_1, ao_matrix, 
+                                             resortted_eig_vect_2.T]) 
+    return mo_overlap_matrix
 
