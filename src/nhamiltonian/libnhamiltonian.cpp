@@ -219,6 +219,9 @@ void export_nhamiltonian_objects(){
   CMATRIX (nHamiltonian::*expt_all_forces_adi_v1)(vector<int>& id_) 
   = &nHamiltonian::all_forces_adi;
 
+  CMATRIX (nHamiltonian::*expt_all_forces_dia_v1)(vector<int>& id_)
+  = &nHamiltonian::all_forces_dia;
+
 
 /*
   CMATRIX (nHamiltonian::*expt_forces_adi_v1)(CMATRIX& ampl_adi) 
@@ -530,6 +533,7 @@ void export_nhamiltonian_objects(){
 //      .def("forces_dia", expt_forces_dia_v4)
 
       .def("all_forces_adi", expt_all_forces_adi_v1)
+      .def("all_forces_dia", expt_all_forces_dia_v1)
 
 
       .def("compute_nac_dia", expt_compute_nac_dia_v1)

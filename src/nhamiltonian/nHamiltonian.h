@@ -496,6 +496,7 @@ public:
   CMATRIX forces_dia(vector<int>& act_states);   // -dH_dia/dR in the diabatic basis for several trajectories
 
   CMATRIX all_forces_adi(vector<int>& id_);
+  CMATRIX all_forces_dia(vector<int>& id_);
 
   
 /*
@@ -554,9 +555,11 @@ public:
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi);
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_, CMATRIX& transform);
   complex<double> Ehrenfest_energy_adi(CMATRIX& ampl_adi, vector<int>& id_);
+  CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRIX& transform, double gamma);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option, CMATRIX& transform);      ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi, int option);      ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi_unit(CMATRIX& ampl_adi);                  ///< Ehrenfest forces in adiabatic basis
+  CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option, vector<CMATRIX*>& transforms, vector<double>& gammas);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option, vector<CMATRIX*>& transforms);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl, int option);  ///< Ehrenfest forces in adiabatic basis
   CMATRIX Ehrenfest_forces_adi(CMATRIX& ampl_adi, int lvl);              ///< Ehrenfest forces in adiabatic basis
