@@ -58,7 +58,9 @@
 
 #include "atomistic/libatomistic.h"
 
+#include "shamiltonian/libshamiltonian.h"
 #include "nhamiltonian/libnhamiltonian.h"
+//#include "shamiltonian/libshamiltonian.h"
 
 #include "fgr/libfgr.h"
 

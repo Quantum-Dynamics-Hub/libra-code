@@ -9,8 +9,11 @@ set(PCH_SRC ${CMAKE_CURRENT_SOURCE_DIR}/pch.cpp ${PCH_HEADERS})
 ADD_LIBRARY(pch SHARED ${PCH_SRC})
 ADD_LIBRARY(pch_stat STATIC ${PCH_SRC})
 
+
 target_precompile_headers(pch PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
 target_precompile_headers(pch_stat PUBLIC ${PCH_SRC}) # With PUBLIC they will be used by targets using this target
+
+
 
 
 #add_compile_definitions(USING_PCH)
@@ -140,6 +143,9 @@ MESSAGE("Going into subdirectory nhamiltonian...")
 ADD_SUBDIRECTORY("nhamiltonian")
 
 
+MESSAGE("Going into subdirectory shamiltonian...")
+ADD_SUBDIRECTORY("shamiltonian")
+
 MESSAGE("Going into subdirectory montecarlo...")
 ADD_SUBDIRECTORY("montecarlo")
 
@@ -230,6 +236,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       models_stat
                       control_parameters_stat
                       nhamiltonian_stat
+                      shamiltonian_stat
                       util_stat
                       forcefield_stat
                       opt_stat

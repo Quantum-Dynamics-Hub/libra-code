@@ -1081,7 +1081,7 @@ void export_linalg_objects(){
 
 
 
-
+/*
   class_< intMap >("intMap")
       .def(vector_indexing_suite< intMap >())
   ;
@@ -1097,7 +1097,7 @@ void export_linalg_objects(){
   class_< complexMap >("complexMap")
       .def(vector_indexing_suite< complexMap >())
   ;
-
+*/
 
   export_IMATRIX();
   export_MATRIX();

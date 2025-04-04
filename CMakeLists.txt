@@ -2,16 +2,14 @@
 #
 #  Verify that Cmake is up to date
 #
-CMAKE_MINIMUM_REQUIRED(VERSION 3.12)
-set (CMAKE_CXX_STANDARD 14)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.24)  # used to be 3.12
+set (CMAKE_CXX_STANDARD 17)
 #SET(CMAKE_LEGACY_CYGWIN_WIN32 0)
 
 
 #
 #  Project name
 #
-
-
 project("libra")
 
 
@@ -23,6 +21,9 @@ LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake/modules)
 
 #
 # Try using the PCH - it will only work if you have the right version of cmake
+# Define USING_PCH globally for all targets
+add_compile_definitions(USING_PCH)
+add_compile_definitions(pch_EXPORTS)
 #
 option(USING_PCH "Build using pre-compiled header support" ON)
 option(WITH_OPENMP "Use OpenMP for parallelization" ON)
@@ -78,6 +79,10 @@ MESSAGE(STATUS "Found Boost libraries directory: ${Boost_LIBRARIES}")
 MESSAGE(STATUS "Found Boost include directory:   ${Boost_INCLUDE_DIRS}")
 
 
+#
+#   Eigen 3 library
+#
+
 MESSAGE(STATUS "Looking for Eigen3 library...")
 FIND_PACKAGE(Eigen3)
 IF(EIGEN3_FOUND)
@@ -89,6 +94,10 @@ ELSEIF(NOT EIGEN3_FOUND)
 ENDIF()
 
 
+#
+#  libint2 library
+#
+
 MESSAGE(STATUS "Looking for libint2 libraries...")
 FIND_PACKAGE(Libint2 CONFIG 2.7.1 REQUIRED COMPONENTS shared gss impure_sh onebody_d0_l6 g12_d0_l4 g12_d1_l4 eri_c4_d0_l5 eri_c4_d1_l4) #gss e5 g5)
 if(Libint2_FOUND)
@@ -98,11 +107,44 @@ endif()
 
 
 #
+#  LibTorch
+#
+
+# Check your PyTorch executable:
+# python -c "import torch; print(torch._C._GLIBCXX_USE_CXX11_ABI)"
+# if it yields True - You have a C++11 ABI build, choose that option
+# if it yields False - Your PyTorch uses the older pre-C++11 ABI, choose that option
+
+# CXX11
+SET(Torch_Root /home/alexvakimov/SOFTWARE/libpytorch/libtorch)
+#ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=1)
+#export CXXFLAGS="-D_GLIBCXX_USE_CXX11_ABI=0"
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0")
+
+# pre-CXX11 - doesn't work
+#SET(Torch_Root /home/alexvakimov/SOFTWARE/libpytorch/libtorch-pre-cxx11-abi)
+#ADD_DEFINITIONS(-D_GLIBCXX_USE_CXX11_ABI=0)
+
+MESSAGE(STATUS "Looking for LibTorch libraries...")
+# Set the LibTorch directory path
+SET(Torch_DIR ${Torch_Root}/share/cmake/Torch)
+#SET(CMAKE_PREFIX_PATH /home/alexvakimov/SOFTWARE/libpytorch/libtorch)  # Here - need to define the prefix 
+#MESSAGE(${CMAKE_PREFIX_PATH})
+FIND_PACKAGE(Torch REQUIRED)
+SET(TORCH_LIBRARIES "${TORCH_LIBRARIES};${Torch_Root}/lib/libtorch_python.so" )
+MESSAGE("Torch Libraries are: ${TORCH_LIBRARIES}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+
+
+
+#
 # GNU compiler definitions
 #
 IF(CMAKE_COMPILER_IS_GNUCXX)
 # For Linux
   ADD_DEFINITIONS("-Wall -Wl,-z,defs")
+  add_compile_options(-Wno-unused-variable)
+  add_compile_options(-Wno-sign-compare)
 # For Cygwin
 #  ADD_DEFINITIONS("-Wall -DCYGWIN")
 ELSE()
@@ -127,9 +169,9 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 # Set the libraries
 #
 if(NOT WITH_OPENMP)
-  SET(ext_libs Boost::regex Boost::python${LIBRA_Python3_VERSION} Python3::Python)
+  SET(ext_libs Boost::regex Boost::python${LIBRA_Python3_VERSION} Python3::Python ${TORCH_LIBRARIES} torch torch_cpu )
 else()
-  SET(ext_libs Boost::regex Boost::python${LIBRA_Python3_VERSION} Python3::Python OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
+  SET(ext_libs Boost::regex Boost::python${LIBRA_Python3_VERSION} Python3::Python ${TORCH_LIBRARIES} torch torch_cpu OpenMP::OpenMP_C OpenMP::OpenMP_CXX)
 endif()
 
 
