@@ -65,10 +65,8 @@ public:
 
   int nbeads;                ///< number of entangled trajectories (e.g. beads in RPMD or generally trajectories
                              /// that should be handled together)
-
-  int nel_dof;               ///< number of electnic degrees of freedom
-
-  int nn_dof;                ///< number of nuclear degrees of freedom - expected
+  int nstates;               ///< number of electronic states
+  int nnucl;                 ///< number of nuclear degrees of freedom - expected
 
   /** Diabatic representation
 
@@ -95,38 +93,19 @@ public:
   So: den_mat_dia - density matrix matrix in the diabatic basis
 
   */
-  int ndia;                   ///< the number of electronic DOFs in the diabatic basis
-
-
-  torch::Tensor ovlp_dia;          ///< the overlap of the diabatic basis 
-  boost::python::object get_ovlp_dia();
-
-  int ovlp_dia_mem_status;       
-
-  //torch::Tensor dc1_dia;   ///< first-order derivative coupling matrices in the diabatic basis 
-  vector<int> dc1_dia_mem_status;
-
-  void set_tensor(torch::Tensor x){  ovlp_dia = x; }
-  void get_tensor(torch::Tensor y){  y = ovlp_dia; }
-
-
-  //torch::Tensor ham_dia;           ///< Hamiltonian in diabatic representation
-  int ham_dia_mem_status;
-
-  //torch::Tensor nac_dia;           ///< Nonadiabatic couplings (time-derivative couplings) in diabatic representation
-  int nac_dia_mem_status;
-
-  //torch::Tensor hvib_dia;          ///< Vibronic Hamiltonian in diabatic representation
-  int hvib_dia_mem_status;
 
 
 
+  // Diabatic properties
+  torch::Tensor ovlp_dia;    ///< the overlap of the diabatic basis  [nbeads, nstates, nstates]
+  torch::Tensor ham_dia;     ///< Hamiltonian in diabatic representation [nbeads, nstates, nstates]
+  torch::Tensor nac_dia;     ///< Nonadiabatic couplings (time-derivative couplings) in diabatic representation [nbeads, nstates, nstates]
+  torch::Tensor hvib_dia;    ///< Vibronic Hamiltonian in diabatic representation [nbeads, nstates, nstates]
+  torch::Tensor dc1_dia;     ///< first-order derivative coupling matrices in the diabatic basis [nbeads, nnucl, nstates, nstates]
+  torch::Tensor d1ham_dia;   ///< first order derivatives of the Hamiltonian matrix in the diabatic basis [nbeads, nnucl, nstates, nstates]
+  torch::Tensor d2ham_dia;   ///< second order derivatives of the Hamiltonian in the diabatic basis [nbeads, nnucl, nnucl, nstates, nstates]
 
-  //torch::Tensor d1ham_dia; ///< first order derivatives of the Hamiltonian matrix in the diabatic basis
-  vector<int> d1ham_dia_mem_status;
 
-  //torch::Tensor d2ham_dia; ///< second order derivatives of the Hamiltonian in the diabatic basis
-  vector<int> d2ham_dia_mem_status;
 
 //  CMATRIX* den_mat_dia;       ///< Density matrix in the diabatic basis
 //  int den_mat_dia_mem_status;
@@ -153,29 +132,19 @@ public:
   density_matrix_operator = |psi_adi> den_mat_adi <psi_adi| 
   So: den_mat_adi - density matrix matrix in the adiabatic basis
 
-  */
-  int nadi;                   ///< the number of electronic DOFs in the adiabatic basis
+
+*/
 
 
-  //torch::Tensor dc1_adi;   ///< first-order derivative coupling matrices in the adiabatic basis 
-  vector<int> dc1_adi_mem_status;
-
-  //torch::Tensor ham_adi;           ///< Hamiltonian in adiabatic representation (diagonal)
-  int ham_adi_mem_status;
-
-
-  //torch::Tensor nac_adi;           ///< Nonadiabatic couplings (time-derivative couplings) in adiabatic representation
-  int nac_adi_mem_status;
-
-  //torch::Tensor hvib_adi;          ///< Vibronic Hamiltonian in adiabatic representation
-  int hvib_adi_mem_status;
+  torch::Tensor ovlp_adi;    ///< the overlap of the adiabatic basis  [nbeads, nstates, nstates]
+  torch::Tensor ham_adi;     ///< Hamiltonian in adiabatic representation [nbeads, nstates, nstates]
+  torch::Tensor nac_adi;     ///< Nonadiabatic couplings (time-derivative couplings) in adiabatic representation [nbeads, nstates, nstates]
+  torch::Tensor hvib_adi;    ///< Vibronic Hamiltonian in adiabatic representation [nbeads, nstates, nstates]
+  torch::Tensor dc1_adi;     ///< first-order derivative coupling matrices in the adiabatic basis [nbeads, nnucl, nstates, nstates]
+  torch::Tensor d1ham_adi;   ///< first order derivatives of the Hamiltonian matrix in the adiabatic basis [nbeads, nnucl, nstates, nstates]
+  torch::Tensor d2ham_adi;   ///< second order derivatives of the Hamiltonian in the adiabatic basis [nbeads, nnucl, nnucl, nstates, nstates]
 
 
-  //torch::Tensor d1ham_adi; ///< first order derivatives of the Hamiltonian matrix in the adiabatic basis (diagonal)
-  vector<int> d1ham_adi_mem_status;
-
-  //torch::Tensor d2ham_adi; ///< second order derivatives of the Hamiltonian matrix in the adiabatic basis
-  vector<int> d2ham_adi_mem_status;
 
 
 
@@ -203,35 +172,15 @@ public:
     
   */
 
-  //torch::Tensor basis_transform;  ///< These are the eigenvectors of the generalized eigenvalue problem for diabatic Hamiltonian
-  int basis_transform_mem_status;
 
-  //torch::Tensor time_overlap_adi;  ///< These are <psi_i_adi (t) | psi_j_adi (t+dt)> matrices
-  int time_overlap_adi_mem_status;
-
-  //torch::Tensor time_overlap_dia;  ///< These are <psi_i_dia (t) | psi_j_dia (t+dt)> matrices
-  int time_overlap_dia_mem_status;
-
-
-
-  /**     
-     All the computation control parameters 
-  **/
-  int eigen_algo;  ///< eigensolver algorithm used to convert diabatic to adiabatic basis 
-                   /// 0 - generalized eigensolver (may reorder states) [default]
-                   /// 1 - eigensolver without reordering (assumes diabatic basis is orthonormaly)
-
-  double phase_corr_ovlp_tol;  /// phase correction overlap tolerance, we only compute phase corrections 
-                               /// if the time overlaps are above (in magnitude) this value, otherwise
-                               /// we assume that uncommon state reordering (adiabatic state switching) 
-                               /// has happened (which may occur in the stochastic state tracking method)
-                               /// then, we don't apply the phase correction since it doesn't make sense
-
-
+  torch::Tensor basis_transform;  ///< These are the eigenvectors of the generalized eigenvalue problem for diabatic Hamiltonian 
+                                  ///< [nbeads, nstates, nstates]
+  torch::Tensor time_overlap_adi;  ///< These are <psi_i_adi (t) | psi_j_adi (t+dt)> matrices  [nbeads, nstates, nstates]
+  torch::Tensor time_overlap_dia;  ///< These are <psi_i_dia (t) | psi_j_dia (t+dt)> matrices  [nbeads, nstates, nstates]
+  
 
   /**
      All the basic methods: constructor, destructor, getters, setters, etc.
-
   **/
   ///< In sHamiltonian_basic.cpp
 
@@ -248,6 +197,14 @@ public:
 
   ///< Tree management utilities
 
+
+
+  void bind(std::string name, torch::Tensor x);
+
+  void compute(std::string property, bp::object py_funct, torch::Tensor q, bp::object params);
+  void compute(bp::object py_funct, torch::Tensor q, bp::object params);
+
+  void dia2adi();
 
   ///< Setters:
 /*

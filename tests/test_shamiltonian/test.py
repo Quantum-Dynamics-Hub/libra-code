@@ -11,27 +11,97 @@ print(torch.__version__)
 from liblibra_core import *
 #from libshamiltonian import *
 
-#a = MATRIX(2,2)
+# Constructor with the default initialization
+print("Constructor of the sHamiltonian object...")
 s = sHamiltonian(2, 2, 2)
+print( s.ovlp_dia) 
+print( cpp2py(s.ovlp_dia) )
 
-#print( s.ovlp_dia) 
-#print(t2p(s.ovlp_dia))
-
+# Create Py tensor
+print("Creating external Py tensor")
 x = torch.ones(2,2,2)
-#x = torch.tensor([1.0, 2.0, 3.0])
-#y = process_tensor(x)
-
-#print(y)
-#print(x)
-
-s.set_tensor(x)
-
-print( s.ovlp_dia)
-print(t2p(s.ovlp_dia))
-
-x[0,0,0] = -1
+address = x.data_ptr()
+print(f"Memory address: {hex(address)}")
 print(x)
-print(t2p(s.ovlp_dia))
+
+
+# Bind the Py tensor with the object
+print("sHamiltonian member after it is binded to the PyTorch object")
+s.bind("ovlp_dia", x)
+print(s.ovlp_dia)
+print( cpp2py(s.ovlp_dia) )
+
+
+print("Creating a copy sHamiltonian")
+s_copy = sHamiltonian(s)
+print(s_copy.ovlp_dia)
+print( cpp2py(s_copy.ovlp_dia) )
+
+
+# Change x in the Python side
+print("Change the Python Tensor, let's see how the internal one changed")
+x[0,0,1] = -1
+print(x)
+print(s.ovlp_dia)
+print(cpp2py(s.ovlp_dia))
+
+print("What about the copied object?")
+print(s_copy.ovlp_dia)
+print( cpp2py(s_copy.ovlp_dia) )
+
+
+print("Showing transpose in place")
+x.transpose_(1,2)
+print(s.ovlp_dia)
+print(cpp2py(s.ovlp_dia))
+
+
+# Add calling external Python function:
+
+def quadratic(q, params):
+    return q*q;
+
+y = torch.randn(2,2,2, dtype=complex)
+print(y)
+
+s.compute("ham_dia", quadratic,  y, {})
+
+ham_dia = cpp2py(s.ham_dia)
+print("Diabatic Ham")
+print(ham_dia)
+
+# Do the diagonalization
+s.dia2adi()
+
+
+#ham_adi = torch.diag_embed( cpp2py(s.ham_adi) )
+ham_adi = cpp2py( s.ham_adi ) 
+print("Adiabatic Ham")
+print(ham_adi)
+U = cpp2py(s.basis_transform)
+
+print("Eigenvectors")
+print(U)
+
+print("Checking:  H_dia * U = U * H_adi")
+print("LHS", ham_dia @ U)
+print("RHS", U @ ham_adi)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #s.get_tensor(x)
 

@@ -87,12 +87,19 @@ void export_shamiltonian_objects(){
   ;
 
 
+
   bp::object (*expt_tensor_to_python_v1)(const torch::Tensor& tensor) = &tensor_to_python;
-  def("t2p", expt_tensor_to_python_v1);
+  def("cpp2py", expt_tensor_to_python_v1);
 
   torch::Tensor (*expt_python_to_tensor_v1)(const bp::object& obj) = &python_to_tensor;
-  def("p2t", expt_python_to_tensor_v1);
+  def("py2cpp", expt_python_to_tensor_v1);
 
+
+ void (sHamiltonian::*expt_compute_v1)(std::string property, bp::object py_funct, torch::Tensor q, bp::object params)
+  = &sHamiltonian::compute;
+
+ void (sHamiltonian::*expt_compute_v2)(bp::object py_funct, torch::Tensor q, bp::object params)
+  = &sHamiltonian::compute;
 
 
   class_<sHamiltonian>("sHamiltonian",init<int,int,int>())
@@ -100,14 +107,33 @@ void export_shamiltonian_objects(){
 //      .def("__copy__", &generic__copy__<Hamiltonian>)
 //      .def("__deepcopy__", &generic__deepcopy__<Hamiltonian>)
       .def_readwrite("nbeads", &sHamiltonian::nbeads)
-      .def_readwrite("nel_dof", &sHamiltonian::nel_dof)
-      .def_readwrite("nn_dof", &sHamiltonian::nn_dof)
-      .def_readwrite("eigen_algo", &sHamiltonian::eigen_algo)
-      .def_readwrite("phase_corr_ovlp_tol", &sHamiltonian::phase_corr_ovlp_tol)
+      .def_readwrite("nstates", &sHamiltonian::nstates)
+      .def_readwrite("nnucl", &sHamiltonian::nnucl)
       .def_readwrite("ovlp_dia", &sHamiltonian::ovlp_dia)
-      .def("get_ovlp_dia", &sHamiltonian::get_ovlp_dia)
-      .def("set_tensor", &sHamiltonian::set_tensor)
-      .def("get_tensor", &sHamiltonian::get_tensor)
+      .def_readwrite("ham_dia", &sHamiltonian::ham_dia)
+      .def_readwrite("nac_dia", &sHamiltonian::nac_dia)
+      .def_readwrite("hvib_dia", &sHamiltonian::hvib_dia)
+      .def_readwrite("dc1_dia", &sHamiltonian::dc1_dia)
+      .def_readwrite("d1ham_dia", &sHamiltonian::d1ham_dia)
+      .def_readwrite("d2ham_dia", &sHamiltonian::d2ham_dia)
+
+      .def_readwrite("ham_adi", &sHamiltonian::ham_adi)
+      .def_readwrite("nac_adi", &sHamiltonian::nac_adi)
+      .def_readwrite("hvib_adi", &sHamiltonian::hvib_adi)
+      .def_readwrite("dc1_adi", &sHamiltonian::dc1_adi)
+      .def_readwrite("d1ham_adi", &sHamiltonian::d1ham_adi)
+      .def_readwrite("d2ham_adi", &sHamiltonian::d2ham_adi)
+
+      .def_readwrite("basis_transform", &sHamiltonian::basis_transform)
+      .def_readwrite("time_overlap_dia", &sHamiltonian::time_overlap_dia)
+      .def_readwrite("time_overlap_adi", &sHamiltonian::time_overlap_adi)
+
+      .def("bind", &sHamiltonian::bind)
+      //.def("get_tensor", &sHamiltonian::get_tensor)
+
+      .def("compute", expt_compute_v1)
+      .def("compute", expt_compute_v2)
+      .def("dia2adi", &sHamiltonian::dia2adi)
   
   ;
 
