@@ -289,12 +289,15 @@ void sHamiltonian::compute_nacs_and_grads(){
 
   // E.g. see the derivations here: https://github.com/alexvakimov/Derivatory/blob/master/theory_NAC.pdf^M
   // also: http://www.theochem.ruhr-uni-bochum.de/~nikos.doltsinis/nic_10_doltsinis.pdf^M
+  // tmp = U.H * H_dia * U:q
   auto tmp = torch::matmul( basis_transform.conj().transpose(-2, -1), torch::matmul(d1ham_dia, basis_transform) );
 
 //        *dtilda = (*basis_transform) * (*dc1_dia[n]).H() * (*basis_transform).H() * (*ham_adi);^M
-  auto dtilda = torch::matmul( basis_transform.conj().transpose(-2, -1), torch::matmul(dc1_dia, torch::matmul( basis_transform, ham_adi)));
-  dtilda = dtilda + dtilda.conj().transpose(-2, -1);
-  tmp = tmp - dtilda;
+
+  //  D_tilda =   U * d * U.H * H_dia
+  auto dtilda = torch::matmul( basis_transform, torch::matmul(dc1_dia.conj().transpose(-2, -1), torch::matmul( basis_transform.conj().transpose(-2, -1), ham_adi)));
+  auto dtilda2 = dtilda + dtilda.conj().transpose(-2, -1);
+  tmp = tmp - dtilda2;
 
   // Adiabatic "forces"
   d1ham_adi.zero_();

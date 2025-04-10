@@ -96,7 +96,7 @@ print("RHS", U @ ham_adi)
 #print("LHS", ham_dia @ U.transpose(-1,-2)  )
 #print("RHS", U.transpose(-1,-2) @ ham_adi)
 
-sys.exit()
+#sys.exit()
 
 
 s.compute_nacs_and_grads()
