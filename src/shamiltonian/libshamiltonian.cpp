@@ -102,6 +102,10 @@ void export_shamiltonian_objects(){
   = &sHamiltonian::compute;
 
 
+ torch::Tensor (sHamiltonian::*expt_forces_adi_v1)() = &sHamiltonian::forces_adi;
+ torch::Tensor (sHamiltonian::*expt_forces_dia_v1)() = &sHamiltonian::forces_dia;
+
+
   class_<sHamiltonian>("sHamiltonian",init<int,int,int>())
       .def(init<const sHamiltonian&>())
 //      .def("__copy__", &generic__copy__<Hamiltonian>)
@@ -134,6 +138,9 @@ void export_shamiltonian_objects(){
       .def("compute", expt_compute_v1)
       .def("compute", expt_compute_v2)
       .def("dia2adi", &sHamiltonian::dia2adi)
+      .def("compute_nacs_and_grads", &sHamiltonian::compute_nacs_and_grads)
+      .def("forces_adi", expt_forces_adi_v1)
+      .def("forces_dia", expt_forces_dia_v1)
   
   ;
 

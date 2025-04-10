@@ -205,6 +205,12 @@ public:
   void compute(bp::object py_funct, torch::Tensor q, bp::object params);
 
   void dia2adi();
+  void compute_nacs_and_grads();
+
+  torch::Tensor forces_adi(); // [nbeads, nstates, nnucl]
+  torch::Tensor forces_dia(); // same
+  
+  
 
   ///< Setters:
 /*

@@ -200,32 +200,155 @@ void sHamiltonian::compute(bp::object py_funct, torch::Tensor q, bp::object para
 
 void sHamiltonian::dia2adi(){
 
-  // Compute eigenvalues and eigenvectors (similar to torch.linalg.eig)
-  auto result = torch::linalg_eig(ham_dia);
+    const int64_t batch_size = ham_dia.size(0);
+    const int64_t n = ham_dia.size(1);
 
-  // Extract eigenvalues (L) and eigenvectors (V)
-  ham_adi =  torch::diag_embed( std::get<0>(result) );  // Eigenvalues (complex)
-  basis_transform = std::get<1>(result);  // Eigenvectors (complex)
+
+// Compute eigenvalues and eigenvectors
+    //auto result = torch::linalg_eig(ham_dia);
+    //auto eigenvalues = std::get<0>(result);
+    //auto eigenvectors = std::get<1>(result);
+
+    // Extract real part of eigenvalues
+    //auto eigenvalues_real = torch::real(eigenvalues);
+
+    // Sort eigenvalues and get sorted indices
+    //torch::Tensor sorted_eigenvalues;
+    //torch::Tensor sorted_indices;
+    //std::tie(sorted_eigenvalues, sorted_indices) = torch::sort(eigenvalues_real, 1);
+
+    // Reorder eigenvalues and eigenvectors
+    //sorted_eigenvalues = torch::gather(eigenvalues, 1, sorted_indices);
+    //auto sorted_eigenvectors = torch::gather(eigenvectors, 2, sorted_indices.unsqueeze(-1).expand({batch_size, n, n}));
+
+
+    
+    // 1. Compute batched eigendecomposition
+    auto [eigenvalues, eigenvectors] = torch::linalg_eig(ham_dia); 
+    // eigenvalues shape: [batch_size, N] (complex)
+    // eigenvectors shape: [batch_size, N, N] (complex)
+
+    // 2. Compute sorting keys (magnitudes)
+    //auto magnitudes = torch::abs(eigenvalues); // [batch_size, N]
+    auto eig_re = torch::real(eigenvalues);
+    auto eig_im = torch::imag(eigenvalues);
+
+
+
+    // 3. Get sorted indices and eigenvectors
+    auto [sorted_eigenvalues_re, sorted_indices] = torch::sort(eig_re, 1, false);
+
+    // Sort the imag part of the eigenvalues:
+    auto batch_idx = torch::arange(batch_size).unsqueeze(1);
+    auto sorted_eigenvalues_im = torch::zeros_like(sorted_eigenvalues_re);
+    sorted_eigenvalues_im.index_put_( {batch_idx, sorted_indices},  eig_im );
+
+    auto sorted_eigenvalues = torch::complex(sorted_eigenvalues_re, sorted_eigenvalues_im);
+    
+    // 4. Gather the sorted eigenvectors
+    // indices: (B, N) -> expand to (B, 1, N) for batch-wise gathering
+    auto indices_expanded = sorted_indices.unsqueeze(1).expand({-1, eigenvectors.size(1), -1});
+
+    // Gather eigenvectors along the last dimension
+    auto sorted_eigenvectors = eigenvectors.gather(2, indices_expanded);
+
 
 /*
-  cout<<"Shape of the ham_adi = \n";
-  auto shape = ham_adi.sizes();
-    std::cout << "Shape: [";
-    for (auto dim : shape) {
-        std::cout << dim << ", ";
-    }
-    std::cout << "]" << std::endl;
+  cout<<"============== Real components ===============\n";
+  cout<<"==== Eigenvalues ======\n";
+  cout<<"eigenvalues = "<<torch::real(eigenvalues)<<endl;
+  cout<<"sorted eigenvalues = "<<sorted_eigenvalues_re<<endl;
 
-  cout<<"Shape of the basis_transform = \n";
-  shape = basis_transform.sizes();
-    std::cout << "Shape: [";
-    for (auto dim : shape) {
-        std::cout << dim << ", ";
-    }
-    std::cout << "]" << std::endl;
-  
+  cout<<"==== Eigenvectors ======\n";
+  cout<<"eigenvectors = "<<torch::real(eigenvectors)<<endl;
+  cout<<"sorted eigenvalues = "<<torch::real(sorted_eigenvectors)<<endl;
+
+  cout<<"============== Imag components ===============\n";
+  cout<<"==== Eigenvalues ======\n";
+  cout<<"eigenvalues = "<<torch::imag(eigenvalues)<<endl;
+  cout<<"sorted eigenvalues = "<<sorted_eigenvalues_im<<endl;
+
+  cout<<"==== Eigenvectors ======\n";
+  cout<<"eigenvectors = "<<torch::imag(eigenvectors)<<endl;
+  cout<<"sorted eigenvectors = "<<torch::imag(sorted_eigenvectors)<<endl;
 */
 
+  auto ham_adi_real = torch::diag_embed( sorted_eigenvalues_re );
+  auto ham_adi_imag = torch::diag_embed( sorted_eigenvalues_im );  
+  
+
+  ham_adi = torch::complex(ham_adi_real, ham_adi_imag);
+  basis_transform = sorted_eigenvectors;
+
+
+ 
+}
+
+
+void sHamiltonian::compute_nacs_and_grads(){
+
+  // E.g. see the derivations here: https://github.com/alexvakimov/Derivatory/blob/master/theory_NAC.pdf^M
+  // also: http://www.theochem.ruhr-uni-bochum.de/~nikos.doltsinis/nic_10_doltsinis.pdf^M
+  auto tmp = torch::matmul( basis_transform.conj().transpose(-2, -1), torch::matmul(d1ham_dia, basis_transform) );
+
+//        *dtilda = (*basis_transform) * (*dc1_dia[n]).H() * (*basis_transform).H() * (*ham_adi);^M
+  auto dtilda = torch::matmul( basis_transform.conj().transpose(-2, -1), torch::matmul(dc1_dia, torch::matmul( basis_transform, ham_adi)));
+  dtilda = dtilda + dtilda.conj().transpose(-2, -1);
+  tmp = tmp - dtilda;
+
+  // Adiabatic "forces"
+  d1ham_adi.zero_();
+  dc1_adi.zero_();
+
+  //auto ham_acc = ham_adi.accessor< torch::kComplexDouble, 3>();  // 3D complex tensor
+
+  for(int b = 0; b < nbeads; b++){
+    for(int n = 0; n < nnucl; n++){
+      for(int i = 0; i<nstates; i++){  
+ 
+        d1ham_adi[b][n][i][i] = tmp[b][n][i][i];
+
+        for(int j = i+1; j < nstates; j++){
+          double dE = at::real(ham_adi[b][j][j] - ham_adi[b][i][i]).item<double>();
+          if(fabs(dE)<1e-25){ dE = 1e-25; }
+
+          dc1_adi[b][n][i][j] = tmp[b][n][i][j]/dE;
+          dc1_adi[b][n][j][i] = -dc1_adi[b][n][i][j];
+        }// for j
+      }// for i
+    }// for n
+  }// b
+
+}// compute_nacs_and_grads
+
+torch::Tensor sHamiltonian::forces_adi(){
+// [nbeads, nstates, nnucl]
+  torch::Tensor f = torch::zeros({ nbeads, nstates, nnucl }, torch::kDouble); 
+
+  for(int b = 0; b < nbeads; b++){
+    for(int n = 0; n < nnucl; n++){
+      for(int i = 0; i<nstates; i++){
+        f[b][i][n] = -at::real(d1ham_adi[b][n][i][i]).item<double>();
+      }// for i
+    }// for n
+  }// for b
+
+  return f;
+}
+
+torch::Tensor sHamiltonian::forces_dia(){
+// [nbeads, nstates, nnucl]
+  torch::Tensor f = torch::zeros({ nbeads, nstates, nnucl }, torch::kDouble);
+
+  for(int b = 0; b < nbeads; b++){
+    for(int n = 0; n < nnucl; n++){
+      for(int i = 0; i<nstates; i++){
+        f[b][i][n] = -at::real(d1ham_dia[b][n][i][i]).item<double>();
+      }// for i
+    }// for n
+  }// for b
+
+  return f;
 }
 
 

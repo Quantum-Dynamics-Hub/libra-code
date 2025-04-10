@@ -1,5 +1,5 @@
 #import pdb
-#import sys
+import sys
 import torch
 #pdb.set_trace()
 print(torch.__version__)
@@ -10,6 +10,8 @@ print(torch.__version__)
 #import liblibra_core
 from liblibra_core import *
 #from libshamiltonian import *
+
+import torchHolstein
 
 # Constructor with the default initialization
 print("Constructor of the sHamiltonian object...")
@@ -74,8 +76,59 @@ print(ham_dia)
 s.dia2adi()
 
 
+#sys.exit()
+
 #ham_adi = torch.diag_embed( cpp2py(s.ham_adi) )
 ham_adi = cpp2py( s.ham_adi ) 
+print("Adiabatic Ham")
+print(ham_adi)
+U = cpp2py(s.basis_transform)
+
+print("Eigenvectors")
+print(U)
+
+#sys.exit()
+
+print("Checking:  H_dia * U = U * H_adi")
+print("LHS", ham_dia @ U  )
+print("RHS", U @ ham_adi)
+
+#print("LHS", ham_dia @ U.transpose(-1,-2)  )
+#print("RHS", U.transpose(-1,-2) @ ham_adi)
+
+sys.exit()
+
+
+s.compute_nacs_and_grads()
+print("NACs")
+print( cpp2py(s.dc1_adi) )
+print( cpp2py(s.d1ham_adi))
+
+print("Adiabatic forces")
+f_adi = s.forces_adi()
+#print(cpp2py(f_adi) )
+
+
+#========
+print("Now testing torch Holstein")
+q = torch.randn(2, 1, dtype=float)  # nbeads, nnucl
+#Holstein2(q, {})
+
+s.compute( torchHolstein.Holstein2,  q, {"E_n":[0.0, 0.001], "x_n":[0.0, 1.0], "k_n":[0.001, 0.001]})
+
+ham_dia = cpp2py(s.ham_dia)
+print("Diabatic Ham")
+print(ham_dia)
+
+
+#sys.exit()
+
+# Do the diagonalization
+s.dia2adi()
+
+
+#ham_adi = torch.diag_embed( cpp2py(s.ham_adi) )
+ham_adi = cpp2py( s.ham_adi )
 print("Adiabatic Ham")
 print(ham_adi)
 U = cpp2py(s.basis_transform)
@@ -87,6 +140,20 @@ print("Checking:  H_dia * U = U * H_adi")
 print("LHS", ham_dia @ U)
 print("RHS", U @ ham_adi)
 
+
+s.compute_nacs_and_grads()
+print("NACs")
+print( cpp2py(s.dc1_adi) )
+print( cpp2py(s.d1ham_adi))
+
+print("Adiabatic forces")
+f_adi = s.forces_adi()
+#print(cpp2py(f_adi) )
+
+
+d1ham_dia = cpp2py(s.d1ham_dia)
+print("Diabatic Ham, derivatives")
+print(d1ham_dia)
 
 
 
