@@ -28,6 +28,7 @@
 #include "../math_random/librandom.h"
 #include "../math_specialfunctions/libspecialfunctions.h"
 #include "../nhamiltonian/libnhamiltonian.h"
+#include "../shamiltonian/libshamiltonian.h"
 #include "dyn_control_params.h"
 #include "thermostat/Thermostat.h"
 
@@ -40,6 +41,7 @@ namespace liblibra{
 using namespace liblinalg;
 using namespace librandom;
 using namespace libnhamiltonian;
+using namespace libshamiltonian;
 
 
 /// libdyn namespace
@@ -76,6 +78,7 @@ class dyn_variables{
      any non-negative integer number
   */
   int nadi;
+  int nstates; // new! to replace ndia and nadi
 
 
   /**
@@ -85,6 +88,7 @@ class dyn_variables{
      any non-negative integer number
   */
   int ndof;
+  int nnucl; // new! to replace ndof
 
 
   /**
@@ -94,6 +98,16 @@ class dyn_variables{
      any non-negative integer number
   */
   int ntraj;
+  int nbeads; // new! to replace ntraj
+
+
+  /**
+    The number of photonic modes
+
+    Option:
+      any non-negative integer
+  */
+  int nphot;  
 
 
   ///================= Electronic variables, for OOP implementation ===================
@@ -111,7 +125,8 @@ class dyn_variables{
     Options:
      CMATRIX(ndia, ntraj)
   */
-  CMATRIX* ampl_dia; 
+  CMATRIX* ampl_dia;
+  torch::Tensor t_ampl_dia; // [nbeads, nstates] complex
 
 
   /**
@@ -121,6 +136,7 @@ class dyn_variables{
      CMATRIX(nadi, ntraj)
   */
   CMATRIX* ampl_adi; 
+  torch::Tensor t_ampl_adi; // [nbeads, nstates]  complex
 
 
   /**
@@ -131,6 +147,7 @@ class dyn_variables{
     MATRIX(nadi, ntraj)
   */
   MATRIX* q_mm;
+  torch::Tensor t_q_elec; // [nbeads, nstates]  double
 
 
   /**
@@ -141,6 +158,7 @@ class dyn_variables{
     MATRIX(nadi, ntraj)
   */
   MATRIX* p_mm;
+  torch::Tensor t_p_elec; // [nbeads, nstates] double
 
 
   /**
@@ -152,6 +170,7 @@ class dyn_variables{
     vector<ntraj, CMATRIX(nadi, nadi)>
   */
   vector<CMATRIX*> proj_adi;
+  torch::Tensor t_proj_adi; // [nbeads, nstates, nstates]  complex
 
 
   /**
@@ -161,6 +180,7 @@ class dyn_variables{
      vector<ntraj, CMATRIX(ndia, ndia)>
   */
   vector<CMATRIX*> dm_dia; 
+  torch::Tensor t_dm_dia;  // [nbeads, nstates, nstates]  complex 
 
 
   /**
@@ -170,6 +190,7 @@ class dyn_variables{
      vector<ntraj, CMATRIX(nadi, nadi)>
   */
   vector<CMATRIX*> dm_adi; 
+  torch::Tensor t_dm_adi;  // [nbeads, nstates, nstates]  complex
 
 
   /**
@@ -179,6 +200,7 @@ class dyn_variables{
      vector<int> act_states(ntraj)
   */
   vector<int> act_states;
+  torch::Tensor t_act_states_adi; // [nbeads, nstates]  int
   
 
   /**
@@ -188,6 +210,7 @@ class dyn_variables{
      vector<int> act_states_dia(ntraj)
   */
   vector<int> act_states_dia;
+  torch::Tensor t_act_states_dia; // [nbeads, nstates] int
 
 
   /**
@@ -197,6 +220,7 @@ class dyn_variables{
     vector<ntraj, CMATRIX(ndia, nadi)>
   */
   vector<CMATRIX*> basis_transform; // same as in the Hamiltonian class
+  torch::Tensor t_basis_transform;  // [nbeads, nstates, nstates]  complex
 
 
   ///================= Nuclear variables, for OOP implementation ===================
@@ -216,6 +240,7 @@ class dyn_variables{
      MATRIX(ndof, 1)
   */
   MATRIX* iM; 
+  torch::Tensor t_iM;  // [nbeads, nnucl]  double 
 
 
   /**
@@ -225,6 +250,7 @@ class dyn_variables{
      MATRIX(ndof, ntraj)
   */
   MATRIX* q; 
+  torch::Tensor t_q_nucl;   // [nbeads, nnucl]  double
 
 
   /**
@@ -234,6 +260,7 @@ class dyn_variables{
      MATRIX(ndof, ntraj)
   */
   MATRIX* p;
+  torch::Tensor t_p_nucl;   // [nbeads, nnucl]  double
 
 
   /**
@@ -243,7 +270,32 @@ class dyn_variables{
       MATRIX(ndof, ntraj)
   */
   MATRIX* f;
+  torch::Tensor t_f_nucl; // [nbeads, nnucl]  double
 
+
+  ///================= Photonic DOFs ===================
+  /**
+    Status of the photonic vars
+
+    0 - not allocated;
+    1 - allocated
+  */
+  int photonic_vars_status;
+  
+  /**
+    Photonic coordinates
+  */
+  torch::Tensor t_q_phot;  // [nbeads, nphot]  double
+
+  /**
+    Photonic momenta
+  */
+  torch::Tensor t_p_phot;  // [nbeads, nphot]  double
+
+  /**
+    Photonic forces (active)
+  */
+  torch::Tensor t_f_phot;  // [nbeads, nphot]  double
 
 
   ///================= For A-FSSH ===================
@@ -557,6 +609,7 @@ class dyn_variables{
 
   void allocate_electronic_vars();
   void allocate_nuclear_vars();
+  void allocate_photonic_vars();
   void allocate_afssh();
   void allocate_bcsh();
   void allocate_dish();
@@ -572,6 +625,7 @@ class dyn_variables{
   ~dyn_variables();
 
   void set_parameters(bp::dict params);
+  void bind(std::string name, torch::Tensor x);
 
 
   void set_q(MATRIX& _q){ *q = _q; }

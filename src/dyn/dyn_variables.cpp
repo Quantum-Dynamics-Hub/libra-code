@@ -49,6 +49,19 @@ void dyn_variables::allocate_electronic_vars(){
     act_states = vector<int>(ntraj, 0);
     act_states_dia = vector<int>(ntraj, 0);
 
+
+    t_ampl_dia = torch::zeros({ nbeads, nstates }, torch::kComplexDouble);
+    t_ampl_adi = torch::zeros({ nbeads, nstates }, torch::kComplexDouble);
+    t_q_elec   = torch::zeros({ nbeads, nstates }, torch::kComplexDouble);
+    t_p_elec   = torch::zeros({ nbeads, nstates }, torch::kComplexDouble);
+    t_proj_adi = torch::zeros({ nbeads, nstates, nstates }, torch::kComplexDouble);
+    t_dm_dia   = torch::zeros({ nbeads, nstates, nstates }, torch::kComplexDouble);
+    t_dm_adi   = torch::zeros({ nbeads, nstates, nstates }, torch::kComplexDouble);
+    t_basis_transform = torch::zeros({ nbeads, nstates, nstates }, torch::kComplexDouble);
+    t_act_states_dia = torch::zeros({ nbeads, nstates }, torch::kInt);
+    t_act_states_adi = torch::zeros({ nbeads, nstates }, torch::kInt);
+
+
     electronic_vars_status = 1;
   }
 
@@ -63,10 +76,31 @@ void dyn_variables::allocate_nuclear_vars(){
     p = new MATRIX(ndof, ntraj);
     f = new MATRIX(ndof, ntraj);
 
+    t_iM = torch::zeros({ nbeads, nnucl }, torch::kDouble);
+    t_q_nucl = torch::zeros({ nbeads, nnucl }, torch::kDouble);
+    t_p_nucl = torch::zeros({ nbeads, nnucl }, torch::kDouble);
+    t_f_nucl = torch::zeros({ nbeads, nnucl }, torch::kDouble);
+
     nuclear_vars_status = 1;
   }
 
 }
+
+
+void dyn_variables::allocate_photonic_vars(){
+
+  if(photonic_vars_status==0){
+
+
+    t_q_phot = torch::zeros({ nbeads, nphot }, torch::kDouble);
+    t_p_phot = torch::zeros({ nbeads, nphot }, torch::kDouble);
+    t_f_phot = torch::zeros({ nbeads, nphot }, torch::kDouble);
+
+    photonic_vars_status = 1;
+  }
+
+}
+
 
 
 
@@ -84,6 +118,11 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ndof = _ndof;
   ntraj = _ntraj;
 
+  nbeads = _ntraj;
+  nstates = _ndia;
+  nnucl = _ndof;
+  nphot = 0;
+
 
   ///================= Electronic and nuclear variables, for OOP implementation ================
   electronic_vars_status = 0;
@@ -91,6 +130,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
     
   nuclear_vars_status = 0;
   allocate_nuclear_vars();
+
+
+  photonic_vars_status = 0;
 
   ///================= A-FSSH ====================
   afssh_vars_status = 0;
@@ -322,6 +364,11 @@ dyn_variables::dyn_variables(const dyn_variables& x){
   ndof = x.ndof;
   ntraj = x.ntraj;
 
+  nbeads = x.nbeads;
+  nstates = x.nstates;
+  nnucl = x.nnucl;
+  nphot = x.nphot;
+
   // copy content of electronic vars, only if initialized 
   if(x.electronic_vars_status==1){
 
@@ -340,6 +387,16 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     act_states = x.act_states;
     act_states_dia = x.act_states_dia;
 
+    t_ampl_dia = x.t_ampl_dia.clone();
+    t_ampl_adi = x.t_ampl_adi.clone();
+    t_q_elec = x.t_q_elec.clone();
+    t_p_elec = x.t_p_elec.clone();
+    t_proj_adi = x.t_proj_adi.clone();
+    t_dm_dia = x.t_dm_dia.clone();
+    t_dm_adi = x.t_dm_adi.clone();
+    t_act_states_dia = x.t_act_states_dia.clone();
+    t_act_states_adi = x.t_act_states_adi.clone();
+
   }
 
   // copy content of nuclear vars, only if initialized 
@@ -351,6 +408,22 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *q = *x.q;
     *p = *x.p;
     *f = *x.f;
+
+    t_iM = x.t_iM.clone();
+    t_q_nucl = x.t_q_nucl.clone();
+    t_p_nucl = x.t_p_nucl.clone();
+    t_f_nucl = x.t_f_nucl.clone();
+
+  }
+
+  if(x.photonic_vars_status == 1){
+
+    allocate_photonic_vars();
+    
+    t_q_phot = x.t_q_phot.clone();
+    t_p_phot = x.t_p_phot.clone();
+    t_f_phot = x.t_f_phot.clone();
+
   }
 
   // AFSSH vars - only if initialized
@@ -505,6 +578,10 @@ dyn_variables::~dyn_variables(){
     act_states.clear();
     act_states_dia.clear();
     electronic_vars_status = 0;
+  }
+
+  if(photonic_vars_status==1){
+    photonic_vars_status = 1;
   }
 
   if(afssh_vars_status==1){
@@ -676,6 +753,31 @@ void dyn_variables::set_parameters(bp::dict params){
 
   }
 }
+
+void dyn_variables::bind(std::string name, torch::Tensor x){
+
+  if(name=="t_ampl_dia"){  t_ampl_dia = x; }
+  else if(name=="t_ampl_adi"){  t_ampl_adi = x; }
+  else if(name=="t_q_elec"){  t_q_elec = x; }
+  else if(name=="t_p_elec"){  t_p_elec = x; }
+  else if(name=="t_proj_adi"){  t_proj_adi = x; }
+  else if(name=="t_dm_dia"){  t_dm_dia = x; }
+  else if(name=="t_dm_adi"){  t_dm_adi = x; }
+  else if(name=="t_basis_transform"){  t_basis_transform = x; }
+  else if(name=="t_act_states_dia"){  t_act_states_dia = x; }
+  else if(name=="t_act_states_adi"){  t_act_states_adi = x; }
+
+  else if(name=="t_iM"){  t_iM = x; }
+  else if(name=="t_q_nucl"){  t_q_nucl = x; }
+  else if(name=="t_p_nucl"){  t_p_nucl = x; }
+  else if(name=="t_f_nucl"){  t_f_nucl = x; }
+
+  else if(name=="t_q_phot"){  t_q_phot = x; }
+  else if(name=="t_p_phot"){  t_p_phot = x; }
+  else if(name=="t_f_phot"){  t_f_phot = x; }
+
+
+}// bind
 
 
 }// namespace libdyn
