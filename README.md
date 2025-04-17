@@ -225,7 +225,32 @@ FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
 
 This will force the make to search within the libra environment in the specified locations where you know the files exist. 
 
- 
+
+### 2. 4/17/2025 (Alexey Akimov)
+
+A good way to setup the conda environment to have Boost and Python version consistent is this:
+
+
+    conda install -c conda-forge boost=1.82 python=3.10
+
+
+### 3. 4/17/2025 (Alexey Akimov)
+
+Another useful recipe for setting up jupyter notebook specific to a selected Conda environment:
+
+Step 1: Activate the environment
+
+    conda activate libra
+
+
+Step 2: Install ipykernel and register the kernel
+
+
+    conda install ipykernel
+    python -m ipykernel install --user --name=libra --display-name "Python (libra)"
+
+
+Now, in Jupyter, you'll see a new kernel called "Python (libra)". Select that in your notebook.
 
 
 

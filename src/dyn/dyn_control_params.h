@@ -323,6 +323,7 @@ class dyn_control_params{
       - 6: MASH
       - 7: FSSH2
       - 8: FSSH3
+      - 9: GFSH (original)
   */
   int tsh_method;
 

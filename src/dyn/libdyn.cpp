@@ -639,6 +639,9 @@ void export_dyn_hop_proposal_objects(){
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_gfsh;
   def("hopping_probabilities_gfsh", expt_hopping_probabilities_gfsh_v2);
 
+  vector<double> (*expt_hopping_probabilities_gfsh_orig_v1)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_gfsh_orig;
+  def("hopping_probabilities_gfsh_orig", expt_hopping_probabilities_gfsh_orig_v1);
 
   vector<double> (*expt_hopping_probabilities_fssh2_v1)
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_fssh2;
