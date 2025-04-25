@@ -124,6 +124,26 @@ class dyn_variables{
 
 
   /**
+    Electronic Meyer-Miller "coordinate" variables:
+    ampl_adi = (q_mm + i * p_mm)/sqrt(2)
+
+    Options:
+    MATRIX(nadi, ntraj)
+  */
+  MATRIX* q_mm;
+
+
+  /**
+    Electronic Meyer-Miller "momentum" variables:
+    ampl_adi = (q_mm + i * p_mm)/sqrt(2)
+
+    Options:
+    MATRIX(nadi, ntraj)
+  */
+  MATRIX* p_mm;
+
+
+  /**
     Cumulative projection matrices for adiabatic states:
 
     |psi_adi_ordered(t)> = |psi_adi_raw(t)> * proj_adi(t)
@@ -560,6 +580,8 @@ class dyn_variables{
 
   CMATRIX get_ampl_adi(){ return *ampl_adi; }
   CMATRIX get_ampl_dia(){ return *ampl_dia; }
+  MATRIX get_q_mm(){ return *q_mm; }
+  MATRIX get_p_mm(){ return *p_mm; }
   CMATRIX get_proj_adi(int i){ return *proj_adi[i]; } 
   CMATRIX get_dm_adi(int i){  return *dm_adi[i]; }
   CMATRIX get_dm_dia(int i){  return *dm_dia[i]; }

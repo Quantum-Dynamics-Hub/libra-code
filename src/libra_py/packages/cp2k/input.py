@@ -1,23 +1,24 @@
-#***********************************************************
+# ***********************************************************
 # * Copyright (C) 2023 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
 # * License, or (at your option) any later version.
 # * http://www.gnu.org/copyleft/gpl.txt
-#***********************************************************/
+# ***********************************************************/
 
 import sys
-if sys.platform=="linux" or sys.platform=="linux2":
+if sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 import util.libutil as comn
+
 
 def get_kind(elt):
     """
     Args:
-        * elt (string): chemical symbol of the atom 
+        * elt (string): chemical symbol of the atom
 
-    Returns: 
+    Returns:
       dict: the dictionary containing the definition of the key parameters for a given atom type. Namely, the following
          entries are possible:
 
@@ -32,16 +33,20 @@ def get_kind(elt):
     """
     res = {}
 
-    if elt=="H":
-        res = {"element": "H", "basis_set":"ORB DZVP-MOLOPT-GTH", "potential":"GTH-PBE-q4", "fit_basis_set":"cFIT3" }
-    elif elt=="Ti":
-        res = {"element": "Ti", "basis_set":"ORB DZVP-MOLOPT-SR-GTH", "potential":"GTH-PBE-q12", "fit_basis_set":"cFIT10" }
+    if elt == "H":
+        res = {"element": "H", "basis_set": "ORB DZVP-MOLOPT-GTH", "potential": "GTH-PBE-q4", "fit_basis_set": "cFIT3"}
+    elif elt == "Ti":
+        res = {
+            "element": "Ti",
+            "basis_set": "ORB DZVP-MOLOPT-SR-GTH",
+            "potential": "GTH-PBE-q12",
+            "fit_basis_set": "cFIT10"}
     return res
 
 
 def generate(_params):
     """
-    Args: 
+    Args:
         _params ( dict ): dictionary of the parameters controlling the calculations
 
         * **_params["input_filename"]** ( string ) : the name of the input file generated [ default: "md.inp"]
@@ -52,7 +57,7 @@ def generate(_params):
         * **_params["print_level"]** (string): how much of output to produce by CP2K; see the CP2K manual for the possible options
             [default: "LOW"]. Possible: "MEDIUM", "HIGH"
         * **_params["charge"]** (int): the charge of the system [ default: 0]
-        * **_params["multiplicity"]** (int): spin multiplicity of the system: 1 - singlet, 2 - doublet, 3 - triplet, and so on 
+        * **_params["multiplicity"]** (int): spin multiplicity of the system: 1 - singlet, 2 - doublet, 3 - triplet, and so on
             [default: 0]
         * **_params["uks"]** (string): whether to spin-unrestricted calculations (if ".TRUE.") or spin-restrictedo one (if ".FALSE.")
             [default: ".FALSE."]
@@ -73,28 +78,28 @@ def generate(_params):
             - "OT" (orbital transformation) - can not be use with extra MOs or smearing, only for the ground state calculations
             - "DIAG" (Davidson diagonalization) - the option for excited state calcualations (TD-DFT or sTDA), or for calculations with
               smearing [ default ]
-        * **_params["ot.preconditioner"]** (string): the preconditioner for OT calculations, only used if `solver == OT`. 
+        * **_params["ot.preconditioner"]** (string): the preconditioner for OT calculations, only used if `solver == OT`.
               Available options: "FULL_ALL", "FULL_SINGLE_INVERSE" [ default ]
         * **_params["ot.minimizer"]** (string): the minimization algorithm for OT calculations, only used if `solver == OT`.
               Available options: "CG" (conjugate gradient), "DIIS" (direct inversion of iterative subspace, default)
-        * **_params["ot.linesearch"]** (string): the algorithm for the minimization on an interval in the OT calculations. 
+        * **_params["ot.linesearch"]** (string): the algorithm for the minimization on an interval in the OT calculations.
               Only used if `solver == OT`. Available options: "2PNT" [default], "3PNT"
         * **_params["ot.energygap"]** (float): the assumed energy gap for the OT preconditioner in Ha [default: 0.01 Ha] Only used
               if `solver == OT`
         * **_params["diag.preconditioner"]** (string): preconditioner for DIAG SCF solver. Only used inf `solver == DIAG`
-              See the CP2K manual for available options. [default: "FULL_ALL"] 
+              See the CP2K manual for available options. [default: "FULL_ALL"]
         * **_params["diag.energygap"]** (float): assumed energy gap for the DIAG preconditioner in Ha. Only used if `solver == DIAG`
              [default: 0.01 Ha]
-        * **_params["added_mos"]** (int): how many extra MOs (unoccupied) to include in calculations [ default: 20]. Requires 
+        * **_params["added_mos"]** (int): how many extra MOs (unoccupied) to include in calculations [ default: 20]. Requires
              `solver == DIAG`, can not be used with "OT" solver.
-        * **_params["smearing"]** (Boolean): a flag that enables (if True) fractional occupations of orbitals [default: False]. Requires 
+        * **_params["smearing"]** (Boolean): a flag that enables (if True) fractional occupations of orbitals [default: False]. Requires
              `solver == DIAG` and `added_mo` to be sufficiently large number to accommodate the populations (need more of the added MOs for
              smaller band gap systems and for larger `smearing_electronic_temperature` parameter). Can not be used with the "OT" solver.
         * **_params["smearing.method"]** (string): the type of smearing to use. See the CP2K manual for options. [defualt: "FERMI_DIRAC"]
         * **_params["smearing.electronic_temperature"]** (float): electronic temperature parameter used in Fermi-Dirac distribution [ default: 300 K]
         * **_params["istate"]** (int): index of the state for which to conduct the calculations [default : 0 - ground state] . For instance, if forces
-             are requested in calculations, the forces (and total energy) printed out would refer to this particular state. For any value larger 
-             than 0, this keyword turns on the TD-DFT or sTDA calculations. 
+             are requested in calculations, the forces (and total energy) printed out would refer to this particular state. For any value larger
+             than 0, this keyword turns on the TD-DFT or sTDA calculations.
         * **_params["nstates"]** (int): how many excited states to include in excited-states calculations with sTDA or TD-DFT [default: 2]
         * **_params["tddft_kernel"]** (string): how to compute the excited states. Only relevant if `istate` > 0. Options include:
             - "FULL" (with DFT methods only, not with xTB) [ default ]
@@ -107,48 +112,71 @@ def generate(_params):
         * **_params["kinds"]** (list of dictionaries): definitions of the bases and auxiliary bases for atoms all types
              Each `kind` entry is a dictionary containing the following entries:
              - "element" (string): the chemical symbol of the atom of a given type [ e.g. "H"]
-             - "basis_set" (string): the type of the basis and the name of the file containing that basis [ e.g. "ORB DZVP-MOLOPT-GTH" ] 
+             - "basis_set" (string): the type of the basis and the name of the file containing that basis [ e.g. "ORB DZVP-MOLOPT-GTH" ]
              - "potential" (string): the name of the file containing the pseudopotentials [e.g. "GTH-PBE-q4"]
              - "fit_basis_set" (string): the name of the basis set for fitting [e.g. "cFIT3"]
-             Use the `get_kind` function to facilitate with the construction of such dictionaries 
+             Use the `get_kind` function to facilitate with the construction of such dictionaries
     """
 
     h_kind = get_kind("H")
-    ti_kind = get_kind("Ti"); ti_kind.update({"dft_plus_u":[2, 0.0]})
+    ti_kind = get_kind("Ti")
+    ti_kind.update({"dft_plus_u": [2, 0.0]})
 
     params = dict(_params)
     critical_params = []
-    default_params = { "input_filename":"md.inp",
-                       "project":"Ti17", "run_type":"ENERGY", "print_level":"LOW",
+    default_params = {
+        "input_filename": "md.inp",
+        "project": "Ti17",
+        "run_type": "ENERGY",
+        "print_level": "LOW",
+        "charge": 0,
+        "multiplicity": 1,
+        "uks": ".FALSE.",
+        "method": "PBE",
+        "max_scf": 100,
+        "solver": "DIAG",
+        "outer_scf": False,
+        "ot.preconditioner": "FULL_SINGLE_INVERSE",
+        "ot.minimizer": "DIIS",
+        "ot.linesearch": "2PNT",
+        "ot.energygap": 0.01,
+        "diag.preconditioner": "FULL_SINGLE_INVERSE",
+        "diag.energygap": 0.01,
+        "added_mos": 20,
+        "smearing": False,
+        "smearing.method": "FERMI_DIRAC",
+        "smearing.electronic_temperature": 300.0,
+        "istate": 0,
+        "nstates": 2,
+        "tddft_kernel": "FULL",
+        "cell.A": [
+            30.0,
+            0.0,
+            0.0],
+        "cell.B": [
+            0.0,
+            30.0,
+            0.0],
+        "cell.C": [
+            0.0,
+            0.0,
+            30.0],
+        "cell.periodic": "XYZ",
+        "xyz_file": "inp.xyz",
+        "center_coordinates": "T",
+        "kinds": [
+                    h_kind,
+            ti_kind]}
 
-                       "charge":0, "multiplicity":1, "uks":".FALSE.",
 
-                       "method":"PBE", "max_scf":100,
-                       "solver":"DIAG", "outer_scf": False,
-                       "ot.preconditioner":"FULL_SINGLE_INVERSE", "ot.minimizer":"DIIS", "ot.linesearch":"2PNT", "ot.energygap":0.01,
-                       "diag.preconditioner":"FULL_SINGLE_INVERSE", "diag.energygap":0.01,
-                       "added_mos":20, "smearing":False,
-                       "smearing.method":"FERMI_DIRAC", "smearing.electronic_temperature":300.0,
-
-                       "istate":0, "nstates":2, "tddft_kernel":"FULL",
-
-                       "cell.A":[30.0, 0.0, 0.0], "cell.B":[0.0, 30.0, 0.0], "cell.C":[0.0, 0.0, 30.0], "cell.periodic":"XYZ",
-                       "xyz_file":"inp.xyz", "center_coordinates": "T",
-
-                       "kinds": [  h_kind, ti_kind  ]
-                     }
-
-
-
-#.update({"dft_plus_u": {"L":2, "U_minus_J":0.1 } })
+# .update({"dft_plus_u": {"L":2, "U_minus_J":0.1 } })
 
     comn.check_input(params, default_params, critical_params)
 
-
     # Unpack
     input_filename = params["input_filename"]
- 
-    #>============== GLOBAL =================
+
+    # >============== GLOBAL =================
     project = params["project"]
     run_type = params["run_type"]
     print_level = params["print_level"]
@@ -161,13 +189,13 @@ def generate(_params):
 &END GLOBAL
 """
 
-    #>=========== FORCE_EVAL =============
+    # >=========== FORCE_EVAL =============
 
-    #>>================== DFT =================
-    #>>> ============ XC ===================
+    # >>================== DFT =================
+    # >>> ============ XC ===================
     method = params["method"]
     qs_method = "GPW"
-    
+
     xc_input = ""
     xtb_input = ""
 
@@ -204,7 +232,7 @@ def generate(_params):
     &END XC
         """
 
-    # xTB 
+    # xTB
     elif method in ["xTB"]:
         qs_method = "xTB"
         xtb_input = """
@@ -220,10 +248,10 @@ def generate(_params):
         """
     elif method in ["manual_XC"]:
         xc_input = "&XC\n      &XC_FUNCTIONAL\n"
-        functional_names =  params["functional_names"]  
-        functional_keys = params["functional_keys"] 
+        functional_names = params["functional_names"]
+        functional_keys = params["functional_keys"]
         functional_key_vals = params["functional_key_vals"]
-        if not len(functional_keys)==len(functional_names):
+        if not len(functional_keys) == len(functional_names):
             raise "The length of functional_names and functional_keys must be the same"
         for i in range(len(functional_names)):
             xc_input += F"        &{functional_names[i]}\n"
@@ -255,8 +283,7 @@ def generate(_params):
             hf_input = ""
         xc_input += hf_input
         xc_input += "    &END XC\n"
-        
-        
+
     # Explicit names of the functionals
     else:
         xc_input = F"""
@@ -266,35 +293,35 @@ def generate(_params):
         &END {method}
       &END XC_FUNCTIONAL
     &END XC
-        """     
+        """
 
-    #>>> ============ XC END=================
+    # >>> ============ XC END=================
 
-    #>>> ============ AUX ===================
+    # >>> ============ AUX ===================
     aux_input = ""
     if params["admm_calculations"]:
         admm_purification_method = params["admm_purification_method"]
-    #if method in ["HSE06", "HSE12" "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
-        aux_input=F"""
+    # if method in ["HSE06", "HSE12" "B3LYP", "CAM-B3LYP", "PBE0", "TPSS"]:
+        aux_input = F"""
     &AUXILIARY_DENSITY_MATRIX_METHOD
       ! recommended, i.e. use a smaller basis for HFX
       ! each kind will need an AUX_FIT_BASIS_SET.
       METHOD BASIS_PROJECTION
-      ! recommended, this method is stable and allows for MD. 
+      ! recommended, this method is stable and allows for MD.
       ! can be expensive for large systems
       ADMM_PURIFICATION_METHOD {admm_purification_method}
     &END
         """
 
-    #>>> ============ AUX END ===============
+    # >>> ============ AUX END ===============
 
-    #>>> ============ QS ====================
-    #>>>> ============ SCF ==================
+    # >>> ============ QS ====================
+    # >>>> ============ SCF ==================
 
-    #>>>>> ============ SOLVER ==============
+    # >>>>> ============ SOLVER ==============
     solver = params["solver"]
 
-    if solver=="OT":    
+    if solver == "OT":
         precond = params["ot.preconditioner"]
         minimizer = params["ot.minimizer"]
         lsearch = params["ot.linesearch"]
@@ -308,7 +335,7 @@ def generate(_params):
         LINESEARCH {lsearch}
       &END OT
         """
-    elif solver=="DIAG":
+    elif solver == "DIAG":
         precond = params["diag.preconditioner"]
         egap = params["diag.energygap"]
         solver_input = F"""
@@ -325,19 +352,19 @@ def generate(_params):
        &END MIXING
         """
 
-    #<<<<< ============ SOLVER END ==========
+    # <<<<< ============ SOLVER END ==========
 
     added_mos = params["added_mos"]
     added_mos_input = ""
-    if solver=="DIAG":
+    if solver == "DIAG":
         added_mos_input = F"""
       ADDED_MOS {added_mos}
-      """    
+      """
 
     smearing = params["smearing"]
     smearing_input = ""
-    if solver=="DIAG" and smearing==True:
-        sm_meth = params["smearing.method"]        
+    if solver == "DIAG" and smearing:
+        sm_meth = params["smearing.method"]
         sm_temp = params["smearing.electronic_temperature"]
         smearing_input = F"""
       &SMEAR
@@ -347,7 +374,7 @@ def generate(_params):
       """
 
     max_scf = params["max_scf"]
-    scf_guess = params["scf_guess"]    
+    scf_guess = params["scf_guess"]
     eps_scf = params["eps_scf"]
     if params["outer_scf"]:
         outer_scf = F"""
@@ -363,14 +390,14 @@ def generate(_params):
     &SCF
       MAX_SCF {max_scf}
       SCF_GUESS {scf_guess}
-      EPS_SCF {eps_scf} 
+      EPS_SCF {eps_scf}
       {solver_input}
       {added_mos_input}
       {smearing_input}
       {outer_scf}
     &END SCF
     """
-    #<<<< ============ SCF END ==================
+    # <<<< ============ SCF END ==================
     eps_default = params["eps_default"]
     qs_input = F"""
     &QS
@@ -379,9 +406,9 @@ def generate(_params):
       EPS_DEFAULT {eps_default}
     &END QS
     """
-    #<<<============ QS END ====================
+    # <<<============ QS END ====================
 
-    #>>>============ POISSON ===================
+    # >>>============ POISSON ===================
     xyz = params["cell.periodic"]
     poisson_solver = params["poisson_solver"]
     poisson_input = F"""
@@ -390,9 +417,9 @@ def generate(_params):
       PERIODIC {xyz}
     &END POISSON
     """
-    #<<<============ POISSON END ===============
+    # <<<============ POISSON END ===============
 
-    #>>> ============ EXCITED_STATES ===========
+    # >>> ============ EXCITED_STATES ===========
     istate = params["istate"]
     excited_states_input = ""
     if istate > 0:
@@ -402,11 +429,10 @@ def generate(_params):
     &END
         """
 
-    #>>> ============ EXCITED_STATES ===========
+    # >>> ============ EXCITED_STATES ===========
 
-
-    #<<<============ PRINT =====================
-    if not params["dft_print"]=="":
+    # <<<============ PRINT =====================
+    if not params["dft_print"] == "":
         print_input = params["dft_print"]
     else:
         print_input = F"""
@@ -421,8 +447,8 @@ def generate(_params):
         &END
       &END
     &END
-    """   
-    #<<<============ PRINT END =================
+    """
+    # <<<============ PRINT END =================
 
     charge = params["charge"]
     multiplicity = params["multiplicity"]
@@ -450,17 +476,16 @@ def generate(_params):
   &END DFT
 
     """
-    #<<================== DFT END ==============
+    # <<================== DFT END ==============
 
-
-    #>>============ PROPERTIES =================
+    # >>============ PROPERTIES =================
     istate = params["istate"]
     properties_input = ""
 
-    if istate > 0:  # REQUEST ACTUAL EXCITED STATES CALCULATIONS 
+    if istate > 0:  # REQUEST ACTUAL EXCITED STATES CALCULATIONS
         nstates = params["nstates"]
         kernel = params["tddft_kernel"]
-        if method=="xTB":
+        if method == "xTB":
             kernel = "STDA"
 
         properties_input = F"""
@@ -481,10 +506,9 @@ def generate(_params):
     &END TDDFPT
   &END PROPERTIES
     """
-    #<<============ PROPERTIES END =============
+    # <<============ PROPERTIES END =============
 
-
-    #>>============ SUBSYS =====================
+    # >>============ SUBSYS =====================
     Ax, Ay, Az = params["cell.A"][0], params["cell.A"][1], params["cell.A"][2]
     Bx, By, Bz = params["cell.B"][0], params["cell.B"][1], params["cell.B"][2]
     Cx, Cy, Cz = params["cell.C"][0], params["cell.C"][1], params["cell.C"][2]
@@ -496,17 +520,17 @@ def generate(_params):
       C {Cx} {Cy} {Cz}
       PERIODIC {xyz}
     &END CELL
-    """  
+    """
 
     xyz_file = params["xyz_file"]
     center_coordinates = params["center_coordinates"]
     topo_input = F"""
-    &TOPOLOGY   
+    &TOPOLOGY
       COORD_FILE_NAME {xyz_file}
       COORD_FILE_FORMAT XYZ
       &CENTER_COORDINATES {center_coordinates}
       &END
-    &END    
+    &END
     """
 
     kinds = params["kinds"]
@@ -526,13 +550,13 @@ def generate(_params):
       &DFT_PLUS_U
         L {l_val}
         U_MINUS_J {u_val}
-      &END DFT_PLUS_U   
+      &END DFT_PLUS_U
             """
         kind_input = F"""{kind_input}
     &KIND {elt}
       ELEMENT {elt}
       BASIS_SET {basis}
-      BASIS_SET AUX_FIT {fit_basis} 
+      BASIS_SET AUX_FIT {fit_basis}
       POTENTIAL {pot}
       {dft_plus_u_input}
     &END
@@ -545,9 +569,9 @@ def generate(_params):
     {kind_input}
   &END SUBSYS
     """
-    #<<============ SUBSYS END =================
+    # <<============ SUBSYS END =================
 
-    #<============= FORCE_EVAL END ================
+    # <============= FORCE_EVAL END ================
 
     force_eval_input = F"""
 &FORCE_EVAL
@@ -557,9 +581,9 @@ def generate(_params):
 &END FORCE_EVAL
 """
 
-    #<============= MOTION ===============
+    # <============= MOTION ===============
 
-    if run_type=="GEO_OPT":
+    if run_type == "GEO_OPT":
         max_iter = params["max_iter"]
         max_disp = params["max_disp"]
         max_force = params["max_force"]
@@ -592,7 +616,7 @@ def generate(_params):
   &END PRINT
 &END
 """
-    elif run_type=="MD":
+    elif run_type == "MD":
         ensemble = params["ensemble"]
         nsteps = params["nsteps"]
         time_step = params["time_step"]
@@ -635,17 +659,14 @@ def generate(_params):
     else:
         motion_input = " "
 
-    #<============= MOTION END ==============
+    # <============= MOTION END ==============
 
-
-    #============ OVERALL ===============  
+    # ============ OVERALL ===============
     input = F"""{global_inp} {force_eval_input} {motion_input}"""
-
 
     f = open(input_filename, "w+")
     f.write(input)
     f.close()
-
 
 
 """ Examples of usage:
@@ -653,7 +674,7 @@ def generate(_params):
 generate({"input_filename":"default1.inp", "solver":"OT"})
 generate({"input_filename":"default2.inp", "solver":"DIAG"})
 generate({"input_filename":"default3.inp", "solver":"OT", "smearing":True, "added_mos":50 })
-generate({"input_filename":"default4.inp", "solver":"DIAG", "smearing":True, "added_mos":50 })                                                                             
+generate({"input_filename":"default4.inp", "solver":"DIAG", "smearing":True, "added_mos":50 })
 generate({"input_filename":"default5.inp", "solver":"DIAG", "smearing":True, "added_mos":50, "istate":1 })
 generate({"input_filename":"default6.inp", "solver":"DIAG", "method":"CAM-B3LYP" })
 generate({"input_filename":"default7.inp", "solver":"DIAG", "method":"HSE06" })

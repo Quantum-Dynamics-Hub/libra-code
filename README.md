@@ -203,12 +203,65 @@ Installation instruction of Scikit-learn from its official website:
    And you should be ready to use Libra.
 
 
+## Useful notes:
+
+### 1. 2/15/2025 (from Liz Stippell):
+
+Notes on making Libra if you have python v3.7+ installed anywhere on your system (Linux):
+Although the libra environment is made with python 3.7, during the `cmake ../` step it will search for any python, 
+including versions outside of the libra environment. (Ex: my system kept finding python v3.9 in my 
+Miniconda here: `/path/to/Conda/Miniconda3/include/python3.9` instead of searching within the libra 
+environment: `/path/to/Conda/Miniconda3/envs/libra` )
+
+To avoid this issue, you can add the following lines in the CMakeLists.txt file in your libra source code directory around line 44:
+
+"""
+set(Python3_ROOT_DIR "/path/to/Conda/Miniconda3/envs/libra")
+set(Python3_EXECUTABLE "/path/to/Conda/Miniconda3/envs/libra/bin/python3")
+set(Python3_LIBRARY "/path/to/Conda/Miniconda3/envs/libra/lib/libpython3.7m.so")
+set(Python3_INCLUDE_DIR "/path/to/Conda/Miniconda3/envs/libra/include/python3.7m")
+FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
+"""
+
+This will force the make to search within the libra environment in the specified locations where you know the files exist. 
+
+
+### 2. 4/17/2025 (Alexey Akimov)
+
+A good way to setup the conda environment to have Boost and Python version consistent is this:
+
+
+    conda install -c conda-forge boost=1.82 python=3.10
+
+
+### 3. 4/17/2025 (Alexey Akimov)
+
+Another useful recipe for setting up jupyter notebook specific to a selected Conda environment:
+
+Step 1: Activate the environment
+
+    conda activate libra
+
+
+Step 2: Install ipykernel and register the kernel
+
+
+    conda install ipykernel
+    python -m ipykernel install --user --name=libra --display-name "Python (libra)"
+
+
+Now, in Jupyter, you'll see a new kernel called "Python (libra)". Select that in your notebook.
+
 
 
 ## Developers and Contributors
 
   * Dr. Alexey Akimov (University at Buffalo, [link](https://akimovlab.github.io/index.html) )  
       The main developer and maintainer of the code
+  
+  * Dr. Daeho Han (University at Buffalo)
+      Implementation of the exact-factorization (XF) methods, quantum trajectories surface hopping (QTSH),
+      validating and testing Ehrenfest dynamics and other internals, implementing some model Hamiltonians 
 
   * Mr. Brendan Smith (University at Buffalo) 
       Entangled trajectories Hamiltonian, NA-MD with spin-orbit coupling, NBRA workflows, BL-LZ NA-MD tutorials and examples, 

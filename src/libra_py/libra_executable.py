@@ -1,11 +1,11 @@
-#***********************************************************
+# ***********************************************************
 # * Copyright (C) 2021 Brendan Smith and Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
 # * License, or (at your option) any later version.
 # * http://www.gnu.org/copyleft/gpl.txt
-#***********************************************************/
+# ***********************************************************/
 
 import sys
 import json
@@ -33,7 +33,7 @@ def read_libra_jobs_json(input_file):
             parameters for using the nbra/workflows in a black-box manner
 
     Returns:
-        params ( dictionary ): Parameters for carrying out the nbra/workflows in a 
+        params ( dictionary ): Parameters for carrying out the nbra/workflows in a
             black-box manner
     """
 
@@ -42,7 +42,7 @@ def read_libra_jobs_json(input_file):
     with open(input_file) as f:
         file_lines = f.readlines()
         f.close()
- 
+
     json_string = ""
     for file_line in file_lines:
         file_line = file_line.replace('\n', '')
@@ -53,20 +53,19 @@ def read_libra_jobs_json(input_file):
     logger.debug("Debugging the json -> python params dict")
     logger.debug(params)
 
-    return params 
-
+    return params
 
 
 def main(json_parameters_filename):
     """ Call this function to run your libra 'executable'
 
     Args:
-        json_parameters_filename (string): The name of the .json file 
-            that contains the user-defined parameters for executing a 
+        json_parameters_filename (string): The name of the .json file
+            that contains the user-defined parameters for executing a
             Libra capability
 
     Returns:
-        None: but carrys out the Libra capability in a 
+        None: but carrys out the Libra capability in a
             black-box manner
     """
 

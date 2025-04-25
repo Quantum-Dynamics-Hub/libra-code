@@ -69,6 +69,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
       .def_readwrite("rep_force", &dyn_control_params::rep_force)
       .def_readwrite("force_method", &dyn_control_params::force_method)
+      .def_readwrite("sqc_gamma", &dyn_control_params::sqc_gamma)
       .def_readwrite("time_overlap_method", &dyn_control_params::time_overlap_method)
       .def_readwrite("nac_update_method", &dyn_control_params::nac_update_method)
       .def_readwrite("nac_algo", &dyn_control_params::nac_algo)
@@ -266,6 +267,8 @@ void export_dyn_variables_objects(){
       .def("set_f", &dyn_variables::set_f)
       .def("get_ampl_adi", &dyn_variables::get_ampl_adi)
       .def("get_ampl_dia", &dyn_variables::get_ampl_dia)
+      .def("get_q_mm", &dyn_variables::get_q_mm)
+      .def("get_p_mm", &dyn_variables::get_p_mm)
       .def("get_proj_adi", &dyn_variables::get_proj_adi)
       .def("get_dm_adi", expt_get_dm_adi_v1)
       .def("get_dm_adi", expt_get_dm_adi_v2)
@@ -636,6 +639,9 @@ void export_dyn_hop_proposal_objects(){
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx) = &hopping_probabilities_gfsh;
   def("hopping_probabilities_gfsh", expt_hopping_probabilities_gfsh_v2);
 
+  vector<double> (*expt_hopping_probabilities_gfsh_orig_v1)
+  (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_gfsh_orig;
+  def("hopping_probabilities_gfsh_orig", expt_hopping_probabilities_gfsh_orig_v1);
 
   vector<double> (*expt_hopping_probabilities_fssh2_v1)
   (dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx) = &hopping_probabilities_fssh2;
