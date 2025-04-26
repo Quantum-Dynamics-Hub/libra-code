@@ -1,28 +1,28 @@
-#*********************************************************************************
-#* Copyright (C) 2016 Kosuke Sato, Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#*
-#*********************************************************************************/
+# *********************************************************************************
+# * Copyright (C) 2016 Kosuke Sato, Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 2 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# *
+# *********************************************************************************/
 
-## \file misc.py
+# \file misc.py
 # This module implements a function reducing matrix sizes according to active_space.
 
 import os
 import sys
 import math
 
-if sys.platform=="cygwin":
+if sys.platform == "cygwin":
     from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
+elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
 
-def reduce_matrix(M,min_shift,max_shift,HOMO_indx):
+def reduce_matrix(M, min_shift, max_shift, HOMO_indx):
     ##
     # Extracts a sub-matrix M_sub of the original matrix M. The size of the extracted matrix is
     # controlled by the input parameters
@@ -41,8 +41,7 @@ def reduce_matrix(M,min_shift,max_shift,HOMO_indx):
     #                       So we reduce the initial 6 x 6 matrix to the 3 x 3 matrix
     # M_red - returned MATRIX, reduced in [min_shift:max_shift+1].
 
-
-    if(HOMO_indx+min_shift<0):
+    if (HOMO_indx + min_shift < 0):
         print "Error in reduce_matrix: The min_shift/HOMO_index combination result in the out-of-range error for the reduced matrix"
         print "min_shift = ", min_shift
         print "HOMO_index = ", HOMO_index
@@ -51,17 +50,14 @@ def reduce_matrix(M,min_shift,max_shift,HOMO_indx):
 
     sz = max_shift - min_shift + 1
 
-    if(sz>M.num_of_cols):
+    if (sz > M.num_of_cols):
         print "Error in reduce_matrix: The size of the cropped matrix is larger than the size of the original matrix"
         print "size of the corpped matrix = ", sz
         print "size of the original matrix = ", M.num_of_cols
         print "Exiting...\n"
         sys.exit(0)
 
-    M_red = MATRIX(sz,sz)
-    pop_submatrix(M,M_red,range(HOMO_indx+min_shift,HOMO_indx+max_shift+1))
-
+    M_red = MATRIX(sz, sz)
+    pop_submatrix(M, M_red, range(HOMO_indx + min_shift, HOMO_indx + max_shift + 1))
 
     return M_red
-
-

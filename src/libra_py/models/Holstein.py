@@ -1,13 +1,13 @@
-#*********************************************************************************
-#* Copyright (C) 2020 Story Temen, Alexey V. Akimov
-#* Copyright (C) 2018-2019 Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2020 Story Temen, Alexey V. Akimov
+# * Copyright (C) 2018-2019 Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 2 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 """
 .. module:: models_Holstein
    :platform: Unix, Windows
@@ -21,9 +21,9 @@ import sys
 import math
 import copy
 
-if sys.platform=="cygwin":
+if sys.platform == "cygwin":
     from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
+elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 import util.libutil as comn
 import libra_py.units as units
@@ -60,62 +60,58 @@ def Holstein_uncoupled(q, params):
 
     """
 
-    critical_params = [ "k_harmonic", "el-phon_coupling", "site_coupling", "is_periodic" ]
-    default_params = { }
+    critical_params = ["k_harmonic", "el-phon_coupling", "site_coupling", "is_periodic"]
+    default_params = {}
     comn.check_input(params, default_params, critical_params)
 
     k = params["k_harmonic"]  # force constant
-    alpha = params["el-phon_coupling"] # local electron-phonon coupling
+    alpha = params["el-phon_coupling"]  # local electron-phonon coupling
     V = params["site_coupling"]  # diabatic coupling between the adjacent sites
     is_periodic = params["is_periodic"]
-
-
 
     ndof = q.num_of_rows  # the number of nuclear DOFs
     N = ndof              # in this case, each site has one nuclear DOF
 
     obj = tmp()
-    obj.ham_dia = CMATRIX(N,N)
-    obj.ovlp_dia = CMATRIX(N,N);  obj.ovlp_dia.identity()
+    obj.ham_dia = CMATRIX(N, N)
+    obj.ovlp_dia = CMATRIX(N, N)
+    obj.ovlp_dia.identity()
     obj.d1ham_dia = CMATRIXList()
     obj.dc1_dia = CMATRIXList()
 
-    for i in range(0,N):
-        obj.d1ham_dia.append( CMATRIX(N,N) )
-        obj.dc1_dia.append( CMATRIX(N,N) )
+    for i in range(0, N):
+        obj.d1ham_dia.append(CMATRIX(N, N))
+        obj.dc1_dia.append(CMATRIX(N, N))
 
+    # =========== Energies & Derivatives ===============
+    for i in range(0, N - 1):
+        obj.ham_dia.set(i, i + 1, -V)
+        obj.ham_dia.set(i + 1, i, -V)
 
-    #=========== Energies & Derivatives ===============
-    for i in range(0,N-1):
-        obj.ham_dia.set(i,i+1, -V)
-        obj.ham_dia.set(i+1,i, -V)
-
-    if is_periodic==True:
-        obj.ham_dia.set(0,N-1, -V)
-        obj.ham_dia.set(N-1,0, -V)
-
+    if is_periodic:
+        obj.ham_dia.set(0, N - 1, -V)
+        obj.ham_dia.set(N - 1, 0, -V)
 
     Epot = 0.0
-    for i in range(0,N):
-        x = q.get(i);  Epot += x*x
-    Epot = 0.5*k*Epot
+    for i in range(0, N):
+        x = q.get(i)
+        Epot += x * x
+    Epot = 0.5 * k * Epot
 
-    for i in range(0,N):
-        x = q.get(i);
-        obj.ham_dia.set(i,i, Epot + alpha*x*(1.0+0.0j))
+    for i in range(0, N):
+        x = q.get(i)
+        obj.ham_dia.set(i, i, Epot + alpha * x * (1.0 + 0.0j))
 
+    for i in range(0, N):
+        for n in range(0, N):
+            x = q.get(n)
 
-    for i in range(0,N):
-        for n in range(0,N):
-            x = q.get(n);
-
-            if(n==0):
-                obj.d1ham_dia[n].set(i,i, (k*x + alpha)*(1.0+0.0j))  #  dH(i,i)/dx_n
+            if (n == 0):
+                obj.d1ham_dia[n].set(i, i, (k * x + alpha) * (1.0 + 0.0j))  # dH(i,i)/dx_n
             else:
-                obj.d1ham_dia[n].set(i,i, k*x*(1.0+0.0j))            #  dH(i,i)/dx_n
+                obj.d1ham_dia[n].set(i, i, k * x * (1.0 + 0.0j))  # dH(i,i)/dx_n
 
     return obj
-
 
 
 def get_Holstein_set1():
@@ -140,17 +136,13 @@ def get_Holstein_set1():
     """
 
     params = {}
-    params["k_harmonic"]  = 14500.0 * units.amu/(units.ps2au * units.ps2au)
-    params["el-phon_coupling"] = 3500.0 * (units.inv_cm2Ha/units.Angst)
+    params["k_harmonic"] = 14500.0 * units.amu / (units.ps2au * units.ps2au)
+    params["el-phon_coupling"] = 3500.0 * (units.inv_cm2Ha / units.Angst)
     params["mass"] = 250.0 * units.amu
     params["site_coupling"] = 10.0 * units.inv_cm2Ha
     params["is_periodic"] = False
 
     return params
-
-
-
-
 
 
 def Holstein2(q, params, full_id):
@@ -182,8 +174,8 @@ def Holstein2(q, params, full_id):
 
     """
 
-    critical_params = ["E_n", "x_n", "k_n" ]
-    default_params = { "V":0.001 }
+    critical_params = ["E_n", "x_n", "k_n"]
+    default_params = {"V": 0.001}
     comn.check_input(params, default_params, critical_params)
 
     E_n = params["E_n"]
@@ -193,10 +185,12 @@ def Holstein2(q, params, full_id):
 
     n = len(E_n)
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -206,17 +200,16 @@ def Holstein2(q, params, full_id):
     Sdia.identity()
 
     for i in range(n):
-        Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
+        Hdia.set(i, i, (E_n[i] + 0.5 * k_n[i] * (x - x_n[i])**2) * (1.0 + 0.0j))
 
-    for i in range(n-1):
-        Hdia.set(i,i+1,  V * (1.0+0.0j) )
-        Hdia.set(i+1,i,  V * (1.0+0.0j) )
+    for i in range(n - 1):
+        Hdia.set(i, i + 1, V * (1.0 + 0.0j))
+        Hdia.set(i + 1, i, V * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
         for i in range(n):
-            d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )
-
+            d1ham_dia[k].set(i, i, (k_n[i] * (x - x_n[i])) * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -225,7 +218,6 @@ def Holstein2(q, params, full_id):
     obj.dc1_dia = dc1_dia
 
     return obj
-
 
 
 def Holstein3(q, params, full_id):
@@ -266,8 +258,13 @@ def Holstein3(q, params, full_id):
                                          0.002
     """
 
-    critical_params = ["E_n", "x_n", "k_n", "V_n" ]
-    default_params = {"E_n":[0.0, 0.001, 0.001, 0.001], "x_n":[0.0, 1.0, 1.0, 1.0], "k_n":[0.001, 0.001, 0.001, 0.001], "V_n":[0.001, 0, 0] }
+    critical_params = ["E_n", "x_n", "k_n", "V_n"]
+    default_params = {
+        "E_n": [
+            0.0, 0.001, 0.001, 0.001], "x_n": [
+            0.0, 1.0, 1.0, 1.0], "k_n": [
+                0.001, 0.001, 0.001, 0.001], "V_n": [
+                    0.001, 0, 0]}
     comn.check_input(params, default_params, critical_params)
 
     E_n = params["E_n"]
@@ -277,10 +274,12 @@ def Holstein3(q, params, full_id):
 
     n = len(E_n)
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -290,16 +289,16 @@ def Holstein3(q, params, full_id):
     Sdia.identity()
 
     for i in range(n):
-        Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
+        Hdia.set(i, i, (E_n[i] + 0.5 * k_n[i] * (x - x_n[i])**2) * (1.0 + 0.0j))
 
-        for k in range(n):	# k = 'distance' between states
+        for k in range(n):  # k = 'distance' between states
             if k != i:
-                Hdia.set(i,k, V_n[abs(i-k)-1] * (1.0+0.0j) )
+                Hdia.set(i, k, V_n[abs(i - k) - 1] * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
         for i in range(n):
-            d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )
+            d1ham_dia[k].set(i, i, (k_n[i] * (x - x_n[i])) * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -310,13 +309,12 @@ def Holstein3(q, params, full_id):
     return obj
 
 
-
 def Holstein4(q, params, full_id):
     """
     n-state model
 
     H_nn = E_n + 0.5*k*(x-x_n)^2
-    H_n,m = V_n,m, 
+    H_n,m = V_n,m,
 
     Args:
         q ( MATRIX(1,1) ): coordinates of the particle, ndof = 1
@@ -338,10 +336,10 @@ def Holstein4(q, params, full_id):
 
     """
 
-    critical_params = ["E_n", "x_n", "k_n" ]
-    default_params = { "V": [ [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001],
-                              [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001] ]
-                     }
+    critical_params = ["E_n", "x_n", "k_n"]
+    default_params = {"V": [[0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001],
+                            [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001]]
+                      }
     comn.check_input(params, default_params, critical_params)
 
     E_n = params["E_n"]
@@ -351,10 +349,12 @@ def Holstein4(q, params, full_id):
 
     n = len(E_n)
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -364,18 +364,17 @@ def Holstein4(q, params, full_id):
     Sdia.identity()
 
     for i in range(n):
-        Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
+        Hdia.set(i, i, (E_n[i] + 0.5 * k_n[i] * (x - x_n[i])**2) * (1.0 + 0.0j))
 
     for i in range(n):
         for j in range(n):
-            if i!=j:
-                Hdia.set(i,j,  V[i][j] * (1.0+0.0j) )
+            if i != j:
+                Hdia.set(i, j, V[i][j] * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
         for i in range(n):
-            d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )
-
+            d1ham_dia[k].set(i, i, (k_n[i] * (x - x_n[i])) * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -384,8 +383,6 @@ def Holstein4(q, params, full_id):
     obj.dc1_dia = dc1_dia
 
     return obj
-
-
 
 
 def Holstein5(q, params, full_id):
@@ -419,14 +416,14 @@ def Holstein5(q, params, full_id):
 
     """
 
-    critical_params = ["E_n", "x_n", "k_n" ]
-    default_params = { "V": [ [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001],
-                              [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001] ],
-                       "alpha": [ [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00],
-                                  [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00] ],
-                       "x_nm": [ [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00],
-                                 [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00] ],
-                     }
+    critical_params = ["E_n", "x_n", "k_n"]
+    default_params = {"V": [[0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001],
+                            [0.001, 0.001, 0.001, 0.001], [0.001, 0.001, 0.001, 0.001]],
+                      "alpha": [[0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00],
+                                [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00]],
+                      "x_nm": [[0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00],
+                               [0.00, 0.00, 0.00, 0.00], [0.00, 0.00, 0.00, 0.00]],
+                      }
     comn.check_input(params, default_params, critical_params)
 
     E_n = params["E_n"]
@@ -438,11 +435,14 @@ def Holstein5(q, params, full_id):
 
     n = len(E_n)
 
-    Hdia = CMATRIX(n,n)
-    Sdia = CMATRIX(n,n)
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    d2ham_dia = CMATRIXList();  d2ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
+    Hdia = CMATRIX(n, n)
+    Sdia = CMATRIX(n, n)
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    d2ham_dia = CMATRIXList()
+    d2ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
@@ -452,35 +452,36 @@ def Holstein5(q, params, full_id):
     Sdia.identity()
 
     for i in range(n):
-        Hdia.set(i,i,  (E_n[i] + 0.5*k_n[i]*(x - x_n[i])**2) * (1.0+0.0j) )
+        Hdia.set(i, i, (E_n[i] + 0.5 * k_n[i] * (x - x_n[i])**2) * (1.0 + 0.0j))
 
     for i in range(n):
         for j in range(n):
-            if i!=j:
-                Hdia.set(i,j,  V[i][j] * math.exp(-alpha[i][j] * (x-x_nm[i][j])**2 ) * (1.0+0.0j) )
+            if i != j:
+                Hdia.set(i, j, V[i][j] * math.exp(-alpha[i][j] * (x - x_nm[i][j])**2) * (1.0 + 0.0j))
 
     for k in [0]:
         #  d Hdia / dR_0
         for i in range(n):
-            d1ham_dia[k].set(i,i, (k_n[i] * (x - x_n[i]))*(1.0+0.0j) )
+            d1ham_dia[k].set(i, i, (k_n[i] * (x - x_n[i])) * (1.0 + 0.0j))
 
     for k in [0]:
         for i in range(n):
             for j in range(n):
-                if i!=j:
-                    d1ham_dia[k].set(i,j,  -2.0*alpha[i][j] * (x-x_nm[i][j]) * V[i][j] * math.exp(-alpha[i][j] * (x-x_nm[i][j])**2 ) * (1.0+0.0j) )
+                if i != j:
+                    d1ham_dia[k].set(i, j, -2.0 * alpha[i][j] * (x - x_nm[i][j]) * V[i][j] *
+                                     math.exp(-alpha[i][j] * (x - x_nm[i][j])**2) * (1.0 + 0.0j))
 
     for k in [0]:
         #  d2 Hdia / dR_0 2
         for i in range(n):
-            d2ham_dia[k].set(i,i, k_n[i]*(1.0+0.0j) )
+            d2ham_dia[k].set(i, i, k_n[i] * (1.0 + 0.0j))
 
     for k in [0]:
         for i in range(n):
             for j in range(n):
-                if i!=j:
-                    d2ham_dia[k].set(i,j, -2.0*alpha[i][j] * V[i][j] * math.exp(-alpha[i][j] * (x-x_nm[i][j])**2 )*(1.0-2.0*alpha[i][j]*(x-x_nm[i][j])**2)*(1.0+0.0j) )
-
+                if i != j:
+                    d2ham_dia[k].set(i, j, -2.0 * alpha[i][j] * V[i][j] * math.exp(-alpha[i][j] * \
+                                     (x - x_nm[i][j])**2) * (1.0 - 2.0 * alpha[i][j] * (x - x_nm[i][j])**2) * (1.0 + 0.0j))
 
     obj = tmp()
     obj.ham_dia = Hdia
@@ -499,24 +500,25 @@ def convert_mtx(X, nx, ny):
     """
     n_sq = len(X)
     n = int(math.sqrt(n_sq))
-    if n*n != n_sq:
-        print("All the parameters should be input as lists on nstates x nstates objects. Exiting...\n");
-        sys.exit(0)    
+    if n * n != n_sq:
+        print("All the parameters should be input as lists on nstates x nstates objects. Exiting...\n")
+        sys.exit(0)
 
     x = []
     for i in range(n):
         xi = []
         for j in range(n):
             # Allocate xi
-            xi.append( MATRIX(nx, ny))
+            xi.append(MATRIX(nx, ny))
 
             # Populate xi
             for k1 in range(nx):
                 for k2 in range(ny):
-                    xi[j].set(k1, k2, X[i*n+j][k1*ny+k2])
+                    xi[j].set(k1, k2, X[i * n + j][k1 * ny + k2])
         x.append(xi)
     return x
-    
+
+
 def polynomial(q, A, B, C, T):
     """
     q = MATRIX(ndof, 1)
@@ -528,7 +530,7 @@ def polynomial(q, A, B, C, T):
 
     dq = q - T
     F = (0.5 * dq.T() * A * dq + B.T() * dq + C).get(0, 0)
-    dF = A * dq + B 
+    dF = A * dq + B
 
     return F, dF
 
@@ -577,7 +579,7 @@ def Holstein_gen(_q, params, full_id=None):
 
     """
 
-    critical_params = [ ]
+    critical_params = []
 
     # Here are parameters for a 2-state systems with 1 nuclear dofs:
     # two parabolas, both depending on 1 nuclear DOF
@@ -589,36 +591,36 @@ def Holstein_gen(_q, params, full_id=None):
     E0, E1 = 0.0, 0.01     # diabatic shifts
     alp0, alp1 = 0.0, 0.0
     x0, x1, x01 = 0.0, 1.0, 0.5
-    default_params["A"] = [  [k0],   [0.0], 
-                             [0.0],  [k1]
-                          ]
-    default_params["B"] = [  [0.0],   [0.0],
-                             [0.0],   [0.0]
-                          ]
-    default_params["C"] = [  [E0],   [V],
-                             [V],    [E1]
-                          ]
-    default_params["T"] = [  [x0],   [x01],
-                             [x01],   [x1]
-                          ]
+    default_params["A"] = [[k0], [0.0],
+                           [0.0], [k1]
+                           ]
+    default_params["B"] = [[0.0], [0.0],
+                           [0.0], [0.0]
+                           ]
+    default_params["C"] = [[E0], [V],
+                           [V], [E1]
+                           ]
+    default_params["T"] = [[x0], [x01],
+                           [x01], [x1]
+                           ]
 
-    default_params["a"] = [  [2.0*alp0],   [0.0],
-                             [0.0],  [2.0*alp1]
-                          ]
-    default_params["b"] = [  [0.0],   [0.0],
-                             [0.0],   [0.0]
-                          ]
-    default_params["c"] = [  [0.0],   [0.0],
-                             [0.0],    [0.0]
-                          ]
-    default_params["t"] = [  [x0],   [x01],
-                             [x01],   [x1]
-                          ]    
+    default_params["a"] = [[2.0 * alp0], [0.0],
+                           [0.0], [2.0 * alp1]
+                           ]
+    default_params["b"] = [[0.0], [0.0],
+                           [0.0], [0.0]
+                           ]
+    default_params["c"] = [[0.0], [0.0],
+                           [0.0], [0.0]
+                           ]
+    default_params["t"] = [[x0], [x01],
+                           [x01], [x1]
+                           ]
 
     # Get the parameters
     comn.check_input(params, default_params, critical_params)
 
-    A = params["A"]; 
+    A = params["A"]
     B = params["B"]
     C = params["C"]
     T = params["T"]
@@ -630,8 +632,8 @@ def Holstein_gen(_q, params, full_id=None):
     n = int(math.sqrt(len(A)))
     ndof = len(B[0])
 
-    #============ Convert to matrices =================
-    A = convert_mtx(A, ndof, ndof)  
+    # ============ Convert to matrices =================
+    A = convert_mtx(A, ndof, ndof)
     B = convert_mtx(B, ndof, 1)
     C = convert_mtx(C, 1, 1)
     T = convert_mtx(T, ndof, 1)
@@ -641,52 +643,52 @@ def Holstein_gen(_q, params, full_id=None):
     c = convert_mtx(c, 1, 1)
     t = convert_mtx(t, ndof, 1)
 
-
-    Sdia = CMATRIX(n,n); Sdia.identity()
-    d1ham_dia = CMATRIXList();  d1ham_dia.append( CMATRIX(n,n) )
-    d2ham_dia = CMATRIXList();  d2ham_dia.append( CMATRIX(n,n) )
-    dc1_dia = CMATRIXList();  dc1_dia.append( CMATRIX(n,n) )
-
+    Sdia = CMATRIX(n, n)
+    Sdia.identity()
+    d1ham_dia = CMATRIXList()
+    d1ham_dia.append(CMATRIX(n, n))
+    d2ham_dia = CMATRIXList()
+    d2ham_dia.append(CMATRIX(n, n))
+    dc1_dia = CMATRIXList()
+    dc1_dia.append(CMATRIX(n, n))
 
     indx = 0
-    if full_id!=None:
+    if full_id is not None:
         Id = Cpp2Py(full_id)
         indx = Id[-1]
 
     q = _q.col(indx)
 
-
     obj = tmp()
-    #============= Diabatic Hamiltonians ======================
-    obj.ham_dia = CMATRIX(n,n)
+    # ============= Diabatic Hamiltonians ======================
+    obj.ham_dia = CMATRIX(n, n)
     obj.d1ham_dia = CMATRIXList()
     for i in range(ndof):
-        obj.d1ham_dia.append( CMATRIX(n,n) )
+        obj.d1ham_dia.append(CMATRIX(n, n))
 
     for i in range(n):
         for j in range(n):
             P1, dP1 = polynomial(q, A[i][j], B[i][j], C[i][j], T[i][j])
             P2, dP2 = polynomial(q, a[i][j], b[i][j], c[i][j], t[i][j])
             h_ij = P1 * math.exp(-P2)
-            obj.ham_dia.set(i,j,  h_ij * (1.0+0.0j) )
-  
-            der = dP1 * math.exp(-P2) - dP2 * h_ij; # MATRIX(ndof, 1)
+            obj.ham_dia.set(i, j, h_ij * (1.0 + 0.0j))
+
+            der = dP1 * math.exp(-P2) - dP2 * h_ij  # MATRIX(ndof, 1)
             for k in range(ndof):
-                obj.d1ham_dia[k].set(i, j,  der.get(k, 0) * (1.0+0.0j) )
+                obj.d1ham_dia[k].set(i, j, der.get(k, 0) * (1.0 + 0.0j))
 
-    #============= Diabatic overlaps ==========================
-    obj.ovlp_dia = CMATRIX(n,n); obj.ovlp_dia.identity()
+    # ============= Diabatic overlaps ==========================
+    obj.ovlp_dia = CMATRIX(n, n)
+    obj.ovlp_dia.identity()
 
-    #============= Diabatic derivative couplings ==============
-    obj.dc1_dia = CMATRIXList();
+    # ============= Diabatic derivative couplings ==============
+    obj.dc1_dia = CMATRIXList()
     for i in range(ndof):
-        obj.dc1_dia.append( CMATRIX(n,n) )
+        obj.dc1_dia.append(CMATRIX(n, n))
 
-    #============== Second derivatives of diabatic Ham =========
-    obj.d2ham_dia = CMATRIXList();
-    for i in range(ndof*ndof):
-        obj.d2ham_dia.append( CMATRIX(n,n) )
-
-
+    # ============== Second derivatives of diabatic Ham =========
+    obj.d2ham_dia = CMATRIXList()
+    for i in range(ndof * ndof):
+        obj.d2ham_dia.append(CMATRIX(n, n))
 
     return obj

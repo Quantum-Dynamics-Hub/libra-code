@@ -1,13 +1,13 @@
-#*********************************************************************************
-#* Copyright (C) 2017 Alexey V. Akimov
-#*
-#* This file is distributed under the terms of the GNU General Public License
-#* as published by the Free Software Foundation, either version 2 of
-#* the License, or (at your option) any later version.
-#* See the file LICENSE in the root directory of this distribution
-#* or <http://www.gnu.org/licenses/>.
-#*
-#*********************************************************************************/
+# *********************************************************************************
+# * Copyright (C) 2017 Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 2 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# *
+# *********************************************************************************/
 
 import cmath
 import math
@@ -18,28 +18,28 @@ import random
 
 cwd = os.getcwd()
 print "Current working directory", cwd
-sys.path.insert(1,cwd+"/../../_build/src/math_linalg")
-sys.path.insert(1,cwd+"/../../_build/src/basis")
+sys.path.insert(1, cwd + "/../../_build/src/math_linalg")
+sys.path.insert(1, cwd + "/../../_build/src/basis")
 
 # Fisrt, we add the location of the library to test to the PYTHON path
-if sys.platform=="cygwin":
-    #from cyglibra_core import *
+if sys.platform == "cygwin":
+    # from cyglibra_core import *
     from cyglinalg import *
     from cygbasis import *
 
-elif sys.platform=="linux" or sys.platform=="linux2":
-    #from liblibra_core import *
+elif sys.platform == "linux" or sys.platform == "linux2":
+    # from liblibra_core import *
     from liblinalg import *
     from libbasis import *
 
 
-basis = basisset_struct(54, 54, 100);
+basis = basisset_struct(54, 54, 100)
 
-#sys.exit(0)
+# sys.exit(0)
 
 basis.read_basisset_file("STO-3G", 0)
 
-#sys.exit(0)
+# sys.exit(0)
 
 for i in xrange(3):
     print "==== atom ", i, " ======"
@@ -57,7 +57,3 @@ for i in xrange(3):
         for k in xrange(basis.atoms[i].shells[j].contrCount):
             print "Exp = ", basis.atoms[i].shells[j].exponentList[k]
             print "Coeff = ", basis.atoms[i].shells[j].coeffList[k]
-
-
-
-

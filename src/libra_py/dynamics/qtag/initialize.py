@@ -1,12 +1,12 @@
-#*********************************************************************************                     
-#* Copyright (C) 2022 Matthew Dutra and Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 3 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2022 Matthew Dutra and Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 
 """
 ..module:: initialize
@@ -23,6 +23,7 @@ import numpy as np
 from liblibra_core import *
 import util.libutil as comn
 
+
 def gbfs(_params):
     """Places the basis functions on all surfaces according to the `init_placement' parameter and
        initializes their qpas MATRIX objects.
@@ -31,8 +32,8 @@ def gbfs(_params):
         _params (dict): Dictionary containing simulation parameters.
 
           * **_params[`init_placement`]** (float) : a parameter controlling how the initial placement
-              of the basis functions is handled; 
-          
+              of the basis functions is handled;
+
             - 0: grid [ default ]
             - 1: gaussian distributed
 
@@ -44,7 +45,7 @@ def gbfs(_params):
     Returns:
         (ntraj, Q, P, A, S, active_states): where:
 
-        ntraj (int): The total number of trajectories across all surfaces. 
+        ntraj (int): The total number of trajectories across all surfaces.
         Q (MATRIX(ndof, ntraj) ): coordinates of the GBFs
         P (MATRIX(ndof, ntraj) ): momenta of the GBFs
         A (MATRIX(ndof, ntraj) ): widths of the GBFs
@@ -55,8 +56,8 @@ def gbfs(_params):
 
     params = dict(_params)
 
-    critical_params = [ ]
-    default_params = { "init_placement":0 }
+    critical_params = []
+    default_params = {"init_placement": 0}
     comn.check_input(params, default_params, critical_params)
 
     init_placement = params['init_placement']
@@ -74,11 +75,10 @@ def gbfs(_params):
     return ntraj, Q, P, A, S, states
 
 
-
 def grid(_params):
-    """Returns the initial basis parameters Q, P, A, S as ndof-by-ntraj matrices, 
-       based on the input contained in the dict *dyn_params*. The placement is evenly spaced 
-       across the domain where the initial wavefunction has a magnitude greater than *rho_cut*, and 
+    """Returns the initial basis parameters Q, P, A, S as ndof-by-ntraj matrices,
+       based on the input contained in the dict *dyn_params*. The placement is evenly spaced
+       across the domain where the initial wavefunction has a magnitude greater than *rho_cut*, and
        each surface has the same number of trajectories. If *rho_cut* is negative, a user-defined
        set of boundary conditions specified by *grid_min* and *grid_max* is used instead.
 
@@ -97,7 +97,7 @@ def grid(_params):
           * **_params[`alp_scl`]** (list of floats) : scaling parameter for the basis function width,
               based on the wavefunction width *wfc_a0* [ default: 8.0 ]
 
-          * **_params[`wfc_q0`]** (list of floats) : list of coordinates (length *ndof*) for the initial 
+          * **_params[`wfc_q0`]** (list of floats) : list of coordinates (length *ndof*) for the initial
               wavefunction position [ default: 0.0 ]
 
           * **_params[`wfc_p0`]** (list of floats) : list of values (length *ndof*) for the initial
@@ -108,10 +108,10 @@ def grid(_params):
 
           * **_params[`wfc_s0`]** (list of floats) : list of values (length *ndof*) for the initial
               wavefunction phase [ default: 0.0 ]
-              
+
           * **_params[`grid_min`]** (list of floats) : list of minimum values for each domain when a user-defined cutoff is
               specified (supersedes the wavefunction-density based method)
-              
+
           * **_params[`grid_max`]** (list of floats) : list of maximum values for each domain when a user-defined cutoff is
               specified (supersedes the wavefunction-density based method)
 
@@ -119,7 +119,7 @@ def grid(_params):
     Returns:
         (ntraj, Q, P, A, S, active_states): where:
 
-        ntraj (int): The total number of trajectories across all surfaces. 
+        ntraj (int): The total number of trajectories across all surfaces.
         Q (MATRIX(ndof, ntraj) ): coordinates of the GBFs
         P (MATRIX(ndof, ntraj) ): momenta of the GBFs
         A (MATRIX(ndof, ntraj) ): widths of the GBFs
@@ -129,11 +129,11 @@ def grid(_params):
 
     params = dict(_params)
 
-    critical_params = [ ]
-    default_params = { "grid_dims":[5], "rho_cut":1e-12, "alp_scl":[8.0], 
-                       "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0],
-                       "grid_min":[-1.0], "grid_max":[1.0]
-                     }
+    critical_params = []
+    default_params = {"grid_dims": [5], "rho_cut": 1e-12, "alp_scl": [8.0],
+                      "wfc_q0": [0.0], "wfc_p0": [0.0], "wfc_a0": [1.0], "wfc_s0": [0.0],
+                      "grid_min": [-1.0], "grid_max": [1.0]
+                      }
     comn.check_input(params, default_params, critical_params)
 
     states = params['states']
@@ -154,31 +154,28 @@ def grid(_params):
     for i in range(len(grid_dims)):
         ntraj_on_state *= grid_dims[i]
 
-    ntraj = ntraj_on_state*nstates
+    ntraj = ntraj_on_state * nstates
 
-
-    qvals = MATRIX(ndof,ntraj)
-    pvals = MATRIX(ndof,ntraj)
-    avals = MATRIX(ndof,ntraj)
-    svals = MATRIX(ndof,ntraj)
+    qvals = MATRIX(ndof, ntraj)
+    pvals = MATRIX(ndof, ntraj)
+    avals = MATRIX(ndof, ntraj)
+    svals = MATRIX(ndof, ntraj)
     surf_ids = []
 
-
-    qlo,qhi = [], []
+    qlo, qhi = [], []
 
     if rho_cut > 0.0:
         for dof in range(ndof):
-            dq = np.sqrt(-0.5/a0[dof]*np.log(rho_cut))
+            dq = np.sqrt(-0.5 / a0[dof] * np.log(rho_cut))
             xlow = q0[dof] - dq
-            xhi  = q0[dof] + dq
+            xhi = q0[dof] + dq
             qlo.append(xlow)
             qhi.append(xhi)
     else:
         qlo = list(grid_min)
         qhi = list(grid_max)
-    
 
-    grid_bounds = np.mgrid[tuple(slice(qlo[dof],qhi[dof],complex(0,grid_dims[dof])) for dof in range(ndof))]
+    grid_bounds = np.mgrid[tuple(slice(qlo[dof], qhi[dof], complex(0, grid_dims[dof])) for dof in range(ndof))]
 
     elems = 1
     for i in grid_dims:
@@ -198,24 +195,23 @@ def grid(_params):
     for dof in range(ndof):
         for j in range(ntraj_on_state):
             for n in range(nstates):
-                qvals.set(dof,j+n*ntraj_on_state, qs[j][dof])
-                pvals.set(dof,j+n*ntraj_on_state, p0[dof])
-                avals.set(dof,j+n*ntraj_on_state, a0[dof]*alp_scl[dof])
-                svals.set(dof,j+n*ntraj_on_state,0.0)
+                qvals.set(dof, j + n * ntraj_on_state, qs[j][dof])
+                pvals.set(dof, j + n * ntraj_on_state, p0[dof])
+                avals.set(dof, j + n * ntraj_on_state, a0[dof] * alp_scl[dof])
+                svals.set(dof, j + n * ntraj_on_state, 0.0)
 
     for n in states:
         for j in range(ntraj_on_state):
             surf_ids.append(n)
-
 
     return ntraj, qvals, pvals, avals, svals, surf_ids
 
 
 def gaussian(_params):
     """Returns the initial basis parameters Q, P, A, S as ndof-by-ntraj matrices,
-       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a 
-       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*, 
-       and each surface has the same number of trajectories. The corresponding Gaussian-distributed 
+       based on the input contained in the dict *dyn_params*. The placement is randomly chosen from a
+       Gaussian distribution centered about the wavepacket maximum with a standard deviation *rho_cut*,
+       and each surface has the same number of trajectories. The corresponding Gaussian-distributed
        momenta are ordered so that the wavepacket spreads as x increases.
 
     Args:
@@ -223,12 +219,12 @@ def gaussian(_params):
 
           * **_params[`states`]** (list of int) : states onto which put trajectories [ default: [0, 1] ]
 
-          * **_params[`grid_dims`]** (list of floats) : the total number of basis functions to be 
-              placed on each surface. For Gaussian, the list has only one element, specifying the 
-              number of basis functions per surface. Note that the total number of basis functions 
+          * **_params[`grid_dims`]** (list of floats) : the total number of basis functions to be
+              placed on each surface. For Gaussian, the list has only one element, specifying the
+              number of basis functions per surface. Note that the total number of basis functions
               will then be *nstates*-by-*prod(grid_dims)*
 
-          * **_params[`rho_cut`]** (float) : cutoff parameter for basis placement, based on the 
+          * **_params[`rho_cut`]** (float) : cutoff parameter for basis placement, based on the
               wavefunction density (strictly speaking, the standard deviation of the Gaussian sampling)
               [ default: 1e-12 ]
 
@@ -250,7 +246,7 @@ def gaussian(_params):
     Returns:
         (ntraj, Q, P, A, S, active_states): where:
 
-        ntraj (int): The total number of trajectories across all surfaces. 
+        ntraj (int): The total number of trajectories across all surfaces.
         Q (MATRIX(ndof, ntraj) ): coordinates of the GBFs
         P (MATRIX(ndof, ntraj) ): momenta of the GBFs
         A (MATRIX(ndof, ntraj) ): widths of the GBFs
@@ -262,12 +258,10 @@ def gaussian(_params):
     params = dict(_params)
 
     critical_params = []
-    default_params = { "grid_dims":[5], "rho_cut":1e-12, 
-                       "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "alp_scl":[1.0], "wfc_s0":[0.0]
-                     }
+    default_params = {"grid_dims": [5], "rho_cut": 1e-12,
+                      "wfc_q0": [0.0], "wfc_p0": [0.0], "wfc_a0": [1.0], "alp_scl": [1.0], "wfc_s0": [0.0]
+                      }
     comn.check_input(params, default_params, critical_params)
-
-
 
     states = params["states"]
     nstates = len(states)
@@ -285,26 +279,26 @@ def gaussian(_params):
     for i in range(len(grid_dims)):
         ntraj_on_state *= grid_dims[i]
 
-    ntraj = ntraj_on_state*nstates
-    qvals=MATRIX(ndof,ntraj)
-    pvals=MATRIX(ndof,ntraj)
-    avals=MATRIX(ndof,ntraj)
-    svals=MATRIX(ndof,ntraj)
+    ntraj = ntraj_on_state * nstates
+    qvals = MATRIX(ndof, ntraj)
+    pvals = MATRIX(ndof, ntraj)
+    avals = MATRIX(ndof, ntraj)
+    svals = MATRIX(ndof, ntraj)
 
     surf_ids = []
-    ntraj = grid_dims[0]*nstates
+    ntraj = grid_dims[0] * nstates
 
-    q_gaus, p_gaus = [],[]
+    q_gaus, p_gaus = [], []
     for dof in range(ndof):
         q_gaus.append(np.sort(np.random.normal(q0[dof], rho_cut, ntraj)))
         p_gaus.append(np.sort(np.random.normal(p0[dof], rho_cut, ntraj)))
 
     for dof in range(ndof):
         for traj in range(ntraj):
-            qvals.set(dof,traj, q_gaus[dof][traj])
-            pvals.set(dof,traj, p_gaus[dof][traj])
-            avals.set(dof,traj, a0[dof]*alp_scl[dof])
-            svals.set(dof,traj, 0.0)
+            qvals.set(dof, traj, q_gaus[dof][traj])
+            pvals.set(dof, traj, p_gaus[dof][traj])
+            avals.set(dof, traj, a0[dof] * alp_scl[dof])
+            svals.set(dof, traj, 0.0)
 
     for n in states:
         for j in range(ntraj_on_state):
@@ -314,7 +308,7 @@ def gaussian(_params):
 
 
 def wfc_centers(_params):
-    """Returns the position, momentum, width and phase parameters of the 
+    """Returns the position, momentum, width and phase parameters of the
     initial multidimensional Gaussian wavepacket
 
     Args:
@@ -344,7 +338,7 @@ def wfc_centers(_params):
     params = dict(_params)
 
     critical_params = []
-    default_params = { "wfc_q0":[0.0], "wfc_p0":[0.0], "wfc_a0":[1.0], "wfc_s0":[0.0]     }
+    default_params = {"wfc_q0": [0.0], "wfc_p0": [0.0], "wfc_a0": [1.0], "wfc_s0": [0.0]}
     comn.check_input(params, default_params, critical_params)
 
     ndof = len(params["wfc_q0"])
@@ -353,24 +347,23 @@ def wfc_centers(_params):
     wfc_p0 = params["wfc_p0"]
     wfc_a0 = params["wfc_a0"]
     wfc_s0 = params["wfc_s0"]
-    
-    Q0 = MATRIX(ndof,1);
-    P0 = MATRIX(ndof,1);
-    A0 = MATRIX(ndof,1);
-    S0 = MATRIX(ndof,1);
+
+    Q0 = MATRIX(ndof, 1)
+    P0 = MATRIX(ndof, 1)
+    A0 = MATRIX(ndof, 1)
+    S0 = MATRIX(ndof, 1)
 
     for i in range(ndof):
-      Q0.set(i, 0, params["wfc_q0"][i])
-      P0.set(i, 0, params["wfc_p0"][i])
-      A0.set(i, 0, params["wfc_a0"][i])
-      S0.set(i, 0, params["wfc_s0"][i])
+        Q0.set(i, 0, params["wfc_q0"][i])
+        P0.set(i, 0, params["wfc_p0"][i])
+        A0.set(i, 0, params["wfc_a0"][i])
+        S0.set(i, 0, params["wfc_s0"][i])
 
     return Q0, P0, A0, S0
 
 
-
 def coeffs(aQ, aP, aA, aS, astate, bQ, bP, bA, bS, bstate):
-    """Returns the projection vector C of the initial wavefunction |psi> onto the basis of GBFs |G>={|G_i>}: 
+    """Returns the projection vector C of the initial wavefunction |psi> onto the basis of GBFs |G>={|G_i>}:
 
        |psi> = sum_i {  |G_i> * C_i } = |G> * C, so:
 
@@ -402,15 +395,15 @@ def coeffs(aQ, aP, aA, aS, astate, bQ, bP, bA, bS, bstate):
     ntraj = bQ.num_of_cols
     nstates = len(set(bstate))
 
-    bA_half = 0.5*bA
-    
+    bA_half = 0.5 * bA
+
     # Not sure why we were considering full A for the initial wavefunction
     G_psi = gwp_overlap_matrix(bQ, bP, bS, bA_half, Py2Cpp_int(bstate), aQ, aP, aS, aA, Py2Cpp_int(astate))
 
     GG = gwp_overlap_matrix(bQ, bP, bS, bA_half, Py2Cpp_int(bstate), bQ, bP, bS, bA_half, Py2Cpp_int(bstate))
 
     tmp = FullPivLU_rank_invertible(GG)
-    if tmp[1]==0:
+    if tmp[1] == 0:
         print("GBF overlap matrix is not invertible.\n Exiting...\n")
         sys.exit(0)
 
@@ -419,6 +412,4 @@ def coeffs(aQ, aP, aA, aS, astate, bQ, bP, bA, bS, bstate):
 
     coeff = invGG * G_psi
 
-    return coeff      
-
-
+    return coeff

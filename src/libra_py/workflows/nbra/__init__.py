@@ -1,11 +1,11 @@
-#***********************************************************
+# ***********************************************************
 # * Copyright (C) 2018-2020 Brendan A. Smith, Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
 # * License, or (at your option) any later version.
 # * http://www.gnu.org/copyleft/gpl.txt
-#***********************************************************/
+# ***********************************************************/
 
 __all__ = ["ann",
            "compute_hprime",
@@ -16,7 +16,7 @@ __all__ = ["ann",
            "mapping2",
            "ml_map",
            "plotting",
-           "qsh", 
+           "qsh",
            "step2",
            "step2_analysis",
            "step2_cp2k",
@@ -26,4 +26,4 @@ __all__ = ["ann",
            "step3",
            "step3_many_body",
            "step4"
-          ]
+           ]

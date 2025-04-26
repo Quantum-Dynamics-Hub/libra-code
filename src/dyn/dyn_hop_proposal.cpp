@@ -370,6 +370,10 @@ MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMAT
 
 
 
+
+
+
+
 vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int act_state_indx){
 /**
   \brief Compute the GFSH surface hopping probabilities for a single trajectory
@@ -464,6 +468,100 @@ vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& den
   return g;
 
 }// gfsh
+
+
+
+
+
+vector<double> hopping_probabilities_gfsh_orig(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx){
+/**
+  \brief Compute the GFSH surface hopping probabilities for a single trajectory
+
+  Abbreviation: GFSH - global flux surface hopping
+  References: 
+  (1) Wang, L.; Trivedi, D.; Prezhdo, O. V. Global Flux Surface Hopping Approach for Mixed Quantum-Classical Dynamics. J. Chem. Theory Comput. 2014, 10, 3598–3605.
+  (2) Akimov, A. V. Libra: An Open-Source “Methodology Discovery” Library for Quantum and Classical Dynamics Simulations.
+  J. Comput. Chem. 2016, 37, 1626–1649.
+
+  \param[in] key parameters needed for this type of calculations
+    - dt - integration timestep [a.u.]
+    - Temperature - temperature [ K ]
+    - use_boltz_factor - whether to scale the computed probabilities by a Boltzmann factor
+  \param[in] denmat - [nstates x nstates] - current density matrix
+  \param[in] denmat_old - [nstates x nstates] - previous density matrix
+  \param[in] act_state_indx - index of the initial state
+
+  Returns: A nstates-vector of hopping probabilities to all states from the current active state
+
+
+*/
+
+  const double kb = 3.166811429e-6; // Hartree/K
+  int i,j,k;
+  double sum,g_ij,argg;
+
+  double dt = prms.dt;
+  double T = prms.Temperature;
+  int use_boltz_factor = prms.use_boltz_factor;
+
+
+  int nstates = denmat.n_rows;
+  vector<double> g(nstates, 0.0);
+
+  CMATRIX denmat_dot(nstates, nstates);
+  denmat_dot = denmat - denmat_old;
+
+
+  // compute a_kk and a_dot_kk
+  vector<double> a(nstates,0.0);
+  vector<double> a_dot(nstates,0.0);
+  double norm = 0.0; // normalization factor
+
+  for(i=0;i<nstates;i++){
+    a[i] = denmat.get(i,i).real();
+    a_dot[i] = denmat_dot.get(i,i).real();
+
+    if(a_dot[i]<0.0){ norm += a_dot[i]; } // total rate of population decrease in all decaying states
+
+  }// for i
+
+
+  // Now calculate the hopping probabilities
+  i = act_state_indx;
+  double sumg = 0.0;
+
+  for(j=0;j<nstates;j++){
+
+    if(j!=i){  // off-diagonal = probabilities to hop to other states
+
+      if(a[i]<1e-12){  g[j] = 0.0; }  // since the initial population is almost zero, so no need for hops
+      else{
+
+        if( fabs(norm) > 1e-12 ){ g[j] = (a_dot[j]/a[i]) * a_dot[i] / norm;  }
+
+        // since norm is negative, than this condition means that a_dot[i] and a_dot[j] have same signs
+        // which is bad - so no transitions are assigned
+        if(g[j]<0.0){  g[j] = 0.0;   }
+
+        // here we have opposite signs of a_dot[i] and a_dot[j], but this is not enough yet
+        else{  
+          if(a_dot[i]<0.0 && a_dot[j]>0.0){ ;; } // this is out transition probability, but it is already computed
+          else{  g[j] = 0.0; } // wrong transition
+        }
+      }// a[i]>1e-12
+
+      sumg += g[j];
+    }
+  }// for j
+
+  g[i] = 1.0 - sumg;  // probability to stay in state i
+
+  if(g[i]<0.0){  g[i] = 0.0; }
+
+  return g;
+
+}// gfsh - original version 
+
 
 
 
@@ -1262,10 +1360,24 @@ nHamiltonian& ham, nHamiltonian& ham_prev){
         CMATRIX dm_prev_trans(*dyn_var.dm_dia_prev[traj]);
         g[traj] = hopping_probabilities_fssh3(prms, dm, dm_prev_trans, dyn_var.act_states_dia[traj], dyn_var.fssh3_errors[traj]);
       }
-    }
+    } // FSSH-3
+	
+	else if(prms.tsh_method == 9){ // GFSH - original
+ 
+      if(prms.rep_sh==1){
+        CMATRIX& dm_prev = *dyn_var.dm_adi_prev[traj];
+        if(prms.rep_tdse==2){ dm = *dyn_var.dm_dia_prev[traj]; }
+        g[traj] = hopping_probabilities_gfsh_orig(prms, dm, dm_prev, dyn_var.act_states[traj]);
+      }
+      else if(prms.rep_sh==0){
+        CMATRIX& dm_prev = *dyn_var.dm_dia_prev[traj];
+        g[traj] = hopping_probabilities_gfsh_orig(prms, dm, dm_prev, dyn_var.act_states_dia[traj]);
+      }
+    }// GFSH original
+		
 
     else{
-      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, 7, or 8. Other values are not defined\n";
+      cout<<"Error in tsh1: tsh_method can be -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9. Other values are not defined\n";
       cout<<"Exiting...\n";
       exit(0);
     }

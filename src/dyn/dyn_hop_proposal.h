@@ -44,6 +44,8 @@ vector<double> hopping_probabilities_fssh(dyn_control_params& prms, CMATRIX& den
 MATRIX hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);
 vector<double> hopping_probabilities_gfsh(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& Hvib, int atc_state_indx);
 
+vector<double> hopping_probabilities_gfsh_orig(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx);
+
 vector<double> hopping_probabilities_fssh2(dyn_control_params& prms, CMATRIX& denmat, CMATRIX& denmat_old, int act_state_indx);
 
 MATRIX hopping_probabilities_mssh(dyn_control_params& prms, CMATRIX& Coeff, CMATRIX& Hvib);

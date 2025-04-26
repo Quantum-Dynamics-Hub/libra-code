@@ -130,10 +130,22 @@ class dyn_control_params{
     Options:
       - 0: don't compute forces at all - e.g. we do not really need them
       - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
-      - 2: Ehrenfest
+      - 2: Ehrenfest and MMST (SQC)
       - 3: QTSH force
   */
   int force_method;
+
+
+  /**
+    Gamma parameter in the Meyer-Miller Hamiltonian of form:
+    
+    H = sum_{i,j} H_{ij} [ 1/(2 hbar) * (q_i - i * p_j) * (q_j + i * p_i) - gamma * delta_ij ]
+
+    Options: 
+      - 0.0: corresponds to Ehrenfest force [ default ]
+
+  */
+  double sqc_gamma;
 
 
   /** 
@@ -311,6 +323,7 @@ class dyn_control_params{
       - 6: MASH
       - 7: FSSH2
       - 8: FSSH3
+      - 9: GFSH (original)
   */
   int tsh_method;
 

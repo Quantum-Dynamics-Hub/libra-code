@@ -1,16 +1,16 @@
-#*********************************************************************************                     
-#* Copyright (C) 2017-2019 Brendan Smith, Wei Li, Alexey V. Akimov                                                   
-#*                                                                                                     
-#* This file is distributed under the terms of the GNU General Public License                          
-#* as published by the Free Software Foundation, either version 2 of                                   
-#* the License, or (at your option) any later version.                                                 
-#* See the file LICENSE in the root directory of this distribution   
-#* or <http://www.gnu.org/licenses/>.          
-#***********************************************************************************
+# *********************************************************************************
+# * Copyright (C) 2017-2019 Brendan Smith, Wei Li, Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 2 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# ***********************************************************************************
 """
 .. module:: acf
    :platform: Unix, Windows
-   :synopsis: 
+   :synopsis:
        This module implements the functionality to compute Autocorrelation Functions (ACF)
        and do some transformations of them
        The assumption is that data are provided in a matrix form - not vectors, so we can handle the
@@ -26,9 +26,9 @@ import sys
 import math
 import copy
 
-if sys.platform=="cygwin":
+if sys.platform == "cygwin":
     from cyglibra_core import *
-elif sys.platform=="linux" or sys.platform=="linux2":
+elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
 from . import units
@@ -59,37 +59,35 @@ def acf_mat(data, dt, opt=0):
 
     """
 
-    sz = len(data)    # For now, we will use the full data set 
+    sz = len(data)    # For now, we will use the full data set
 
-                      ###               how many elements we have in the time series
-                      ###  old comments we use only a half of the point, because of the 
-                      ###               poorer statistics we get otherwise
+    # how many elements we have in the time series
+    # old comments we use only a half of the point, because of the
+    # poorer statistics we get otherwise
     autocorr = []
     ndof = data[0].num_of_rows
 
-    for i in range(0,sz):
+    for i in range(0, sz):
         total = 0.0
-        for j in range(0,sz-i):
-            total += (data[j].T()*data[j+i]).get(0)   # scalar product
-        if opt==0:
-            autocorr.append( total/((sz-i)*ndof) )  # less bias, chemistry adopted
-        elif opt==1:
-            autocorr.append( total/(sz*ndof) )      # statistically-preferred option
+        for j in range(0, sz - i):
+            total += (data[j].T() * data[j + i]).get(0)   # scalar product
+        if opt == 0:
+            autocorr.append(total / ((sz - i) * ndof))  # less bias, chemistry adopted
+        elif opt == 1:
+            autocorr.append(total / (sz * ndof))      # statistically-preferred option
 
-    #normalize the ACF	
+    # normalize the ACF
     nautocorr = []
     norm = 1.0
-    if math.fabs(autocorr[0])>0.0:
-        norm = 1.0/autocorr[0]
+    if math.fabs(autocorr[0]) > 0.0:
+        norm = 1.0 / autocorr[0]
 
     T = []
-    for it in range(0,sz):
-        T.append(it*dt)
-        nautocorr.append( norm * autocorr[it] )
+    for it in range(0, sz):
+        T.append(it * dt)
+        nautocorr.append(norm * autocorr[it])
 
     return T, nautocorr, autocorr
-
-
 
 
 def acf_vec(data, dt, opt=0):
@@ -116,33 +114,32 @@ def acf_vec(data, dt, opt=0):
 
     """
 
-    sz = len(data)    # For now, we will use the full data set 
+    sz = len(data)    # For now, we will use the full data set
 
-                      ###               how many elements we have in the time series
-                      ###  old comments we use only a half of the point, because of the 
-                      ###               poorer statistics we get otherwise
+    # how many elements we have in the time series
+    # old comments we use only a half of the point, because of the
+    # poorer statistics we get otherwise
     autocorr = []
     ndof = 3.0
 
-    for i in range(0,sz):
+    for i in range(0, sz):
         total = 0.0
-        for j in range(0,sz-i):
-            total += data[j]*data[j+i]  # scalar product
-        if opt==0:
-            autocorr.append( total/((sz-i)*ndof) )  # less bias, chemistry adopted
-        elif opt==1:
-            autocorr.append( total/(sz*ndof) )      # statistically-preferred option
+        for j in range(0, sz - i):
+            total += data[j] * data[j + i]  # scalar product
+        if opt == 0:
+            autocorr.append(total / ((sz - i) * ndof))  # less bias, chemistry adopted
+        elif opt == 1:
+            autocorr.append(total / (sz * ndof))      # statistically-preferred option
 
-    #normalize the ACF	
+    # normalize the ACF
     nautocorr = []
     norm = 1.0
-    if math.fabs(autocorr[0])>0.0:
-        norm = 1.0/autocorr[0]
+    if math.fabs(autocorr[0]) > 0.0:
+        norm = 1.0 / autocorr[0]
 
     T = []
-    for it in range(0,sz):
-        T.append(it*dt)
-        nautocorr.append( norm * autocorr[it] )
+    for it in range(0, sz):
+        T.append(it * dt)
+        nautocorr.append(norm * autocorr[it])
 
     return T, nautocorr, autocorr
-
