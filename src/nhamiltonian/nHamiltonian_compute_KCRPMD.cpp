@@ -35,26 +35,6 @@ using namespace liblinalg;
 using namespace libmeigen;
 
 
-//CMATRIX nHamiltonian::potentials_dia(vector<int>& act_states){
-///**
-//  This only applies for a nHamiltonian object with a set of children whose size is 
-//  equal to the number of integers in `act_states` input
-//
-//  Return: -d1ham_dia shaped as CMATRIX(ndof, ntraj) - for `act_states` states
-//*?/
-//
-//  vector<int> act_states(ntraj, 0);
-//
-//  CMATRIX res(ntraj);
-//  for(int traj=0; traj<ntraj; traj++){
-//    int st = act_states[traj];
-//      res.set(dof, traj, -children[traj]->d1ham_dia[dof]->get(st, st) );
-//    }// for traj
-//
-//  return res;
-//}
-
-
 vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 /**
   Generate set of M matrices for each trajectory
