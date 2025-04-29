@@ -1341,7 +1341,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-   
+  
+
+  // Update amplitudes and density matrices in response to regular evolution
+  dyn_var.update_amplitudes(prms);
+  dyn_var.update_density_matrix(prms);
+ 
   //============== Begin the TSH part ===================
 
   //================= Update decoherence rates & times ================
@@ -1370,6 +1375,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   else if(prms.decoherence_times_type==4){
     decoherence_rates = schwartz_1(prms, *dyn_var.ampl_adi, *dyn_var.p, ham, *prms.schwartz_interaction_width); 
+  }
+
+  else if(prms.decoherence_times_type==5){
+    decoherence_rates = Gu_Franco(prms, *dyn_var.ampl_adi);
   }
 
   ///== Optionally, apply the dephasing-informed correction ==

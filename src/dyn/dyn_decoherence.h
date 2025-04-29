@@ -111,6 +111,9 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, MATRIX&
 vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp);
 
 
+vector<MATRIX> Gu_Franco(dyn_control_params& prms, CMATRIX& amplitudes);
+
+
 ///================  In dyn_methods_dish.cpp  ===================================
 /*
 vector<int> dish(dyn_control_params& prms,

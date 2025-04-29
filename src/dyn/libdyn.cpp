@@ -150,7 +150,8 @@ void export_dyn_control_params_objects(){
       .def_readwrite("tcnbra_nhc_size", &dyn_control_params::tcnbra_nhc_size)
       .def_readwrite("tcnbra_do_nac_scaling", &dyn_control_params::tcnbra_do_nac_scaling)
       .def_readwrite("properties_to_save", &dyn_control_params::properties_to_save)
-
+ 
+      .def_readwrite("reorg_energy", &dyn_control_params::reorg_energy)
 
       .def("sanity_check", expt_sanity_check_v1)
       .def("set_parameters", expt_set_parameters_v1)
@@ -484,6 +485,8 @@ void export_dyn_decoherence_objects(){
   (dyn_control_params& prms, nHamiltonian& ham, MATRIX& inv_alp) = &schwartz_2;
   def("schwartz_2", expt_schwartz_2_v1);
 
+
+  vector<MATRIX> (*expt_Gu_Franco_v1)(dyn_control_params& prms, CMATRIX& amplitudes) = &Gu_Franco;
 
 
   ///================== In dyn_methods_dish.cpp  =======================

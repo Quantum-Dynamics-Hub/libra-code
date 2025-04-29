@@ -552,6 +552,13 @@ class dyn_variables{
   int timestep; 
 
 
+  ///=============== For new decoherence method ==============
+  /**
+   Integrated exp( -(dt/tau(t))**2 ) over many timesteps 
+   Reset to 1 at every accepted hop
+  */
+  vector< vector<double> > coherence_factors;
+
 
   ///====================== In dyn_variables.cpp =====================
 

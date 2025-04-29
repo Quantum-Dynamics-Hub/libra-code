@@ -550,6 +550,7 @@ class dyn_control_params{
       - 1: use the energy-based decoherence method (EDC)    
       - 2: Schwartz - mean-field Force-based decoherence
       - 3: Schwartz - pair-wise-based decoherences
+      - 4: Gu-Franco 
   */  
   int decoherence_times_type;
 
@@ -971,6 +972,12 @@ class dyn_control_params{
     but is read for reducing redundant calculations.
   */
   bp::list properties_to_save;
+
+
+  /**
+    Reorganization energy of the bath, Ha
+  */
+  double reorg_energy;
   
 
 

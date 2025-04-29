@@ -465,6 +465,56 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& i
 }
 
 
+vector<MATRIX> Gu_Franco(dyn_control_params& prms, CMATRIX& amplitudes){
+/**
+  Compute decoherence rates 1/tau_i for all states and all trajectories according to Eq. 25 in:
+
+  (1) Gu, B.; Franco, I. Generalized Theory for the Timescale of Molecular Electronic Decoherence in the Condensed Phase. 
+  J. Phys. Chem. Lett. 2018, 9 (4), 773–778. https://doi.org/10.1021/acs.jpclett.7b03322.
+
+  also notice this correction:
+
+  (2) Gu, B.; Franco, I. Correction to "Generalized Theory for the Timescale of Molecular Electronic Decoherence in the Condensed Phase." 
+  J. Phys. Chem. Lett. 2020, 11 (6), 2044–2045. https://doi.org/10.1021/acs.jpclett.0c00437.
+
+  amplitudes  - CMATRIX(nstates, ntraj)
+
+  Return:
+
+  MATRIX(nstates, ntraj) - 1/tau - decoherence rates for all states and trajectories
+*/
+
+  int nstates = amplitudes.n_rows;
+  int ntraj = amplitudes.n_cols;
+
+  vector<MATRIX> res(ntraj, MATRIX(nstates, nstates));
+  CMATRIX loc_dm(nstates, nstates);
+
+  double reorg_energy = prms.reorg_energy;
+  double T = prms.Temperature;
+  double kB = boltzmann / hartree; 
+
+  double pref = sqrt(4.0 * reorg_energy * kB*T);
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    CMATRIX c = amplitudes.col(itraj);
+    loc_dm = c * c.H();
+
+    for(int i=0;i<nstates; i++){
+      for(int j=0;j<nstates; j++){
+
+        double val = std::abs(loc_dm.get(i,j) ) * pref;
+        res[itraj].set(i,j, val);
+
+      }// for j states
+    }// for i states
+  }// for trajectories 
+
+  return res;
+}
+
+
+
 
 }// namespace libdyn
 }// liblibra

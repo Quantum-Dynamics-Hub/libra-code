@@ -137,6 +137,8 @@ dyn_control_params::dyn_control_params(){
   tcnbra_do_nac_scaling = 1;
 
   properties_to_save = bp::list();
+
+  reorg_energy = 0.0;
 }
 
 
@@ -257,7 +259,10 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   tcnbra_do_nac_scaling = x.tcnbra_do_nac_scaling;
 
   properties_to_save = bp::list(x.properties_to_save);
+  
+  reorg_energy = x.reorg_energy;
 }
+
 dyn_control_params::~dyn_control_params() {  
 
   //cout<<"dyn_control_params destructor\n";
@@ -490,6 +495,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="tcnbra_do_nac_scaling") { tcnbra_do_nac_scaling =  bp::extract<int>(params.values()[i]); }
     
     else if(key=="properties_to_save"){ properties_to_save = bp::extract<bp::list>(params.values()[i]); }    
+
+    else if(key=="reorg_energy") { reorg_energy =  bp::extract<double>(params.values()[i]); }
 
   }// for i
 
