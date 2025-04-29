@@ -988,6 +988,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_shxf()
     elif decoherence_algo == 6:  # MQCXF
         dyn_var.allocate_mqcxf()
+    elif decoherence_algo == 9:  # simple decoherence
+        dyn_var.allocate_simple_decoherence()
+
     if tsh_method == 5 or decoherence_algo == 7:  # DISH or DISH_rev2023
         dyn_var.allocate_dish()
     if tsh_method == 7 or tsh_method == 8 or tsh_method == 9:  # FSSH2 or FSSH3 or original GFSH

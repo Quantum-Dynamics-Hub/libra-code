@@ -248,6 +248,7 @@ void export_dyn_variables_objects(){
       .def_readwrite("tcnbra_ekin", &dyn_variables::tcnbra_ekin)
       .def_readwrite("qtsh_vars_status", &dyn_variables::qtsh_vars_status)
       .def_readwrite("kcrpmd_vars_status", &dyn_variables::kcrpmd_vars_status)
+      .def_readwrite("simple_decoherence_vars_status", &dyn_variables::simple_decoherence_vars_status)
 
       .def("set_parameters", expt_set_parameters_v1)
 
@@ -262,6 +263,7 @@ void export_dyn_variables_objects(){
       .def("allocate_mqcxf", &dyn_variables::allocate_mqcxf)
       .def("allocate_qtsh", &dyn_variables::allocate_qtsh)
       .def("allocate_kcrpmd", &dyn_variables::allocate_kcrpmd)
+      .def("allocate_simple_decoherence", &dyn_variables::allocate_simple_decoherence)
 
       .def("set_q", &dyn_variables::set_q)
       .def("set_p", &dyn_variables::set_p)
