@@ -1,23 +1,37 @@
-import libra_py.units as units
-from libra_py import data_conv
-import libra_py.data_read as data_read
-import util.libutil as comn
-import matplotlib.pyplot as plt
-import sys
-import cmath
-import math
+# *********************************************************************************
+# * Copyright (C) 2025 Daeho Han and Alexey V. Akimov
+# *
+# * This file is distributed under the terms of the GNU General Public License
+# * as published by the Free Software Foundation, either version 3 of
+# * the License, or (at your option) any later version.
+# * See the file LICENSE in the root directory of this distribution
+# * or <http://www.gnu.org/licenses/>.
+# *
+# *********************************************************************************/
+
+"""
+.. module:: rpi
+   :platform: Unix, Windows
+   :synopsis: this module implements restricted path integral (RPI) calculations
+
+.. moduleauthor:: Daeho Han, Alexey V. Akimov
+
+"""
+
 import os
-import multiprocessing as mp
-import time
+import sys
 import numpy as np
 import h5py
-import scipy.sparse as sp
+import time
 import multiprocessing as mp
-
 if sys.platform == "cygwin":
     from cyglibra_core import *
 elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
+import libra_py.units as units
+from libra_py import data_conv
+import libra_py.data_read as data_read
+import util.libutil as comn
 
 def run_patch_rpi(rpi_params):
     """
@@ -61,6 +75,14 @@ def run_patch_rpi(rpi_params):
     Return:
         None: but performs the action
     """
+    
+    critical_params = ["path_to_save_Hvibs", "iread", "fread", "nsteps", "npatches", "nstates", "path_to_save_patch"]
+    default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
+                      "run_python_file": 'run_template.py',
+                      "iconds": [0],
+                      "dt": 1.0*units.fs2au,
+                      }
+    comn.check_input(rpi_params, default_params, critical_params)
 
     out_dir = rpi_params["path_to_save_patch"]
     if not os.path.exists(out_dir):
@@ -197,6 +219,11 @@ def run_sum_rpi(rpi_params):
     Return:
         None: but performs the action
     """
+    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
+    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "iconds": [0]}
+
+    comn.check_input(rpi_params, default_params, critical_params)
+
     nprocs = rpi_params["nprocs"]
   
     nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
@@ -248,6 +275,10 @@ def run_sum_rpi_crude(rpi_params):
     Return:
         None: but performs the action
     """
+    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
+    default_params = {"prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "iconds": [0]}
+
+    comn.check_input(rpi_params, default_params, critical_params)
 
     nsteps, dt, istate = rpi_params["nsteps"], rpi_params["dt"], rpi_params["istate"]
 
