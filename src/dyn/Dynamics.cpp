@@ -1120,6 +1120,63 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
 }
 
+void renormalize_hopping_probabilities(vector< vector<double> >& g, vector< vector<vector<double> > >& coherence_factors, vector<int>& act_states){
+/**
+  Scale the hopping probabilities by the factors and ensure the sum of all 
+  hopping probabilities is still 1
+
+  g[itraj][i] - hopping probability from the current active state for the trajectory itraj to the state i
+
+  act_states[itraj] - the active state for the trajectory itraj
+
+  coherence_factors[itraj][i][j] - the scaling of the hopping probability from state i to state j for the trajectory itraj
+
+
+  Result: the g vector is modified
+*/
+  int ntraj = g.size();
+  int nstates = coherence_factors[0].size();
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    int a = act_states[itraj];
+    double sum = 0.0;
+    for(int j=0;j<nstates; j++){
+      if(j!=a){ 
+        double val = g[itraj][j] * coherence_factors[itraj][a][j];
+        sum += val;
+        g[itraj][j] =  val;
+      } 
+    }// for j
+    // The self-element: 
+    g[itraj][a] = 1.0 - sum;
+    if(g[itraj][a]<0){  g[itraj][a] = 0.0; }
+
+  }// for itraj  
+
+}
+
+void reset_coherence_factors(vector< vector<vector<double> > >& coherence_factors, vector<int>& act_states, vector<int>& old_states){
+
+  int ntraj = coherence_factors.size();
+  int nstates = coherence_factors[0].size();
+
+  for(int itraj=0; itraj<ntraj; itraj++){
+    if( act_states[itraj] != old_states[itraj]){
+      // If the hop has happened for this trajectory, we start 
+      // new evolution of the wavepackets on all the surfaces
+      // so we have to reset all the coherence factors to 1.0
+      for(int i=0; i<nstates; i++){
+        for(int j=0; j<nstates; j++){
+          coherence_factors[itraj][i][j] = 1.0;
+        }// for j
+      }// for i
+
+    }// if
+  }// for itraj
+
+}
+
+
 void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
               nHamiltonian& ham, nHamiltonian& ham_aux, bp::object py_funct, bp::dict params,  Random& rnd,
               vector<Thermostat>& therm){
@@ -1151,7 +1208,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
 //  cout<<"In compute_dynamics\n";
   //======== General variables =======================
-  int i, cdof, traj, dof, idof, ntraj1;
+  int i, j, cdof, traj, dof, idof, ntraj1;
 
   //========= Control parameters variables ===========
   dyn_control_params prms;
@@ -1341,7 +1398,12 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);
-   
+  
+
+  // Update amplitudes and density matrices in response to regular evolution
+  dyn_var.update_amplitudes(prms);
+  dyn_var.update_density_matrix(prms);
+ 
   //============== Begin the TSH part ===================
 
   //================= Update decoherence rates & times ================
@@ -1370,6 +1432,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   else if(prms.decoherence_times_type==4){
     decoherence_rates = schwartz_1(prms, *dyn_var.ampl_adi, *dyn_var.p, ham, *prms.schwartz_interaction_width); 
+  }
+
+  else if(prms.decoherence_times_type==5){
+    decoherence_rates = Gu_Franco(prms, *dyn_var.ampl_adi); 
   }
 
   ///== Optionally, apply the dephasing-informed correction ==
@@ -1426,7 +1492,19 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   }
 
   // DISH, rev2023
-  if(prms.decoherence_algo==7){  dish_rev2023(dyn_var, ham,  decoherence_rates, prms, rnd);   }
+  else if(prms.decoherence_algo==7){  dish_rev2023(dyn_var, ham,  decoherence_rates, prms, rnd);   }
+
+  // Simple decoherence
+  else if(prms.decoherence_algo==9){
+    for(traj=0; traj<ntraj; traj++){
+      for(i=0; i<nadi; i++){
+        for(j=0; j<nadi; j++){
+          double argg = decoherence_rates[traj].get(i,j) * prms.dt;
+          dyn_var.coherence_factors[traj][i][j] *= exp( - argg * argg );
+        }// for j
+      }// for i
+    }// for traj
+  }// simple decoherence
 
 
   // Update amplitudes and density matrices in response to decoherence corrections
@@ -1457,6 +1535,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       /// of that trajectory
       vector< vector<double> > g;
       g = hop_proposal_probabilities(prms, dyn_var, ham, ham_aux);
+
+      // simple decoherence correction
+      if(prms.decoherence_algo==9){   // intended only for adiabatic states for now 
+        renormalize_hopping_probabilities(g, dyn_var.coherence_factors, dyn_var.act_states); 
+      }
 
       // Propose new discrete states for all trajectories
       vector<int> prop_states(ntraj, 0);
@@ -1502,7 +1585,11 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
                                     prms.instantaneous_decoherence_variant, prms.collapse_option);
         }
         else{ cout<<"ERROR: Instantaneous Decoherence requires rep_tdse = 1\nExiting now...\n"; exit(0); }
-      }// algo == 6
+      }// algo == 8
+
+      else if(prms.decoherence_algo==9){ // simple decoherence method
+        reset_coherence_factors(dyn_var.coherence_factors, act_states, old_states);   
+      }// algo == 9 
 
     }
     // DISH - the old one
@@ -1511,6 +1598,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
       else{ cout<<"ERROR: DISH method should be used only with decoherence_algo = -1\nExiting now...\n"; exit(0); }
       act_states = dish(dyn_var, ham, decoherence_rates, prms, rnd);
     }// DISH
+
 
 
     //====================== Momenta adjustment after successful/frustrated hops ===================

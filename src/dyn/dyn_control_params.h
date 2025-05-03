@@ -294,15 +294,15 @@ class dyn_control_params{
   int convergence;
   
   /**
-  The maximum number of hops that an be attempted before either choosing the identity or exiting in stochastic reordering algorithm 3. 
+    The maximum number of hops that an be attempted before either choosing the identity or exiting in stochastic reordering algorithm 3. 
   */
   int max_number_attempts;
 
   /**
-  The probability threshold for stochastic state reordering algorithm. 
-  If a probability for a multi-state stransition is below this value, it will be disregarded and set to 0
-  The rest of the probabilities will be renormalized
-  Default: 0.0 
+    The probability threshold for stochastic state reordering algorithm. 
+    If a probability for a multi-state stransition is below this value, it will be disregarded and set to 0
+    The rest of the probabilities will be renormalized
+    Default: 0.0 
   */
   double min_probability_reordering; 
 
@@ -527,6 +527,7 @@ class dyn_control_params{
       - 6: MQCXF
       - 7: DISH, rev2023
       - 8: diabatic IDA, experimental
+      - 9: simple decoherence, experimental
 
   */
   double decoherence_algo;
@@ -564,6 +565,7 @@ class dyn_control_params{
       - 1: use the energy-based decoherence method (EDC)    
       - 2: Schwartz - mean-field Force-based decoherence
       - 3: Schwartz - pair-wise-based decoherences
+      - 4: Gu-Franco 
   */  
   int decoherence_times_type;
 
@@ -986,6 +988,12 @@ class dyn_control_params{
     but is read for reducing redundant calculations.
   */
   bp::list properties_to_save;
+
+
+  /**
+    Reorganization energy of the bath, Ha
+  */
+  double reorg_energy;
   
 
 

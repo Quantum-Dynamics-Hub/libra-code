@@ -552,6 +552,21 @@ class dyn_variables{
   int timestep; 
 
 
+  ///=============== For new decoherence method (let's call it simple_decoherence ) ==============
+  /**
+    Status of the new decoherence method vars
+
+    0 - not allocated;
+    1 - allocated 
+  */
+  int simple_decoherence_vars_status;
+
+  /**
+   Integrated exp( -(dt/tau(t))**2 ) over many timesteps 
+   Reset to 1 at every accepted hop, separate for each trajectory
+  */
+  vector< vector< vector<double> > > coherence_factors;
+
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -566,6 +581,8 @@ class dyn_variables{
   void allocate_mqcxf();
   void allocate_qtsh();
   void allocate_kcrpmd();
+  void allocate_simple_decoherence();
+
 
   dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj);
   dyn_variables(const dyn_variables& x); 

@@ -119,6 +119,9 @@ dyn_variables::dyn_variables(int _ndia, int _nadi, int _ndof, int _ntraj){
   ///================= KC-RPMD ====================
   kcrpmd_vars_status = 0;
 
+  ///================= simple decoherence ====================
+  simple_decoherence_vars_status = 0;
+
 }
 
 
@@ -313,6 +316,18 @@ void dyn_variables::allocate_kcrpmd(){
 }// allocate_kcrpmd
 
 
+void dyn_variables::allocate_simple_decoherence(){
+
+  if(simple_decoherence_vars_status==0){
+
+    coherence_factors = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 1.0) ) );
+    simple_decoherence_vars_status = 1;
+  }
+
+}
+
+
+
 dyn_variables::dyn_variables(const dyn_variables& x){     
   //cout<<"dyn_variables copy constructor\n";
   int itraj, idof;
@@ -469,6 +484,10 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     auxiliary_y = x.auxiliary_y;
 
   }// if KCRPMD vars
+
+  if(x.simple_decoherence_vars_status == 1 ){
+    coherence_factors = x.coherence_factors;
+  }
 
 }// dyn_variables cctor
 
@@ -627,6 +646,12 @@ dyn_variables::~dyn_variables(){
     auxiliary_y.clear(); 
 
     kcrpmd_vars_status = 0;
+  }
+
+  if(simple_decoherence_vars_status==1){
+    coherence_factors.clear();
+
+    simple_decoherence_vars_status = 0;
   }
 
 }
