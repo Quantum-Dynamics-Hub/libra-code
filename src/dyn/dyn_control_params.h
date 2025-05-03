@@ -58,6 +58,7 @@ class dyn_control_params{
      - 1: adiabatic representation, wfc [ default ]
      - 2: diabatic representation, density matrix (e.g. Liouville's picture)
      - 3: adiabatic representation, density matrix (e.g. Liouville's picture)
+     - 4: MMST adiabatic representation, wfc
   */
   int rep_tdse;
 
@@ -132,6 +133,7 @@ class dyn_control_params{
       - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
       - 2: Ehrenfest and MMST (SQC)
       - 3: QTSH force
+      - 4: KC-RPMD force
   */
   int force_method;
 
@@ -493,6 +495,18 @@ class dyn_control_params{
   */
   int qtsh_force_option;
 
+
+  //=========== KC-RPMD options ==========
+  /**
+    Whether to use KC-RPMD 
+    
+    Options:
+
+      - 0: don't apply [ default ]
+      - 1: use it 
+  */
+  int use_kcrpmd;
+ 
   
   ///===============================================================================
   ///================= Decoherence options =========================================
@@ -754,6 +768,7 @@ class dyn_control_params{
       - 1: ETHD
       - 2: ETHD3 (experimental)
       - 22: another flavor of ETHD3 (experimental)
+      - 3: RPMD
   */
   int entanglement_opt;
 
