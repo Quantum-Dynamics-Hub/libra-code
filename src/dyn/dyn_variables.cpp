@@ -310,6 +310,8 @@ void dyn_variables::allocate_kcrpmd(){
   if(kcrpmd_vars_status==0){
     
     auxiliary_y = vector<double>(1, -1.0);
+    auxiliary_vy = vector<double>(1, 0.0);
+    auxiliary_fy = vector<double>(1, 0.0);
 
     kcrpmd_vars_status = 1;
   }
@@ -482,6 +484,8 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     
     // Copy content
     auxiliary_y = x.auxiliary_y;
+    auxiliary_vy = x.auxiliary_vy;
+    auxiliary_fy = x.auxiliary_fy;
 
   }// if KCRPMD vars
 
@@ -644,6 +648,8 @@ dyn_variables::~dyn_variables(){
 
   if(kcrpmd_vars_status==1){
     auxiliary_y.clear(); 
+    auxiliary_vy.clear(); 
+    auxiliary_fy.clear(); 
 
     kcrpmd_vars_status = 0;
   }

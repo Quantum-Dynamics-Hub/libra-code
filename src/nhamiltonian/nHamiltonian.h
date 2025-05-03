@@ -601,6 +601,7 @@ public:
   vector<MATRIX> generate_m_matrices(double beta);
   double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
   MATRIX kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
+  vector<double> kcrpmd_effective_auxiliary_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
 
 
 

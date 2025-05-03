@@ -285,6 +285,117 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
 }
 
 
+vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+/**
+  Compute the KC-RPMD effective auxiliary force
+
+  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  q - is a ndof x ntraj matrix of coordinates
+  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the kinetic constraint ad-hoc parameter
+  b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+
+  if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
+  but it is needed for the calculations\n"; exit(0); }
+
+  if(ndia!=2){ cout<<"Error in kcrpmd_effective_potential(): implementation only for ndia=2\n"; exit(0); }
+
+  int ntraj = q.n_cols;
+
+  double V0;
+  double V1;
+  double VKP;
+
+  double F0;
+  double F1;
+  double FKP;
+  vector<double> res;
+
+  if(children.size()==0 and ntraj==1){ 
+    //============ Compute the pure electronic contributions =========  
+    V0 = (ham_dia->get(0,0)).real(); 
+    V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double Vg = (ham_adi->get(0,0)).real();
+    double Ve = (ham_adi->get(1,1)).real(); 
+    if(beta * K > 1e-3){
+      VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
+    }
+    else if(beta * abs(V0 - V1) > 1e-7){
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2) * sinh(0.5 * beta * (V0 - V1)) / (0.5 * beta * (V0 - V1))) / beta;
+    }
+    else{
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2)) / beta;
+    }
+
+    //============ Compute the kinetic constraint =========  
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    VKP += (A * w * w - log(C)) / beta;
+
+    //============ Compute the heavy side auxiliary potentials =========  
+    if(abs(auxiliary_y[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    }
+    else{
+      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
+    }
+    else{
+      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+    }
+
+    if(auxiliary_y[0] + 1 > 0.0){
+      F0 += -b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+    }
+    else{
+      F0 += b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+    }
+    if(auxiliary_y[0] > 0.0){
+      FKP += -b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
+    }
+    else{
+      FKP += b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
+    }
+    if(auxiliary_y[0] - 1 > 0.0){
+      F1 += -b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+    }
+    else{
+      F1 += b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+    }
+  }
+  else if(children.size()==ntraj){
+    cout<<"Error in kcrpmd_effective_potential() not implemented for quantum nuclei\n"; exit(0);
+  }
+  else{
+    cout<<"ERROR: the size of the input is different from the number of children\n"; exit(0); 
+  }
+ 
+  double Vshift = min({V0, VKP, V1});
+  
+  res = vector<double>(1, (exp(-beta * (V0 - Vshift)) * F0 + exp(-beta * (VKP - Vshift)) * FKP + exp(-beta * (V1 - Vshift)) * F1) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift))));
+
+  return res;
+}
+
+
+
+
+
 
 }// namespace libnhamiltonian
 }// liblibra
