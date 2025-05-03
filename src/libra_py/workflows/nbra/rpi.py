@@ -21,6 +21,7 @@
 import os
 import sys
 import numpy as np
+import scipy.sparse as sp
 import h5py
 import time
 import multiprocessing as mp
@@ -32,6 +33,105 @@ import libra_py.units as units
 from libra_py import data_conv
 import libra_py.data_read as data_read
 import util.libutil as comn
+import libra_py.dynamics.tsh.compute as tsh_dynamics
+
+def run_patch_dyn_serial(rpi_params, istep, fstep, istate):
+    """
+    This function runs a single patch dynamics calculation for the time segment from istep to fstep and a given initial state.
+    For conducting a coherent Ehrenfest propagation, the `libra_py.dynamics.tsh.compute` module is used.
+
+    Args:
+
+        rpi_params ( dictionary ): parameters controlling the execution of the RPI dynamics
+            Can contain:
+
+            * **rpi_params["path_to_save_Hvibs"]** ( string ): The path of the vibronic Hamiltonian files.
+            
+            * **rpi_params["basis_type"]** ( string ): The electronic basis type (such as the Slater determinant or CI adpatation, i.e., 'sd' or 'ci').
+
+            * **rpi_params["dt"]** ( double ): the time step in the atomic unit.
+            
+            * **rpi_params["nstates"]** ( int ): The number of electronic states.
+
+        istep ( int ): the start index to read the vibronic Hamiltonian and time overlap files
+        
+        fstep ( int ): the end index to read the vibronic Hamiltonian and time overlap files
+
+        istate ( int ): the initial electronic state for this patch dynamics
+
+    Return:
+        None: but performs the action
+    """
+    path_to_save_Hvibs, basis_type, dt, NSTATES = rpi_params["path_to_save_Hvibs"], rpi_params["basis_type"], rpi_params["dt"], rpi_params["nstates"]
+    NSTEPS = fstep - istep # The patch duration
+
+    # Read the vibronic Hamiltonian and time overlap files in a selected basis
+    E = []
+    for step in range(istep, fstep):
+        energy_filename = F"{path_to_save_Hvibs}/Hvib_{basis_type}_{step}_re.npz"
+        energy_mat = sp.load_npz(energy_filename)
+        E.append( np.array( np.diag( energy_mat.todense() ) ) )
+    E = np.array(E)
+    
+    St = []
+    for step in range(istep, fstep):
+        St_filename = F"{path_to_save_Hvibs}/St_{basis_type}_{step}_re.npz"
+        St_mat = sp.load_npz(St_filename)
+        St.append( np.array( St_mat.todense() ) )
+    St = np.array(St)
+
+    NAC = []
+    Hvib = []
+    for c, step in enumerate(range(istep, fstep)):
+        nac_filename = F"{path_to_save_Hvibs}/Hvib_{basis_type}_{step}_im.npz"
+        nac_mat = sp.load_npz(nac_filename)
+        NAC.append( np.array( nac_mat.todense() ) )
+        Hvib.append( np.diag(E[c, :])*(1.0+1j*0.0)  - (0.0+1j)*nac_mat[:, :] )
+    
+    NAC = np.array(NAC)
+    Hvib = np.array(Hvib)
+
+    # The interface function
+    class tmp:
+        pass
+    
+    def compute_model(q, params, full_id):
+        """
+        This function serves as an interface function for a serial patch dynamics calculation.
+        """
+    
+        timestep = params["timestep"]
+        nst = params["nstates"]
+        obj = tmp()
+    
+        obj.ham_adi = data_conv.nparray2CMATRIX( np.diag(E[timestep, : ]) )
+        obj.nac_adi = data_conv.nparray2CMATRIX( NAC[timestep, :, :] )
+        obj.hvib_adi = data_conv.nparray2CMATRIX( Hvib[timestep, :, :] )
+        obj.basis_transform = CMATRIX(nst,nst); obj.basis_transform.identity()  #basis_transform
+        obj.time_overlap_adi = data_conv.nparray2CMATRIX( St[timestep, :, :] )
+    
+        return obj
+
+    # Set the NBRA model
+    model_params = {"timestep":0, "icond":0,  "model0":0, "nstates":NSTATES}
+    
+    # Setting the coherent Ehrenfest propagation. Define the argument-dependent part first.
+    dyn_general = {"nsteps":NSTEPS, "nstates":NSTATES, "dt":dt, "nfiles": NSTEPS, "which_adi_states":range(NSTATES), "which_dia_states":range(NSTATES)}
+    
+    dyn_general.update({"ntraj":1, "mem_output_level":2, "progress_frequency":1, "properties_to_save":["timestep", "time", "se_pop_adi"], "prefix":"out", "isNBRA":0, 
+                   "ham_update_method":2, "ham_transform_method":0, "time_overlap_method":0, "nac_update_method":0,
+                   "hvib_update_method":0, "force_method":0, "rep_force":1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0, "rep_tdse":1,
+                   "electronic_integrator":2, "tsh_method":-1, "decoherence_algo":-1, "decoherence_times_type":-1, "do_ssy":0, "dephasing_informed":0})
+
+    # Nuclear DOF - these parameters don't matter much in the NBRA calculations
+    nucl_params = {"ndof":1, "init_type":3, "q":[-10.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.0], "verbosity":-1 }
+
+    # Electronic DOF
+    elec_params = {"ndia":NSTATES, "nadi":NSTATES, "verbosity":-1, "init_dm_type":0, "init_type":1, "rep":1,"istate":istate }
+
+    rnd = Random()
+
+    res = tsh_dynamics.generic_recipe(dyn_general, compute_model, model_params, elec_params, nucl_params, rnd)
 
 def run_patch_rpi(rpi_params):
     """
@@ -50,6 +150,8 @@ def run_patch_rpi(rpi_params):
             * **rpi_params["run_python_file"]** ( string ): The path of a template running script.
 
             * **rpi_params["path_to_save_Hvibs"]** ( string ): The path of the vibronic Hamiltonian files.
+            
+            * **rpi_params["basis_type"]** ( string ): The electronic basis type (such as the Slater determinant or CI adpatation, i.e., 'sd' or 'ci').
 
             * **rpi_params["submission_exe"]** ( string ): The submission executable
 
@@ -86,7 +188,7 @@ def run_patch_rpi(rpi_params):
     path_to_save_Hvibs, basis_type = rpi_params["path_to_save_Hvibs"], rpi_params["basis_type"]
     iread, fread = rpi_params["iread"], rpi_params["fread"]
     nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
-    npatches, nstates = rpi_params["npatches"], rpi_params["nstates"]
+    iconds, npatches, nstates = rpi_params["iconds"], rpi_params["npatches"], rpi_params["nstates"]
 
     out_dir = rpi_params["path_to_save_patch"]
     if not os.path.exists(out_dir):
@@ -94,10 +196,9 @@ def run_patch_rpi(rpi_params):
 
     os.chdir(out_dir)
 
-    for ibatch, icond in enumerate(rpi_params["iconds"]):
-        for ipatch in range(rpi_params["npatches"]):
-            for istate in range(rpi_params["nstates"]):
-                print(F"Submitting patch dynamics job of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
+    for ibatch, icond in enumerate(iconds):
+        for ipatch in range(npatches):
+            for istate in range(nstates):
                 
                 # Compute the istep and fstep here, for each patch
                 istep = iread + icond + ipatch * int( nsteps / npatches )
@@ -111,19 +212,20 @@ def run_patch_rpi(rpi_params):
 
                 # Submit jobs or run each patch dynamics through this loop        
                 if rpi_params["run_slurm"]:
+                    print(F"Submitting a patch dynamics job of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
                     os.system('cp ../../%s %s' % (rpi_params["run_python_file"], rpi_params["run_python_file"]))
                     os.system('cp ../../%s %s' % (rpi_params["submit_template"], rpi_params["submit_template"]))
                     
                     file = open(rpi_params["submit_template"], 'a')
-                    args_fmt = ' --path_to_save_Hvibs %s --basis_type %s --istep %d --fstep %d --istate %d --dt %f'
+                    args_fmt = ' --path_to_save_Hvibs %s --basis_type %s --istep %d --fstep %d --dt %f --istate %d'
                     file.write('%s %s' % (rpi_params["python_exe"], rpi_params["run_python_file"]) + \
-                                args_fmt % (path_to_save_Hvibs, basis_type, istep, fstep, istate, dt) + " >log" )
+                                args_fmt % (path_to_save_Hvibs, basis_type, istep, fstep, dt, istate) + " >log" )
                     file.close()
 
                     os.system('%s %s' % (rpi_params["submission_exe"], rpi_params["submit_template"]))
                 else:
-                    # Just in case you want to use a bash file and not submitting
-                    os.system("python run.py > log")
+                    print(F"Running patch dynamics of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
+                    run_patch_dyn_serial(rpi_params, istep, fstep, istate)
                 os.chdir('../')
 
     os.chdir('../')
