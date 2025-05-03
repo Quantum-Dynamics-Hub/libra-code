@@ -78,19 +78,19 @@ def run_patch_rpi(rpi_params):
     
     critical_params = ["path_to_save_Hvibs", "iread", "fread", "nsteps", "npatches", "nstates", "path_to_save_patch"]
     default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
-                      "run_python_file": 'run_template.py',
-                      "iconds": [0],
-                      "dt": 1.0*units.fs2au,
-                      }
+                      "run_python_file": 'run_template.py', "python_exe": 'python', "basis_type": 'ci', 
+                      "iconds": [0], "dt": 1.0*units.fs2au}
+    
     comn.check_input(rpi_params, default_params, critical_params)
+
+    path_to_save_Hvibs, basis_type = rpi_params["path_to_save_Hvibs"], rpi_params["basis_type"]
+    iread, fread = rpi_params["iread"], rpi_params["fread"]
+    nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
+    npatches, nstates = rpi_params["npatches"], rpi_params["nstates"]
 
     out_dir = rpi_params["path_to_save_patch"]
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
-
-    file = open(rpi_params["run_python_file"], 'r')
-    lines = file.readlines()
-    file.close()
 
     os.chdir(out_dir)
 
@@ -100,37 +100,26 @@ def run_patch_rpi(rpi_params):
                 print(F"Submitting patch dynamics job of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
                 
                 # Compute the istep and fstep here, for each patch
-                istep = rpi_params['iread'] + icond + ipatch*int(rpi_params['nsteps']/rpi_params['npatches'])
-                fstep = fstep = istep + int(rpi_params['nsteps']/rpi_params['npatches']) + 1
+                istep = iread + icond + ipatch * int( nsteps / npatches )
+                fstep = istep + int( nsteps / npatches ) + 1
 
                 dir_patch = F"job_{ibatch}_{ipatch}_{istate}"
                 if os.path.exists(dir_patch):
                     os.system('rm -rf ' + dir_patch)
                 os.mkdir(dir_patch)
                 os.chdir(dir_patch)
-                file = open('run.py', 'w')
 
-                for i in range(len(lines)):
-                    if "params['path_to_save_Hvibs'] =" in lines[i]:
-                        file.write("""params['path_to_save_Hvibs'] = "%s"\n""" % rpi_params["path_to_save_Hvibs"])
-                    elif "params['istep'] =" in lines[i]:
-                        file.write("params['istep'] = %d\n" % istep)
-                    elif "params['fstep'] =" in lines[i]:
-                        file.write("params['fstep'] = %d\n" % fstep)
-                    elif "params['nsteps'] =" in lines[i]:
-                        file.write("params['nsteps'] = %d\n" % rpi_params["nsteps"])
-                    elif "params['npatches'] =" in lines[i]:
-                        file.write("params['npatches'] = %d\n" % rpi_params["npatches"])
-                    elif "params['istate'] =" in lines[i]:
-                        file.write("params['istate'] = %d\n" % istate)
-                    elif "params['dt'] =" in lines[i]:
-                        file.write("params['dt'] = %f\n" % rpi_params["dt"])
-                    else:
-                        file.write(lines[i])
-                file.close()
-        
+                # Submit jobs or run each patch dynamics through this loop        
                 if rpi_params["run_slurm"]:
+                    os.system('cp ../../%s %s' % (rpi_params["run_python_file"], rpi_params["run_python_file"]))
                     os.system('cp ../../%s %s' % (rpi_params["submit_template"], rpi_params["submit_template"]))
+                    
+                    file = open(rpi_params["submit_template"], 'a')
+                    args_fmt = ' --path_to_save_Hvibs %s --basis_type %s --istep %d --fstep %d --istate %d --dt %f'
+                    file.write('%s %s' % (rpi_params["python_exe"], rpi_params["run_python_file"]) + \
+                                args_fmt % (path_to_save_Hvibs, basis_type, istep, fstep, istate, dt) + " >log" )
+                    file.close()
+
                     os.system('%s %s' % (rpi_params["submission_exe"], rpi_params["submit_template"]))
                 else:
                     # Just in case you want to use a bash file and not submitting
