@@ -35,26 +35,6 @@ using namespace liblinalg;
 using namespace libmeigen;
 
 
-double nHamiltonian::internal_ring_polymer_potential(const MATRIX& q, const MATRIX& invM, double beta){
-/**
-  Compute the ETHD energy
-
-  q - is a ndof x ntraj matrix of coordinates
-  invM - is a ndof x 1 matrix of inverse masses of all DOFs
-  beta - the inverse temperature Boltzmann factor in atomic units
-*/
-
-  double en = 0.0;
-
-  if(children.size()==0){
-    en = 0.0;
-  }
-  else{ cout<<"Error in internal_ring_polymer_potential(), not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
 vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 /**
   Generate set of M matrices for each trajectory
@@ -71,9 +51,9 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 
   if(children.size()==0){
     res = vector<MATRIX>(1, MATRIX(2,2));
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
+    double V0 = (ham_dia->get(0,0)).real(); 
+    double V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
     res[0].set(0,0, exp(-beta * V0));
     res[0].set(0,1, -beta * K * exp(-beta * V0));
     res[0].set(1,0, -beta * K * exp(-beta * V1));
@@ -95,135 +75,7 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 }
 
 
-double nHamiltonian::donor_electronic_potential(double beta){
-/**
-  Compute the Donor electronic potential contribution to the effective potentials
-
-  beta - the inverse temperature Boltzmann factor in atomic units
-*/
-
-  if(ham_dia_mem_status==0){ cout<<"Error in donor_electronic_potential(): the diabatic Hamiltonian matrix is not allocated \
-  but it is needed for the calculations\n"; exit(0); }
-
-  if(ndia!=2){ cout<<"Error in donor_electronic_potential(): implementation only for ndia=2\n"; exit(0); }
-
-  double en = 0.0;
-
-  if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    en = V0;
-  }
-  else{ cout<<"Error in donor_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
-double nHamiltonian::acceptor_electronic_potential(double beta){
-/**
-  Compute the Acceptor electronic potential contribution to the effective potentials
-
-  beta - the inverse temperature Boltzmann factor in atomic units
-*/
-
-  if(ham_dia_mem_status==0){ cout<<"Error in acceptor_electronic_potential(): the diabatic Hamiltonian matrix is not allocated \
-  but it is needed for the calculations\n"; exit(0); }
-
-  if(ndia!=2){ cout<<"Error in acceptor_electronic_potential(): implementation only for ndia=2\n"; exit(0); }
-
-  double en = 0.0;
-
-  if(children.size()==0){
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    en = V1;
-  }
-  else{ cout<<"Error in acceptor_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
-double nHamiltonian::kinked_pair_electronic_potential(double beta){
-/**
-  Compute the Kinked Pair electronic potential contribution to the effective potentials
-
-  beta - the inverse temperature Boltzmann factor in atomic units
-*/
-
-  if(ham_dia_mem_status==0){ cout<<"Error in kinked_pair_electronic_potential(): the diabatic Hamiltonian matrix is not allocated \
-  but it is needed for the calculations\n"; exit(0); }
-
-  if(ndia!=2){ cout<<"Error in kinked_pair_electronic_potential(): implementation only for ndia=2\n"; exit(0); }
-
-  double en = 0.0;
-
-  if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
-    if(beta * K > 1e-3){
-      double Vg = 0.5 * (V0 + V1) - 0.5 * sqrt((V0 - V1) * (V0 - V1) + 4 * K * K);
-      double Ve = 0.5 * (V0 + V1) + 0.5 * sqrt((V0 - V1) * (V0 - V1) + 4 * K * K);
-      en = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
-    }
-    else if(beta * abs(V0 - V1) > 1e-7){
-      en = 0.5 * (V0 + V1) - log(pow(beta * K, 2) * sinh(0.5 * beta * (V0 - V1)) / (0.5 * beta * (V0 - V1))) / beta;
-    }
-    else{
-      en = 0.5 * (V0 + V1) - log(pow(beta * K, 2)) / beta;
-    }
-  }
-  else{ cout<<"Error in kinked_pair_electronic_potential() not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
-double nHamiltonian::kinetic_constraint_potential(double beta, double eta, double a){
-/**
-  Additional potential constraint added to the kinked-pair electronic contributions as defined in original KC-RPMD paper
-
-  beta - the inverse temperature Boltzmann factor in atomic units
-  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
-  a - is the gaussian functional limit parameter
-*/
-  double en = 0.0;
-
-  if(children.size()==0){
-    double V0 = (this->ham_dia->get(0,0)).real(); 
-    double V1 = (this->ham_dia->get(1,1)).real(); 
-    double K = abs(this->ham_dia->get(0,1)); 
-    double w = (V0 - V1) / K;
-    en = (a * w * w - log(sqrt(a / 3.1415) * eta)) / beta;
-  } 
-  else{ cout<<"Error in kinetic_constraint_potential() not implemented for quantum nuclei\n"; exit(0); }
-
-  return en;
-}
-
-
-double nHamiltonian::heavy_side_potential(vector<double>& auxiliary_y, int theta, double beta, double b){
-/**
-  Heavy side coarse graining potential Vr as defined in original KC-RPMD paper
-
-  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
-  theta - the coarse graining box center
-  beta - the inverse temperature Boltzmann factor in atomic units
-  b - is the heavyside functional limit parameter
-*/
-  double en = 0.0;
-
-  if(abs(auxiliary_y[0] - theta) < 0.5){
-    en = -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - theta) - 1)))) / beta;
-  }
-  else{
-    en = (b * (2 * abs(auxiliary_y[0] - theta) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - theta) - 1))))) / beta;
-  }
-
-  return en;
-}
-
-double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b){
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
 /**
   Compute the KC-RPMD effective potential energy
 
@@ -234,18 +86,312 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
   eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
   a - is the kinetic constraint ad-hoc parameter
   b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
 */
-  double en = 0.0;
 
-  double V0 = donor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,-1,beta,b); 
-  double VKP = kinked_pair_electronic_potential(beta) + heavy_side_potential(auxiliary_y,0,beta,b) + kinetic_constraint_potential(beta,eta,a); 
-  double V1 = acceptor_electronic_potential(beta) + heavy_side_potential(auxiliary_y,1,beta,b); 
+  if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
+  but it is needed for the calculations\n"; exit(0); }
+
+  if(ndia!=2){ cout<<"Error in kcrpmd_effective_potential(): implementation only for ndia=2\n"; exit(0); }
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+
+  double V0;
+  double V1;
+  double VKP;
+  double res;
+
+  if(children.size()==0 and ntraj==1){ 
+    //============ Compute the pure electronic contributions =========  
+    V0 = (ham_dia->get(0,0)).real(); 
+    V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double Vg = (ham_adi->get(0,0)).real();
+    double Ve = (ham_adi->get(1,1)).real(); 
+    if(beta * K > 1e-3){
+      VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
+    }
+    else if(beta * abs(V0 - V1) > 1e-7){
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2) * sinh(0.5 * beta * (V0 - V1)) / (0.5 * beta * (V0 - V1))) / beta;
+    }
+    else{
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2)) / beta;
+    }
+
+    //============ Compute the kinetic constraint =========  
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    VKP += (A * w * w - log(C)) / beta;
+
+    //============ Compute the heavy side auxiliary potentials =========  
+    if(abs(auxiliary_y[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    }
+    else{
+      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
+    }
+    else{
+      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+    }
+  }
+  else if(children.size()==ntraj){
+    cout<<"Error in kcrpmd_effective_potential() not implemented for quantum nuclei\n"; exit(0);
+  }
+  else{
+    cout<<"ERROR: the size of the input is different from the number of children\n"; exit(0); 
+  }
+  
   double Vshift = min({V0, VKP, V1});
 
-  en = internal_ring_polymer_potential(q,invM,beta) + Vshift - log(exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift))) / beta;
+  res = RPMD_internal_potential(q,invM,beta) + Vshift - log(exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift))) / beta;
 
-  return en;
+  return res;
 }
+
+
+MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+/**
+  Compute the KC-RPMD effective nuclear force
+
+  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  q - is a ndof x ntraj matrix of coordinates
+  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the kinetic constraint ad-hoc parameter
+  b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+
+  if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
+  but it is needed for the calculations\n"; exit(0); }
+
+  if(ndia!=2){ cout<<"Error in kcrpmd_effective_potential(): implementation only for ndia=2\n"; exit(0); }
+
+  int ndof = q.n_rows;
+  int ntraj = q.n_cols;
+  int dof;
+
+  double V0;
+  double V1;
+  double VKP;
+
+  MATRIX F0(ndof, ntraj);
+  MATRIX F1(ndof, ntraj);
+  MATRIX FKP(ndof, ntraj);
+  MATRIX res(ndof, ntraj);
+
+  if(children.size()==0 and ntraj==1){ 
+    //============ Compute the pure electronic contributions =========  
+    V0 = (ham_dia->get(0,0)).real(); 
+    V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double Vg = (ham_adi->get(0,0)).real();
+    double Ve = (ham_adi->get(1,1)).real(); 
+    if(beta * K > 1e-3){  
+      VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
+    }
+    else if(beta * abs(V0 - V1) > 1e-7){
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2) * sinh(0.5 * beta * (V0 - V1)) / (0.5 * beta * (V0 - V1))) / beta;
+    }
+    else{
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2)) / beta;
+    }
+
+    MATRIX FK(ndof, ntraj);
+    MATRIX Fg(ndof, ntraj);
+    MATRIX Fe(ndof, ntraj);
+    for(dof=0; dof<ndof; dof++){   
+      F0.set(dof, 0, -(d1ham_dia[dof]->get(0,0)).real());
+      F1.set(dof, 0, -(d1ham_dia[dof]->get(1,1)).real());
+      FK.set(dof, 0, -abs(d1ham_dia[dof]->get(0,1)));
+      Fg.set(dof, 0, -(d1ham_adi[dof]->get(0,0)).real());
+      Fe.set(dof, 0, -(d1ham_adi[dof]->get(1,1)).real());
+    }// for dof
+    if(beta * K > 1e-3){  
+      FKP = (Fg + exp(-beta * (Ve - Vg)) * Fe - exp(-beta * (V0 - Vg)) * F0 - exp(-beta * (V1 - Vg)) * F1) / (1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg)));
+    }
+    else if(beta * abs(V0 - V1) > 1e-7){
+      FKP = 0.5 * (F0 + F1) + (F0 - F1) * (1 / (beta * (V0 - V1)) - 0.5 * cosh(0.5 * beta * (V0 - V1)) / sinh(0.5 * beta * (V0 - V1))) - 2 * FK / (beta * K);
+    }
+    else{
+      FKP = 0.5 * (F0 + F1) - 2 * FK / (beta * K);
+    }
+
+    //============ Compute the kinetic constraint =========  
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    VKP += (A * w * w - log(C)) / beta;
+
+    MATRIX Fw(ndof, ntraj);
+    MATRIX FA(ndof, ntraj);
+    MATRIX FC(ndof, ntraj);
+    Fw = (F0 - F1 - w * FK) / K;
+    if(c * abs(beta * K - 1) < 250.){
+      FA = -0.5 * a * c * beta / pow(cosh(-c * (beta * K - 1)), 2) * FK;
+    }
+    FC = -eta / (4 * sqrt(3.1415)) * (1 + tanh(-d * (beta * K - 1))) * FA / sqrt(A); 
+    if(d * abs(beta * K - 1) < 250.){
+      FC += -0.5 * d * beta * (sqrt(A / 3.1415) * eta - 1) / pow(cosh(-d * (beta * K - 1)), 2) * FK;
+    }
+    FKP += (w * w * FA + 2 * A * w * Fw - FC / C) / beta;
+
+    //============ Compute the heavy side auxiliary potentials =========  
+    if(abs(auxiliary_y[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    }
+    else{
+      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
+    }
+    else{
+      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+    }
+  }
+  else if(children.size()==ntraj){
+    cout<<"Error in kcrpmd_effective_potential() not implemented for quantum nuclei\n"; exit(0);
+  }
+  else{
+    cout<<"ERROR: the size of the input is different from the number of children\n"; exit(0); 
+  }
+  
+  double Vshift = min({V0, VKP, V1});
+  
+  res = RPMD_internal_force(q,invM,beta) + (exp(-beta * (V0 - Vshift)) * F0 + exp(-beta * (VKP - Vshift)) * FKP + exp(-beta * (V1 - Vshift)) * F1) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift)));
+
+  return res;
+}
+
+
+vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+/**
+  Compute the KC-RPMD effective auxiliary force
+
+  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  q - is a ndof x ntraj matrix of coordinates
+  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  beta - the inverse temperature Boltzmann factor in atomic units
+  eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
+  a - is the kinetic constraint ad-hoc parameter
+  b - is the heavyside functional limit parameter
+  c - is the constraint switching parameter
+  d - is the free energy conservation switching parameter
+*/
+
+  if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
+  but it is needed for the calculations\n"; exit(0); }
+
+  if(ndia!=2){ cout<<"Error in kcrpmd_effective_potential(): implementation only for ndia=2\n"; exit(0); }
+
+  int ntraj = q.n_cols;
+
+  double V0;
+  double V1;
+  double VKP;
+
+  double F0;
+  double F1;
+  double FKP;
+  vector<double> res;
+
+  if(children.size()==0 and ntraj==1){ 
+    //============ Compute the pure electronic contributions =========  
+    V0 = (ham_dia->get(0,0)).real(); 
+    V1 = (ham_dia->get(1,1)).real(); 
+    double K = abs(ham_dia->get(0,1)); 
+    double Vg = (ham_adi->get(0,0)).real();
+    double Ve = (ham_adi->get(1,1)).real(); 
+    if(beta * K > 1e-3){
+      VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
+    }
+    else if(beta * abs(V0 - V1) > 1e-7){
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2) * sinh(0.5 * beta * (V0 - V1)) / (0.5 * beta * (V0 - V1))) / beta;
+    }
+    else{
+      VKP = 0.5 * (V0 + V1) - log(pow(beta * K, 2)) / beta;
+    }
+
+    //============ Compute the kinetic constraint =========  
+    double w = (V0 - V1) / K;
+    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
+    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    VKP += (A * w * w - log(C)) / beta;
+
+    //============ Compute the heavy side auxiliary potentials =========  
+    if(abs(auxiliary_y[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    }
+    else{
+      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
+    }
+    else{
+      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
+    }
+    if(abs(auxiliary_y[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+    }
+
+    if(auxiliary_y[0] + 1 > 0.0){
+      F0 += -b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+    }
+    else{
+      F0 += b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+    }
+    if(auxiliary_y[0] > 0.0){
+      FKP += -b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
+    }
+    else{
+      FKP += b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
+    }
+    if(auxiliary_y[0] - 1 > 0.0){
+      F1 += -b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+    }
+    else{
+      F1 += b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+    }
+  }
+  else if(children.size()==ntraj){
+    cout<<"Error in kcrpmd_effective_potential() not implemented for quantum nuclei\n"; exit(0);
+  }
+  else{
+    cout<<"ERROR: the size of the input is different from the number of children\n"; exit(0); 
+  }
+ 
+  double Vshift = min({V0, VKP, V1});
+  
+  res = vector<double>(1, (exp(-beta * (V0 - Vshift)) * F0 + exp(-beta * (VKP - Vshift)) * FKP + exp(-beta * (V1 - Vshift)) * F1) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift))));
+
+  return res;
+}
+
 
 
 

@@ -84,6 +84,9 @@ dyn_control_params::dyn_control_params(){
   use_qtsh = 0;
   qtsh_force_option = 1;
 
+  ///================= KCRPMD specific ====================
+  use_kcrpmd = 0;
+
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
   sdm_norm_tolerance = 0.0;

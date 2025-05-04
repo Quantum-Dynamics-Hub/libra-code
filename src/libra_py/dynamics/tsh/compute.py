@@ -126,6 +126,13 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 1: state-specific  as in the TSH or adiabatic (including adiabatic excited states) [ default ]
                 - 2: Ehrenfest
                 - 3: QTSH force
+                - 4: KC-RPMD force
+
+
+            * **dyn_params["sqc_gamma"]** ( double ): Gamma parameter in the Meyer-Miller Hamiltonian of form:
+                H = sum_{i,j} H_{ij} [ 1/(2 hbar) * (q_i - i * p_j) * (q_j + i * p_i) - gamma * delta_ij ]
+ 
+                - 0.0: corresponds to Ehrenfest force [ default ]
 
 
             * **dyn_params["enforce_state_following"]** ( int ): Wheather we want to enforce nuclear dynamics
@@ -203,7 +210,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - -1: use LD approach, it includes phase correction too [ default ]
                 - 0: no state tracking
                 - 1: method of Kosuke Sato (may fail by getting trapped into an infinite loop)
-                - 2: Munkres-Kuhn (Hungarian) algorithm
+                - 2: Munkres-Kuhn (Hungarian) algorithm 
+                - 21: ChatGPT-generated Munkres-Kuhn (Hungarian) algorithm
                 - 3: experimental stochastic algorithm, the original version with elimination (known problems)
                 - 32: experimental stochastic algorithms with all permutations (too expensive)
                 - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
@@ -255,6 +263,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 6: MASH
                 - 7: FSSH2
                 - 8: FSSH3
+                - 9: GFSH (original)
 
 
             * **dyn_params["hop_acceptance_algo"]** ( int ): Options to control the acceptance of the proposed hops:
@@ -367,6 +376,15 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
                 - 0: Considering only the first-order force, i.e., off-diagonal Ehrenfest force
                 - 1: The whole force including the second-order term is used [default]
+
+
+            //=========== KC-RPMD options ==========
+
+            * **dyn_params["use_kcrpmd"]** ( int ): Whether to use KC-RPMD
+
+                - 0: don't apply [ default ]
+                - 1: use it
+
 
             ///===============================================================================
             ///================= Decoherence options =========================================
@@ -549,6 +567,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 1: ETHD
                 - 2: ETHD3 (experimental)
                 - 22: another flavor of ETHD3 (experimental)
+                - 3: RPMD
 
 
             * **dyn_params["ETHD3_alpha"]** ( double ): Gaussian exponents that dresses up the trajectories in the ETHD3 method

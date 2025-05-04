@@ -598,14 +598,10 @@ public:
 
 
 ///< In nHamiltonian_compute_KCRPMD.cpp
-  double internal_ring_polymer_potential(const MATRIX& q, const MATRIX& invM, double beta);
   vector<MATRIX> generate_m_matrices(double beta);
-  double donor_electronic_potential(double beta);
-  double acceptor_electronic_potential(double beta);
-  double kinked_pair_electronic_potential(double beta);
-  double kinetic_constraint_potential(double beta, double eta, double a);
-  double heavy_side_potential(vector<double>& auxiliary_y, int theta, double beta, double b);
-  double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b);
+  double kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
+  MATRIX kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
+  vector<double> kcrpmd_effective_auxiliary_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d);
 
 
 
@@ -643,6 +639,11 @@ MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& invM, double alp);           
 MATRIX ETHD3_forces(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet);   // -dH_{ETHD3}/dQ
 
 MATRIX ETHD3_friction(const MATRIX& q, const MATRIX& p, const MATRIX& invM, double alp, double bet); // dH_{ETHD3}/dP
+
+
+///< In nHamiltonian_compute_RPMD.cpp
+double RPMD_internal_potential(const MATRIX& q, const MATRIX& invM, double beta);
+MATRIX RPMD_internal_force(const MATRIX& q, const MATRIX& invM, double beta);
 
 
 

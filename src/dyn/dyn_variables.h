@@ -529,7 +529,7 @@ class dyn_variables{
   MATRIX* qtsh_f_nc;
   
 
-  ///========= For kinetic-constrained RPMD ======================
+  ///========= For KC-RPMD ======================
   /**
     Status of the KC-RPMD vars
 
@@ -539,10 +539,19 @@ class dyn_variables{
   int kcrpmd_vars_status;
   
   /** 
-    The classical auxiliary electronic variable(s)
+    The classical auxiliary electronic variable
   */ 
   vector<double> auxiliary_y;
 
+  /** 
+    The classical auxiliary electronic variable velocity
+  */ 
+  vector<double> auxiliary_vy;
+
+  /** 
+    The classical auxiliary electronic variable force
+  */ 
+  vector<double> auxiliary_fy;
 
 
   ///================= Misc ===================
