@@ -42,7 +42,7 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
 
     Args:
 
-        rpi_params ( dictionary ): parameters controlling the execution of the RPI dynamics
+        rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
             Can contain:
 
             * **rpi_params["run_slurm"]** ( bool ): Whether to use the slurm environment to submit the jobs using the submit_template file. 
@@ -181,7 +181,7 @@ def run_patch_rpi(rpi_params):
 
     Args:
 
-        rpi_params ( dictionary ): parameters controlling the execution of the RPI dynamics
+        rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
             Can contain:
 
             * **rpi_params["run_slurm"]** ( bool ): Whether to use the slurm environment to submit the jobs using the submit_template file. 
@@ -284,7 +284,7 @@ def print_pop(outfile, time, pops):
             f.write(line)
 
 def process_batch(args):
-    ibatch, icond, rpi_params = args
+    ibatch, rpi_params = args
     nsteps, dt, istate = rpi_params["nsteps"], rpi_params["dt"], rpi_params["istate"]
     npatches, nstates = rpi_params["npatches"], rpi_params["nstates"]
     path_to_save_patch = rpi_params["path_to_save_patch"]
@@ -297,7 +297,7 @@ def process_batch(args):
     pops[0, :] = P_temp
     
     for ipatch in range(npatches):
-        print(F"Summing ipatch = {ipatch}, ibatch = {ibatch}, icond = {icond}")
+        print(F"Summing ipatch = {ipatch}, ibatch = {ibatch}")
        
         # Compute the transition probability from a patch dynamics 
         T = np.zeros((nstep_patch, nstates, nstates)) # (timestep in a patch, init, dest)
@@ -318,107 +318,108 @@ def process_batch(args):
     
     # Per-batch output
     time = np.array([x for x in range(npatches * nstep_patch + 1)]) * dt
-    print(F"Print the population from ibatch, icond = {ibatch}, {icond}")
+    print(F"Print the population from ibatch")
     print_pop(rpi_params["prefix"] + F"_ibatch{ibatch}.dat", time, pops)
     
     return pops
 
-def run_sum_rpi(rpi_params):
+def run_sum_rpi(rpi_sum_params):
     """
     This function conducts the RPI patch summation to yield the population dynamics in the whole time domain.
 
     Args:
 
-        rpi_params ( dictionary ): parameters controlling the execution of the RPI dynamics
+        rpi_sum_params ( dictionary ): parameters controlling the patch summation in the RPI calculation
             Can contain:
     
-            * **rpi_params["nprocs"]** ( int ): The number of processors to be used.
+            * **rpi_sum_params["nprocs"]** ( int ): The number of processors to be used.
 
-            * **rpi_params["nsteps"]** ( int ): The total number of RPI simulation steps
+            * **rpi_sum_params["nsteps"]** ( int ): The total number of RPI simulation steps
 
-            * **rpi_params["dt"]** ( double ): the time step in the atomic unit.
+            * **rpi_sum_params["dt"]** ( double ): the time step in the atomic unit.
             
-            * **rpi_params["istate"]** ( int ): The initial state
+            * **rpi_sum_params["istate"]** ( int ): The initial state
 
-            * **rpi_params["iconds"]** ( list of ints ): The list of initial step indices from the trajectory segment from iread to fread. 
-                Each initial condition characterizes each batch.
+            * **rpi_sum_params["nbatches"]** ( int ): The number of batches, i.e., the number of initial geometries you used in the previous patch dynamics calculation.
+            This corresponds to `len(rpi_params["iconds"])`, where `rpi_params` is a previous patch-dynamics params.
 
-            * **rpi_params["npatches"]** ( int ): The number of patches.
+            * **rpi_sum_params["npatches"]** ( int ): The number of patches.
 
-            * **rpi_params["nstates"]** ( int ): The number of electronic states.
+            * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
             
-            * **rpi_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+            * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
             
-            * **rpi_params["prefix"]** ( string ): The prefix for the population dynamics output
+            * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
 
     Return:
         None: but performs the action
     """
     critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
-    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "iconds": [0]}
+    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
 
-    comn.check_input(rpi_params, default_params, critical_params)
+    comn.check_input(rpi_sum_params, default_params, critical_params)
 
-    nprocs = rpi_params["nprocs"]
+    nprocs = rpi_sum_params["nprocs"]
   
-    nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
-    npatches, nstates = rpi_params["npatches"], rpi_params["nstates"]
-    iconds = rpi_params["iconds"]
+    nsteps, dt = rpi_sum_params["nsteps"], rpi_sum_params["dt"]
+    nbatches, npatches, nstates = rpi_sum_params["nbatches"], rpi_sum_params["npatches"], rpi_sum_params["nstates"]
 
     nstep_patch = int(nsteps / npatches)
     time = np.array([x for x in range(npatches * nstep_patch + 1)]) * dt
     pops_avg = np.zeros((npatches * nstep_patch + 1, nstates))
     
     with mp.Pool(processes=nprocs) as pool:
-        results = pool.map(process_batch, [(ibatch, icond, rpi_params) for ibatch, icond in enumerate(iconds)])
+        results = pool.map(process_batch, [(ibatch, rpi_sum_params) for ibatch in range(nbatches)])
     
     for pops in results:
         pops_avg += pops
     
-    pops_avg /= len(iconds)
+    pops_avg /= nbatches
     
     print("Print the final population from all batches")
-    print_pop(rpi_params["prefix"] + "_all.dat", time, pops_avg)
+    print_pop(rpi_sum_params["prefix"] + "_all.dat", time, pops_avg)
 
 
-def run_sum_rpi_crude(rpi_params):
+def run_sum_rpi_crude(rpi_sum_params):
     """
     This function conducts the RPI patch summation to yield the population dynamics in the whole time domain.
 
     Args:
-
-        rpi_params ( dictionary ): parameters controlling the execution of the RPI dynamics
+        
+        rpi_sum_params ( dictionary ): parameters controlling the patch summation in the RPI calculation
             Can contain:
-            
-            * **rpi_params["nsteps"]** ( int ): The total number of RPI simulation steps
+    
+            * **rpi_sum_params["nprocs"]** ( int ): The number of processors to be used.
 
-            * **rpi_params["dt"]** ( double ): the time step in the atomic unit.
-            
-            * **rpi_params["istate"]** ( int ): The initial state
+            * **rpi_sum_params["nsteps"]** ( int ): The total number of RPI simulation steps
 
-            * **rpi_params["iconds"]** ( list of ints ): The list of initial step indices from the trajectory segment from iread to fread. 
-                Each initial condition characterizes each batch.
-
-            * **rpi_params["npatches"]** ( int ): The number of patches.
-
-            * **rpi_params["nstates"]** ( int ): The number of electronic states.
+            * **rpi_sum_params["dt"]** ( double ): the time step in the atomic unit.
             
-            * **rpi_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+            * **rpi_sum_params["istate"]** ( int ): The initial state
+
+            * **rpi_sum_params["nbatches"]** ( int ): The number of batches, i.e., the number of initial geometries you used in the previous patch dynamics calculation.
+            This corresponds to `len(rpi_params["iconds"])`, where `rpi_params` is a previous patch-dynamics params.
+
+            * **rpi_sum_params["npatches"]** ( int ): The number of patches.
+
+            * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
             
-            * **rpi_params["prefix"]** ( string ): The prefix for the population dynamics output
+            * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+            
+            * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
 
     Return:
         None: but performs the action
     """
     critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
-    default_params = {"prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "iconds": [0]}
+    default_params = {"prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
 
-    comn.check_input(rpi_params, default_params, critical_params)
+    comn.check_input(rpi_sum_params, default_params, critical_params)
 
-    nsteps, dt, istate = rpi_params["nsteps"], rpi_params["dt"], rpi_params["istate"]
+    nsteps, dt, istate = rpi_sum_params["nsteps"], rpi_sum_params["dt"], rpi_sum_params["istate"]
 
-    iconds, npatches, nstates = rpi_params["iconds"], rpi_params["npatches"], rpi_params["nstates"]
-    path_to_save_patch = rpi_params["path_to_save_patch"]
+    nbatches, npatches, nstates = rpi_sum_params["nbatches"], rpi_sum_params["npatches"], rpi_sum_params["nstates"]
+    path_to_save_patch = rpi_sum_params["path_to_save_patch"]
 
     nstep_patch = int(nsteps / npatches)
 
@@ -427,7 +428,7 @@ def run_sum_rpi_crude(rpi_params):
     # The total population across all batches
     pops_avg = np.zeros((npatches * nstep_patch + 1, nstates))
     
-    for ibatch, icond in enumerate(iconds):
+    for ibatch in range(nbatches):
         # The global population on a batch
         pops = np.zeros((npatches * nstep_patch + 1, nstates))
 
@@ -438,7 +439,7 @@ def run_sum_rpi_crude(rpi_params):
         pop_patch = np.zeros((nstep_patch, nstates, nstates)) # A temporary array to read population of a patch dynamics
         T = np.zeros((nstep_patch, nstates, nstates)) # The transition probability from a patch dynamics
         for ipatch in range(npatches):
-            print(F"Summing ipatch = {ipatch}, ibatch = {ibatch}, icond = {icond}")
+            print(F"Summing ipatch = {ipatch}, ibatch = {ibatch}")
             pop_patch.fill(0.0)
             T.fill(0.0)
             for ist in range(nstates):
@@ -467,11 +468,11 @@ def run_sum_rpi_crude(rpi_params):
                     P_temp = pops[glob_time]
         pops_avg += pops
     
-        print(F"Print the population from ibatch, icond = {ibatch}, {icond}")
-        print_pop(rpi_params["prefix"] + F"_ibatch{ibatch}.dat", time, pops)
+        print(F"Print the population from ibatch, ibatch = {ibatch}")
+        print_pop(rpi_sum_params["prefix"] + F"_ibatch{ibatch}.dat", time, pops)
 
-    pops_avg /= len(iconds)
+    pops_avg /= nbatches
 
     print("Print the final population from all batches")
-    print_pop(rpi_params["prefix"] + "_all.dat", time, pops_avg)
+    print_pop(rpi_sum_params["prefix"] + "_all.dat", time, pops_avg)
 
