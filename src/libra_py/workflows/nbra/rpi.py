@@ -290,10 +290,51 @@ def print_pop(outfile, time, pops):
             f.write(line)
 
 def process_batch(args):
-    ibatch, rpi_params = args
-    nsteps, dt, istate = rpi_params["nsteps"], rpi_params["dt"], rpi_params["istate"]
-    npatches, nstates = rpi_params["npatches"], rpi_params["nstates"]
-    path_to_save_patch = rpi_params["path_to_save_patch"]
+    """
+    This function is used for a parallel execution of the patch summation in the run_sum_rpi function. 
+    A single run of this function gives the RPI population on one batch.
+
+    Args:
+        input `args` list contains the following:
+
+        ibatch ( int ): the batch index
+
+        rpi_sum_params ( dictionary ): parameters controlling the patch summation in the RPI calculation
+            Can contain:
+    
+            * **rpi_sum_params["nprocs"]** ( int ): The number of processors to be used.
+
+            * **rpi_sum_params["nsteps"]** ( int ): The total number of RPI simulation steps
+
+            * **rpi_sum_params["dt"]** ( double ): the time step in the atomic unit.
+            
+            * **rpi_sum_params["istate"]** ( int ): The initial state
+
+            * **rpi_sum_params["nbatches"]** ( int ): The number of batches, i.e., the number of initial geometries you used in the previous patch dynamics calculation.
+            This corresponds to `len(rpi_params["iconds"])`, where `rpi_params` is a previous patch-dynamics params.
+
+            * **rpi_sum_params["npatches"]** ( int ): The number of patches.
+
+            * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
+            
+            * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+            
+            * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
+
+    Return:
+        pops (nparray): a single-batch population numpy array
+    """
+
+    ibatch, rpi_sum_params = args
+    
+    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
+    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
+
+    comn.check_input(rpi_sum_params, default_params, critical_params)
+    
+    nsteps, dt, istate = rpi_sum_params["nsteps"], rpi_sum_params["dt"], rpi_sum_params["istate"]
+    npatches, nstates = rpi_sum_params["npatches"], rpi_sum_params["nstates"]
+    path_to_save_patch = rpi_sum_params["path_to_save_patch"]
     
     nstep_patch = int(nsteps / npatches)
     pops = np.zeros((npatches * nstep_patch + 1, nstates))
