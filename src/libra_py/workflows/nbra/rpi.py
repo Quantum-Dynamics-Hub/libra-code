@@ -115,10 +115,10 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
         None: but performs the action
     """
     
-    critical_params = ["path_to_save_Hvibs", "iread", "fread", "nsteps", "npatches", "nstates", "path_to_save_patch"]
+    critical_params = ["path_to_save_patch"]
     default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
-                      "run_python_file": 'run_template.py', "python_exe": 'python', "basis_type": 'ci', 
-                      "iconds": [0], "dt": 1.0*units.fs2au}
+                      "run_python_file": 'run_template.py', "python_exe": 'python', "path_to_save_Hvibs": 'res', "basis_type": 'ci', 
+                      "iread": 0, "fread": 1, "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], "dt": 1.0*units.fs2au}
     
     comn.check_input(rpi_params, default_params, critical_params)
     
@@ -228,10 +228,10 @@ def run_patch_rpi(rpi_params):
         None: but performs the action
     """
     
-    critical_params = ["path_to_save_Hvibs", "iread", "fread", "nsteps", "npatches", "nstates", "path_to_save_patch"]
+    critical_params = ["path_to_save_patch"]
     default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
-                      "run_python_file": 'run_template.py', "python_exe": 'python', "basis_type": 'ci', 
-                      "iconds": [0], "dt": 1.0*units.fs2au}
+                      "run_python_file": 'run_template.py', "python_exe": 'python', "path_to_save_Hvibs": 'res', "basis_type": 'ci', 
+                      "iread": 0, "fread": 1, "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], "dt": 1.0*units.fs2au}
     
     comn.check_input(rpi_params, default_params, critical_params)
 
@@ -327,8 +327,8 @@ def process_batch(args):
 
     ibatch, rpi_sum_params = args
     
-    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
-    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
+    critical_params = ["path_to_save_patch"]
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
     
@@ -401,8 +401,8 @@ def run_sum_rpi(rpi_sum_params):
     Return:
         None: but performs the action
     """
-    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
-    default_params = {"nprocs": 1, "prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
+    critical_params = ["path_to_save_patch"]
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
 
@@ -458,8 +458,8 @@ def run_sum_rpi_crude(rpi_sum_params):
     Return:
         None: but performs the action
     """
-    critical_params = ["nsteps", "npatches", "nstates", "path_to_save_patch"]
-    default_params = {"prefix": 'out', "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1}
+    critical_params = ["path_to_save_patch"]
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
 
