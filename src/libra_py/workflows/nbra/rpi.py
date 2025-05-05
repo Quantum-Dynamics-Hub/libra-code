@@ -34,6 +34,32 @@ from libra_py import data_conv
 import libra_py.data_read as data_read
 import util.libutil as comn
 import libra_py.dynamics.tsh.compute as tsh_dynamics
+    
+class tmp:
+    pass
+
+def compute_model(q, params, full_id):
+    """
+    This function serves as an interface function for a serial patch dynamics calculation.
+    """
+
+    timestep = params["timestep"]
+    nst = params["nstates"]
+    E = params["E"]
+    NAC = params["NAC"]
+    Hvib = params["Hvib"]
+    St = params["St"]
+
+    obj = tmp()
+
+    obj.ham_adi = data_conv.nparray2CMATRIX( np.diag(E[timestep, : ]) )
+    obj.nac_adi = data_conv.nparray2CMATRIX( NAC[timestep, :, :] )
+    obj.hvib_adi = data_conv.nparray2CMATRIX( Hvib[timestep, :, :] )
+    obj.basis_transform = CMATRIX(nst,nst); obj.basis_transform.identity()  #basis_transform
+    obj.time_overlap_adi = data_conv.nparray2CMATRIX( St[timestep, :, :] )
+
+    return obj
+
 
 def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
     """
@@ -107,7 +133,9 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
     
     NSTEPS = fstep - istep # The patch duration
 
-    # Read the vibronic Hamiltonian and time overlap files in a selected basis
+    # Set the NBRA model by reading the vibronic Hamiltonian and time overlap data
+    model_params = {"timestep":0, "icond":0,  "model0":0, "nstates":nstates}
+    
     E = []
     for step in range(istep, fstep):
         energy_filename = F"{path_to_save_Hvibs}/Hvib_{basis_type}_{step}_re.npz"
@@ -133,29 +161,7 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
     NAC = np.array(NAC)
     Hvib = np.array(Hvib)
 
-    # The interface function
-    class tmp:
-        pass
-    
-    def compute_model(q, params, full_id):
-        """
-        This function serves as an interface function for a serial patch dynamics calculation.
-        """
-    
-        timestep = params["timestep"]
-        nst = params["nstates"]
-        obj = tmp()
-    
-        obj.ham_adi = data_conv.nparray2CMATRIX( np.diag(E[timestep, : ]) )
-        obj.nac_adi = data_conv.nparray2CMATRIX( NAC[timestep, :, :] )
-        obj.hvib_adi = data_conv.nparray2CMATRIX( Hvib[timestep, :, :] )
-        obj.basis_transform = CMATRIX(nst,nst); obj.basis_transform.identity()  #basis_transform
-        obj.time_overlap_adi = data_conv.nparray2CMATRIX( St[timestep, :, :] )
-    
-        return obj
-
-    # Set the NBRA model
-    model_params = {"timestep":0, "icond":0,  "model0":0, "nstates":nstates}
+    model_params.update({"E": E, "St": St, "NAC": NAC, "Hvib": Hvib})
     
     # Setting the coherent Ehrenfest propagation. Define the argument-dependent part first.
     dyn_general = {"nsteps":NSTEPS, "nstates":nstates, "dt":dt, "nfiles": NSTEPS, "which_adi_states":range(nstates), "which_dia_states":range(nstates)}
