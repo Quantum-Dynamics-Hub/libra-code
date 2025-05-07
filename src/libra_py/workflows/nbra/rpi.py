@@ -35,40 +35,14 @@ import libra_py.data_read as data_read
 import util.libutil as comn
 import libra_py.dynamics.tsh.compute as tsh_dynamics
     
-class tmp:
-    pass
-
-def compute_model(q, params, full_id):
-    """
-    This function serves as an interface function for a serial patch dynamics calculation.
-    """
-
-    timestep = params["timestep"]
-    nst = params["nstates"]
-    E = params["E"]
-    NAC = params["NAC"]
-    Hvib = params["Hvib"]
-    St = params["St"]
-
-    obj = tmp()
-
-    obj.ham_adi = data_conv.nparray2CMATRIX( np.diag(E[timestep, : ]) )
-    obj.nac_adi = data_conv.nparray2CMATRIX( NAC[timestep, :, :] )
-    obj.hvib_adi = data_conv.nparray2CMATRIX( Hvib[timestep, :, :] )
-    obj.basis_transform = CMATRIX(nst,nst); obj.basis_transform.identity()  #basis_transform
-    obj.time_overlap_adi = data_conv.nparray2CMATRIX( St[timestep, :, :] )
-
-    return obj
-
-
-def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
+def run_patch_dyn_serial(_rpi_params, _dyn_params, compute_model, _model_params, _init_elec, _init_nucl, ibatch, ipatch, istate):
     """
     This function runs a single patch dynamics calculation for the time segment from istep to fstep and a given initial state.
-    For conducting a coherent Ehrenfest propagation, the `libra_py.dynamics.tsh.compute` module is used.
+    For conducting a coherent Ehrenfest propagation, `libra_py.dynamics.tsh.compute.generic_recipe` is used.
 
     Args:
-
-        rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
+        
+        _rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
             Can contain:
 
             * **rpi_params["run_slurm"]** ( bool ): Whether to use the slurm environment to submit the jobs using the submit_template file. 
@@ -82,28 +56,59 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
             
             * **rpi_params["python_exe"]** ( string ): The Python executable
 
-            * **rpi_params["path_to_save_Hvibs"]** ( string ): The path of the vibronic Hamiltonian files.
-            
-            * **rpi_params["basis_type"]** ( string ): The electronic basis type (such as the Slater determinant or CI adpatation, i.e., 'sd' or 'ci').
-
-            * **rpi_params["iread"]** ( int ): The initial step to read the vibronic Hamiltonian and time overlap
-
-            * **rpi_params["fread"]** ( int ): The final step to read the vibronic Hamiltonian and time overlap
-
-            * **rpi_params["iconds"]** ( list of ints ): The list of initial step indices from the trajectory segment from iread to fread. 
-                Each initial condition characterizes each batch.
+            * **rpi_params["iconds"]** ( list of ints ): The list of initial geometry indices of the trajectory segment used for setting model_params. 
+                Each initial condition in this list characterizes each batch.
 
             * **rpi_params["nsteps"]** ( int ): The total number of RPI simulation steps
 
-            * **rpi_params["npatches"]** ( int ): The number of patches. The time duration of each patch dynamics will be int( nsteps / npatches ) + 1. 
-              The additional single step is because the tsh recipe (see libra_py.dynamics.tsh.compute for details) used for the patch dynamics 
-              saves the dynamics information before the electron-nuclear propagation in each MD loop.
+            * **rpi_params["npatches"]** ( int ): The number of patches. The time duration of each patch dynamics will be int(nsteps/npatches) + 1. 
+                The additional single step is because the tsh recipe (see libra_py.dynamics.tsh.compute for details) used for the patch dynamics 
+                saves the dynamics information before the electron-nuclear propagation in each MD loop.
 
             * **rpi_params["nstates"]** ( int ): The number of electronic states.
 
             * **rpi_params["dt"]** ( double ): the time step in the atomic unit.
             
-            * **rpi_params["path_to_save_patch"]** ( string ): The path of the output patch dynamics
+            * **rpi_params["prefix"]** ( string ): The prefix of directories having the output patch dynamics. 
+                The patch dynamics data are characterized by three numbers - the batch index, the patch index, the initial state index.
+                Thus, the full name of output directory is expressed by these three numbers and their limits as follows.
+                  rpi_params["prefix"] + F"n{len(rpi_params["iconds"])}" + "_ibatch{X}" + _n{rpi_params["npatches"]} + F"_ipatch{Y}" \
+                        + F"_n{rpi_params["nstates"]}" + F"_istate{Z}"
+                  X = 0 to len(rpi_params["iconds"]) - 1; Y = 0 to rpi_params["npatches"] - 1; Z = 0 to rpi_params["nstates"] - 1
+                An NBRA trajectory from an initial geometry defined in rpi_params['iconds'] is called a batch. 
+        
+        The rest of parameters are for setting patch dynamics conducted by `libra_py.dynamics.tsh.compute.generic_recipe`.
+        
+        dyn_params ( dictionary ): control parameters for running the dynamics
+            see the documentation of the :func:`libra_py.dynamics.tsh.run_dynamics` function
+
+        compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
+
+        _model_params ( dictionary ): contains the selection of a model and the parameters
+            for that model Hamiltonian. In addition to all the parameters, should contain the key
+
+            * **_model_params["model0"]** ( int ): the selection of the model to be used to compute diabatic-to-adiabatic
+                transformation. The particular value chosen here depends on the way the `compute_model` functions is defined
+
+               :Note: the function selected should be able to generate the transformation matrix.
+
+        _init_elec ( dictionary ): control parameters for initialization of electronic variables
+            see the documentation of the :func:`libra_py.dynamics.init_electronic_dyn_var` function
+
+        _init_nucl (dict): controls how to sample nuclear DOFs from what the user provides. Can contain:
+          * **_init_nucl["init_type"]** (int) : the type of the sampling:
+            - 0 : Coords and momenta are set exactly to the given value
+            - 1 : Coords are set, momenta are sampled
+            - 2 : Coords are sampled, momenta are set
+            - 3 : Both coords and momenta are samples [ default ]
+          * **_init_nucl["ndof"]** (int) : the number of nuclear DOFs [default: 1]
+          * **_init_nucl["q"]** ( list of `ndof` doubles ): average coordinate of all trajectories, for each nuclear DOF,
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["p"]** ( list of `ndof` doubles ): average momentum of all trajectories, for each nuclear DOF,
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["mass"]** (list of `ndof` doubles): the mass for each nuclear DOF, in a.u. of mass [ default: [2000.0] ]
+          * **_init_nucl["force_constant"]** (list of `ndof` doubles) : the force constant of the harmonic oscillator in each
+                  nuclear DOF, determins the width of the coordinate and momentum samplings [ default: [0.001] ]
 
         ibatch ( int ): the initial geometry index of rpi_params["iconds"]
         
@@ -114,80 +119,56 @@ def run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate):
     Return:
         None: but performs the action
     """
+    rpi_params = dict(_rpi_params)
+    model_params = dict(_model_params)
+    dyn_params = dict(_dyn_params)
+    init_elec = dict(_init_elec)
+    init_nucl = dict(_init_nucl)
     
-    critical_params = ["path_to_save_patch"]
+    critical_params = []
     default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
-                      "run_python_file": 'run_template.py', "python_exe": 'python', "path_to_save_Hvibs": 'res', "basis_type": 'ci', 
-                      "iread": 0, "fread": 1, "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], "dt": 1.0*units.fs2au}
+                      "run_python_file": 'run_template.py', "python_exe": 'python',  
+                      "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], "dt": 1.0*units.fs2au, "prefix": 'out_'}
     
     comn.check_input(rpi_params, default_params, critical_params)
     
-    path_to_save_Hvibs, basis_type = rpi_params["path_to_save_Hvibs"], rpi_params["basis_type"]
-    iread, fread = rpi_params["iread"], rpi_params["fread"]
+    # ========== Model params ==========
+    comn.check_input(model_params, {}, ["model0"])
+
+    # ========== Nuclear params ==========
+    # First check the inputs for the initialization of nuclear variables
+    comn.check_input(init_nucl, {"init_type": 3, "ndof": 1, "q": [0.0], "p": [0.0], "mass": [2000.0],
+                                 "force_constant": [0.01], "q_width": [1.0], "p_width": [1.0]}, [])
+    ndof = len(init_nucl["mass"])
+
+    # ========== Dynamics params ==========
+    # Now, we can use the information of ndof to define the default quantum_dofs
+    comn.check_input(dyn_params, {"rep_tdse": 1, "rep_sh": 1, "is_nbra": 0, "direct_init": 0, "ntraj": 1,
+                                  "quantum_dofs": list(range(ndof))
+                                  }, [])
+    
     nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
     iconds, npatches, nstates = rpi_params["iconds"], rpi_params["npatches"], rpi_params["nstates"]
 
-    # Compute the istep and fstep here, for each patch
-    istep = iread + iconds[ibatch] + ipatch * int( nsteps / npatches )
-    fstep = istep + int( nsteps / npatches ) + 1
-    
-    NSTEPS = fstep - istep # The patch duration
+    # Adjust icond according to the batch and patch indices
+    icond = iconds[ibatch] + ipatch * int( nsteps / npatches )
+   
+    dyn_params.update({"nsteps": int( nsteps / npatches ) + 1, "dt": dt, "icond":icond})
 
-    # Set the NBRA model by reading the vibronic Hamiltonian and time overlap data
-    model_params = {"timestep":0, "icond":0,  "model0":0, "nstates":nstates}
-    
-    E = []
-    for step in range(istep, fstep):
-        energy_filename = F"{path_to_save_Hvibs}/Hvib_{basis_type}_{step}_re.npz"
-        energy_mat = sp.load_npz(energy_filename)
-        E.append( np.array( np.diag( energy_mat.todense() ) ) )
-    E = np.array(E)
-    
-    St = []
-    for step in range(istep, fstep):
-        St_filename = F"{path_to_save_Hvibs}/St_{basis_type}_{step}_re.npz"
-        St_mat = sp.load_npz(St_filename)
-        St.append( np.array( St_mat.todense() ) )
-    St = np.array(St)
-
-    NAC = []
-    Hvib = []
-    for c, step in enumerate(range(istep, fstep)):
-        nac_filename = F"{path_to_save_Hvibs}/Hvib_{basis_type}_{step}_im.npz"
-        nac_mat = sp.load_npz(nac_filename)
-        NAC.append( np.array( nac_mat.todense() ) )
-        Hvib.append( np.diag(E[c, :])*(1.0+1j*0.0)  - (0.0+1j)*nac_mat[:, :] )
-    
-    NAC = np.array(NAC)
-    Hvib = np.array(Hvib)
-
-    model_params.update({"E": E, "St": St, "NAC": NAC, "Hvib": Hvib})
-    
-    # Setting the coherent Ehrenfest propagation. Define the argument-dependent part first.
-    dyn_general = {"nsteps":NSTEPS, "nstates":nstates, "dt":dt, "nfiles": NSTEPS, "which_adi_states":range(nstates), "which_dia_states":range(nstates)}
-    
-    dyn_general.update({"ntraj":1, "mem_output_level":2, "progress_frequency":1, "properties_to_save":["timestep", "time", "se_pop_adi"], "prefix":"out", "isNBRA":0, 
-                   "ham_update_method":2, "ham_transform_method":0, "time_overlap_method":0, "nac_update_method":0,
-                   "hvib_update_method":0, "force_method":0, "rep_force":1, "hop_acceptance_algo":0, "momenta_rescaling_algo":0, "rep_tdse":1,
-                   "electronic_integrator":2, "tsh_method":-1, "decoherence_algo":-1, "decoherence_times_type":-1, "do_ssy":0, "dephasing_informed":0})
-
-    # Nuclear DOF - these parameters don't matter much in the NBRA calculations
-    nucl_params = {"ndof":1, "init_type":3, "q":[-10.0], "p":[0.0], "mass":[2000.0], "force_constant":[0.0], "verbosity":-1 }
-
-    # Electronic DOF
-    elec_params = {"ndia":nstates, "nadi":nstates, "verbosity":-1, "init_dm_type":0, "init_type":1, "rep":1,"istate":istate }
+    istates = [0.0]*nstates; istates[istate] = 1.0
+    init_elec.update({"istate":istate, "istates": istates})
 
     rnd = Random()
 
-    res = tsh_dynamics.generic_recipe(dyn_general, compute_model, model_params, elec_params, nucl_params, rnd)
+    res = tsh_dynamics.generic_recipe(dyn_params, compute_model, model_params, init_elec, init_nucl, rnd)
 
-def run_patch_rpi(rpi_params):
+def generic_patch_dyn(_rpi_params, _dyn_params, compute_model, _model_params, _init_elec, _init_nucl):
     """
-    This function distributes the jobs to perform patch dynamics calculations in the restricted path integral (RPI) method.
+    This function performs patch dynamics calculations based on the restricted path integral (RPI) approach.
 
     Args:
 
-        rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
+        _rpi_params ( dictionary ): parameters controlling the patch dynamics in the RPI calculation
             Can contain:
 
             * **rpi_params["run_slurm"]** ( bool ): Whether to use the slurm environment to submit the jobs using the submit_template file. 
@@ -201,84 +182,126 @@ def run_patch_rpi(rpi_params):
             
             * **rpi_params["python_exe"]** ( string ): The Python executable
 
-            * **rpi_params["path_to_save_Hvibs"]** ( string ): The path of the vibronic Hamiltonian files.
-            
-            * **rpi_params["basis_type"]** ( string ): The electronic basis type (such as the Slater determinant or CI adpatation, i.e., 'sd' or 'ci').
-
-            * **rpi_params["iread"]** ( int ): The initial step to read the vibronic Hamiltonian and time overlap
-
-            * **rpi_params["fread"]** ( int ): The final step to read the vibronic Hamiltonian and time overlap
-
-            * **rpi_params["iconds"]** ( list of ints ): The list of initial step indices from the trajectory segment from iread to fread. 
-                Each initial condition characterizes each batch.
+            * **rpi_params["iconds"]** ( list of ints ): The list of initial geometry indices of the trajectory segment used for setting model_params. 
+                Each initial condition in this list characterizes each batch.
 
             * **rpi_params["nsteps"]** ( int ): The total number of RPI simulation steps
 
             * **rpi_params["npatches"]** ( int ): The number of patches. The time duration of each patch dynamics will be int(nsteps/npatches) + 1. 
-              The additional single step is because the tsh recipe (see libra_py.dynamics.tsh.compute for details) used for the patch dynamics 
-              saves the dynamics information before the electron-nuclear propagation in each MD loop.
+                The additional single step is because the tsh recipe (see libra_py.dynamics.tsh.compute for details) used for the patch dynamics 
+                saves the dynamics information before the electron-nuclear propagation in each MD loop.
 
             * **rpi_params["nstates"]** ( int ): The number of electronic states.
 
             * **rpi_params["dt"]** ( double ): the time step in the atomic unit.
             
-            * **rpi_params["path_to_save_patch"]** ( string ): The path of the output patch dynamics
+            * **rpi_params["prefix"]** ( string ): The prefix of directories having the output patch dynamics. 
+                The patch dynamics data are characterized by three numbers - the batch index, the patch index, the initial state index.
+                Thus, the full name of output directory is expressed by these three numbers and their limits as follows.
+                  rpi_params["prefix"] + F"n{len(rpi_params["iconds"])}" + "_ibatch{X}" + _n{rpi_params["npatches"]} + F"_ipatch{Y}" \
+                        + F"_n{rpi_params["nstates"]}" + F"_istate{Z}"
+                  X = 0 to len(rpi_params["iconds"]) - 1; Y = 0 to rpi_params["npatches"] - 1; Z = 0 to rpi_params["nstates"] - 1
+                An NBRA trajectory from an initial geometry defined in rpi_params['iconds'] is called a batch. 
+        
+        The rest of parameters are for setting patch dynamics conducted by `libra_py.dynamics.tsh.compute.generic_recipe`.
+
+        _dyn_params ( dictionary ): control parameters for running the dynamics
+            see the documentation of the :func:`libra_py.dynamics.tsh.run_dynamics` function
+
+        compute_model ( PyObject ): the pointer to the Python function that performs the Hamiltonian calculations
+
+        _model_params ( dictionary ): contains the selection of a model and the parameters
+            for that model Hamiltonian. In addition to all the parameters, should contain the key
+
+            * **_model_params["model0"]** ( int ): the selection of the model to be used to compute diabatic-to-adiabatic
+                transformation. The particular value chosen here depends on the way the `compute_model` functions is defined
+
+               :Note: the function selected should be able to generate the transformation matrix.
+
+        _init_elec ( dictionary ): control parameters for initialization of electronic variables
+            see the documentation of the :func:`libra_py.dynamics.init_electronic_dyn_var` function
+
+        _init_nucl (dict): controls how to sample nuclear DOFs from what the user provides. Can contain:
+          * **_init_nucl["init_type"]** (int) : the type of the sampling:
+            - 0 : Coords and momenta are set exactly to the given value
+            - 1 : Coords are set, momenta are sampled
+            - 2 : Coords are sampled, momenta are set
+            - 3 : Both coords and momenta are samples [ default ]
+          * **_init_nucl["ndof"]** (int) : the number of nuclear DOFs [default: 1]
+          * **_init_nucl["q"]** ( list of `ndof` doubles ): average coordinate of all trajectories, for each nuclear DOF,
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["p"]** ( list of `ndof` doubles ): average momentum of all trajectories, for each nuclear DOF,
+                  a.u. of lenth [ default: [0.0] ]
+          * **_init_nucl["mass"]** (list of `ndof` doubles): the mass for each nuclear DOF, in a.u. of mass [ default: [2000.0] ]
+          * **_init_nucl["force_constant"]** (list of `ndof` doubles) : the force constant of the harmonic oscillator in each
+                  nuclear DOF, determins the width of the coordinate and momentum samplings [ default: [0.001] ]
 
     Return:
         None: but performs the action
     """
+   
+    rpi_params = dict(_rpi_params)
+    model_params = dict(_model_params)
+    dyn_params = dict(_dyn_params)
+    init_elec = dict(_init_elec)
+    init_nucl = dict(_init_nucl)
     
-    critical_params = ["path_to_save_patch"]
+    # ========== RPI params ==========
+    critical_params = []
     default_params = {"run_slurm": False, "submit_template": 'submit_template.slm', "submission_exe": 'sbatch',
-                      "run_python_file": 'run_template.py', "python_exe": 'python', "path_to_save_Hvibs": 'res', "basis_type": 'ci', 
-                      "iread": 0, "fread": 1, "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], "dt": 1.0*units.fs2au}
+                      "run_python_file": 'run_template.py', "python_exe": 'python', "nsteps": 1, "npatches": 1, "nstates":2, "iconds": [0], 
+                      "dt": 1.0*units.fs2au, "prefix": 'out_'}
     
     comn.check_input(rpi_params, default_params, critical_params)
+    
+    # ========== Model params ==========
+    comn.check_input(model_params, {}, ["model0"])
 
-    path_to_save_Hvibs, basis_type = rpi_params["path_to_save_Hvibs"], rpi_params["basis_type"]
-    iread, fread = rpi_params["iread"], rpi_params["fread"]
+    # ========== Nuclear params ==========
+    # First check the inputs for the initialization of nuclear variables
+    comn.check_input(init_nucl, {"init_type": 3, "ndof": 1, "q": [0.0], "p": [0.0], "mass": [2000.0],
+                                 "force_constant": [0.01], "q_width": [1.0], "p_width": [1.0]}, [])
+    ndof = len(init_nucl["mass"])
+
+    # ========== Dynamics params ==========
+    # Now, we can use the information of ndof to define the default quantum_dofs
+    comn.check_input(dyn_params, {"rep_tdse": 1, "rep_sh": 1, "is_nbra": 0, "direct_init": 0, "ntraj": 1,
+                                  "quantum_dofs": list(range(ndof))
+                                  }, [])
+
+    # RPI setting
     nsteps, dt = rpi_params["nsteps"], rpi_params["dt"]
     iconds, npatches, nstates = rpi_params["iconds"], rpi_params["npatches"], rpi_params["nstates"]
+    prefix = rpi_params["prefix"]
 
-    out_dir = rpi_params["path_to_save_patch"]
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
-    os.chdir(out_dir)
+    nsteps_patch = int(nsteps / npatches) + 1
 
     for ibatch, icond in enumerate(iconds):
         for ipatch in range(npatches):
             for istate in range(nstates):
-                
-                # Compute the istep and fstep here, for each patch
-                istep = iread + icond + ipatch * int( nsteps / npatches )
-                fstep = istep + int( nsteps / npatches ) + 1
-
-                dir_patch = F"job_{ibatch}_{ipatch}_{istate}"
-                if os.path.exists(dir_patch):
-                    os.system('rm -rf ' + dir_patch)
-                os.mkdir(dir_patch)
+                dir_patch = prefix + F"n{len(iconds)}_ibatch{ibatch}_n{npatches}_ipatch{ipatch}_n{nstates}_istate{istate}"
+                if not os.path.exists(dir_patch):
+                    os.mkdir(dir_patch)
                 os.chdir(dir_patch)
 
                 # Submit jobs or run each patch dynamics through this loop        
                 if rpi_params["run_slurm"]:
-                    print(F"Submitting a patch dynamics job of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
-                    os.system('cp ../../%s %s' % (rpi_params["run_python_file"], rpi_params["run_python_file"]))
-                    os.system('cp ../../%s %s' % (rpi_params["submit_template"], rpi_params["submit_template"]))
+                    print(F"Submitting a patch dynamics job of ibatch = {ibatch}, ipatch = {ipatch}, istate = {istate}")
+                    os.system('cp ../%s %s' % (rpi_params["run_python_file"], rpi_params["run_python_file"]))
+                    os.system('cp ../%s %s' % (rpi_params["submit_template"], rpi_params["submit_template"]))
+                    
+                    icond1 = icond + ipatch * int(nsteps / npatches)
                     
                     file = open(rpi_params["submit_template"], 'a')
-                    args_fmt = ' --path_to_save_Hvibs %s --basis_type %s --istep %d --fstep %d --dt %f --istate %d'
-                    file.write('%s %s' % (rpi_params["python_exe"], rpi_params["run_python_file"]) + \
-                                args_fmt % (path_to_save_Hvibs, basis_type, istep, fstep, dt, istate) + " >log" )
+                    args_fmt = ' --nsteps %d --icond %d --istate %d --dt %f'
+                    file.write('%s %s' % (rpi_params["python_exe"], rpi_params["run_python_file"]) + args_fmt % (nsteps_patch, icond1, istate, dt))
                     file.close()
 
                     os.system('%s %s' % (rpi_params["submission_exe"], rpi_params["submit_template"]))
                 else:
-                    print(F"Running patch dynamics of icond = {ibatch}, ipatch = {ipatch}, istate = {istate}")
-                    run_patch_dyn_serial(rpi_params, ibatch, ipatch, istate)
+                    print(F"Running patch dynamics of ibatch = {ibatch}, ipatch = {ipatch}, istate = {istate}")
+                    run_patch_dyn_serial(rpi_params, dyn_params, compute_model, model_params, init_elec, init_nucl, ibatch, ipatch, istate)
                 os.chdir('../')
-
-    os.chdir('../')
 
 def print_pop(outfile, time, pops):
     """
