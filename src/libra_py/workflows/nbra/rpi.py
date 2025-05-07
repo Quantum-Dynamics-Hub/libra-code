@@ -341,7 +341,9 @@ def process_batch(args):
             * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
             
             * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
-            
+    
+            * **rpi_sum_params["prefix_patch"]** ( string ): The prefix of patch dynamics directories
+
             * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
 
     Return:
@@ -351,13 +353,15 @@ def process_batch(args):
     ibatch, rpi_sum_params = args
     
     critical_params = ["path_to_save_patch"]
-    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, 
+                      "prefix_patch": 'out_', "prefix": 'POP_NPATCH_'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
     
     nsteps, dt, istate = rpi_sum_params["nsteps"], rpi_sum_params["dt"], rpi_sum_params["istate"]
-    npatches, nstates = rpi_sum_params["npatches"], rpi_sum_params["nstates"]
-    path_to_save_patch = rpi_sum_params["path_to_save_patch"]
+    nbatches, npatches, nstates = rpi_sum_params["nbatches"], rpi_sum_params["npatches"], rpi_sum_params["nstates"]
+    path_to_save_patch, prefix_patch = rpi_sum_params["path_to_save_patch"], rpi_sum_params["prefix_patch"]
+    prefix = rpi_sum_params["prefix"]
     
     nstep_patch = int(nsteps / npatches)
     pops = np.zeros((npatches * nstep_patch + 1, nstates))
@@ -372,7 +376,8 @@ def process_batch(args):
         # Compute the transition probability from a patch dynamics 
         T = np.zeros((nstep_patch, nstates, nstates)) # (timestep in a patch, init, dest)
         for ist in range(nstates):
-            with h5py.File(F"{path_to_save_patch}/job_{ibatch}_{ipatch}_{ist}/out/mem_data.hdf", 'r') as f:
+            with h5py.File(F"{path_to_save_patch}/{prefix_patch}" +
+                           F"n{nbatches}_ibatch{ibatch}_n{npatches}_ipatch{ipatch}_n{nstates}_istate{ist}/mem_data.hdf", 'r') as f:
                 pop_adi_data = np.array(f["se_pop_adi/data"])
             T[:, ist, :] = pop_adi_data[1:,:]
             T[:, ist, ist] = 0.0  # zero diagonal explicitly 
@@ -389,11 +394,11 @@ def process_batch(args):
     # Per-batch output
     time = np.array([x for x in range(npatches * nstep_patch + 1)]) * dt
     print(F"Print the population from ibatch")
-    print_pop(rpi_params["prefix"] + F"_ibatch{ibatch}.dat", time, pops)
+    print_pop(prefix + F"{npatches}_ibatch{ibatch}.dat", time, pops)
     
     return pops
 
-def run_sum_rpi(rpi_sum_params):
+def run_sum(rpi_sum_params):
     """
     This function conducts the RPI patch summation to yield the population dynamics in the whole time domain.
 
@@ -418,6 +423,8 @@ def run_sum_rpi(rpi_sum_params):
             * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
             
             * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+    
+            * **rpi_sum_params["prefix_patch"]** ( string ): The prefix of patch dynamics directories
             
             * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
 
@@ -425,7 +432,8 @@ def run_sum_rpi(rpi_sum_params):
         None: but performs the action
     """
     critical_params = ["path_to_save_patch"]
-    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, 
+                      "prefix_patch": 'out_', "prefix": 'POP_NPATCH_'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
 
@@ -433,6 +441,7 @@ def run_sum_rpi(rpi_sum_params):
   
     nsteps, dt = rpi_sum_params["nsteps"], rpi_sum_params["dt"]
     nbatches, npatches, nstates = rpi_sum_params["nbatches"], rpi_sum_params["npatches"], rpi_sum_params["nstates"]
+    prefix = rpi_sum_params["prefix"]
 
     nstep_patch = int(nsteps / npatches)
     time = np.array([x for x in range(npatches * nstep_patch + 1)]) * dt
@@ -447,10 +456,10 @@ def run_sum_rpi(rpi_sum_params):
     pops_avg /= nbatches
     
     print("Print the final population from all batches")
-    print_pop(rpi_sum_params["prefix"] + "_all.dat", time, pops_avg)
+    print_pop(prefix + F"{npatches}_all.dat", time, pops_avg)
 
 
-def run_sum_rpi_crude(rpi_sum_params):
+def run_sum_crude(rpi_sum_params):
     """
     This function conducts the RPI patch summation to yield the population dynamics in the whole time domain.
 
@@ -475,6 +484,8 @@ def run_sum_rpi_crude(rpi_sum_params):
             * **rpi_sum_params["nstates"]** ( int ): The number of electronic states.
             
             * **rpi_sum_params["path_to_save_patch"]** ( string ): The path of the precomputed patch dynamics
+    
+            * **rpi_sum_params["prefix_patch"]** ( string ): The prefix of patch dynamics directories
             
             * **rpi_sum_params["prefix"]** ( string ): The prefix for the population dynamics output
 
@@ -482,14 +493,16 @@ def run_sum_rpi_crude(rpi_sum_params):
         None: but performs the action
     """
     critical_params = ["path_to_save_patch"]
-    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, "prefix": 'out'}
+    default_params = {"nprocs": 1, "nsteps": 1, "dt": 1.0*units.fs2au, "istate": 0, "nbatches": 1, "npatches": 1, "nstates": 2, 
+                      "prefix_patch": 'out_', "prefix": 'POP_NPATCH_'}
 
     comn.check_input(rpi_sum_params, default_params, critical_params)
 
     nsteps, dt, istate = rpi_sum_params["nsteps"], rpi_sum_params["dt"], rpi_sum_params["istate"]
 
     nbatches, npatches, nstates = rpi_sum_params["nbatches"], rpi_sum_params["npatches"], rpi_sum_params["nstates"]
-    path_to_save_patch = rpi_sum_params["path_to_save_patch"]
+    path_to_save_patch, prefix_patch = rpi_sum_params["path_to_save_patch"], rpi_sum_params["prefix_patch"]
+    prefix = rpi_sum_params["prefix"]
 
     nstep_patch = int(nsteps / npatches)
 
@@ -513,7 +526,8 @@ def run_sum_rpi_crude(rpi_sum_params):
             pop_patch.fill(0.0)
             T.fill(0.0)
             for ist in range(nstates):
-                with h5py.File(F"{path_to_save_patch}/job_{ibatch}_{ipatch}_{ist}/out/mem_data.hdf", 'r') as f:
+                with h5py.File(F"{path_to_save_patch}/{prefix_patch}" +
+                               F"n{nbatches}_ibatch{ibatch}_n{npatches}_ipatch{ipatch}_n{nstates}_istate{ist}/mem_data.hdf", 'r') as f:
                     pop_adi_data = np.array(f["se_pop_adi/data"])
             
                 for istep in range(nstep_patch):
@@ -539,10 +553,10 @@ def run_sum_rpi_crude(rpi_sum_params):
         pops_avg += pops
     
         print(F"Print the population from ibatch, ibatch = {ibatch}")
-        print_pop(rpi_sum_params["prefix"] + F"_ibatch{ibatch}.dat", time, pops)
+        print_pop(prefix + F"{npatches}_ibatch{ibatch}.dat", time, pops)
 
     pops_avg /= nbatches
 
     print("Print the final population from all batches")
-    print_pop(rpi_sum_params["prefix"] + "_all.dat", time, pops_avg)
+    print_pop(prefix + F"{npatches}_all.dat", time, pops_avg)
 
