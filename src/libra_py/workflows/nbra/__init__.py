@@ -25,5 +25,6 @@ __all__ = ["ann",
            "step2_many_body",
            "step3",
            "step3_many_body",
-           "step4"
+           "step4",
+           "rpi"
            ]
