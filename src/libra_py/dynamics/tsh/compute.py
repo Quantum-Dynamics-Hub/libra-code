@@ -427,8 +427,10 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - -1: set all dephasing rates to zero [ default ]
                 - 0: use the rates read out from the input
                 - 1: use the energy-based decoherence method (EDC)
-                - 2: Schwartz - mean-field Force-based decoherence
-                - 3: Schwartz - pair-wise-based decoherences
+                - 2: Schwartz - mean-field Force-based decoherence with `schwartz_decoherence_inv_alpha`
+                - 3: Schwartz - pair-wise-based decoherences 
+                - 4: Schwartz - mean-field Force-based decoherence with `schwartz_interaction_width`
+                - 5: Gu-Franco 
 
 
             * **dyn_params["schwartz_decoherence_inv_alpha"]** ( MATRIX(ndof, 1) ): a matrix of 1/alpha - the parameters
@@ -437,6 +439,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
             * **dyn_params["schwartz_interaction_width"]** ( MATRIX(ndof, 1) ): the parameters for the spatial extent
                 of NAC in computing decoherence rates [ default: NULL ]
+
+
+            * **dyn_params["reorg_energy"]** ( double ): reorganization energy of the bath [ units: Ha; default: 0.0 Ha ]
 
 
             * **dyn_params["decoherence_C_param"]** ( double ): An empirical parameter used in the EDC method [ default: 1.0 Ha]
@@ -853,6 +858,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             "sdm_norm_tolerance": 0.0,
             "dish_decoherence_event_option": 1,
             "decoherence_times_type": -1,
+            "reorg_energy":0.0,
             "decoherence_C_param": 1.0,
             "decoherence_eps_param": 0.1,
             "dephasing_informed": 0,

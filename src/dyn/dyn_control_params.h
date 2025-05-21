@@ -563,9 +563,10 @@ class dyn_control_params{
       - -1: set all dephasing rates to zero [ default ]
       - 0: use the rates read out from the input 
       - 1: use the energy-based decoherence method (EDC)    
-      - 2: Schwartz - mean-field Force-based decoherence
-      - 3: Schwartz - pair-wise-based decoherences
-      - 4: Gu-Franco 
+      - 2: Schwartz - mean-field Force-based decoherence (Schwartz 1), using inv_alpha
+      - 3: Schwartz - pair-wise-based decoherence, (Schwartz 2), using inv_alpha
+      - 4: Schwartz - mean-field Force-based decoherence (Schwartz 1), but using interaction width
+      - 5: Gu-Franco 
   */  
   int decoherence_times_type;
 
@@ -992,6 +993,7 @@ class dyn_control_params{
 
   /**
     Reorganization energy of the bath, Ha
+    default: 0.0 Ha
   */
   double reorg_energy;
   
