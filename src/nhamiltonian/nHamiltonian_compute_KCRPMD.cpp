@@ -75,11 +75,11 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 }
 
 
-double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
 /**
   Compute the KC-RPMD effective potential energy
 
-  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  y_aux_var - is the classical electronic coordinate as defined in KC-RPMD
   q - is a ndof x ntraj matrix of coordinates
   invM - is a ndof x 1 matrix of inverse masses of all DOFs
   beta - the inverse temperature Boltzmann factor in atomic units
@@ -103,13 +103,15 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
   double VKP;
   double res;
 
-  if(children.size()==0 and ntraj==1){ 
+  if(children.size()==1 and ntraj==1){ 
     //============ Compute the pure electronic contributions =========  
-    V0 = (ham_dia->get(0,0)).real(); 
-    V1 = (ham_dia->get(1,1)).real(); 
-    double K = abs(ham_dia->get(0,1)); 
-    double Vg = (ham_adi->get(0,0)).real();
-    double Ve = (ham_adi->get(1,1)).real(); 
+    V0 = (children[0]->ham_dia->get(0,0)).real(); 
+    V1 = (children[0]->ham_dia->get(1,1)).real(); 
+    double K = abs(children[0]->ham_dia->get(0,1)); 
+    // double Vg = (children[0]->ham_adi->get(0,0)).real();
+    // double Ve = (children[0]->ham_adi->get(1,1)).real(); 
+    double Vg = 0.5 * (V0 + V1) - 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
+    double Ve = 0.5 * (V0 + V1) + 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
     if(beta * K > 1e-3){
       VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
     }
@@ -124,26 +126,26 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
     double w = (V0 - V1) / K;
     double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
     double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
-    VKP += (A * w * w - log(C)) / beta;
+    VKP += (A * pow(w, 2) - log(C)) / beta;
 
     //============ Compute the heavy side auxiliary potentials =========  
-    if(abs(auxiliary_y[0] + 1) < 0.5){
-      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    if(abs(y_aux_var[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] + 1) - 1)))) / beta;
     }
     else{
-      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+      V0 += (b * (2 * abs(y_aux_var[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] + 1) - 1))))) / beta;
     }
-    if(abs(auxiliary_y[0] - 1) < 0.5){
-      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
-    }
-    else{
-      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
-    }
-    if(abs(auxiliary_y[0]) < 0.5){
-      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    if(abs(y_aux_var[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] - 1) - 1)))) / beta;
     }
     else{
-      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+      V1 += (b * (2 * abs(y_aux_var[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] - 1) - 1))))) / beta;
+    }
+    if(abs(y_aux_var[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(y_aux_var[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0]) - 1))))) / beta;
     }
   }
   else if(children.size()==ntraj){
@@ -161,11 +163,11 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& auxiliary_y, con
 }
 
 
-MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
 /**
   Compute the KC-RPMD effective nuclear force
 
-  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
+  y_aux_var - is the classical electronic coordinate as defined in KC-RPMD
   q - is a ndof x ntraj matrix of coordinates
   invM - is a ndof x 1 matrix of inverse masses of all DOFs
   beta - the inverse temperature Boltzmann factor in atomic units
@@ -194,13 +196,15 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
   MATRIX FKP(ndof, ntraj);
   MATRIX res(ndof, ntraj);
 
-  if(children.size()==0 and ntraj==1){ 
+  if(children.size()==1 and ntraj==1){ 
     //============ Compute the pure electronic contributions =========  
-    V0 = (ham_dia->get(0,0)).real(); 
-    V1 = (ham_dia->get(1,1)).real(); 
-    double K = abs(ham_dia->get(0,1)); 
-    double Vg = (ham_adi->get(0,0)).real();
-    double Ve = (ham_adi->get(1,1)).real(); 
+    V0 = (children[0]->ham_dia->get(0,0)).real(); 
+    V1 = (children[0]->ham_dia->get(1,1)).real(); 
+    double K = abs(children[0]->ham_dia->get(0,1)); 
+    // double Vg = (children[0]->ham_adi->get(0,0)).real();
+    // double Ve = (children[0]->ham_adi->get(1,1)).real(); 
+    double Vg = 0.5 * (V0 + V1) - 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
+    double Ve = 0.5 * (V0 + V1) + 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
     if(beta * K > 1e-3){  
       VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
     }
@@ -215,19 +219,31 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
     MATRIX Fg(ndof, ntraj);
     MATRIX Fe(ndof, ntraj);
     for(dof=0; dof<ndof; dof++){   
-      F0.set(dof, 0, -(d1ham_dia[dof]->get(0,0)).real());
-      F1.set(dof, 0, -(d1ham_dia[dof]->get(1,1)).real());
-      FK.set(dof, 0, -abs(d1ham_dia[dof]->get(0,1)));
-      Fg.set(dof, 0, -(d1ham_adi[dof]->get(0,0)).real());
-      Fe.set(dof, 0, -(d1ham_adi[dof]->get(1,1)).real());
+      F0.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(0,0)).real());
+      F1.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(1,1)).real());
+      FK.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(0,1)).real());
+      //FK.set(dof, 0, -abs(children[0]->d1ham_dia[dof]->get(0,1)));
+      // cout << "K: " << children[0]->ham_dia->get(0,1) << " |K|: " << K << " dK:" << children[0]->d1ham_dia[dof]->get(0,1) << endl;
+      // Fg.set(dof, 0, -(children[0]->d1ham_adi[dof]->get(0,0)).real());
+      // Fe.set(dof, 0, -(children[0]->d1ham_adi[dof]->get(1,1)).real());
     }// for dof
+    Fg = 0.5 * (F0 + F1) - ((V0 - V1) * (F0 - F1) + 4 * K * FK) / (2 * sqrt(pow(V0 - V1, 2) + pow(2 * K, 2)));
+    Fe = 0.5 * (F0 + F1) + ((V0 - V1) * (F0 - F1) + 4 * K * FK) / (2 * sqrt(pow(V0 - V1, 2) + pow(2 * K, 2)));
     if(beta * K > 1e-3){  
+      //cout<<K<<" <-|K|, VKP-> " << VKP << endl;
       FKP = (Fg + exp(-beta * (Ve - Vg)) * Fe - exp(-beta * (V0 - Vg)) * F0 - exp(-beta * (V1 - Vg)) * F1) / (1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg)));
+      //cout<<FKP<<endl;
     }
     else if(beta * abs(V0 - V1) > 1e-7){
+      //cout << "Here 1" << endl;
       FKP = 0.5 * (F0 + F1) + (F0 - F1) * (1 / (beta * (V0 - V1)) - 0.5 * cosh(0.5 * beta * (V0 - V1)) / sinh(0.5 * beta * (V0 - V1))) - 2 * FK / (beta * K);
     }
     else{
+      // cout << "Here 2" << endl;
+      //cout<<(children[0]->ham_dia->get(0,0))<<endl; 
+      //cout<<(children[0]->ham_dia->get(0,1))<<endl; 
+      //cout<<K<<" <-|K|, Fk? " << FK << endl;
+      //cout<<"Error in kcrpmd_effective_potential()?\n"; exit(0); 
       FKP = 0.5 * (F0 + F1) - 2 * FK / (beta * K);
     }
 
@@ -235,7 +251,7 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
     double w = (V0 - V1) / K;
     double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
     double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
-    VKP += (A * w * w - log(C)) / beta;
+    VKP += (A * pow(w, 2) - log(C)) / beta;
 
     MATRIX Fw(ndof, ntraj);
     MATRIX FA(ndof, ntraj);
@@ -244,30 +260,35 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
     if(c * abs(beta * K - 1) < 250.){
       FA = -0.5 * a * c * beta / pow(cosh(-c * (beta * K - 1)), 2) * FK;
     }
+    //cout << "FC Before: " << FC << " A: " << A << " FA: " << FA << " Ratio: " << FA / sqrt(A)<<endl;
     FC = -eta / (4 * sqrt(3.1415)) * (1 + tanh(-d * (beta * K - 1))) * FA / sqrt(A); 
+    //cout << "FC Halfway: " << FC << endl;
     if(d * abs(beta * K - 1) < 250.){
       FC += -0.5 * d * beta * (sqrt(A / 3.1415) * eta - 1) / pow(cosh(-d * (beta * K - 1)), 2) * FK;
     }
+    //cout << "FC After: " << FC << endl;
+    //cout << "FKP Before: " << FKP << " FA: " << FA << " FC: " << FC << endl;
     FKP += (w * w * FA + 2 * A * w * Fw - FC / C) / beta;
+    //cout << "FKP After: " << FKP << endl;
 
     //============ Compute the heavy side auxiliary potentials =========  
-    if(abs(auxiliary_y[0] + 1) < 0.5){
-      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    if(abs(y_aux_var[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] + 1) - 1)))) / beta;
     }
     else{
-      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+      V0 += (b * (2 * abs(y_aux_var[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] + 1) - 1))))) / beta;
     }
-    if(abs(auxiliary_y[0] - 1) < 0.5){
-      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
-    }
-    else{
-      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
-    }
-    if(abs(auxiliary_y[0]) < 0.5){
-      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    if(abs(y_aux_var[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] - 1) - 1)))) / beta;
     }
     else{
-      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+      V1 += (b * (2 * abs(y_aux_var[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] - 1) - 1))))) / beta;
+    }
+    if(abs(y_aux_var[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(y_aux_var[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0]) - 1))))) / beta;
     }
   }
   else if(children.size()==ntraj){
@@ -281,17 +302,17 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& auxiliary_y, const M
   
   res = RPMD_internal_force(q,invM,beta) + (exp(-beta * (V0 - Vshift)) * F0 + exp(-beta * (VKP - Vshift)) * FKP + exp(-beta * (V1 - Vshift)) * F1) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift)));
 
+
+  // cout<<"VKP: " << VKP << "FKP: "<<FKP<< " " <<abs(children[0]->ham_dia->get(0,1))<<" <-|K|, Fk? " << " FKCRPMD = " << res << endl;
   return res;
 }
 
 
-vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_aux_var, double beta, double eta, double a, double b, double c, double d){
 /**
   Compute the KC-RPMD effective auxiliary force
 
-  auxiliary_y - is the classical electronic coordinate as defined in KC-RPMD
-  q - is a ndof x ntraj matrix of coordinates
-  invM - is a ndof x 1 matrix of inverse masses of all DOFs
+  y_aux_var - is the classical electronic coordinate as defined in KC-RPMD
   beta - the inverse temperature Boltzmann factor in atomic units
   eta - geometric parameter conserving free energy of kinked pair formation ad defined in second KC-RPMD paper
   a - is the kinetic constraint ad-hoc parameter
@@ -305,7 +326,7 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& au
 
   if(ndia!=2){ cout<<"Error in kcrpmd_effective_potential(): implementation only for ndia=2\n"; exit(0); }
 
-  int ntraj = q.n_cols;
+  int ntraj = children.size();   
 
   double V0;
   double V1;
@@ -316,13 +337,15 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& au
   double FKP;
   vector<double> res;
 
-  if(children.size()==0 and ntraj==1){ 
+  if(ntraj==1){ 
     //============ Compute the pure electronic contributions =========  
-    V0 = (ham_dia->get(0,0)).real(); 
-    V1 = (ham_dia->get(1,1)).real(); 
-    double K = abs(ham_dia->get(0,1)); 
-    double Vg = (ham_adi->get(0,0)).real();
-    double Ve = (ham_adi->get(1,1)).real(); 
+    V0 = (children[0]->ham_dia->get(0,0)).real(); 
+    V1 = (children[0]->ham_dia->get(1,1)).real(); 
+    double K = abs(children[0]->ham_dia->get(0,1)); 
+    // double Vg = (children[0]->ham_adi->get(0,0)).real();
+    // double Ve = (children[0]->ham_adi->get(1,1)).real(); 
+    double Vg = 0.5 * (V0 + V1) - 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
+    double Ve = 0.5 * (V0 + V1) + 0.5 * sqrt(pow((V0 - V1), 2) + pow(2 * K, 2));
     if(beta * K > 1e-3){
       VKP = Vg - log(1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg))) / beta;
     }
@@ -337,52 +360,49 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& au
     double w = (V0 - V1) / K;
     double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
     double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
-    VKP += (A * w * w - log(C)) / beta;
+    VKP += (A * pow(w, 2) - log(C)) / beta;
 
     //============ Compute the heavy side auxiliary potentials =========  
-    if(abs(auxiliary_y[0] + 1) < 0.5){
-      V0 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] + 1) - 1)))) / beta;
+    if(abs(y_aux_var[0] + 1) < 0.5){
+      V0 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] + 1) - 1)))) / beta;
     }
     else{
-      V0 += (b * (2 * abs(auxiliary_y[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] + 1) - 1))))) / beta;
+      V0 += (b * (2 * abs(y_aux_var[0] + 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] + 1) - 1))))) / beta;
     }
-    if(abs(auxiliary_y[0] - 1) < 0.5){
-      V1 += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0] - 1) - 1)))) / beta;
-    }
-    else{
-      V1 += (b * (2 * abs(auxiliary_y[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0] - 1) - 1))))) / beta;
-    }
-    if(abs(auxiliary_y[0]) < 0.5){
-      VKP += -log(1 / (1 + exp(b * (2 * abs(auxiliary_y[0]) - 1)))) / beta;
+    if(abs(y_aux_var[0] - 1) < 0.5){
+      V1 += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0] - 1) - 1)))) / beta;
     }
     else{
-      VKP += (b * (2 * abs(auxiliary_y[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(auxiliary_y[0]) - 1))))) / beta;
+      V1 += (b * (2 * abs(y_aux_var[0] - 1) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0] - 1) - 1))))) / beta;
+    }
+    if(abs(y_aux_var[0]) < 0.5){
+      VKP += -log(1 / (1 + exp(b * (2 * abs(y_aux_var[0]) - 1)))) / beta;
+    }
+    else{
+      VKP += (b * (2 * abs(y_aux_var[0]) - 1) - log(1 / (1 + exp(-b * (2 * abs(y_aux_var[0]) - 1))))) / beta;
     }
 
-    if(auxiliary_y[0] + 1 > 0.0){
-      F0 += -b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+    if(y_aux_var[0] + 1 > 0.0){
+      F0 += -b * (1 + tanh(b * (abs(y_aux_var[0] + 1) - 0.5))) / beta;
     }
     else{
-      F0 += b * (1 + tanh(b * (abs(auxiliary_y[0] + 1) - 0.5))) / beta;
+      F0 += b * (1 + tanh(b * (abs(y_aux_var[0] + 1) - 0.5))) / beta;
     }
-    if(auxiliary_y[0] > 0.0){
-      FKP += -b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
-    }
-    else{
-      FKP += b * (1 + tanh(b * (abs(auxiliary_y[0]) - 0.5))) / beta;
-    }
-    if(auxiliary_y[0] - 1 > 0.0){
-      F1 += -b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+    if(y_aux_var[0] > 0.0){
+      FKP += -b * (1 + tanh(b * (abs(y_aux_var[0]) - 0.5))) / beta;
     }
     else{
-      F1 += b * (1 + tanh(b * (abs(auxiliary_y[0] - 1) - 0.5))) / beta;
+      FKP += b * (1 + tanh(b * (abs(y_aux_var[0]) - 0.5))) / beta;
     }
-  }
-  else if(children.size()==ntraj){
-    cout<<"Error in kcrpmd_effective_potential() not implemented for quantum nuclei\n"; exit(0);
+    if(y_aux_var[0] - 1 > 0.0){
+      F1 += -b * (1 + tanh(b * (abs(y_aux_var[0] - 1) - 0.5))) / beta;
+    }
+    else{
+      F1 += b * (1 + tanh(b * (abs(y_aux_var[0] - 1) - 0.5))) / beta;
+    }
   }
   else{
-    cout<<"ERROR: the size of the input is different from the number of children\n"; exit(0); 
+    cout<<"Error in kcrpmd_effective_auxiliary_force() not implemented for quantum nuclei\n"; exit(0);
   }
  
   double Vshift = min({V0, VKP, V1});

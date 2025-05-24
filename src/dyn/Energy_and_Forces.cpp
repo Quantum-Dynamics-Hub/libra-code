@@ -278,6 +278,23 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     }// rep_force == 1
 
   }
+  else if(prms.force_method==4){  // KC-RPMD force
+
+    // Diabatic 
+    if(prms.rep_force==0){ 
+      double Veff;
+      Veff = ham.kcrpmd_effective_potential(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, 1000.0, 6.0, 0.1, 1000.0, 0.5, 3.0);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        res[itraj] = Veff;
+      }
+    }
+    // Adiabatic
+    else if(prms.rep_force==1){
+      cout<<"Error in potential_energies(): KC-RPMD works exclusively within diabatic bases\n"; exit(0);
+    }
+  
+  }// KC-RPMD
 
 
   return res;
@@ -407,6 +424,16 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     }
 
   }// QTSH
+  else if(prms.force_method==4){  // KC-RPMD forces
+    // Diabatic 
+    if(prms.rep_force==0){  
+     //*dyn_vars.f = ham.Ehrenfest_forces_dia(*dyn_vars.ampl_dia, 1).real(); 
+     *dyn_vars.f = ham.kcrpmd_effective_force(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, 1000.0, 6.0, 0.1, 1000.0, 0.5, 3.0);
+    }
+
+    // Adiabatic 
+    else if(prms.rep_force==1){ cout<<"Error in update_forces(): KC-RPMD works exclusively within diabatic bases\n"; exit(0); }
+  }// KC-RPMD
 
 //  return F;
 }

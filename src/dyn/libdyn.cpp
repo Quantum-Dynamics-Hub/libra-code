@@ -291,6 +291,10 @@ void export_dyn_variables_objects(){
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
       .def("get_qtsh_f_nc", &dyn_variables::get_qtsh_f_nc)
+      .def("get_m_aux_var", &dyn_variables::get_m_aux_var)
+      .def("get_y_aux_var", &dyn_variables::get_y_aux_var)
+      .def("get_p_aux_var", &dyn_variables::get_p_aux_var)
+      .def("get_f_aux_var", &dyn_variables::get_f_aux_var)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -337,6 +341,8 @@ void export_dyn_variables_objects(){
       .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
 
       .def("save_curr_dm_into_prev", &dyn_variables::save_curr_dm_into_prev)
+
+      .def("compute_kcrpmd_ekin", &dyn_variables::compute_kcrpmd_ekin)
 
   ;
 }
@@ -1072,6 +1078,10 @@ void export_Dyn_objects(){
   void (*expt_propagate_electronic_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &propagate_electronic;
   def("propagate_electronic", expt_propagate_electronic_v1);
+
+  void (*expt_propagate_electronic_kcrpmd_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms) = &propagate_electronic_kcrpmd;
+  def("propagate_electronic_kcrpmd", expt_propagate_electronic_kcrpmd_v1);
 
 /*
   void (*expt_compute_dynamics_v1)

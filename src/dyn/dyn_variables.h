@@ -539,19 +539,24 @@ class dyn_variables{
   int kcrpmd_vars_status;
   
   /** 
-    The classical auxiliary electronic variable
+    The classical auxiliary electronic variable mass
   */ 
-  vector<double> auxiliary_y;
+  vector<double> m_aux_var;
 
   /** 
-    The classical auxiliary electronic variable velocity
+    The classical auxiliary electronic variable coordinate
   */ 
-  vector<double> auxiliary_vy;
+  vector<double> y_aux_var;
+
+  /** 
+    The classical auxiliary electronic variable momentum
+  */ 
+  vector<double> p_aux_var;
 
   /** 
     The classical auxiliary electronic variable force
   */ 
-  vector<double> auxiliary_fy;
+  vector<double> f_aux_var;
 
 
   ///================= Misc ===================
@@ -628,6 +633,10 @@ class dyn_variables{
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
+  vector<double> get_m_aux_var(){ return m_aux_var; }
+  vector<double> get_y_aux_var(){ return y_aux_var; }
+  vector<double> get_p_aux_var(){ return p_aux_var; }
+  vector<double> get_f_aux_var(){ return f_aux_var; }
   
   void get_current_timestep(bp::dict params){
     std::string key;
@@ -690,6 +699,8 @@ class dyn_variables{
   double compute_tcnbra_thermostat_energy();
 
   void save_curr_dm_into_prev();
+
+  double compute_kcrpmd_ekin();
 
 
 

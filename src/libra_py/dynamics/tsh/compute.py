@@ -846,6 +846,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # ================= QTSH specific ====================
     default_params.update({"use_qtsh": 0, "qtsh_force_option": 1})
 
+    # ================= KC-RPMD specific ====================
+    default_params.update({"use_kcrpmd": 0})
+
     # ================= Decoherence options =========================================
     default_params.update(
         {
@@ -967,6 +970,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     total_energy = dyn_params["total_energy"]
     use_qtsh = dyn_params["use_qtsh"]
     qtsh_force_option = dyn_params["qtsh_force_option"]
+    use_kcrpmd = dyn_params["use_kcrpmd"]
 
     states = intList()
 
@@ -1021,6 +1025,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     if use_qtsh == 1:  # QTSH
         dyn_var.allocate_qtsh()
+
+    if use_kcrpmd == 1:  # KC-RPMD
+        dyn_var.allocate_kcrpmd()
 
     ham_aux = nHamiltonian(ham)
 

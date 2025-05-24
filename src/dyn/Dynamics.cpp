@@ -1120,6 +1120,25 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
 }
 
+// Learn * vs &
+void propagate_electronic_kcrpmd(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms){
+
+  int num_el = prms.num_electronic_substeps;
+  double dt = prms.dt / num_el;
+
+  vector<double>& m_aux_var = dyn_var.m_aux_var;
+  vector<double>& y_aux_var = dyn_var.y_aux_var;
+  vector<double>& p_aux_var = dyn_var.p_aux_var;
+  vector<double>& f_aux_var = dyn_var.f_aux_var;
+
+  p_aux_var[0] += 0.5 * dt * f_aux_var[0];
+  y_aux_var[0] += dt * p_aux_var[0] / m_aux_var[0];
+  // kcrpmd_effective_auxiliary_force(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d)
+  f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, 1000.0, 6.0, 0.1, 1000.0, 0.5, 3.0))[0];
+  p_aux_var[0] += 0.5 * dt * f_aux_var[0];
+
+}
+
 void renormalize_hopping_probabilities(vector< vector<double> >& g, vector< vector<vector<double> > >& coherence_factors, vector<int>& act_states){
 /**
   Scale the hopping probabilities by the factors and ensure the sum of all 
@@ -1344,8 +1363,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms);
-  dyn_var.update_density_matrix(prms);
- 
+  dyn_var.update_density_matrix(prms); 
+
+  if(prms.use_kcrpmd==1){ propagate_electronic_kcrpmd(dyn_var, ham, prms); }
+
   vector<int> old_states( dyn_var.act_states);
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 

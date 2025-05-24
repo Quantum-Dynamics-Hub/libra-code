@@ -1429,6 +1429,15 @@ void dyn_variables::save_curr_dm_into_prev(){
 }
 
 
+double dyn_variables::compute_kcrpmd_ekin(){
+  double res = 0.0;
+
+  res += pow(p_aux_var[0], 2) / m_aux_var[0];
+
+  return 0.5*res;
+}
+
+
 }// namespace libdyn
 }// liblibra
 

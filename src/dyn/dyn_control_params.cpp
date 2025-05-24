@@ -197,6 +197,9 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   use_qtsh = x.use_qtsh;
   qtsh_force_option = x.qtsh_force_option;
 
+  ///================= KC-RPMD specific ====================
+  use_kcrpmd = x.use_kcrpmd;
+
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
   sdm_norm_tolerance = x.sdm_norm_tolerance;
@@ -398,6 +401,9 @@ void dyn_control_params::set_parameters(bp::dict params){
     ///================= QTSH specific ====================
     else if(key=="use_qtsh"){ use_qtsh = bp::extract<int>(params.values()[i]);  }
     else if(key=="qtsh_force_option"){ qtsh_force_option = bp::extract<int>(params.values()[i]);  }
+
+    ///================= KC-RPMD specific ====================
+    else if(key=="use_kcrpmd"){ use_kcrpmd = bp::extract<int>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }
