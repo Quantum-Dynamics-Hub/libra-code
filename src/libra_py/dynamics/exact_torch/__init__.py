@@ -1,5 +1,5 @@
 # ***********************************************************
-# * Copyright (C) 2020 - 2025 Alexey V. Akimov
+# * Copyright (C) 2025 Alexey V. Akimov
 # * This file is distributed under the terms of the
 # * GNU General Public License as published by the
 # * Free Software Foundation; either version 3 of the
@@ -7,10 +7,5 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["bohmian",
-           "exact",
-           "exact_torch",
-           "heom",
-           "qtag",
-           "tsh",
+__all__ = ["compute",
            ]
