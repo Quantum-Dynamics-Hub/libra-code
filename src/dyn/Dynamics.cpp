@@ -1125,6 +1125,12 @@ void propagate_electronic_kcrpmd(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_
 
   int num_el = prms.num_electronic_substeps;
   double dt = prms.dt / num_el;
+  double beta = (hartree/boltzmann) / prms.Temperature; 
+  double eta = prms.kcrpmd_eta; 
+  double a = prms.kcrpmd_a; 
+  double b = prms.kcrpmd_b; 
+  double c = prms.kcrpmd_c; 
+  double d = prms.kcrpmd_d; 
 
   vector<double>& m_aux_var = dyn_var.m_aux_var;
   vector<double>& y_aux_var = dyn_var.y_aux_var;
@@ -1133,8 +1139,7 @@ void propagate_electronic_kcrpmd(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_
 
   p_aux_var[0] += 0.5 * dt * f_aux_var[0];
   y_aux_var[0] += dt * p_aux_var[0] / m_aux_var[0];
-  // kcrpmd_effective_auxiliary_force(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d)
-  f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, 1000.0, 6.0, 0.1, 1000.0, 0.5, 3.0))[0];
+  f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta, a, b, c, d))[0];
   p_aux_var[0] += 0.5 * dt * f_aux_var[0];
 
 }

@@ -507,6 +507,36 @@ class dyn_control_params{
   */
   int use_kcrpmd;
  
+  /**
+    KC-RPMD free energy parameter eta
+    Default: 6.28
+  */
+  double kcrpmd_eta;
+
+  /**
+    KC-RPMD kinetic constraint parameter a
+    Default: 0.1
+  */
+  double kcrpmd_a;
+
+  /**
+    KC-RPMD heavy-side parameter b
+    Default: 1000.
+  */
+  double kcrpmd_b;
+
+  /**
+    KC-RPMD kinetic constraint switching parameter c
+    Default: 0.5
+  */
+  double kcrpmd_c;
+
+  /**
+    KC-RPMD free energy switching parameter d
+    Default: 3.0
+  */
+  double kcrpmd_d;
+
   
   ///===============================================================================
   ///================= Decoherence options =========================================

@@ -1156,6 +1156,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
     # dyn_var.init_active_states(init_elec, rnd)
+    dyn_var.init_auxiliary_variables(init_elec, rnd)
 
     # Setup the hierarchy of Hamiltonians
     ham = nHamiltonian(ndia, nadi, ndof)

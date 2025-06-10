@@ -993,6 +993,91 @@ void dyn_variables::init_active_states_dia(bp::dict _params, Random& rnd){
 
 }
 
+void dyn_variables::init_auxiliary_variables(bp::dict _params, Random& rnd){
+/**
+    """
+    Args:
+        y_aux_var ( list of doubles ): the mean values of coordinates for all DOFs [ units: a.u.]
+        p_aux_var ( list of doubles ): the mean values of momenta for all DOFs [ units: a.u. ]
+        m_aux_var ( list of doubles ): masses of all auxiliary DOFs [ units: a.u. ]
+
+        params ( dictionary ): control parameters
+ 
+            * **params["init_type"]** ( int ): the type of sampling of auxiliary DOFs
+     
+                - 0 : initialize identical copy of coordinates and momenta
+ 
+        rnd ( Random ): random numbers generator object
+
+
+    Returns:
+        y_aux_var, p_aux_var, m_aux_var:  where:
+
+            * y_aux_var ( vector<double>(1) ) : coordinates for all trajectories
+            * p_aux_var ( vector<double>(1) ) : momenta for all trajectories
+            * m_aux var ( vector<double>(1) ) : masses of all DOFs (same across the trajectories)
+
+    """
+*/
+
+  //# Read the parameters
+  bp::list critical_params; 
+  bp::dict default_params;
+  bp::dict params(_params);
+
+  default_params["init_type"] = 0;
+  //default_params["y_aux_var"] = vector<double>(1, 0.0);
+  //default_params["p_aux_var"] = vector<double>(1, 0.0);
+  //default_params["m_aux_var"] = vector<double>(1, 1.0);
+  bp::list default_list1;
+  default_list1.append(1.0);
+  default_params["y_aux_var"] = default_list1;
+  bp::list default_list2;
+  default_list2.append(0.0);
+  default_params["p_aux_var"] = default_list2;
+  bp::list default_list3;
+  default_list3.append(1.0);
+  default_params["m_aux_var"] = default_list3;
+
+
+  check_input(params, default_params, critical_params);
+
+
+  int init_type;
+  vector<double> _Y_aux_var;
+  vector<double> _P_aux_var;
+  vector<double> _M_aux_var;
+
+  int idof;
+
+  std::string key;
+  for(int i=0;i<len(params.values());i++){
+    key = bp::extract<std::string>(params.keys()[i]);
+
+    ///================= Computing Hamiltonian-related properties ====================
+    if(key=="init_type") {  init_type = bp::extract<int>(params.values()[i]); }
+    else if(key=="y_aux_var") {  _Y_aux_var = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+    else if(key=="p_aux_var") {  _P_aux_var = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+    else if(key=="m_aux_var") {  _M_aux_var = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
+  }
+
+
+  ///================= Sanity check ================================
+  if(! (init_type==0) ){
+    cout<<"WARNINIG in init_auxiliary_variables:\
+           the init_type = "<<init_type<<" is not known. Allowed values are: [0]\n";
+  }
+  
+
+  ///================= Actual calculations  ================================
+
+  if(init_type==0){
+    y_aux_var.push_back(_Y_aux_var[0]);
+    p_aux_var.push_back(_P_aux_var[0]);
+    m_aux_var.push_back(_M_aux_var[0]);
+  }// init_type == 0
+
+}
 
 void dyn_variables::init_electronic_dyn_var(bp::dict _params, Random& rnd){
 

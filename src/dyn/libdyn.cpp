@@ -329,6 +329,7 @@ void export_dyn_variables_objects(){
       .def("init_active_states", &dyn_variables::init_active_states)
       .def("init_active_states_dia", &dyn_variables::init_active_states_dia)
       .def("init_electronic_dyn_var", &dyn_variables::init_electronic_dyn_var)
+      .def("init_auxiliary_variables", &dyn_variables::init_auxiliary_variables)
 
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)

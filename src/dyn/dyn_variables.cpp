@@ -309,9 +309,9 @@ void dyn_variables::allocate_kcrpmd(){
 
   if(kcrpmd_vars_status==0){
 
-    m_aux_var = vector<double>(1, 10.0);
-    y_aux_var = vector<double>(1, 0.0);
-    p_aux_var = vector<double>(1, 0.0);
+    //m_aux_var = vector<double>(1, 10.0);
+    //y_aux_var = vector<double>(1, 0.0);
+    //p_aux_var = vector<double>(1, 0.05);
     f_aux_var = vector<double>(1, 0.0);
 
     kcrpmd_vars_status = 1;

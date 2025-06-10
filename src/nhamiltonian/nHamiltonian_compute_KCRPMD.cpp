@@ -123,9 +123,18 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const
     }
 
     //============ Compute the kinetic constraint =========  
-    double w = (V0 - V1) / K;
-    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
-    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    double w;
+    double A;
+    double C;
+    w = (V0 - V1) / K;
+    if((beta * K - 1) < 0.0){
+      A = a / (1 + exp(2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+    }
+    else{
+      A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+    }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 
     //============ Compute the heavy side auxiliary potentials =========  
@@ -221,55 +230,51 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
     for(dof=0; dof<ndof; dof++){   
       F0.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(0,0)).real());
       F1.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(1,1)).real());
+      // Reminder to account for complex coupling
       FK.set(dof, 0, -(children[0]->d1ham_dia[dof]->get(0,1)).real());
-      //FK.set(dof, 0, -abs(children[0]->d1ham_dia[dof]->get(0,1)));
-      // cout << "K: " << children[0]->ham_dia->get(0,1) << " |K|: " << K << " dK:" << children[0]->d1ham_dia[dof]->get(0,1) << endl;
       // Fg.set(dof, 0, -(children[0]->d1ham_adi[dof]->get(0,0)).real());
       // Fe.set(dof, 0, -(children[0]->d1ham_adi[dof]->get(1,1)).real());
     }// for dof
     Fg = 0.5 * (F0 + F1) - ((V0 - V1) * (F0 - F1) + 4 * K * FK) / (2 * sqrt(pow(V0 - V1, 2) + pow(2 * K, 2)));
     Fe = 0.5 * (F0 + F1) + ((V0 - V1) * (F0 - F1) + 4 * K * FK) / (2 * sqrt(pow(V0 - V1, 2) + pow(2 * K, 2)));
     if(beta * K > 1e-3){  
-      //cout<<K<<" <-|K|, VKP-> " << VKP << endl;
       FKP = (Fg + exp(-beta * (Ve - Vg)) * Fe - exp(-beta * (V0 - Vg)) * F0 - exp(-beta * (V1 - Vg)) * F1) / (1 + exp(-beta * (Ve - Vg)) - exp(-beta * (V0 - Vg)) - exp(-beta * (V1 - Vg)));
-      //cout<<FKP<<endl;
     }
     else if(beta * abs(V0 - V1) > 1e-7){
-      //cout << "Here 1" << endl;
       FKP = 0.5 * (F0 + F1) + (F0 - F1) * (1 / (beta * (V0 - V1)) - 0.5 * cosh(0.5 * beta * (V0 - V1)) / sinh(0.5 * beta * (V0 - V1))) - 2 * FK / (beta * K);
     }
     else{
-      // cout << "Here 2" << endl;
-      //cout<<(children[0]->ham_dia->get(0,0))<<endl; 
-      //cout<<(children[0]->ham_dia->get(0,1))<<endl; 
-      //cout<<K<<" <-|K|, Fk? " << FK << endl;
-      //cout<<"Error in kcrpmd_effective_potential()?\n"; exit(0); 
       FKP = 0.5 * (F0 + F1) - 2 * FK / (beta * K);
     }
 
     //============ Compute the kinetic constraint =========  
-    double w = (V0 - V1) / K;
-    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
-    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    double w;
+    double A;
+    double C;
+    w = (V0 - V1) / K;
+    if((beta * K - 1) < 0.0){
+      A = a / (1 + exp(2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+    }
+    else{
+      A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+    }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 
     MATRIX Fw(ndof, ntraj);
     MATRIX FA(ndof, ntraj);
     MATRIX FC(ndof, ntraj);
     Fw = (F0 - F1 - w * FK) / K;
-    if(c * abs(beta * K - 1) < 250.){
-      FA = -0.5 * a * c * beta / pow(cosh(-c * (beta * K - 1)), 2) * FK;
+    if((beta * K - 1) < 0.0){
+      FA = -2 * beta * a * c * exp(2 * c * (beta * K - 1)) / pow((1 + exp(2 * c * (beta * K - 1))), 2) * FK;
+      FC = -beta * (eta * sqrt(a / 3.1415) * c * exp(2 * c * (beta * K - 1)) / (pow(sqrt(1 + exp(2 * c * (beta * K - 1))), 3) * (1 + exp(2 * d * (beta * K - 1)))) + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) * 2 * d * exp(2 * d * (beta * K - 1)) / pow((1 + exp(2 * d * (beta * K - 1))), 2)) * FK;
     }
-    //cout << "FC Before: " << FC << " A: " << A << " FA: " << FA << " Ratio: " << FA / sqrt(A)<<endl;
-    FC = -eta / (4 * sqrt(3.1415)) * (1 + tanh(-d * (beta * K - 1))) * FA / sqrt(A); 
-    //cout << "FC Halfway: " << FC << endl;
-    if(d * abs(beta * K - 1) < 250.){
-      FC += -0.5 * d * beta * (sqrt(A / 3.1415) * eta - 1) / pow(cosh(-d * (beta * K - 1)), 2) * FK;
+    else{
+      FA = -2 * beta * a * c * exp(-2 * c * (beta * K - 1)) / pow((1 + exp(-2 * c * (beta * K - 1))), 2) * FK;
+      FC = -beta * (eta * sqrt(a / 3.1415) * c * exp(-(c + 2 * d) * (beta * K - 1)) / (pow(sqrt(1 + exp(-2 * c * (beta * K - 1))), 3) * (1 + exp(-2 * d * (beta * K - 1)))) + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * 2 * d * exp(-2 * d * (beta * K - 1)) / pow((1 + exp(-2 * d * (beta * K - 1))), 2)) * FK;
     }
-    //cout << "FC After: " << FC << endl;
-    //cout << "FKP Before: " << FKP << " FA: " << FA << " FC: " << FC << endl;
-    FKP += (w * w * FA + 2 * A * w * Fw - FC / C) / beta;
-    //cout << "FKP After: " << FKP << endl;
+    FKP += (pow(w, 2) * FA + 2 * A * w * Fw - FC / C) / beta;
 
     //============ Compute the heavy side auxiliary potentials =========  
     if(abs(y_aux_var[0] + 1) < 0.5){
@@ -302,8 +307,6 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
   
   res = RPMD_internal_force(q,invM,beta) + (exp(-beta * (V0 - Vshift)) * F0 + exp(-beta * (VKP - Vshift)) * FKP + exp(-beta * (V1 - Vshift)) * F1) / (exp(-beta * (V0 - Vshift)) + exp(-beta * (VKP - Vshift)) + exp(-beta * (V1 - Vshift)));
 
-
-  // cout<<"VKP: " << VKP << "FKP: "<<FKP<< " " <<abs(children[0]->ham_dia->get(0,1))<<" <-|K|, Fk? " << " FKCRPMD = " << res << endl;
   return res;
 }
 
@@ -357,9 +360,18 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_
     }
 
     //============ Compute the kinetic constraint =========  
-    double w = (V0 - V1) / K;
-    double A = 0.5 * a * (1 + tanh(-c * (beta * K - 1)));
-    double C = 1 + 0.5 * (sqrt(A / 3.1415) * eta - 1) * (1 + tanh(-d * (beta * K - 1)));
+    double w;
+    double A;
+    double C;
+    w = (V0 - V1) / K;
+    if((beta * K - 1) < 0.0){
+      A = a / (1 + exp(2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+    }
+    else{
+      A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+    }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 
     //============ Compute the heavy side auxiliary potentials =========  

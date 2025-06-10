@@ -86,6 +86,11 @@ dyn_control_params::dyn_control_params(){
 
   ///================= KCRPMD specific ====================
   use_kcrpmd = 0;
+  kcrpmd_eta = 6.28;
+  kcrpmd_a = 0.1;
+  kcrpmd_b = 1000.;
+  kcrpmd_c = 0.5;
+  kcrpmd_d = 3.0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -199,6 +204,11 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
 
   ///================= KC-RPMD specific ====================
   use_kcrpmd = x.use_kcrpmd;
+  kcrpmd_eta = x.kcrpmd_eta;
+  kcrpmd_a = x.kcrpmd_a;
+  kcrpmd_b = x.kcrpmd_b;
+  kcrpmd_c = x.kcrpmd_c;
+  kcrpmd_d = x.kcrpmd_d;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -404,6 +414,11 @@ void dyn_control_params::set_parameters(bp::dict params){
 
     ///================= KC-RPMD specific ====================
     else if(key=="use_kcrpmd"){ use_kcrpmd = bp::extract<int>(params.values()[i]);  }
+    else if(key=="kcrpmd_eta"){ kcrpmd_eta = bp::extract<double>(params.values()[i]);  }
+    else if(key=="kcrpmd_a"){ kcrpmd_a = bp::extract<double>(params.values()[i]);  }
+    else if(key=="kcrpmd_b"){ kcrpmd_b = bp::extract<double>(params.values()[i]);  }
+    else if(key=="kcrpmd_c"){ kcrpmd_c = bp::extract<double>(params.values()[i]);  }
+    else if(key=="kcrpmd_d"){ kcrpmd_d = bp::extract<double>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

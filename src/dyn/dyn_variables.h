@@ -684,6 +684,7 @@ class dyn_variables{
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
   void init_active_states_dia(bp::dict _params, Random& rnd);
+  void init_auxiliary_variables(bp::dict _params, Random& rnd);
 
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
