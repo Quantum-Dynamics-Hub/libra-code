@@ -43,9 +43,9 @@ CMATRIX Gaussian(vector<double>& x, vector<double>& x0, vector<double>& px0, vec
 
   For each dimension:
 
-  G(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x0)/(2*dx))^2 + i*(x-x0)*px0)
+  Psi(x) = [ (1/(2.0*pi*dx^2))^(1/4) ] * exp(-((x-x0)/(2*dx))^2 + i*(x-x0)*px0)
 
-  P(x) = |G(x)|^2 = [ (1/(2.0*pi*dx^2)^2) ] * exp( -(x-x0)^2/(2*dx^2) )
+  P(x) = G(x) = |Psi(x)|^2 = [ (1/(2.0*pi*dx^2)^(1/2) ] * exp( -(x-x0)^2/(2*dx^2) )
 
   That is according to: https://en.wikipedia.org/wiki/Normal_distribution,  
   dx - corresponds to standard deviation (in the classical distribution)

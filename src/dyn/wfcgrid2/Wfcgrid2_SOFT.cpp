@@ -132,7 +132,7 @@ void Wfcgrid2::update_propagator_H_lin(double dt){
 
   ex = cos(dt*Re(E)) - i * sin(dt*Re(E))
 
-  Instead of the `update_propagator_H`, this function work in the full space,
+  Unlike the `update_propagator_H`, this function work in the full space,
   not point-by-point
 */
 

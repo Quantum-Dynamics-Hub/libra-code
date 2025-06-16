@@ -82,7 +82,7 @@ def Ferretti(q, params, full_id=None):
         "X2": 3.0,
         "X3": 3.0,
         "Kx": 0.02,
-        "Ky": 0.01,
+        "Ky": 0.1,
         "Delta": 0.01,
         "alpha": 3.0,
         "beta": 1.5,
@@ -152,10 +152,10 @@ def Ferretti(q, params, full_id=None):
     dexpy = -2.0 * beta * Y * expy
     dH_12 = gamma * Y * expx * dexpy + gamma * expx * expy
 
-    obj.d1ham_dia[0].set(0, 0, dH_11 * (1.0 + 0.0j))
-    obj.d1ham_dia[0].set(1, 1, dH_22 * (1.0 + 0.0j))
-    obj.d1ham_dia[0].set(0, 1, dH_12 * (1.0 + 0.0j))
-    obj.d1ham_dia[0].set(1, 0, dH_12 * (1.0 + 0.0j))
+    obj.d1ham_dia[1].set(0, 0, dH_11 * (1.0 + 0.0j))
+    obj.d1ham_dia[1].set(1, 1, dH_22 * (1.0 + 0.0j))
+    obj.d1ham_dia[1].set(0, 1, dH_12 * (1.0 + 0.0j))
+    obj.d1ham_dia[1].set(1, 0, dH_12 * (1.0 + 0.0j))
 
     # ========== Second derivatives =================
     # d^2H/dX^2
