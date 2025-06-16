@@ -1081,7 +1081,7 @@ void export_Dyn_objects(){
   def("propagate_electronic", expt_propagate_electronic_v1);
 
   void (*expt_propagate_electronic_kcrpmd_v1)
-  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms) = &propagate_electronic_kcrpmd;
+  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, Random& rnd) = &propagate_electronic_kcrpmd;
   def("propagate_electronic_kcrpmd", expt_propagate_electronic_kcrpmd_v1);
 
 /*

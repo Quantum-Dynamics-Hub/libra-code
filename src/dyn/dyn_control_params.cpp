@@ -91,6 +91,7 @@ dyn_control_params::dyn_control_params(){
   kcrpmd_b = 1000.;
   kcrpmd_c = 0.5;
   kcrpmd_d = 3.0;
+  kcrpmd_gamma = 0.0;
 
   ///================= Decoherence options =========================================
   decoherence_algo = -1; 
@@ -209,6 +210,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   kcrpmd_b = x.kcrpmd_b;
   kcrpmd_c = x.kcrpmd_c;
   kcrpmd_d = x.kcrpmd_d;
+  kcrpmd_gamma = x.kcrpmd_gamma;
 
   ///================= Decoherence options =========================================
   decoherence_algo = x.decoherence_algo; 
@@ -419,6 +421,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="kcrpmd_b"){ kcrpmd_b = bp::extract<double>(params.values()[i]);  }
     else if(key=="kcrpmd_c"){ kcrpmd_c = bp::extract<double>(params.values()[i]);  }
     else if(key=="kcrpmd_d"){ kcrpmd_d = bp::extract<double>(params.values()[i]);  }
+    else if(key=="kcrpmd_gamma"){ kcrpmd_gamma = bp::extract<double>(params.values()[i]);  }
 
     ///================= Decoherence options =========================================
     else if(key=="decoherence_algo"){ decoherence_algo = bp::extract<int>(params.values()[i]); }

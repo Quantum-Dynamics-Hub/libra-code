@@ -537,6 +537,12 @@ class dyn_control_params{
   */
   double kcrpmd_d;
 
+  /**
+    KC-RPMD Langevin frictional coefficient 
+    Default: 0.0
+  */
+  double kcrpmd_gamma;
+
   
   ///===============================================================================
   ///================= Decoherence options =========================================
