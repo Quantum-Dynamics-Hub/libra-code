@@ -144,6 +144,7 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.
     """
 
     # Copy the content of the file to a temporary location
+    print(F"Reading file {filename}")
     f = open(filename, "r")
     A = f.readlines()
     f.close()
@@ -167,6 +168,8 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.
     X = []
     norbs2 = int(norbs / 2)
 
+    print(F"norbs = {norbs}, norbs2 = {norbs2}, act_sp1 = {act_sp1}, act_sp2 = {act_sp2}")
+
     # For each k-point
     for ikpt in range(0, nkpts):
 
@@ -176,6 +179,8 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.
         B = A[5 + ikpt * norbs: 5 + (1 + ikpt) * norbs]
 
         f1 = open(filename + "_tmp", "w")
+        x = MATRIX(norbs, norbs)
+
         for i in range(0, norbs):
 
             tmp = B[i].split()
@@ -186,18 +191,23 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.
                 if tmp[j] == "NaN" or tmp[j] == "NAN":
                     z = 1000.0
                     # z = float(tmp[int(j%norbs2)]) #-1000.0
+                    sys.exit(0)
                 else:
                     try:
                         z = float(tmp[j])
+                        x.set(i,j, z)
                     except ValueError:
-                        z = 1000.0
+                        sys.exit(0)
+                        #z = 1000.0
                         # z = float(tmp[int(j%norbs2)]) #-1000.0
-                        pass
+                        #pass
                     except TypeError:
-                        z = 1000.0
+                        sys.exit(0)
+                        #z = 1000.0
                         # z = float(tmp[int(j%norbs2)]) #-1000.0
-                        pass
+                        #pass
 
+                """
                 if correction == 1:  # if we want to enforce correction of the matrix elements in blocks 01 and 10
                     #           norbs2    norbs
                     #       ______________
@@ -225,16 +235,18 @@ def get_dftb_matrices(filename, act_sp1=None, act_sp2=None, correction=0, tol=0.
                                 z = 0.0
                         else:
                             pass
-
-                line = line + "%10.8f  " % (z)
+                """
+                #line = line + "%10.8f  " % (z)
+                line = F"{line} {z}" 
             line = line + "\n"
 
             f1.write(line)
         f1.close()
 
         # Read in the temporary file - get the entire matrix
-        x = MATRIX(norbs, norbs)
-        x.Load_Matrix_From_File(filename + "_tmp")
+        #x = MATRIX(norbs, norbs)
+        #x.Load_Matrix_From_File(filename + "_tmp")
+      
 
         # Extract the sub-matrix of interest
         x_sub = MATRIX(nstates1, nstates2)

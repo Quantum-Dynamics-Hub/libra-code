@@ -132,7 +132,48 @@ def num_of_perms(x):
     return cnt
 
 
-def ovlp_arb(SD1, SD2, S, reduce_det=False):
+def count_inversions(arr):
+    """
+    Count the number of inversions in a list.
+    An inversion is a pair (i, j) such that i < j and arr[i] > arr[j].
+
+    Args:
+        arr (list[int]): A list of integers.
+
+    Returns:
+        int: Number of inversions (unordered pairs that are out of order).
+    """
+    def merge_sort(nums):
+        if len(nums) <= 1:
+            return nums, 0
+        
+        mid = len(nums) // 2
+        left, inv_left = merge_sort(nums[:mid])
+        right, inv_right = merge_sort(nums[mid:])
+        merged, inv_split = merge(left, right)
+        return merged, inv_left + inv_right + inv_split
+
+    def merge(left, right):
+        result = []
+        i = j = inv_count = 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+                inv_count += len(left) - i  # Count inversions here
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result, inv_count
+
+    _, total_inversions = merge_sort(arr)
+    return total_inversions
+
+
+
+def ovlp_arb(SD1, SD2, S): # reduce_det=False):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
     Args:
@@ -155,12 +196,16 @@ def ovlp_arb(SD1, SD2, S, reduce_det=False):
 
     nbasis = S.num_of_rows
 
+    #print(SD1, SD2)
     # Converting the SDs provided by the user into the internal format to be read by Libra
     sd1, sd1_a, sd1_b = sd2indx(SD1)
     sd2, sd2_a, sd2_b = sd2indx(SD2)
 
     # Compute the phase using the original determinants in the internal notation
-    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
+    phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
+
+    """
+    # Deprecate this option since it may be dangerous!
 
     # Now reduce the determinants for faster calculations
     if reduce_det:
@@ -169,6 +214,9 @@ def ovlp_arb(SD1, SD2, S, reduce_det=False):
         # Convert the SDs to the internal notation again, but this time we'd be using the reduced ones
         sd1, _, _ = sd2indx(SD1)
         sd2, _, _ = sd2indx(SD2)
+    """
+
+    #print(sd1, sd2)
 
     res = 0.0 + 0j
     if len(sd1) > 0 and len(sd2) > 0:
@@ -197,10 +245,13 @@ def ovlp_arb(SD1, SD2, S, reduce_det=False):
             print("len(sd2) = ", len(sd2))
             sys.exit(0)
 
+    #print(res)
+
     return res
 
 
-def ovlp_mat_arb(SD1, SD2, S, reduce_det=False):
+
+def ovlp_mat_arb(SD1, SD2, S): # reduce_det=False):
     """Compute a matrix of overlaps in the SD basis
 
     Args:
@@ -245,7 +296,7 @@ def ovlp_mat_arb(SD1, SD2, S, reduce_det=False):
 
     for n in range(0, N):
         for m in range(0, M):
-            val = ovlp_arb(SD1[n], SD2[m], S, reduce_det)
+            val = ovlp_arb(SD1[n], SD2[m], S) # reduce_det)
             res.set(n, m, val)
 
     return res

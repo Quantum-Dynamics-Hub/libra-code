@@ -2745,9 +2745,13 @@ def compute_sd_overlaps_in_parallel(step, params):
             s_ks_1,
             use_minimal=False,
             use_mo_approach=False).real
-        s_sd_2 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step +
-                                                                 1], sd_states_reindexed_sorted[step +
-                                                                                                1], s_ks_2, use_minimal=False, use_mo_approach=False).real
+        s_sd_2 = mapping.ovlp_mat_arb(
+            sd_states_reindexed_sorted[step + 1], 
+            sd_states_reindexed_sorted[step + 1], 
+            s_ks_2, 
+            use_minimal=False, 
+            use_mo_approach=False).real
+
     st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step],
                                  sd_states_reindexed_sorted[step + 1],
                                  st_ks,

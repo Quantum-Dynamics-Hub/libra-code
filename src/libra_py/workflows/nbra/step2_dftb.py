@@ -21,6 +21,7 @@
 
 import os
 import sys
+import numpy as np
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform == "cygwin":
@@ -30,8 +31,73 @@ elif sys.platform == "linux" or sys.platform == "linux2":
 
 import libra_py.packages.dftbplus.methods as DFTB_methods
 from libra_py import units
-from libra_py import data_io
+from libra_py import data_io, eigensolvers, data_conv
 import util.libutil as comn
+
+
+def create_odin_inp(params):
+    """
+    Creates the input file for the Odin program:
+    https://github.com/thomas-niehaus/odin
+
+    Args:
+    * params[`filename`] (string) - the name of the .gen file for which we want to compute overlaps 
+        [default: "x1.gen"]
+    * params[`slakos_prefix`] (string) - the name of the prefix (folder) that contains the Slater-Koster files
+        [default: "./"]
+    * params[`max_ang_mom`] (dict) - dictionary defining the maximal angular momentum for each element
+        [default: {"H":1, "C":2}]
+        
+    Returns:
+    (string): the content of the input file for the ODIN program
+    
+    """
+    filename = params.get("filename", "x1.gen") # gen file
+    slakos_prefix = params.get("slakos_prefix", "./") # prefix to the file where the Slater-Koster files are located
+    max_l = params.get("max_ang_mom", {"H":1, "C":2} )  # maximal angular momentum numbers for elements
+
+    res = F"'{filename}'\n'{slakos_prefix}'\n'-'\n'.skf'\n"
+    f = open(filename)
+    A = f.readlines()
+    f.close()
+    
+    elts = A[1].split()
+    print(elts)
+    for elt in elts:
+        if elt in max_l.keys():
+            res = F"{res} {max_l[elt]} "
+        else:
+            print(F"Element: {elt} is not present in the input `max_l` parameter\n max_l = {max_l}")
+            sys.exit(0)
+
+    return res
+
+def run_odin(params):
+    """
+    Run the overlap calculations using ODIN program:
+    https://github.com/thomas-niehaus/odin
+
+    Args:
+    * params[`ODIN_EXE`] (string) - the path/name of the ODIN executable [default: "odin"]
+    * params[`filename`] (string) - the name of the .gen file for which we want to compute overlaps 
+        [default: "x1.gen"]
+    * params[`slakos_prefix`] (string) - the name of the prefix (folder) that contains the Slater-Koster files
+        [default: "./"]
+    * params[`max_ang_mom`] (dict) - dictionary defining the maximal angular momentum for each element
+        [default: {"H":1, "C":2}]
+        
+    Returns:
+    None: doesn't return anything but executed the ODIN code on the .gen file defined by the `filename`
+    to compute the AO overlap matrix `oversqr.dat`
+    
+    """
+    EXE = params.get("ODIN_EXE", "odin")
+    inp = create_odin_inp(params)
+    f = open("odin.inp", "w")
+    f.write(F"{inp}")
+    f.close()
+    os.system(F"{EXE} < odin.inp")
+    
 
 
 def do_step(snap, params):
@@ -77,6 +143,13 @@ def do_step(snap, params):
 
                 - False : compute and read only the single-prticle energies [ default ]
 
+            * **params["eigensolver"]** ( string ): the type of the eigensolver to use
+
+               - "libra" : native solver from Libra
+               - "eigh" : eigh for Hermitian matrices from scipy [ default ]
+               - "eig" : eig for non-Hermitian matrices from scipy
+               - "cholesky" : Cholesky-based decomposition from scipy
+
 
     Returns:
         tuple: (Ei, MOi, Hi, Si), where:
@@ -102,7 +175,8 @@ def do_step(snap, params):
                       "scf_in_file": "dftb_in_ham1.hsd",
                       "hs_in_file": "dftb_in_ham2.hsd",
                       "do_tddftb": False, "use_single_sd_energy": False,
-                      "get_dominant_sd_transitions": False
+                      "get_dominant_sd_transitions": False,
+                      "eigensolver": "eigh" 
                       }
 
     comn.check_input(params, default_params, critical_params)
@@ -117,9 +191,13 @@ def do_step(snap, params):
     do_tddftb = params["do_tddftb"]
     use_single_sd_energy = params["use_single_sd_energy"]
     get_dominant_sd_transitions = params["get_dominant_sd_transitions"]
+    odin_params = params.get("ODIN_PARAMS", {"ODIN_EXE":"odin",
+          "filename":"x1.gen", "slakos_prefix":"./",
+          "max_ang_mom":{"C":2, "O":2, "H":1, "Ti":3}})
+    esolver = params["eigensolver"]
 
     # Make an input file for SP calculations
-    DFTB_methods.xyz_traj2gen_sp(md_file, sp_gen_file, snap, syst_spec)
+    DFTB_methods.xyz_traj2gen_sp(md_file, "x1.gen", snap, syst_spec)
 
     # Run SCF calculations and generate the charge density for a converged calculations
     # The file x1.gen is used as a geometry
@@ -229,7 +307,12 @@ def do_step(snap, params):
 
         # [0] is because we extract just the gamma-point
         F = DFTB_methods.get_dftb_matrices("hamsqr1.dat")
+
+
+        #odin_params.update({"filename":"x1.gen"})
+        #run_odin(odin_params)
         S = DFTB_methods.get_dftb_matrices("oversqr.dat")
+
 
         # Get the dimensions
         ao_sz = F[0].num_of_cols
@@ -244,9 +327,29 @@ def do_step(snap, params):
 
         # Solve the eigenvalue problem with the converged Fock matrix
         # get the converged MOs
-        E = CMATRIX(ao_sz, ao_sz)
-        MO = CMATRIX(ao_sz, ao_sz)
-        solve_eigen(F[0], S[0], E, MO, 0)
+        E, MO = None, None
+        if esolver == "libra": 
+            E = CMATRIX(mo_sz, mo_sz)
+            MO = CMATRIX(ao_sz, mo_sz)
+            solve_eigen(F[0], S[0], E, MO, 0)
+
+        else:
+            np_F = data_conv.MATRIX2nparray(F[0])
+            np_S = data_conv.MATRIX2nparray(S[0])
+        
+            if esolver == "eigh":
+                eigvals, eigvecs = eigensolvers.generalized_eigensolve_scipy(0.5*(np_F + np_F.T), 0.5*(np_S+np_S.T), hermitian=True, sort=True)
+            elif esolver == "eig":
+                eigvals, eigvecs = eigensolvers.generalized_eigensolve_scipy(np_F, np_S, hermitian=False, sort=True)
+            elif esolver == "cholesky":
+                eigvals, eigvecs = eigensolvers.generalized_eigensolve_scipy_cholesky(0.5*(np_F + np_F.T), 0.5*(np_S+np_S.T), hermitian=True)
+
+            E = data_conv.nparray2CMATRIX(np.diag(eigvals) )
+            MO = data_conv.nparray2CMATRIX(eigvecs)
+
+        print(F" is Fock matrix symmetric?  { (F[0] - F[0].H()).real().max_elt() }")
+        print(F" is ovlp matrix symmetric?  { (S[0] - S[0].H()).real().max_elt() }") 
+        print(F"Solving eigenvalue problem - max elt of error =  {(F[0] * MO - S[0] * MO * E).real().max_elt()}")
 
         # Extract the E sub-matrix
         E_sub = CMATRIX(mo_sz, mo_sz)
@@ -255,6 +358,10 @@ def do_step(snap, params):
         # Extract the MO sub-matrix
         MO_sub = CMATRIX(ao_sz, mo_sz)
         pop_submatrix(MO, MO_sub, ao_act_sp, mo_act_sp)
+
+        print(F"Checking the sub-eigenvalue problem - max elt of error =  {(F[0] * MO_sub - S[0] * MO_sub * E_sub).real().max_elt()}")
+        iden = MATRIX(ao_sz, ao_sz); iden.identity();
+        print(F"Checking the orthogonality { ((MO.H() * S[0] * MO).real() - iden).max_elt() }")
 
         return E_sub, MO_sub, F, S
 
@@ -269,6 +376,7 @@ def do_ovlp(snap, params):
         params ( dictionary ): the control parameters of the simulation
 
             * **params["EXE"]** ( string ): path to the DFTB+ executable [ default: dftb+ ]
+            * **params["ODIN_PARAMS"]** ( dict ): dictionary containing parameters of the `run_odin` function
             * **params["md_file"]** ( string ): the name of the xyz file containing the trajectory - the
                 file should be in the xyz format produced by the DFTB+ program. [default: "md.xyz"]
             * **params["ovlp_gen_file"]** ( string ): the name of the .gen file that is listed in the
@@ -301,9 +409,9 @@ def do_ovlp(snap, params):
 
     # Now try to get parameters from the input
     critical_params = []
-    default_params = {"EXE": "dftb+",
+    default_params = {"EXE": "dftb+", "ODIN_EXE":"odin",
                       "md_file": "md.xyz", "ovlp_gen_file": "x2.gen", "syst_spec": "C",
-                      "ovlp_in_file": "dftb_in_overlaps.hsd", "tol": 0.5
+                      "ovlp_in_file": "dftb_in_overlaps.hsd", "tol": 2.5
                       }
     comn.check_input(params, default_params, critical_params)
 
@@ -315,16 +423,22 @@ def do_ovlp(snap, params):
     ovlp_in_file = params["ovlp_in_file"]
     tol = params["tol"]
 
+    odin_params = params.get("ODIN_PARAMS", {"ODIN_EXE":"odin",
+          "filename":"x2.gen", "slakos_prefix":"./",
+          "max_ang_mom":{"C":2, "O":2, "H":1, "Ti":3}})
+
     # Make an input file for the overlap calculations
-    DFTB_methods.xyz_traj2gen_ovlp(md_file, ovlp_gen_file, snap, snap + 1, syst_spec)
+    DFTB_methods.xyz_traj2gen_ovlp(md_file, "x2.gen", snap, snap + 1, syst_spec)
 
     # Run SCF calculations and generate the charge density for a converged calculations
     # The file x2.gen is used as a geometry
-    os.system("cp %s dftb_in.hsd" % ovlp_in_file)
-    os.system("%s" % EXE)
+    #os.system("cp %s dftb_in.hsd" % ovlp_in_file)
+    #os.system("%s" % EXE)
+    odin_params.update({"filename":"x2.gen"})
+    run_odin(odin_params)
 
     # Get the Hamiltonian
-    Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat", None, None, 1, tol)
+    Sbig = DFTB_methods.get_dftb_matrices("oversqr.dat") #, None, None, 0, tol)
     norbs = int(Sbig[0].num_of_cols / 2)
 
     act_sp1 = list(range(0, norbs))
@@ -383,16 +497,37 @@ def run_step2(params):
     else:
         os.system("mkdir %s" % out_dir)
 
+    print("In run_step2 : params = ", params )
+
     # Compute
     E_prev, U_prev, Hao_prev, Sao_prev = do_step(isnap, params)
+    #E_prev, U_prev, Hao_prev, Sao_prev = do_step(0, params) # just a test
+
+    os.system(F"cp hamsqr1.dat {out_dir}/hamsqr1_step{isnap}.dat")
+    os.system(F"cp oversqr.dat {out_dir}/oversqr_small_step{isnap}.dat")
 
     for i in range(isnap + 1, fsnap - 1):
         E_curr, U_curr, Hao_curr, Sao_curr = do_step(i, params)
+        #E_curr, U_curr, Hao_curr, Sao_curr = do_step(0, params)  # jut a test
+        #print("MO dimensions = ", U_curr.num_of_rows, U_curr.num_of_cols)
+        #U_curr.show_matrix()
+
+        os.system(F"cp hamsqr1.dat {out_dir}/hamsqr1_step{i}.dat")
+        os.system(F"cp oversqr.dat {out_dir}/oversqr_small_step{i}.dat")
+
         S, S00, S11 = do_ovlp(i - 1, params)
+        #S, S00, S11 = do_ovlp(0, params)  # just a test
+
+        os.system(F"cp oversqr.dat {out_dir}/oversqr_big_step{isnap}.dat")
+
+        print(F"S00 - Sao_prev = {(S00 - Sao_prev[0]).real().max_elt() }") 
 
         # S.real().show_matrix("res/AOS_%i_re" % (i) )
 
         TDM = U_prev.H() * S * U_curr
+        #TDM = U_prev.H() * S00 * U_curr  # just a test
+        #print("TDM", TDM.num_of_rows, TDM.num_of_cols)
+        #TDM.show_matrix()
         Hvib = 0.5 * (E_prev + E_curr) - (0.5j / dt) * (TDM - TDM.H())
 
         # Overlaps
@@ -411,6 +546,7 @@ def run_step2(params):
         # Current becomes the old
         E_prev = CMATRIX(E_curr)
         U_prev = CMATRIX(U_curr)
+        Sao_prev[0] = CMATRIX(Sao_curr[0])
 
 
 def run_step2_lz(params):
