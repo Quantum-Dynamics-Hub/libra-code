@@ -131,7 +131,7 @@ class ldr_solver:
         T4D = self.Tnucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
         S4D = self.Snucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
     
-        if scheme == 'as_is':
+        if scheme == 'as_is': # For showing the original non-Hermitian form, not intended to use
             Ej4D = self.E[None, None, :, :]           # (1, 1, s, N)
             bracket4D = T4D + Ej4D * S4D
         elif scheme == 'symmetrized':
@@ -265,7 +265,7 @@ class ldr_solver:
 
     def compute_kinetic_energy(self):
         """
-        Compute nuclear kinetic energy as <C|T|C>/<C|S|C> for a single step.
+        Compute nuclear kinetic energy as C^+ T C / C^+ S C for a single step.
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
@@ -285,7 +285,7 @@ class ldr_solver:
     
     def compute_potential_energy(self):
         """
-        Compute potential energy as <C|V|C>/<C|S|C> for a single step.
+        Compute potential energy as C^+ V C / C^+ S C for a single step.
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
@@ -306,7 +306,7 @@ class ldr_solver:
     
     def compute_total_energy(self):
         """
-        Compute total energy as <C|H|C>/<C|S|C> for a single step.
+        Compute total energy as C^+ H C / C^+ S C for a single step.
         """
         Cvec = self.Ccurr
     
