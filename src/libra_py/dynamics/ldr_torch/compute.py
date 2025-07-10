@@ -1,5 +1,5 @@
 # *********************************************************************************
-# * Copyright (C) 2025 Alexey V. Akimov
+# * Copyright (C) 2025 Daeho Han and Alexey V. Akimov
 # *
 # * This file is distributed under the terms of the GNU General Public License
 # * as published by the Free Software Foundation, either version 3 of
@@ -18,13 +18,13 @@
        List of classes:
            * ldr_solver
 
-.. moduleauthor:: Alexey V. Akimov, Daeho Han
+.. moduleauthor:: Daeho Han and Alexey V. Akimov
 
 """
 
-__author__ = "Alexey V. Akimov"
+__author__ = "Daeho Han, Alexey V. Akimov"
 __copyright__ = "Copyright 2025 Alexey V. Akimov"
-__credits__ = ["Alexey V. Akimov"]
+__credits__ = ["Daeho Han", "Alexey V. Akimov"]
 __license__ = "GNU-3"
 __version__ = "1.0"
 __maintainer__ = "Alexey V. Akimov"
@@ -199,12 +199,12 @@ class ldr_solver:
         qgrid  = self.qgrid.to(torch.cdouble)
         alpha  = self.alpha.to(torch.cdouble)
 
-        s_q = (1.0/(self.k*self.mass)) ** 0.25
-        alpha0 = 1/(2*s_q**2)
+        s_q = (1.0 / (self.k*self.mass) ) ** 0.25
+        alpha0 = 1 / ( 2 * s_q **2 )
         alpha0 = alpha0.to(torch.cdouble)
 
         # Width matrix
-        Ag, A = torch.diag(1.j*2.0*self.alpha), torch.diag(1.j*2.0*alpha0)
+        Ag, A = torch.diag(2.j * self.alpha), torch.diag(2.j * alpha0)
         delta_A = A - Ag.conj()
         delta_A_inv = torch.torch.linalg.inv(delta_A)
 
@@ -214,9 +214,8 @@ class ldr_solver:
     
             xi0, xig = p0 - torch.matmul(A, q0), -torch.matmul(Ag, qgrid[n])
             delta_xi = xi0 - xig.conj()
-            delta_eta = -0.5*torch.dot(xi0 + p0, q0) + 0.5*torch.dot(xig, qgrid[n]).conj()
-            exponent = -1.j * 0.5* torch.dot(delta_xi, torch.matmul(delta_A_inv, delta_xi)) + 1.j*delta_eta
-            #exponent = -torch.dot(alpha0, delta**2) + .1j * torch.dot(self.p0, delta)
+            delta_eta = -0.5 * torch.dot(xi0 + p0, q0) + 0.5 * torch.dot(xig, qgrid[n]).conj()
+            exponent = -1.j * 0.5 * torch.dot(delta_xi, torch.matmul(delta_A_inv, delta_xi)) + 1.j * delta_eta
     
             self.C0[index] = torch.exp(exponent)
     
