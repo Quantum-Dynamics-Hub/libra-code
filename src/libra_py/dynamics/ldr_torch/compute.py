@@ -184,23 +184,39 @@ class ldr_solver:
         Initialize coefficient vector self.C0 at t=0, assuming:
         - electronic state self.istate
         - nuclear wavefunction is a Gaussian centered at self.q0 and self.p0, i.e.
-        chi0 = exp( alpha0 * (qgrid point - self.q0)**2 + i * self.p0 * (qgrid point - self.q0) )
+        chi0(q;q0,p0) = exp( - alpha0 * (q - self.q0)**2 + i * self.p0 * (q - self.q0) )
         alpha0 = 0.5/s_q **2; s_q = (1/(self.k * self.mass)) **0.25
+        
+        For the Gaussian overlap calculation, consult with the formula in Begušić, T.; Vaníček, J. J. Chem. Phys. 2020, 153 (18), 184110.
+
         Sets:
             self.C0 : complex-valued coefficient vector of shape (ndim)
         """
         N, ist = self.ngrids, self.istate
 
+        q0     = self.q0.to(torch.cdouble)
+        p0     = self.p0.to(torch.cdouble)
+        qgrid  = self.qgrid.to(torch.cdouble)
+        alpha  = self.alpha.to(torch.cdouble)
+
         s_q = (1.0/(self.k*self.mass)) ** 0.25
         alpha0 = 1/(2*s_q**2)
+        alpha0 = alpha0.to(torch.cdouble)
+
+        # Width matrix
+        Ag, A = torch.diag(1.j*2.0*self.alpha), torch.diag(1.j*2.0*alpha0)
+        delta_A = A - Ag.conj()
+        delta_A_inv = torch.torch.linalg.inv(delta_A)
 
         # Compute Gaussian nuclear wavefunction at each grid point
         for n in range(N):
             index = ist * N + n
     
-            qn = self.qgrid[n]  # (D,)
-            delta = qn - self.q0  # (D,)
-            exponent = -torch.dot(alpha0, delta**2) + .1j * torch.dot(self.p0, delta)
+            xi0, xig = p0 - torch.matmul(A, q0), -torch.matmul(Ag, qgrid[n])
+            delta_xi = xi0 - xig.conj()
+            delta_eta = -0.5*torch.dot(xi0 + p0, q0) + 0.5*torch.dot(xig, qgrid[n]).conj()
+            exponent = -1.j * 0.5* torch.dot(delta_xi, torch.matmul(delta_A_inv, delta_xi)) + 1.j*delta_eta
+            #exponent = -torch.dot(alpha0, delta**2) + .1j * torch.dot(self.p0, delta)
     
             self.C0[index] = torch.exp(exponent)
     
