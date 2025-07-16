@@ -43,7 +43,7 @@ if sys.platform == "cygwin":
 elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
-from . import mapping, step2_many_body, step3_many_body
+from . import mapping, mapping3, step2_many_body, step3_many_body
 import util.libutil as comn
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.units as units
@@ -2717,7 +2717,8 @@ def compute_sd_overlaps_in_parallel(step, params):
 
     start_time = params['start_time']
     res_dir_1 = params['path_to_npz_files']
-    active_space = params['active_space']
+    active_space = params.get('active_space', None)
+    active_space2 = ( np.array(active_space) + 1 ).tolist() # conversion to a different convention
     sd_states_reindexed_sorted = params['sd_states_reindexed_sorted']
 
     t2 = time.time()
@@ -2739,20 +2740,27 @@ def compute_sd_overlaps_in_parallel(step, params):
     # Computing the overlaps for SDs
     t2 = time.time()
     if params['apply_orthonormalization']:
-        s_sd_1 = mapping.ovlp_mat_arb(
+        s_sd_1 = mapping3.ovlp_mat_arb(
             sd_states_reindexed_sorted[step],
             sd_states_reindexed_sorted[step],
             s_ks_1,
-            use_minimal=False,
-            use_mo_approach=False).real
-        s_sd_2 = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step +
-                                                                 1], sd_states_reindexed_sorted[step +
-                                                                                                1], s_ks_2, use_minimal=False, use_mo_approach=False).real
-    st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step],
+            active_space2)
+            #use_minimal=False,
+            #use_mo_approach=False).real
+        s_sd_2 = mapping3.ovlp_mat_arb(
+            sd_states_reindexed_sorted[step + 1], 
+            sd_states_reindexed_sorted[step + 1], 
+            s_ks_2, 
+            active_space2)
+            #use_minimal=False, 
+            #use_mo_approach=False).real
+
+    st_sd = mapping3.ovlp_mat_arb(sd_states_reindexed_sorted[step],
                                  sd_states_reindexed_sorted[step + 1],
                                  st_ks,
-                                 use_minimal=False,
-                                 use_mo_approach=False).real
+                                 active_space2)
+                                 #use_minimal=False,
+                                 #use_mo_approach=False).real
     # s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
     # s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
     # st_sd = data_conv.MATRIX2nparray(st_sd)

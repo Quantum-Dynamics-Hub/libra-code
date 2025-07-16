@@ -215,17 +215,20 @@ def energy_arb(SD, e):
             This is the approximation of the SD energy
 
     """
+    if isinstance(e, np.ndarray)==True:
+        nbasis = e.shape[0]
+        sd = sd2indx(SD, nbasis)
+        res = 0.0
+        for i in sd:
+            res = res + e[i, i]
 
-    # nbasis = e.num_of_rows
-    nbasis = e.shape[0]
 
-    sd = sd2indx(SD, nbasis)
-    # res = 0.0+0.0j
-    res = 0.0
-
-    for i in sd:
-        # res = res + e.get(i,i)
-        res = res + e[i, i]
+    elif isinstance(e, CMATRIX)==True or isinstance(e, MATRIX)==True:
+        nbasis = e.num_of_rows
+        sd = sd2indx(SD, nbasis)
+        res = 0.0+0.0j  
+        for i in sd:
+            res = res + e.get(i,i)
 
     return res
 
@@ -246,14 +249,21 @@ def energy_mat_arb(SD, e, dE):
         CMATRIX(N,N): the matrix of energies in the SD basis. Here, N = len(SD) - the number of SDs.
 
     """
-    n = len(SD)
-    # E = CMATRIX(n,n)
-    E = np.zeros((n, n))
+    E = None
 
-    E0 = energy_arb(SD[0], e) + dE[0]  # *(1.0+0.0j)
-    for i in range(0, n):
-        # E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
-        E[i, i] = energy_arb(SD[i], e) + dE[i] - E0
+    if isinstance(e, np.ndarray)==True:
+        n = len(SD)
+        E = np.zeros((n, n))
+        E0 = energy_arb(SD[0], e) + dE[0]
+        for i in range(0, n):
+            E[i, i] = energy_arb(SD[i], e) + dE[i] - E0
+
+    elif isinstance(e, CMATRIX)==True or isinstance(e, MATRIX)==True:
+        n = len(SD)
+        E = CMATRIX(n,n)
+        E0 = energy_arb(SD[0], e) + dE[0]*(1.0+0.0j)
+        for i in range(0, n):
+            E.set(i,i, energy_arb(SD[i], e) + dE[i]*(1.0+0.0j) - E0 )
 
     return E
 

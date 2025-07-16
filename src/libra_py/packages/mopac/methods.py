@@ -34,9 +34,11 @@ import util.libutil as comn
 from libra_py import units
 from libra_py import scan
 from libra_py import regexlib as rgl
+from libra_py import data_conv
 
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.workflows.nbra.mapping2 as mapping2
+import libra_py.workflows.nbra.mapping3 as mapping3
 import libra_py.workflows.nbra.step3 as step3
 
 
@@ -516,6 +518,7 @@ def mopac_compute_adi(q, params, full_id):
     mopac_jobid = params[itraj]["mopac_jobid"] = F"timestep_{timestep}_traj_{itraj}"
     mopac_input_prefix = params[itraj]["mopac_input_prefix"]
     mopac_output_prefix = params[itraj]["mopac_output_prefix"]
+    active_space = params[itraj]["active_space"]
     dt = params[itraj]["dt"]
     do_Lowdin = params[itraj]["do_Lowdin"]
 
@@ -594,13 +597,26 @@ def mopac_compute_adi(q, params, full_id):
     ci_ovlp_curr = None
     if do_Lowdin:
         ident_curr = U_curr.T() * S_curr.real() * U_curr
-        ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, False).real()
+        # The original (older) approach
+        #ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, False).real()
+
+        # The new way:
+        # I don't like this way - we need to fix it later
+        ident_curr = data_conv.MATRIX2nparray(ident_curr).real  # MATRIX -> real np array
+        ovlp_sd_curr = mapping3.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, active_space)  # do the calculations
+        ovlp_sd_curr = data_conv.nparray2MATRIX( ovlp_sd_curr )  # real np array -> MATRIX
+
         ovlp_sd_curr.scale(-1, 0, sqt2)
         ovlp_sd_curr.scale(0, -1, sqt2)
         ovlp_sd_curr.scale(0, 0, 0.5)
 
         ident_prev = U_prev.T() * S_prev.real() * U_prev
-        ovlp_sd_prev = mapping2.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, False).real()
+        #ovlp_sd_prev = mapping2.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, False).real()
+
+        ident_prev = data_conv.MATRIX2nparray(ident_prev).real  # MATRIX -> real np array
+        ovlp_sd_prev = mapping3.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, active_space)  # do the calculations
+        ovlp_sd_prev = data_conv.nparray2MATRIX( ovlp_sd_prev )  # complex np array -> CMATRIX
+
         ovlp_sd_prev.scale(-1, 0, sqt2)
         ovlp_sd_prev.scale(0, -1, sqt2)
         ovlp_sd_prev.scale(0, 0, 0.5)
@@ -620,14 +636,25 @@ def mopac_compute_adi(q, params, full_id):
         ci_ovlp_curr = U_curr.T() * ovlp_ci_curr.real() * U_curr
     else:
         S_curr = MO_curr.T() * MO_curr
-        ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, S_curr, False).real()
+        #ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, S_curr, False).real()
+
+        S_curr = data_conv.MATRIX2nparray(S_curr).real  # MATRIX -> real np array
+        ovlp_sd_curr = mapping3.ovlp_mat_arb(configs_curr, configs_curr, S_curr, active_space)  # do the calculations
+        ovlp_sd_curr = data_conv.nparray2MATRIX( ovlp_sd_curr )  # complex np array -> MATRIX
+
         ovlp_sd_curr.scale(-1, 0, sqt2)
         ovlp_sd_curr.scale(0, -1, sqt2)
         ovlp_sd_curr.scale(0, 0, 0.5)
         ci_ovlp_curr = CI_curr.T() * ovlp_sd_curr * CI_curr
 
     # Time-overlap in the SD basis
-    time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
+    #time_ovlp_sd = mapping2.ovlp_mat_arb(configs_prev, configs_curr, mo_st, False).real()
+
+    mo_st = data_conv.MATRIX2nparray(mo_st).real  # MATRIX -> real np array
+    time_ovlp_sd = mapping3.ovlp_mat_arb(configs_prev, configs_curr, mo_st, active_space)  # do the calculations
+    time_ovlp_sd = data_conv.nparray2MATRIX( time_ovlp_sd )  # complex np array -> MATRIX
+
+
     # Scaling to account for SAC prefactors:
     time_ovlp_sd.scale(-1, 0, sqt2)
     time_ovlp_sd.scale(0, -1, sqt2)

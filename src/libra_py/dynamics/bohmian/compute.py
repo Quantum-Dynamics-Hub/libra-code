@@ -68,7 +68,7 @@ def rho_lorentzian(q, Q, sigma):
     return y
 
 
-def quantum_potential_orginal(Q, sigma, mass, TBF):
+def quantum_potential_original(Q, sigma, mass, TBF):
     """
     Args:
     * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
@@ -90,6 +90,31 @@ def quantum_potential_orginal(Q, sigma, mass, TBF):
             u = -(0.25/mass[0,i])*( deriv2[k, i]/f  - 0.5 * (deriv1[k,i]/f)**2 );
             U = U + u
     return U
+
+
+def quantum_potential_original_gen(q, Q, sigma, mass, TBF):
+    """
+    Args:
+    * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
+    * sigma (Tensor(ndof)) - width parameters for each trajectory
+    * mass ( Tensor(1, ndof)) - masses of all DOFs, same for all trajectories
+    * TBF (object) - basis function reference (`rho_gaussian` or `rho_lorentzian`)
+
+    Returns:
+    Tensor(1) - quantum potential summed over all trajectory points
+    """
+
+    ntraj, ndof = Q.shape[0], Q.shape[1]
+    U = torch.zeros( (1,), requires_grad=True)
+    f = TBF(q, Q, sigma);
+    [deriv1] = torch.autograd.grad(f, [q], create_graph=True, retain_graph=True);
+    for i in range(ndof):
+        [deriv2] = torch.autograd.grad(deriv1[i], [q], create_graph=True, retain_graph=True);
+        u = -(0.25/mass[0,i])*( deriv2[i]/f  - 0.5 * (deriv1[i]/f)**2 );
+        U = U + u
+    return U
+
+
 
 
 def quantum_potential(Q, sigma, mass, TBF):
