@@ -19,9 +19,8 @@
 
 """
 
-import os
-import sys
-import math
+import os, sys, math
+import numpy as np
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform == "cygwin":
@@ -54,7 +53,7 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, verbose=False):
 
     """
 
-    nbasis = S.num_of_rows
+    nbasis = S.shape[0] #num_of_rows
 
     SD1, SD2 = [], []
 
@@ -87,7 +86,7 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, verbose=False):
             if (I * J) > 0:
                 i = abs(I) - 1
                 j = abs(J) - 1
-                s[indx_I, indx_J] = S.get(i, j).real
+                s[indx_I, indx_J] = S[i, j] # .real #S.get(i, j).real
             else:
                 s[indx_I, indx_J] = 0.0
 
@@ -100,7 +99,7 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, verbose=False):
 
 
 
-def ovlp_mat_arb(SD1, SD2, S, active_space):
+def ovlp_mat_arb(SD1, SD2, S, active_space=None):
     """Compute a matrix of overlaps in the SD basis
 
     Args:
@@ -126,12 +125,13 @@ def ovlp_mat_arb(SD1, SD2, S, active_space):
     """
 
     N, M = len(SD1), len(SD2)
-    res = CMATRIX(N, M)
+    res = np.zeros( (N, M), dtype=np.float64 ) #CMATRIX(N, M)
 
     for n in range(0, N):
         for m in range(0, M):
-            val = ovlp_arb(SD1[n], SD2[m], S, active_space, 0) 
-            res.set(n, m, val)
+            res[n, m] = ovlp_arb(SD1[n], SD2[m], S, active_space, 0) 
+            #res.set(n, m, val)
+            #res[n, m] = val
 
     return res
 
