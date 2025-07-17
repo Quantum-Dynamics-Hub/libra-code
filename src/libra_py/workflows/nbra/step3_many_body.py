@@ -417,7 +417,7 @@ def make_T_matrices_fast(ci_coefficients, ci_basis_states, spin_components, sd_b
     if verbosity >= 1:
         print("=============== In make_T_matrices ============")
         print(F"number_of_states = {number_of_states} nCIs = {nCIs} nSDs = {nSDs}")
-        print(F"sd_basis_states_unique ", sd_bais_states_unique)
+        print(F"sd_basis_states_unique ", sd_basis_states_unique)
 
     # Results
     SD2CI = []
