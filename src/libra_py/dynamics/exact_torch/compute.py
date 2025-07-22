@@ -68,13 +68,12 @@ def tully_potential_matrix(Q, params):
     D = params.get("D", 1.0)
    
 
+    # Diabatic state 1 potential
     V11 = torch.where(
     x >= 0,
     A * (1 - torch.exp(-B * x)),
     -A * (1 - torch.exp(B * x))
-    )
- 
-    #V11 = A * (1 - torch.exp(-B * x))  # Diabatic state 1 potential
+    ) 
     V22 = -V11                         # Diabatic state 2 potential (mirror)
     V12 = C * torch.exp(-D * x**2)    # Coupling between diabatic states
     
@@ -290,12 +289,12 @@ class exact_tdse_solver_multistate:
         self.initial_state_index = params.get("initial_state_index", 0)
         self.method = params.get("method", "miller-colton").lower()
 
-        self.time = []
-        self.kinetic_energy = []
-        self.potential_energy = []
-        self.total_energy = []
-        self.population_right = []
-        self.norm = []
+        #self.time = []
+        #self.kinetic_energy = []
+        #self.potential_energy = []
+        #self.total_energy = []
+        #self.population_right = []
+        #self.norm = []
 
     def initialize_grids(self):
         """
@@ -331,7 +330,14 @@ class exact_tdse_solver_multistate:
     
 
         # Allocate storage:
-        self.nsnaps = self.nsteps // self.save_every_n_steps + 1  # how many snapshots to save
+        self.nsnaps = self.nsteps // self.save_every_n_steps  # how many snapshots to save
+
+        self.time = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.kinetic_energy = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.potential_energy = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.total_energy = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.population_right = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.norm = torch.zeros( self.nsnaps, dtype=torch.float )
 
         # Diabatic properties
         self.psi_r_dia = torch.zeros((*self.grid_size, self.Nstates), dtype=torch.cfloat)
@@ -443,7 +449,7 @@ class exact_tdse_solver_multistate:
         
             if step % self.save_every_n_steps == 0:
                 istep = int(step / self.save_every_n_steps)
-               
+     
                 # Diabatic r-space wavefunctions
                 self.psi_r_dia_all[istep] = self.psi_r_dia
 
@@ -471,11 +477,11 @@ class exact_tdse_solver_multistate:
                 right_mask = self.Q[0] > 0
                 #pop_right = torch.sum(self.prob_density[right_mask]) * self.dV
                 
-                self.norm.append( nrm )
-                self.time.append(step * self.dt)
-                self.kinetic_energy.append( KE.real.item() )
-                self.potential_energy.append( PE.real.item() )
-                self.total_energy.append( KE + PE )
+                self.norm[istep] = nrm
+                self.time[istep] = step * self.dt
+                self.kinetic_energy[istep] = KE.real.item()
+                self.potential_energy[istep] = PE.real.item()
+                self.total_energy[istep] = KE + PE
                 #self.population_right.append(pop_right.item())
                         
                 print(f"Step {step}: Norm = {nrm:.4f}")
@@ -522,7 +528,7 @@ class exact_tdse_solver_multistate:
                      "ndim":self.ndim, 
                      "q_min":self.q_min, "q_max":self.q_max, 
                      "save_every_n_steps": self.save_every_n_steps,
-                     "dt":self.dt, "nsteps":self.nsteps,
+                     "dt":self.dt, "nsteps":self.nsteps, "nsnaps":self.nsnaps,
                      "mass":self.mass,
                      "psi_r_adi":self.psi_r_adi,
                      "psi_r_dia":self.psi_r_dia,
@@ -534,6 +540,8 @@ class exact_tdse_solver_multistate:
                      "psi_r_adi_all":self.psi_r_adi_all,
                      "psi_k_dia_all":self.psi_k_dia_all,
                      "psi_k_adi_all":self.psi_k_adi_all,
+                     "E":self.eigvals, 
+                     "U":self.eigvecs,
                      "time":self.time,
                      "Q":self.Q, "K":self.K, "dq":self.dq, "dk":self.dk,
                      "dV":self.dV, "dVk":self.dVk,
