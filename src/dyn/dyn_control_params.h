@@ -538,10 +538,16 @@ class dyn_control_params{
   double kcrpmd_d;
 
   /**
-    KC-RPMD Langevin frictional coefficient 
+    KC-RPMD Langevin frictional coefficient within donor-acceptor basin 
     Default: 0.0
   */
   double kcrpmd_gamma;
+
+  /**
+    KC-RPMD Langevin frictional coefficient within kinked-pair regime 
+    Default: 0.0
+  */
+  double kcrpmd_gammaKP;
 
   
   ///===============================================================================
