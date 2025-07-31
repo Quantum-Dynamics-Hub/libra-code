@@ -165,8 +165,12 @@ functions/modules written with PyTorch. The general instructions can be found [h
 
 As a simple (most common case, peraps), we install PyTorch for CPU on Linux with:
 
-
     pip install -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+or
+
+    conda install pytorch cpuonly -c pytorch
+    
 
 ### 3. Download and build Libra
 
