@@ -137,14 +137,13 @@ Next, all what we actually need:
     conda install -y -c psi4/label/dev libint2=2.7.1
     conda install -y -c anaconda h5py gmp
 
-
 Install Jupyter Lab or traditional Jupyter notebook as explainted [here](https://jupyter.org/install):
 
     pip install -U jupyterlab
 
     or 
 
-    pit install -U notebook
+    pip install -U notebook
 
 
 Install py3Dmol for viewing molecular structures:
@@ -161,6 +160,17 @@ Installation instruction of Scikit-learn from its official website:
     >  YES - IT GOT SMALLER AND MORE COMPACT !
     >
 
+Install PyTorch - since the current versions of Libra have a growing number of 
+functions/modules written with PyTorch. The general instructions can be found [here](https://pytorch.org/get-started/locally/)
+
+As a simple (most common case, peraps), we install PyTorch for CPU on Linux with:
+
+    pip install -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+or
+
+    conda install pytorch cpuonly -c pytorch
+    
 
 ### 3. Download and build Libra
 
@@ -252,7 +262,25 @@ Step 2: Install ipykernel and register the kernel
 
 Now, in Jupyter, you'll see a new kernel called "Python (libra)". Select that in your notebook.
 
+### 4. 7/31/2025 (from Daeho Han)
 
+Here are some installationinstructions from **Daeho Han** that may be used as a good revised summary of the above
+installation instructions:
+
+    conda create -n libra
+    conda install -c conda-forge boost=1.82 python=3.10
+    conda install -y -c conda-forge numpy scipy matplotlib imageio
+
+    conda install -y conda-build make
+    conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 cmake=3.24.2 python-devtools llvm-openmp
+    conda install -y -c conda-forge/label/gcc7 eigen mpfr
+    conda install -y -c psi4/label/dev libint2=2.7.1
+    conda install -y -c anaconda h5py gmp
+
+    pip install -U jupyterlab
+    pip install -U py3Dmol
+    pip install -U scikit-learn
+    pip install -U torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
 ## Developers and Contributors
 
