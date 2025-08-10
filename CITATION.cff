@@ -8,7 +8,7 @@ message: >-
   metadata from this file.
 type: software
 authors:
-  - given-names: 'Alexey, V.'
+  - given-names: 'Alexey V.'
     family-names: Akimov
     email: alexvakimov@gmail.com
     affiliation: 'University at Buffalo, State University of New York'
@@ -17,45 +17,73 @@ authors:
     family-names: Shakiba
     affiliation: 'University at Buffalo, State University of New York'
     email: mshakiba@buffalo.edu
-  - given-names: Brendan
-    family-names: Smit
-    affiliation: 'University at Buffalo, State University of New York'
-    orcid: 'https://orcid.org/0000-0003-3460-9984'
+    orcid: 'https://orcid.org/0000-0002-4110-7627'
   - given-names: Daeho
     family-names: Han
     email: daehohan@buffalo.edu
     affiliation: 'University at Buffalo, State University of New York'
     orcid: 'https://orcid.org/0000-0003-2853-6571'
+  - given-names: Brendan
+    family-names: Smith
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: 'https://orcid.org/0000-0003-3460-9984'
   - given-names: Matthew
     family-names: Dutra
-    affiliation: University of South Carolina
+    affiliation: 'University of South Carolina'
     orcid: 'https://orcid.org/0000-0001-5240-3547'
   - given-names: Kosuke
     family-names: Sato
-    affiliation: Toyota Central Research and Development Laboratories
+    affiliation: 'Toyota Central Research and Development Laboratories'
     orcid: 'https://orcid.org/0000-0003-3293-2809'
   - given-names: Story
     family-names: Temen
     affiliation: 'University at Buffalo, State University of New York'
-  - given-names: Wei
-    family-names: Li
-    orcid: 'https://orcid.org/0000-0002-9999-5081'
-    affiliation: Hunan Agricultural University
-    email: liwei0099@gmail.com
+    orcid: ''
+  - given-names: Victor
+    family-names: Suarez
+    email: suarez.a.victor@gmail.com
+    affiliation: 'Georgia Institute of Technology'
+    orcid: 'https://orcid.org/0000-0001-8164-709X'
+  - given-names: Kosar
+    family-names: Yasin
+    email: kosaryas@buffalo.edu
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: ''
   - given-names: Taras
     family-names: Khvorost
     affiliation: 'University of California, Los Angeles'
     email: xbopoctt@gmail.com
+    orcid: ''
+  - given-names: Wei
+    family-names: Li
+    orcid: 'https://orcid.org/0000-0002-9999-5081'
+    affiliation: 'Hunan Agricultural University'
+    email: liwei0099@gmail.com
+  - given-names: Qingxin
+    family-names: Zhang
+    email: qingxinz@buffalo.edu
+    affiliation: 'University at Buffalo, State University of New York'
+    orcid: ''
   - given-names: Xiang
     family-names: Sun
     orcid: 'https://orcid.org/0000-0002-2846-8532'
-    affiliation: New York University Shanghai
+    affiliation: 'New York University Shanghai'
     email: xiang.sun@nyu.edu
   - given-names: Elizabeth
     family-names: Stippell
-    affiliation: University of Southern California
-  - given-names: 'Igor, S.'
+    affiliation: 'University of Southern California'
+    email: stippell@usc.edu
+    orcid: ''
+  - given-names: 'Igor S.'
     family-names: Gerasimov
+    orcid: 'https://orcid.org/0000-0001-7762-2594'
+    affiliation: 'Budapest University of Technology and Economics'
+  - given-names: Jain
+    family-names: Amber
+    orcid: 'https://orcid.org/0000-0003-4108-9112'
+    affiliation: 'Indian Institute of Technology Bombay'
+
+
 repository-code: 'https://github.com/Quantum-Dynamics-Hub/libra-code'
 repository: 'https://github.com/compchem-cybertraining/Tutorials_Libra'
 abstract: >-
@@ -80,7 +108,7 @@ keywords:
   - DVR
   - Ehrenfest
 license: GPL-3.0+
-version: 5.8.1
-date-released: '2024-11-05'
+version: 5.10.0
+date-released: '2025-08-10'
 
 
