@@ -4,66 +4,26 @@ from functools import reduce
 from liblibra_core import *
 import util.libutil as comn
 
-HARTREE2EV = 27.2116
-R_grid_info = None
-eigvals_info = None
-d_V_info = None
-nac_info = None
-mu_info = None
-d_mu_info = None
-mu_deri_info = None
 """
-    Calculate the polaritonic states with the 2-state and 4-state models
+.. module:: models_shin_meitu model with polaritonic effects
+   :platform: Unix, Windows
+   :synopsis: This module implements the polaritonic effects using Shin-meitu potential
+   :Calculate the polaritonic states with the 2-state and 4-state models
     in reference paper.
-
     See (34)-(40) in J. Chem. Phys. 157, 104118 (2022)
+.. moduleauthor:: Yuchen Wang
+.. module co-author:: Mohammad Shakiba, Alexey V. Akimov, Norah M. Hoffmann
+
 """
 
-def interpolateDVR_from_file(R, filename):
-    global R_grid_info, eigvals_info, d_V_info, nac_info, mu_info, d_mu_info, mu_deri_info
-    if R_grid_info is None:
-        with h5py.File(filename, 'r') as f:
-            R_grid_info = f['R_grid'][:]
-            eigvals_info = f['eigvals'][:]
-            d_V_info = f['d_V'][:]
-            nac_info = f['nac'][:]
-            mu_info = f['mu'][:]
-            d_mu_info = f['d_mu'][:]
-            mu_deri_info = f['mu_deri'][:]
+# constants
+from dataclasses import dataclass
 
-    nelec_dim_dump = eigvals_info.shape[-1]
-    
-    eigvals = np.zeros((nelec_dim_dump))
-    d_V = np.zeros((nelec_dim_dump, nelec_dim_dump))
-    nac = np.zeros((nelec_dim_dump, nelec_dim_dump))
-    mu = np.zeros((nelec_dim_dump, nelec_dim_dump))
-    d_mu = np.zeros((nelec_dim_dump, nelec_dim_dump))
-    mu_deri = np.zeros((nelec_dim_dump, nelec_dim_dump))
+HARTREE2EV = 27.2116  # constant stays as a constant
 
-    for i in range(nelec_dim_dump):
-        eigvals[i] = np.interp(R, R_grid_info, eigvals_info[:,i])
-        for j in range(nelec_dim_dump):
-            d_V[i,j] = np.interp(R, R_grid_info, d_V_info[:,i,j])
-            nac[i,j] = np.interp(R, R_grid_info, nac_info[:,i,j])
-            mu[i,j] = np.interp(R, R_grid_info, mu_info[:,i,j])
-            d_mu[i,j] = np.interp(R, R_grid_info, d_mu_info[:,i,j])
-            mu_deri[i,j] = np.interp(R, R_grid_info, mu_deri_info[:,i,j])
-    return eigvals, d_V, nac, mu, d_mu, mu_deri
+# dvr_data
 
-def polariton_info(R, model = '4-state', 
-                   g_c = 0.005, omega_c = 0.1, epsilon = 1.0, 
-                   force_subspace = True, read_dvr_from_file = None,
-                   ndim_elec = None, ndim_ph = None):
-    assert model in ['2-state', '4-state', 'general'], "Model must be either '2-state' or '4-state'."
-    if model == 'general':
-        assert ndim_ph is not None, "For 'general' model, ndim_ph must be specified."
-        assert ndim_ph > 0, "ndim_ph must be a positive integer."
-    if ndim_elec is None:
-        if model == '2-state':
-            ndim_elec = 2
-        elif model == '4-state':
-            ndim_elec = 2
-    # general nomenclature:
+# general nomenclature:
     # d_X = [\nabla X] and X_deri = \nabla [X], see reference paper
 
     # solve cavity-free electronic DVR
@@ -74,11 +34,69 @@ def polariton_info(R, model = '4-state',
     # mu: dipole moment matrix
     # d_mu: dipole moment gradient matrix [\nabla \mu]
     # mu_deri: derivative of dipole moment matrix elements \nabla [\mu]
-    eigvals, d_V, nac, mu, d_mu, mu_deri = interpolateDVR_from_file(R, read_dvr_from_file)
-                
+
+@dataclass
+class DVRData:
+    R_grid: np.ndarray
+    eigvals: np.ndarray
+    d_V: np.ndarray
+    nac: np.ndarray
+    mu: np.ndarray
+    d_mu: np.ndarray
+    mu_deri: np.ndarray
+
+# DVR shin meitu surface was loaded from fitted potential file with HDF5 format
+def load_dvr_from_file(filename: str) -> DVRData:
+    with h5py.File(filename, 'r') as f:
+        return DVRData(
+            R_grid=f['R_grid'][:],
+            eigvals=f['eigvals'][:],
+            d_V=f['d_V'][:],
+            nac=f['nac'][:],
+            mu=f['mu'][:],
+            d_mu=f['d_mu'][:],
+            mu_deri=f['mu_deri'][:]
+        )
+#Interpolation of the fitted potential from HDF5 file
+def interpolateDVR_from_file(R: float, dvr_data: DVRData):
+    nelec_dim_dump = dvr_data.eigvals.shape[-1]
+
+    eigvals = np.zeros((nelec_dim_dump))
+    d_V = np.zeros((nelec_dim_dump, nelec_dim_dump))
+    nac = np.zeros((nelec_dim_dump, nelec_dim_dump))
+    mu = np.zeros((nelec_dim_dump, nelec_dim_dump))
+    d_mu = np.zeros((nelec_dim_dump, nelec_dim_dump))
+    mu_deri = np.zeros((nelec_dim_dump, nelec_dim_dump))
+
+    for i in range(nelec_dim_dump):
+        eigvals[i] = np.interp(R, dvr_data.R_grid, dvr_data.eigvals[:, i])
+        for j in range(nelec_dim_dump):
+            d_V[i, j] = np.interp(R, dvr_data.R_grid, dvr_data.d_V[:, i, j])
+            nac[i, j] = np.interp(R, dvr_data.R_grid, dvr_data.nac[:, i, j])
+            mu[i, j] = np.interp(R, dvr_data.R_grid, dvr_data.mu[:, i, j])
+            d_mu[i, j] = np.interp(R, dvr_data.R_grid, dvr_data.d_mu[:, i, j])
+            mu_deri[i, j] = np.interp(R, dvr_data.R_grid, dvr_data.mu_deri[:, i, j])
+
+    return eigvals, d_V, nac, mu, d_mu, mu_deri
+
+#Define parameters for polaritonic effects 
+def polariton_info(R, dvr_data: DVRData, model='4-state',
+                   g_c=0.005, omega_c=0.1, epsilon=1.0,
+                   force_subspace=True, ndim_elec=None, ndim_ph=None):
+
+    assert model in ['2-state', '4-state', 'general']  "Model must be either '2-state' or '4-state'."
+
+    if model == 'general':
+        assert ndim_ph is not None and ndim_ph > 0
+
+    if ndim_elec is None:
+        ndim_elec = 2 if model in ['2-state', '4-state'] else ndim_elec
+    # Load interpolated values
+    eigvals, d_V, nac, mu, d_mu, mu_deri = interpolateDVR_from_file(R, dvr_data)
+
     # H_deri = d_H + np.dot(H, nac) - np.dot(nac, H)
     H_deri = d_V + np.dot(np.diag(eigvals), nac) - np.dot(nac, np.diag(eigvals))  # (27)
-    
+
     # electronic part of D^2
     # assuming polarization direction aligned with dipole
     # (31d)
@@ -160,40 +178,40 @@ def polariton_info(R, model = '4-state',
         raise NotImplementedError("General model is not implemented yet.")
     else:
         raise ValueError("Model must be either '2-state', '4-state', or 'general'.")
-    
+
     return V_adia_fock.copy(), d_V_adia_fock.copy(), nac_adia_fock.copy()  # eigvals_polariton, grad_polariton, nac_polariton, eigvecs_polariton
+
 
 def compute_model(q, params, full_id):
     critical_params = []
-    default_params = {"g_c": 0.005, "omega_c": 0.1, "epsilon" : 1.0, "nstates": 4}
+    default_params = {"g_c": 0.005, "omega_c": 0.1, "epsilon": 1.0, "nstates": 4}
     comn.check_input(params, default_params, critical_params)
+
     g_c = params["g_c"]
     omega_c = params["omega_c"]
     epsilon = params["epsilon"]
     nstates = params["nstates"]
     model = params["model"]
+
     if model == 0:
-        dvr_dump_info = "dvr_sm1.h5"
+        dvr_file = "dvr_sm1.h5"
     elif model == 1:
-        dvr_dump_info = "dvr_sm2.h5"
+        dvr_file = "dvr_sm2.h5"
     else:
-        raise ValueError(F"Unknown nstates {nstates}")
+        raise ValueError(f"Unknown nstates {nstates}")
 
-
-    if nstates == 2:
-        model_polariton = '2-state'
-    elif nstates == 4:
-        model_polariton = '4-state'
-    else:
-        raise ValueError(F"Unknown nstates {nstates}")
-
+    model_polariton = '2-state' if nstates == 2 else '4-state'
 
     Id = Cpp2Py(full_id)
     indx = Id[-1]
     R = q.get(0, indx)
 
-    V_dia_fock, dV_dia_fock, nac_adia_fock = polariton_info(R, model_polariton, g_c, omega_c, epsilon,
-                                                       read_dvr_from_file=dvr_dump_info)
+    # Load DVR data once, no globals
+    dvr_data = load_dvr_from_file(dvr_file)
+
+    V_dia_fock, dV_dia_fock, nac_adia_fock = polariton_info(
+        R, dvr_data, model_polariton, g_c, omega_c, epsilon
+    )
 
     H_adia = CMATRIX(nstates, nstates)
     S_adia = CMATRIX(nstates, nstates)
@@ -220,5 +238,4 @@ def compute_model(q, params, full_id):
 
 
     return obj
-
 
