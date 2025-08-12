@@ -1,0 +1,26 @@
+This .h5 file contains simulation output data generated from a DVR calculation using Shin-Metiu model.
+The file stores a set of physical quantities computed over a one-dimensional grid of nuclear coordinates (R_grid).
+The data is stored in NumPy array format within HDF5 datasets.
+
+File Structure and Variables
+
+R_grid — Shape: (N_grids_R,)
+coordiates on the grid
+
+eigvals — Shape: (N_grids_R, nelec_dim_dump)
+adiabatic electronic energies
+
+d_V — Shape: (N_grids_R, nelec_dim_dump, nelec_dim_dump)
+matrix of potential energy gradient [\nabla V]
+
+nac — Shape: (N_grids_R, nelec_dim_dump, nelec_dim_dump)
+non-adiabatic coupling matrix
+
+mu — Shape: (N_grids_R, nelec_dim_dump, nelec_dim_dump)
+dipole moment matrix
+
+d_mu — Shape: (N_grids_R, nelec_dim_dump, nelec_dim_dump)
+dipole moment gradient matrix [\nabla \mu]
+
+mu_deri — Shape: (N_grids_R, nelec_dim_dump, nelec_dim_dump)
+derivative of dipole moment matrix elements \nabla [\mu]
