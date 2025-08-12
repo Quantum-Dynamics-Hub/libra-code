@@ -7,7 +7,7 @@ import util.libutil as comn
 """
 .. module:: models_shin_meitu model with polaritonic effects
    :platform: Unix, Windows
-   :synopsis: This module implements the polaritonic effects using Shin-meitu potential
+   :synopsis: This module implements the polaritonic effects using Shin-metiu potential
    :Calculate the polaritonic states with the 2-state and 4-state models
     in reference paper.
     See (34)-(40) in J. Chem. Phys. 157, 104118 (2022)
