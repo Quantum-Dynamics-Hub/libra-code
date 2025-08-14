@@ -33,6 +33,7 @@ void dyn_variables::allocate_electronic_vars(){
     ampl_adi = new CMATRIX(nadi, ntraj);
     q_mm = new MATRIX(nadi, ntraj);
     p_mm = new MATRIX(nadi, ntraj);
+    ave_decoherence_rates = new MATRIX(nadi, nadi);
     proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
@@ -348,6 +349,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *ampl_adi = *x.ampl_adi;
     *q_mm = *x.q_mm;
     *p_mm = *x.p_mm;
+    *ave_decoherence_rates = *x.ave_decoherence_rates;
     for(itraj=0; itraj<ntraj; itraj++){
       *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
@@ -524,6 +526,7 @@ dyn_variables::~dyn_variables(){
     delete ampl_adi;
     delete q_mm;
     delete p_mm;
+    delete ave_decoherence_rates;
 
     act_states.clear();
     act_states_dia.clear();

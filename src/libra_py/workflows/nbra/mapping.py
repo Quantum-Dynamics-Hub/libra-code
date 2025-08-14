@@ -311,6 +311,46 @@ def num_of_perms(x):
     return cnt
 
 
+def count_inversions(arr):
+    """
+    Count the number of inversions in a list.
+    An inversion is a pair (i, j) such that i < j and arr[i] > arr[j].
+
+    Args:
+        arr (list[int]): A list of integers.
+
+    Returns:
+        int: Number of inversions (unordered pairs that are out of order).
+    """
+    def merge_sort(nums):
+        if len(nums) <= 1:
+            return nums, 0
+
+        mid = len(nums) // 2
+        left, inv_left = merge_sort(nums[:mid])
+        right, inv_right = merge_sort(nums[mid:])
+        merged, inv_split = merge(left, right)
+        return merged, inv_left + inv_right + inv_split
+
+    def merge(left, right):
+        result = []
+        i = j = inv_count = 0
+        while i < len(left) and j < len(right):
+            if left[i] <= right[j]:
+                result.append(left[i])
+                i += 1
+            else:
+                result.append(right[j])
+                j += 1
+                inv_count += len(left) - i  # Count inversions here
+        result.extend(left[i:])
+        result.extend(right[j:])
+        return result, inv_count
+
+    _, total_inversions = merge_sort(arr)
+    return total_inversions
+
+
 def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
@@ -344,7 +384,7 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
     # Compute the phase using the original determinants in the internal notation
-    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
+    phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     # Now reduce the determinants for faster calculations
     if use_minimal:
@@ -354,9 +394,21 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
         sd1 = sd2indx(SD1, nbasis, False, user_notation)
         sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
+    # What about beta indices?! We should add `nbasis/2` to them. This is added on 7/22/2025
+    # With this, we don't need to worry about alpha-beta excitations since their corresponding elements
+    # in the KS matrices is already zero
+    beta_indices = np.where(np.array(SD1) < 0)
+    sd1 = np.array(sd1)
+    sd1[beta_indices] += int(nbasis/2)
+
+    beta_indices = np.where(np.array(SD2) < 0)
+    sd2 = np.array(sd2)
+    sd2[beta_indices] += int(nbasis/2)
+
     res = 0.0 + 0j
     if len(sd1) > 0 and len(sd2) > 0:
         if len(sd1) == len(sd2):
+            """ No need for this, the explanation are given in mapping3 module
             # It is a numpy translation of the code below
             # much faster and more accurate than MO approach
             # Checked with the code commented below and the result match
@@ -364,9 +416,10 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
             # the overlap of many SDs
             tmp = np.sign(np.tensordot(SD1, SD2, axes=0))
             indices = np.where(tmp < 0)
+            """
             s = S[sd1, :][:, sd2]
-            s[indices] = 0.0
-            res = np.linalg.det(s) * phase
+            # s[indices] = 0.0
+            res = np.linalg.det(s) # * phase
 #          # Now apply the determinant formula
 #          s = CMATRIX(len(sd1),len(sd2))
 #          # Forming the overlap of the SDs
@@ -421,9 +474,18 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
     sd1 = sd2indx(SD1, nbasis, False, user_notation)
     sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
+    # What about beta indices?! We should add `nbasis/2` to them. This is added on 7/22/2025
+    beta_indices = np.where(np.array(SD1) < 0)
+    sd1 = np.array(sd1)
+    sd1[beta_indices] += int(nbasis/2)
+
+    beta_indices = np.where(np.array(SD2) < 0)
+    sd2 = np.array(sd2)
+    sd2[beta_indices] += int(nbasis/2)
+
     res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
 
-    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
+    phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     s = 0.0
     # The SDs are coupled

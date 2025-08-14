@@ -328,6 +328,7 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, nHamilt
       double tau_inv2 = 0.0;
       for(int idof=0; idof<ndof; idof++){
         double dF = F_mf.get(idof, itraj) - F_st.get(idof, itraj);
+        //cout << "Flag schwartz_1 function for itraj " << itraj << " for i " << i << " and idof " << idof << " the F_mf is : " << F_mf << " and F_st is : " << F_st << endl;
         
         tau_inv2 += 0.25 * inv_alp.get(idof, 0) * dF * dF; 
       }
@@ -391,7 +392,7 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, MATRIX&
       double tau_inv2 = 0.0;
       for(int idof=0; idof<ndof; idof++){
         double dF = F_mf.get(idof, itraj) - F_st.get(idof, itraj);
-        
+        //cout << "Flag schwartz_1 function for itraj " << itraj << " for i " << i << " and idof " << idof << " the F_mf is : " << F_mf << " and F_st is : " << F_st << endl;
         w2 = pow(w.get(idof,0), 2.0); 
         tau_inv2 += 0.25 * pow(4*M_PI/(w2*p.get(idof, itraj)), 2.0) * dF * dF; 
       }
@@ -450,6 +451,7 @@ vector<MATRIX> schwartz_2(dyn_control_params& prms, nHamiltonian& ham, MATRIX& i
         for(int idof=0; idof<ndof; idof++){
           double dF = F[i].get(idof, itraj) - F[j].get(idof, itraj);
         
+          //cout << "Flag schwartz_2 function for itraj " << itraj << " ij " << i << j << " and for idof " << idof << " the value of F[i].get(idof, itraj) is : " <<  F[i].get(idof, itraj) << " and F[i].get(idof, itraj) is : " <<  F[j].get(idof, itraj) << endl;
           tau_inv2 += 0.25 * inv_alp.get(idof, 0) * dF * dF; 
         }
         double tau_inv = sqrt(tau_inv2);
@@ -504,6 +506,7 @@ vector<MATRIX> Gu_Franco(dyn_control_params& prms, CMATRIX& amplitudes){
       for(int j=0;j<nstates; j++){
 
         double val = std::abs(loc_dm.get(i,j) ) * pref;
+        //cout << "Flag Gu-Franco function for itraj " << itraj << " ij " << i << j << ", std::abs(loc_dm.get(i,j) ) is : " <<  std::abs(loc_dm.get(i,j) ) << endl;
         res[itraj].set(i,j, val);
 
       }// for j states
