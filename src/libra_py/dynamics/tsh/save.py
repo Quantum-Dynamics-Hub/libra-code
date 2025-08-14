@@ -239,7 +239,7 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "qtsh_f_nc" in saver.keywords:  # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _ndof), "R")
 
-        # Trajectory-resolved decoherence time
+        # Trajectory-resolved decoherence rates
         if "ave_decoherence_rates" in saver.keywords:  # decoherence time:
             saver.add_dataset("ave_decoherence_rates", (_nsteps, _nadi, _nadi), "R") 
 
@@ -759,7 +759,7 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
         qtsh_f_nc = dyn_var.get_qtsh_f_nc()
         saver.save_matrix(t, "qtsh_f_nc", qtsh_f_nc.T())
 
-    # Average decoherence time
+    # Average decoherence rate
     # Format: saver.add_dataset("ave_decoherence_rates", (_nsteps, _nadi, _nadi), "R") 
     if "ave_decoherence_rates" in saver.keywords and "ave_decoherence_rates" in saver.np_data.keys():
         ave_decoherence_rates = dyn_var.get_ave_decoherence_rates()

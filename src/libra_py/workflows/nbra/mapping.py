@@ -311,46 +311,6 @@ def num_of_perms(x):
     return cnt
 
 
-def count_inversions(arr):
-    """
-    Count the number of inversions in a list.
-    An inversion is a pair (i, j) such that i < j and arr[i] > arr[j].
-
-    Args:
-        arr (list[int]): A list of integers.
-
-    Returns:
-        int: Number of inversions (unordered pairs that are out of order).
-    """
-    def merge_sort(nums):
-        if len(nums) <= 1:
-            return nums, 0
-
-        mid = len(nums) // 2
-        left, inv_left = merge_sort(nums[:mid])
-        right, inv_right = merge_sort(nums[mid:])
-        merged, inv_split = merge(left, right)
-        return merged, inv_left + inv_right + inv_split
-
-    def merge(left, right):
-        result = []
-        i = j = inv_count = 0
-        while i < len(left) and j < len(right):
-            if left[i] <= right[j]:
-                result.append(left[i])
-                i += 1
-            else:
-                result.append(right[j])
-                j += 1
-                inv_count += len(left) - i  # Count inversions here
-        result.extend(left[i:])
-        result.extend(right[j:])
-        return result, inv_count
-
-    _, total_inversions = merge_sort(arr)
-    return total_inversions
-
-
 def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     """Compute the overlap of two generic SDs: <SD1|SD2>
 
@@ -384,7 +344,7 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
     # Compute the phase using the original determinants in the internal notation
-    phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
+    #phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     # Now reduce the determinants for faster calculations
     if use_minimal:
@@ -485,7 +445,7 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
 
     res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
 
-    phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
+    #phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     s = 0.0
     # The SDs are coupled
@@ -507,7 +467,7 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
         s = det(x)
 
         # s = 1.0+0.0j
-    return s * phase
+    return s #* phase
 
 
 def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False, user_notation=0):

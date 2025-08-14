@@ -1635,15 +1635,9 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Saves the current density matrix into the previous - needed for FSSH2 and GFSH (original)
   dyn_var.save_curr_dm_into_prev();
 
-  // Print out the average decoherence rates
-  // This is a temporary thong and will be removed after the assessment project...
-  //*dyn_var.ave_decoherence_rates;
   for(traj=0; traj<ntraj; traj++){
-    //cout << "============= For traj " << traj << endl;
-    //ave_dec_rate += decoherence_rates[traj].get(1,0);
     *dyn_var.ave_decoherence_rates += decoherence_rates[traj];
   }
-  //cout << "Average decoherence rate between states 0 and 1 is : " << ave_dec_rate/ntraj << endl;
   *dyn_var.ave_decoherence_rates /= ntraj;
 
 }
