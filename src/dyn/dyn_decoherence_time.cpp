@@ -391,7 +391,6 @@ vector<MATRIX> schwartz_1(dyn_control_params& prms, CMATRIX& amplitudes, MATRIX&
       double tau_inv2 = 0.0;
       for(int idof=0; idof<ndof; idof++){
         double dF = F_mf.get(idof, itraj) - F_st.get(idof, itraj);
-        
         w2 = pow(w.get(idof,0), 2.0); 
         tau_inv2 += 0.25 * pow(4*M_PI/(w2*p.get(idof, itraj)), 2.0) * dF * dF; 
       }

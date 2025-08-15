@@ -344,7 +344,7 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
     sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
     # Compute the phase using the original determinants in the internal notation
-    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
+    #phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     # Now reduce the determinants for faster calculations
     if use_minimal:
@@ -354,9 +354,21 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
         sd1 = sd2indx(SD1, nbasis, False, user_notation)
         sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
+    # What about beta indices?! We should add `nbasis/2` to them. This is added on 7/22/2025
+    # With this, we don't need to worry about alpha-beta excitations since their corresponding elements
+    # in the KS matrices is already zero
+    beta_indices = np.where(np.array(SD1) < 0)
+    sd1 = np.array(sd1)
+    sd1[beta_indices] += int(nbasis/2)
+
+    beta_indices = np.where(np.array(SD2) < 0)
+    sd2 = np.array(sd2)
+    sd2[beta_indices] += int(nbasis/2)
+
     res = 0.0 + 0j
     if len(sd1) > 0 and len(sd2) > 0:
         if len(sd1) == len(sd2):
+            """ No need for this, the explanation are given in mapping3 module
             # It is a numpy translation of the code below
             # much faster and more accurate than MO approach
             # Checked with the code commented below and the result match
@@ -364,9 +376,10 @@ def ovlp_arb(SD1, SD2, S, use_minimal=False, user_notation=0):
             # the overlap of many SDs
             tmp = np.sign(np.tensordot(SD1, SD2, axes=0))
             indices = np.where(tmp < 0)
+            """
             s = S[sd1, :][:, sd2]
-            s[indices] = 0.0
-            res = np.linalg.det(s) * phase
+            # s[indices] = 0.0
+            res = np.linalg.det(s) # * phase
 #          # Now apply the determinant formula
 #          s = CMATRIX(len(sd1),len(sd2))
 #          # Forming the overlap of the SDs
@@ -421,9 +434,18 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
     sd1 = sd2indx(SD1, nbasis, False, user_notation)
     sd2 = sd2indx(SD2, nbasis, False, user_notation)
 
+    # What about beta indices?! We should add `nbasis/2` to them. This is added on 7/22/2025
+    beta_indices = np.where(np.array(SD1) < 0)
+    sd1 = np.array(sd1)
+    sd1[beta_indices] += int(nbasis/2)
+
+    beta_indices = np.where(np.array(SD2) < 0)
+    sd2 = np.array(sd2)
+    sd2[beta_indices] += int(nbasis/2)
+
     res = delta(Py2Cpp_int(sd1), Py2Cpp_int(sd2))
 
-    phase = (-1)**(num_of_perms(sd1) + num_of_perms(sd2))
+    #phase = (-1)**(count_inversions(sd1) + count_inversions(sd2)) #(num_of_perms(sd1) + num_of_perms(sd2))
 
     s = 0.0
     # The SDs are coupled
@@ -445,7 +467,7 @@ def ovlp_arb_mo(SD1, SD2, S, user_notation=0):
         s = det(x)
 
         # s = 1.0+0.0j
-    return s * phase
+    return s #* phase
 
 
 def ovlp_mat_arb(SD1, SD2, S, use_minimal=True, use_mo_approach=False, user_notation=0):

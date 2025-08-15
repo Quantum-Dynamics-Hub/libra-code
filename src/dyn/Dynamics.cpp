@@ -1635,7 +1635,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Saves the current density matrix into the previous - needed for FSSH2 and GFSH (original)
   dyn_var.save_curr_dm_into_prev();
 
-  
+  for(traj=0; traj<ntraj; traj++){
+    *dyn_var.ave_decoherence_rates += decoherence_rates[traj];
+  }
+  *dyn_var.ave_decoherence_rates /= ntraj;
 
 }
 
