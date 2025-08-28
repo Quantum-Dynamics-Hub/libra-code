@@ -317,9 +317,9 @@ void export_nhamiltonian_objects(){
 //  = &nHamiltonian::QTSH_forces_dia;
 
 
-  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_potential;
-  MATRIX (nHamiltonian::*expt_kcrpmd_effective_force_v1)(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_force;
-  vector<double> (nHamiltonian::*expt_kcrpmd_effective_auxiliary_force_v1)(vector<double>& auxiliary_y, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_auxiliary_force;
+  double (nHamiltonian::*expt_kcrpmd_effective_potential_v1)(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_potential;
+  MATRIX (nHamiltonian::*expt_kcrpmd_effective_force_v1)(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_force;
+  vector<double> (nHamiltonian::*expt_kcrpmd_effective_auxiliary_force_v1)(vector<double>& y_aux_var, double beta, double eta, double a, double b, double c, double d) = &nHamiltonian::kcrpmd_effective_auxiliary_force;
 
 
   void (nHamiltonian::*expt_add_ethd_dia_v1)(const MATRIX& q, const MATRIX& invM, int der_lvl) = &nHamiltonian::add_ethd_dia;

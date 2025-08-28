@@ -309,10 +309,11 @@ void dyn_variables::allocate_qtsh(){
 void dyn_variables::allocate_kcrpmd(){
 
   if(kcrpmd_vars_status==0){
-    
-    auxiliary_y = vector<double>(1, -1.0);
-    auxiliary_vy = vector<double>(1, 0.0);
-    auxiliary_fy = vector<double>(1, 0.0);
+
+    //m_aux_var = vector<double>(1, 10.0);
+    //y_aux_var = vector<double>(1, 0.0);
+    //p_aux_var = vector<double>(1, 0.05);
+    f_aux_var = vector<double>(1, 0.0);
 
     kcrpmd_vars_status = 1;
   }
@@ -485,9 +486,10 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_kcrpmd();
     
     // Copy content
-    auxiliary_y = x.auxiliary_y;
-    auxiliary_vy = x.auxiliary_vy;
-    auxiliary_fy = x.auxiliary_fy;
+    m_aux_var = x.m_aux_var;
+    y_aux_var = x.y_aux_var;
+    p_aux_var = x.p_aux_var;
+    f_aux_var = x.f_aux_var;
 
   }// if KCRPMD vars
 
@@ -650,9 +652,10 @@ dyn_variables::~dyn_variables(){
   }
 
   if(kcrpmd_vars_status==1){
-    auxiliary_y.clear(); 
-    auxiliary_vy.clear(); 
-    auxiliary_fy.clear(); 
+    m_aux_var.clear(); 
+    y_aux_var.clear(); 
+    p_aux_var.clear(); 
+    f_aux_var.clear(); 
 
     kcrpmd_vars_status = 0;
   }
@@ -693,7 +696,6 @@ vector<double> dyn_variables::get_fssh3_average_errors(){
 
   return res;
 }
-
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

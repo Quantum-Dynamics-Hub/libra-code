@@ -1120,6 +1120,76 @@ void propagate_electronic(dyn_variables& dyn_var, nHamiltonian* Ham, nHamiltonia
 
 }
 
+// Learn * vs &
+void propagate_electronic_kcrpmd(dyn_variables& dyn_var, nHamiltonian& Ham, dyn_control_params& prms, Random& rnd){
+
+  int num_el = prms.num_electronic_substeps;
+  double dt = prms.dt / num_el;
+  double beta = (hartree/boltzmann) / prms.Temperature; 
+  double a = prms.kcrpmd_a; 
+  double b = prms.kcrpmd_b; 
+  double c = prms.kcrpmd_c; 
+  double d = prms.kcrpmd_d; 
+  double eta = prms.kcrpmd_eta; 
+  double gam = prms.kcrpmd_gamma;
+  double gamKP = prms.kcrpmd_gammaKP;
+  double sigma;
+  double xi;
+  double theta;
+
+  vector<double>& m_aux_var = dyn_var.m_aux_var;
+  vector<double>& y_aux_var = dyn_var.y_aux_var;
+  vector<double>& p_aux_var = dyn_var.p_aux_var;
+  vector<double>& f_aux_var = dyn_var.f_aux_var;
+
+  if(y_aux_var[0] >= -0.5 && y_aux_var[0] <= 0.5){
+    if(gamKP == 0.0){
+      p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
+      y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt;
+      f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta, a, b, c, d))[0];
+      p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
+    }
+    else{
+      sigma = sqrt(2.0 * gamKP / (beta * m_aux_var[0]));
+      xi = rnd.normal();
+      theta = rnd.normal();
+      p_aux_var[0] += 0.5 * xi * sigma * m_aux_var[0] * sqrt(dt)
+                    + 0.5 * (f_aux_var[0] - gamKP * p_aux_var[0]) * dt
+	  	            - 0.25 * (xi / 2.0 + theta / sqrt(3.0)) * gamKP * sigma * m_aux_var[0] * sqrt(pow(dt,3))
+	  	            - 0.125 * gamKP * (f_aux_var[0] - gamKP * p_aux_var[0]) * pow(dt,2);
+      y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt + 0.5 * theta / sqrt(3.0) * sigma * sqrt(pow(dt,3));
+      f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta, a, b, c, d))[0];
+      p_aux_var[0] += 0.5 * xi * sigma * m_aux_var[0] * sqrt(dt)
+	                 + 0.5 * (f_aux_var[0] - gamKP * p_aux_var[0]) * dt
+		             - 0.25 * (xi / 2.0 + theta / sqrt(3.0)) * gamKP * sigma * m_aux_var[0] * sqrt(pow(dt,3))
+		             - 0.125 * gamKP * (f_aux_var[0] - gamKP * p_aux_var[0]) * pow(dt,2);
+    }
+  }
+  else{
+    if(gam == 0.0){
+      p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
+      y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt;
+      f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta, a, b, c, d))[0];
+      p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
+    }
+    else{
+      sigma = sqrt(2.0 * gam / (beta * m_aux_var[0]));
+      xi = rnd.normal();
+      theta = rnd.normal();
+      p_aux_var[0] += 0.5 * xi * sigma * m_aux_var[0] * sqrt(dt)
+                    + 0.5 * (f_aux_var[0] - gam * p_aux_var[0]) * dt
+	  	            - 0.25 * (xi / 2.0 + theta / sqrt(3.0)) * gam * sigma * m_aux_var[0] * sqrt(pow(dt,3))
+	  	            - 0.125 * gam * (f_aux_var[0] - gam * p_aux_var[0]) * pow(dt,2);
+      y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt + 0.5 * theta / sqrt(3.0) * sigma * sqrt(pow(dt,3));
+      f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta, a, b, c, d))[0];
+      p_aux_var[0] += 0.5 * xi * sigma * m_aux_var[0] * sqrt(dt)
+	                 + 0.5 * (f_aux_var[0] - gam * p_aux_var[0]) * dt
+		             - 0.25 * (xi / 2.0 + theta / sqrt(3.0)) * gam * sigma * m_aux_var[0] * sqrt(pow(dt,3))
+		             - 0.125 * gam * (f_aux_var[0] - gam * p_aux_var[0]) * pow(dt,2);
+    }
+  }
+}
+
 void renormalize_hopping_probabilities(vector< vector<double> >& g, vector< vector<vector<double> > >& coherence_factors, vector<int>& act_states){
 /**
   Scale the hopping probabilities by the factors and ensure the sum of all 
@@ -1268,17 +1338,49 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   //***************************** Coherent dynamics *******************************
   //============== Nuclear propagation ===================
+//  // NVT dynamics
+//  if(prms.ensemble==1){  
+//    for(idof=0; idof<n_therm_dofs; idof++){
+//      dof = prms.thermostat_dofs[idof];
+//      for(traj=0; traj<ntraj; traj++){
+//        dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+//      }// traj
+//    }// idof 
+//  }
+//
+//  *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
+
   // NVT dynamics
-  if(prms.ensemble==1){  
-    for(idof=0; idof<n_therm_dofs; idof++){
-      dof = prms.thermostat_dofs[idof];
-      for(traj=0; traj<ntraj; traj++){
-        dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
-      }// traj
-    }// idof 
+  double beta = (hartree/boltzmann) / prms.Temperature; 
+  MATRIX sigma_therm(ndof,ntraj);
+  MATRIX xi_therm(ndof, ntraj);
+  MATRIX theta_therm(ndof, ntraj);
+  MATRIX extra_force(ndof, ntraj);
+  MATRIX extra_momentum(ndof, ntraj);
+  if(prms.ensemble==1){ 
+    if(therm[0].thermostat_type=="Nose-Hoover"){
+      for(idof=0; idof<n_therm_dofs; idof++){
+        dof = prms.thermostat_dofs[idof];
+        for(traj=0; traj<ntraj; traj++){
+          dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+        }// traj
+      }// idof 
+    }// Nose-Hoover
+    else if(therm[0].thermostat_type=="Langevin"){
+      for(idof=0; idof<n_therm_dofs; idof++){
+        dof = prms.thermostat_dofs[idof];
+        for(traj=0; traj<ntraj; traj++){
+          sigma_therm.set(dof, traj, sqrt(2 * invM.get(dof,traj) * therm[traj].nu_therm / beta));
+	  xi_therm.set(dof, traj, rnd.normal());
+	  theta_therm.set(dof, traj, rnd.normal());
+	  extra_force.set(dof, traj, 0.5 * xi_therm.get(dof,traj) * sigma_therm.get(dof,traj) / invM.get(dof,traj) * sqrt(prms.dt) - 0.5 * therm[traj].nu_therm * dyn_var.p->get(dof,traj) * prms.dt - 0.25 * (xi_therm.get(dof,traj) / 2.0 + theta_therm.get(dof,traj) / sqrt(3.0)) * therm[traj].nu_therm * sigma_therm.get(dof,traj) / invM.get(dof,traj) * sqrt(pow(prms.dt,3)) - 0.125 * therm[traj].nu_therm * (dyn_var.f->get(dof,traj) - therm[traj].nu_therm * dyn_var.p->get(dof,traj)) * pow(prms.dt,2));
+	  extra_momentum.set(dof, traj, theta_therm.get(dof,traj) * sigma_therm.get(dof,traj) / (2.0 * sqrt(3.0)) * sqrt(pow(prms.dt,3)));
+        }// traj
+      }// idof 
+    }// Langevin
   }
 
-  *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f);
+  *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f) + extra_force;
   //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * compute_dkinemat(dyn_var, ham); }
   if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
@@ -1293,7 +1395,7 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
   // Update coordinates of nuclei for all trajectories
   for(traj=0; traj<ntraj; traj++){
     for(dof=0; dof<ndof; dof++){  
-      dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt ); 
+      dyn_var.q->add(dof, traj,  invM.get(dof,0) * dyn_var.p->get(dof,traj) * prms.dt + extra_momentum.get(dof,traj) ); 
       
       if(prms.entanglement_opt==22){
         dyn_var.q->add(dof, traj,  invM.get(dof,0) * gamma.get(dof,traj) * prms.dt ); 
@@ -1344,8 +1446,10 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
 
   // Recompute density matrices in response to the updated amplitudes  
   dyn_var.update_amplitudes(prms);
-  dyn_var.update_density_matrix(prms);
- 
+  dyn_var.update_density_matrix(prms); 
+
+  if(prms.use_kcrpmd==1){ propagate_electronic_kcrpmd(dyn_var, ham, prms, rnd); }
+
   vector<int> old_states( dyn_var.act_states);
 
   // In the interval [t, t + dt], we may have experienced the basis reordering, so we need to 
@@ -1366,18 +1470,40 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     update_forces_xf(dyn_var, ham, ham_aux);
   }
 
-  // NVT dynamics
-  if(prms.ensemble==1){  
-    for(traj=0; traj<ntraj; traj++){
-      t2[0] = traj; 
-      pop_submatrix(p, p_traj, t1, t2);
-      double ekin = compute_kinetic_energy(p_traj, invM, prms.thermostat_dofs);
-      therm[traj].propagate_nhc(prms.dt, ekin, 0.0, 0.0);
-    }
+//  // NVT dynamics
+//  if(prms.ensemble==1){  
+//    for(traj=0; traj<ntraj; traj++){
+//      t2[0] = traj; 
+//      pop_submatrix(p, p_traj, t1, t2);
+//      double ekin = compute_kinetic_energy(p_traj, invM, prms.thermostat_dofs);
+//      therm[traj].propagate_nhc(prms.dt, ekin, 0.0, 0.0);
+//    }
+//
+//  }
+//
+//  *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
 
+  // NVT dynamics
+  if(prms.ensemble==1){ 
+    if(therm[0].thermostat_type=="Nose-Hoover"){
+      for(traj=0; traj<ntraj; traj++){
+        t2[0] = traj; 
+        pop_submatrix(p, p_traj, t1, t2);
+        double ekin = compute_kinetic_energy(p_traj, invM, prms.thermostat_dofs);
+        therm[traj].propagate_nhc(prms.dt, ekin, 0.0, 0.0);
+      }// traj
+    }// Nose-Hoover
+    else if(therm[0].thermostat_type=="Langevin"){
+      for(idof=0; idof<n_therm_dofs; idof++){
+        dof = prms.thermostat_dofs[idof];
+        for(traj=0; traj<ntraj; traj++){
+	  extra_force.set(dof, traj, 0.5 * xi_therm.get(dof,traj) * sigma_therm.get(dof,traj) / invM.get(dof,traj) * sqrt(prms.dt) - 0.5 * therm[traj].nu_therm * dyn_var.p->get(dof,traj) * prms.dt - 0.25 * (xi_therm.get(dof,traj) / 2.0 + theta_therm.get(dof,traj) / sqrt(3.0)) * therm[traj].nu_therm * sigma_therm.get(dof,traj) / invM.get(dof,traj) * sqrt(pow(prms.dt,3)) - 0.125 * therm[traj].nu_therm * (dyn_var.f->get(dof,traj) - therm[traj].nu_therm * dyn_var.p->get(dof,traj)) * pow(prms.dt,2));
+        }// traj
+      }// idof 
+    }// Langevin
   }
 
-  *dyn_var.p = *dyn_var.p + 0.5*prms.dt* (*dyn_var.f);
+  *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.f) + extra_force;
   //if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5* compute_dkinemat(dyn_var, ham); }
   if(prms.use_qtsh==1){ *dyn_var.p = *dyn_var.p + 0.5 * prms.dt * (*dyn_var.qtsh_f_nc); }
 
@@ -1386,15 +1512,28 @@ void compute_dynamics(dyn_variables& dyn_var, bp::dict dyn_params,
     dyn_var.p->scale(prms.constrained_dofs[cdof], -1, 0.0); 
   }
 
+//  // NVT dynamics
+//  if(prms.ensemble==1){  
+//    for(idof=0; idof<n_therm_dofs; idof++){
+//      dof = prms.thermostat_dofs[idof];
+//      for(traj=0; traj<ntraj; traj++){
+//        dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+//      }// traj
+//    }// idof 
+//  }
+
   // NVT dynamics
-  if(prms.ensemble==1){  
-    for(idof=0; idof<n_therm_dofs; idof++){
-      dof = prms.thermostat_dofs[idof];
-      for(traj=0; traj<ntraj; traj++){
-        dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
-      }// traj
-    }// idof 
+  if(prms.ensemble==1){ 
+    if(therm[0].thermostat_type=="Nose-Hoover"){
+      for(idof=0; idof<n_therm_dofs; idof++){
+        dof = prms.thermostat_dofs[idof];
+        for(traj=0; traj<ntraj; traj++){
+          dyn_var.p->scale(dof, traj, therm[traj].vel_scale(0.5*prms.dt));
+        }// traj
+      }// idof 
+    }// Nose-Hoover
   }
+
 
   //ham_aux.copy_content(ham);
   update_Hamiltonian_variables(prms, dyn_var, ham, ham_aux, py_funct, params, 1);

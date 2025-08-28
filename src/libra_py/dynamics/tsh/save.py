@@ -112,6 +112,10 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "Ekin_ave_qtsh" in saver.keywords:
             saver.add_dataset("Ekin_ave_qtsh", (_nsteps,), "R")
 
+        # KC-RPMD auxiliary electronic variable kinetic energy
+        if "ekin_aux_var" in saver.keywords:
+            saver.add_dataset("ekin_aux_var", (_nsteps,), "R")
+
     if output_level >= 2:
 
         # Trajectory-resolved instantaneous adiabatic states
@@ -157,6 +161,18 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Average errors from FSSH3
         if "fssh3_average_errors" in saver.keywords:  # and "fssh3_average_errors" in saver.np_data.keys():
             saver.add_dataset("fssh3_average_errors", (_nsteps, 5), "R")
+
+        # Trajectory-resolved auxiliary electronic variable coordinate
+        if "y_aux_var" in saver.keywords:  # and "y_aux_var" in saver.np_data.keys():
+            saver.add_dataset("y_aux_var", (_nsteps, 1), "R")
+
+        # Trajectory-resolved auxiliary electronic variable momentum
+        if "p_aux_var" in saver.keywords:  # and "p_aux_var" in saver.np_data.keys():
+            saver.add_dataset("p_aux_var", (_nsteps, 1), "R")
+
+        # Trajectory-resolved auxiliary electronic variable force
+        if "f_aux_var" in saver.keywords:  # and "p_aux_var" in saver.np_data.keys():
+            saver.add_dataset("f_aux_var", (_nsteps, 1), "R")
 
     if output_level >= 3:
 
@@ -464,6 +480,11 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
         tcnbra_thermostat_energy = dyn_var.compute_tcnbra_thermostat_energy()
         saver.save_scalar(t, "tcnbra_thermostat_energy", tcnbra_thermostat_energy)
 
+    # KC-RPMD auxiliary electronic variable kinetic energy
+    if "ekin_aux_var" in saver.keywords and "ekin_aux_var" in saver.np_data.keys():
+        ekin_aux_var = dyn_var.compute_kcrpmd_ekin()
+        saver.save_scalar(t, "ekin_aux_var", ekin_aux_var)
+
 
 def save_hdf5_2D(saver, i, states, txt_type=0):
     """
@@ -580,6 +601,24 @@ def save_hdf5_2D_new(saver, i, dyn_var, ham, txt_type=0):
         fssh3_average_errors = dyn_var.get_fssh3_average_errors()
         for k in range(5):
             saver.save_multi_scalar(t, k, "fssh3_average_errors", fssh3_average_errors[k])
+
+    if "y_aux_var" in saver.keywords and "y_aux_var" in saver.np_data.keys():
+        # Trajectory-resolved auxiliary electronic variable coordinate
+        # Format: saver.add_dataset("y_aux_var", (_nsteps, 1), "R")
+        y_aux_var = dyn_var.get_y_aux_var()
+        saver.save_multi_scalar(t, 0, "y_aux_var", y_aux_var[0])
+
+    if "p_aux_var" in saver.keywords and "p_aux_var" in saver.np_data.keys():
+        # Trajectory-resolved auxiliary electronic variable coordinate
+        # Format: saver.add_dataset("p_aux_var", (_nsteps, 1), "R")
+        p_aux_var = dyn_var.get_p_aux_var()
+        saver.save_multi_scalar(t, 0, "p_aux_var", p_aux_var[0])
+
+    if "f_aux_var" in saver.keywords and "f_aux_var" in saver.np_data.keys():
+        # Trajectory-resolved auxiliary electronic variable coordinate
+        # Format: saver.add_dataset("f_aux_var", (_nsteps, 1), "R")
+        f_aux_var = dyn_var.get_f_aux_var()
+        saver.save_multi_scalar(t, 0, "f_aux_var", f_aux_var[0])
 
 
 def save_hdf5_3D(saver, i, pops, pops_raw, dm_adi, dm_adi_raw, dm_dia, dm_dia_raw, q, p, Cadi, Cdia, txt_type=0):
