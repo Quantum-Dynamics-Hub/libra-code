@@ -35,20 +35,22 @@ __url__ = "https://github.com/Quantum-Dynamics-Hub/libra-code"
 
 import torch
 import numpy as np
+import math
+from scipy.special import gamma
 
 def rho_gaussian(q, Q, sigma):
     """
     Args: 
     * q (Tensor(ndof) ) - coordinate of the current point of interest
     * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
-    * sigma (Tensor(ntraj, ndof)) - width parameter for each trajectory
+    * sigma (float) - width parameter for each trajectory
 
     Returns:
     Tensor(1) - probability density at the point of interest
 
     """
     _SQRT_2PI = torch.sqrt(torch.tensor(2.0 * torch.pi))
-
+    
     ntraj, ndof = Q.shape[0], Q.shape[1]
     return torch.sum( (1.0/ntraj) * torch.prod(  torch.exp( - 0.5*(q-Q)**2/sigma**2 )/(sigma * _SQRT_2PI ),   1,  False) ) 
 
@@ -56,38 +58,90 @@ def rho_gaussian(q, Q, sigma):
 def rho_lorentzian(q, Q, sigma):
     """
     Args:
-    * q (Tensor(ndof) ) - coordinate of the current point of interest
-    * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
-    * sigma (Tensor(ntraj, ndof)) - width parameter for each trajectory
+    * q (Tensor(..., ndof) ) - coordinate of the current point of interest
+    * Q (Tensor(..., ntraj, ndof)) - coordinates of all trajectories
+    * sigma (float) - width parameter for each trajectory
 
     Returns:
     Tensor(1) - probability density at the point of interest
     """
-    ntraj, ndof = Q.shape[0], Q.shape[1]
-    y =  torch.sum( (1.0/ntraj) * torch.prod( (1.0/torch.pi) * sigma/( (q-Q)**2 + sigma**2 ),   1,  False) )
-    return y
+    # Old way
+    #ntraj, ndof = Q.shape[0], Q.shape[1]
+    #y =  torch.sum( (1.0/ntraj) * torch.prod( (1.0/torch.pi) * sigma/( (q-Q)**2 + sigma**2 ),   1,  False) )
+
+    # New way
+    #ntraj, ndof = Q.shape[-2], Q.shape[-1]
+    #norm = gamma(ndof / 2) / (math.pi**(ndof / 2) * sigma**(ndof - 1))
+    #
+    #LZ = sigma/( ((q-Q)**2).sum(axis=-1) + sigma**2)
+    #f =  torch.tensor( (1.0/ntraj) * norm * LZ.sum(axis=0), requires_grad=True)
+
+    ntraj, ndof = Q.shape
+
+    gamma_term = torch.exp(torch.lgamma(torch.tensor(ndof / 2.0, dtype=Q.dtype, device=Q.device)))
+    norm = gamma_term / (math.pi**( 1 + ndof / 2) * sigma**(ndof - 1))
+
+    r2 = ((q - Q)**2).sum(dim=1)  # shape: (ntraj,)
+    LZ = sigma / (r2 + sigma**2)  # shape: (ntraj,)
+
+    f = (1.0 / ntraj) * norm * LZ.sum()  # no tensor wrapping
+
+
+    return f
+
+
+def rho_mv_cauchy(q, Q, sigma):
+    """
+    Multivariate Cauchy: https://en.wikipedia.org/wiki/Cauchy_distribution
+
+    Args:
+    * q (Tensor(..., ndof) ) - coordinate of the current point of interest
+    * Q (Tensor(..., ntraj, ndof)) - coordinates of all trajectories
+    * sigma (float) - width parameter for each trajectory
+
+    Returns:
+    Tensor(1) - probability density at the point of interest
+    """
+
+    ntraj, ndof = Q.shape
+    # Normalization constant
+    num = torch.lgamma(torch.tensor((ndof + 1) / 2))
+    denom = (
+        torch.lgamma(torch.tensor(0.5)) +
+        0.5 * ndof * math.log(math.pi) +
+        ndof * math.log(sigma)
+    )
+    norm = torch.exp(num - denom)
+
+    r2 = ((q - Q)**2).sum(dim=1)  # shape: (ntraj,)
+    LZ = (torch.tensor(1.0) + r2 / sigma**2) ** (-(ndof + 1) / 2)  # shape: (ntraj,)
+
+    f = (1.0 / ntraj) * norm * LZ.sum()  # no tensor wrapping
+
+    return f
+
 
 
 def quantum_potential_original(Q, sigma, mass, TBF):
     """
     Args:
     * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
-    * sigma (Tensor(ndof)) - width parameters for each trajectory
-    * mass ( Tensor(1, ndof)) - masses of all DOFs, same for all trajectories
+    * sigma (float) - width parameters for each trajectory
+    * mass ( Tensor( ndof)) - masses of all DOFs, same for all trajectories
     * TBF (object) - basis function reference (`rho_gaussian` or `rho_lorentzian`)
 
     Returns:
     Tensor(1) - quantum potential summed over all trajectory points
     """
 
-    ntraj, ndof = Q.shape[0], Q.shape[1]
+    ntraj, ndof = Q.shape[-2], Q.shape[-1]
     U = torch.zeros( (1,), requires_grad=True)
     for k in range(ntraj):
         f = TBF(Q[k], Q, sigma);
         [deriv1] = torch.autograd.grad(f, [Q], create_graph=True, retain_graph=True);
         for i in range(ndof):
             [deriv2] = torch.autograd.grad(deriv1[k,i], [Q], create_graph=True, retain_graph=True);
-            u = -(0.25/mass[0,i])*( deriv2[k, i]/f  - 0.5 * (deriv1[k,i]/f)**2 );
+            u = -(0.25/mass[i])*( deriv2[k, i]/f  - 0.5 * (deriv1[k,i]/f)**2 );
             U = U + u
     return U
 
@@ -97,29 +151,75 @@ def quantum_potential_original_gen(q, Q, sigma, mass, TBF):
     Args:
     * Q (Tensor(ntraj, ndof)) - coordinates of all trajectories
     * sigma (Tensor(ndof)) - width parameters for each trajectory
-    * mass ( Tensor(1, ndof)) - masses of all DOFs, same for all trajectories
+    * mass ( Tensor(ndof)) - masses of all DOFs, same for all trajectories
     * TBF (object) - basis function reference (`rho_gaussian` or `rho_lorentzian`)
 
     Returns:
     Tensor(1) - quantum potential summed over all trajectory points
     """
 
-    ntraj, ndof = Q.shape[0], Q.shape[1]
+    ntraj, ndof = Q.shape[-2], Q.shape[-1]
     U = torch.zeros( (1,), requires_grad=True)
     f = TBF(q, Q, sigma);
     [deriv1] = torch.autograd.grad(f, [q], create_graph=True, retain_graph=True);
     for i in range(ndof):
         [deriv2] = torch.autograd.grad(deriv1[i], [q], create_graph=True, retain_graph=True);
-        u = -(0.25/mass[0,i])*( deriv2[i]/f  - 0.5 * (deriv1[i]/f)**2 );
+        u = -(0.25/mass[i])*( deriv2[i]/f  - 0.5 * (deriv1[i]/f)**2 );
         U = U + u
     return U
 
 
-
-
 def quantum_potential(Q, sigma, mass, TBF):
     """
+    Compute quantum potential in a partially vectorized way.
+
+    ### BUT, HOPEFULLY, THIS IS CORRECT ###
+
+    Args:
+        Q (Tensor): shape (ntraj, ndof), requires_grad=True
+        sigma (float): scalar width
+        mass (Tensor): shape (ndof,)
+        TBF (function): q, Q, sigma → scalar
+
+    Returns:
+        Tensor(1,) — scalar quantum potential
+    """
+
+    ntraj, ndof = Q.shape
+    assert Q.requires_grad, "Q must have requires_grad=True"
+    
+    U = 0.0
+    for k in range(ntraj):
+        # Compute scalar density f_k = rho(q_k; Q)
+        f_k = TBF(Q[k], Q, sigma)  # scalar
+
+        # First derivative: grad f_k w.r.t Q → shape: (ntraj, ndof)
+        dfk = torch.autograd.grad(f_k, Q, create_graph=True, retain_graph=True)[0]
+
+        # Get ∂f_k/∂Q[k, i] across i
+        dfk_k = dfk[k]  # shape: (ndof,)
+
+        # Vectorized second derivatives: loop over i, but vectorized
+        d2fk_k = torch.zeros(ndof, dtype=Q.dtype, device=Q.device)
+        for i in range(ndof):
+            grad_i = torch.autograd.grad(dfk[k, i], Q, create_graph=True, retain_graph=True)[0]
+            d2fk_k[i] = grad_i[k, i]  # ∂²f_k / ∂Q[k,i]²
+
+        # Compute quantum potential contribution from trajectory k
+        f_k_safe = f_k + 1e-12  # prevent divide-by-zero
+        term1 = d2fk_k / f_k_safe
+        term2 = 0.5 * (dfk_k / f_k_safe) ** 2
+        U_k = -0.25 / mass * (term1 - term2)  # shape: (ndof,)
+        U += U_k.sum()
+
+    return U
+
+
+def quantum_potential_old(Q, sigma, mass, TBF):
+    """
     Compute quantum potential in a fully vectorized way.
+
+    ###  THIS WAS INCORRECT MATHEMATICALLY ###
 
     Args:
         Q (Tensor): shape (ntraj, ndof), requires_grad=True
@@ -261,7 +361,7 @@ def init_variables(ntraj, opt):
     q.requires_grad_(True)
     p.requires_grad_(True)
 
-    masses = torch.tensor([[mass, mass]])
+    masses = torch.tensor([mass, mass])
 
     return q, p, masses 
 
@@ -272,7 +372,7 @@ def md( q, p, mass_mat, params ):
     Args:
     * q (Tensor(ntraj, ndof)) - coordinates of all trajectories
     * p (Tensor(ntraj, ndof)) - momenta of all trajectories
-    * mass_mat (Tensor(1, ndof)) - masses for all DOFs (same for all trajectories)
+    * mass_mat (Tensor(ndof)) - masses for all DOFs (same for all trajectories)
     * params:
       - nsteps (int) - how many steps to do
       - dt (float) - integration timestep [in a.u.]

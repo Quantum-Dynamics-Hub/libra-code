@@ -581,6 +581,12 @@ class dyn_variables{
   */
   vector< vector< vector<double> > > coherence_factors;
 
+  ///====================== For average decoherence rates
+  /*
+    Stores the decoherence rates between states averaged over all trajectories
+  */
+
+  MATRIX* ave_decoherence_rates;
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -633,6 +639,7 @@ class dyn_variables{
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
+  MATRIX get_ave_decoherence_rates(){ return *ave_decoherence_rates; }
   vector<double> get_m_aux_var(){ return m_aux_var; }
   vector<double> get_y_aux_var(){ return y_aux_var; }
   vector<double> get_p_aux_var(){ return p_aux_var; }
