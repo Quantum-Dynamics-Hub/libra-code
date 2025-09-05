@@ -229,6 +229,7 @@ def read_mopac_orbital_info(params_):
 
             * **params_["filename"]** ( string ) : the name of the file to read
             * **params_["active_space"]** (list of ints): the orbital numbers to be includes, the indexing starts with 1, not 0 [default: None]
+            * **params_["nstates"]** ( int ): the number of CI states + ground state to use, `nstates = 2` means 1 ground and 1 excited states
 
     Returns:
         (Es, MOs, E_CI, CI, configs):
@@ -256,7 +257,7 @@ def read_mopac_orbital_info(params_):
     params = dict(params_)
 
     critical_params = []
-    default_params = {"filename": "output", "active_space": None}
+    default_params = {"filename": "output", "active_space": None, "nstates":2}
     comn.check_input(params, default_params, critical_params)
 
     out_file = params["filename"]
@@ -416,6 +417,12 @@ def read_mopac_orbital_info(params_):
             ci_end.append(i)
 
     nci = len(ci_beg)
+    if nci < params["nstates"]:
+        print("Not enough CI states requested in the INDO input line\nExiting...\n")
+        sys.exit(0)
+    else:
+        nci = params["nstates"]
+
 
     if False:  # Make True for debugging
         print(F"The number of CI states = {nci}")
