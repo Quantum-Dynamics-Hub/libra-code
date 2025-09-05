@@ -33,6 +33,7 @@ void dyn_variables::allocate_electronic_vars(){
     ampl_adi = new CMATRIX(nadi, ntraj);
     q_mm = new MATRIX(nadi, ntraj);
     p_mm = new MATRIX(nadi, ntraj);
+    ave_decoherence_rates = new MATRIX(nadi, nadi);
     proj_adi = vector<CMATRIX*>(ntraj);
     dm_dia = vector<CMATRIX*>(ntraj);
     dm_adi = vector<CMATRIX*>(ntraj);
@@ -308,10 +309,11 @@ void dyn_variables::allocate_qtsh(){
 void dyn_variables::allocate_kcrpmd(){
 
   if(kcrpmd_vars_status==0){
-    
-    auxiliary_y = vector<double>(1, -1.0);
-    auxiliary_vy = vector<double>(1, 0.0);
-    auxiliary_fy = vector<double>(1, 0.0);
+
+    //m_aux_var = vector<double>(1, 10.0);
+    //y_aux_var = vector<double>(1, 0.0);
+    //p_aux_var = vector<double>(1, 0.05);
+    f_aux_var = vector<double>(1, 0.0);
 
     kcrpmd_vars_status = 1;
   }
@@ -348,6 +350,7 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     *ampl_adi = *x.ampl_adi;
     *q_mm = *x.q_mm;
     *p_mm = *x.p_mm;
+    *ave_decoherence_rates = *x.ave_decoherence_rates;
     for(itraj=0; itraj<ntraj; itraj++){
       *proj_adi[itraj] = *x.proj_adi[itraj];
       *dm_dia[itraj] = *x.dm_dia[itraj];
@@ -483,9 +486,10 @@ dyn_variables::dyn_variables(const dyn_variables& x){
     allocate_kcrpmd();
     
     // Copy content
-    auxiliary_y = x.auxiliary_y;
-    auxiliary_vy = x.auxiliary_vy;
-    auxiliary_fy = x.auxiliary_fy;
+    m_aux_var = x.m_aux_var;
+    y_aux_var = x.y_aux_var;
+    p_aux_var = x.p_aux_var;
+    f_aux_var = x.f_aux_var;
 
   }// if KCRPMD vars
 
@@ -524,6 +528,7 @@ dyn_variables::~dyn_variables(){
     delete ampl_adi;
     delete q_mm;
     delete p_mm;
+    delete ave_decoherence_rates;
 
     act_states.clear();
     act_states_dia.clear();
@@ -647,9 +652,10 @@ dyn_variables::~dyn_variables(){
   }
 
   if(kcrpmd_vars_status==1){
-    auxiliary_y.clear(); 
-    auxiliary_vy.clear(); 
-    auxiliary_fy.clear(); 
+    m_aux_var.clear(); 
+    y_aux_var.clear(); 
+    p_aux_var.clear(); 
+    f_aux_var.clear(); 
 
     kcrpmd_vars_status = 0;
   }
@@ -690,7 +696,6 @@ vector<double> dyn_variables::get_fssh3_average_errors(){
 
   return res;
 }
-
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

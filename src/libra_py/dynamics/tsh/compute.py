@@ -851,6 +851,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # ================= QTSH specific ====================
     default_params.update({"use_qtsh": 0, "qtsh_force_option": 1})
 
+    # ================= KC-RPMD specific ====================
+    default_params.update({"use_kcrpmd": 0})
+
     # ================= Decoherence options =========================================
     default_params.update(
         {
@@ -973,6 +976,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     total_energy = dyn_params["total_energy"]
     use_qtsh = dyn_params["use_qtsh"]
     qtsh_force_option = dyn_params["qtsh_force_option"]
+    use_kcrpmd = dyn_params["use_kcrpmd"]
 
     states = intList()
 
@@ -1027,6 +1031,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     if use_qtsh == 1:  # QTSH
         dyn_var.allocate_qtsh()
+
+    if use_kcrpmd == 1:  # KC-RPMD
+        dyn_var.allocate_kcrpmd()
 
     ham_aux = nHamiltonian(ham)
 
@@ -1155,6 +1162,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
     dyn_var.init_amplitudes(init_elec, rnd)
     dyn_var.init_density_matrix(init_elec)
     # dyn_var.init_active_states(init_elec, rnd)
+    dyn_var.init_auxiliary_variables(init_elec, rnd)
 
     # Setup the hierarchy of Hamiltonians
     ham = nHamiltonian(ndia, nadi, ndof)

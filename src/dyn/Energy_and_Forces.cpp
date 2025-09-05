@@ -278,6 +278,29 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
     }// rep_force == 1
 
   }
+  else if(prms.force_method==4){  // KC-RPMD force
+
+    // Diabatic 
+    if(prms.rep_force==0){ 
+      double Veff;
+      double beta = (hartree/boltzmann) / prms.Temperature; 
+      double eta = prms.kcrpmd_eta; 
+      double a = prms.kcrpmd_a; 
+      double b = prms.kcrpmd_b; 
+      double c = prms.kcrpmd_c; 
+      double d = prms.kcrpmd_d; 
+      Veff = ham.kcrpmd_effective_potential(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c, d);
+      for(itraj=0; itraj<ntraj; itraj++){
+        id[1] = itraj;
+        res[itraj] = Veff;
+      }
+    }
+    // Adiabatic
+    else if(prms.rep_force==1){
+      cout<<"Error in potential_energies(): KC-RPMD works exclusively within diabatic bases\n"; exit(0);
+    }
+  
+  }// KC-RPMD
 
 
   return res;
@@ -407,6 +430,21 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
     }
 
   }// QTSH
+  else if(prms.force_method==4){  // KC-RPMD forces
+    // Diabatic 
+    if(prms.rep_force==0){  
+     double beta = (hartree/boltzmann) / prms.Temperature; 
+     double eta = prms.kcrpmd_eta; 
+     double a = prms.kcrpmd_a; 
+     double b = prms.kcrpmd_b; 
+     double c = prms.kcrpmd_c; 
+     double d = prms.kcrpmd_d; 
+     *dyn_vars.f = ham.kcrpmd_effective_force(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c, d);
+    }
+
+    // Adiabatic 
+    else if(prms.rep_force==1){ cout<<"Error in update_forces(): KC-RPMD works exclusively within diabatic bases\n"; exit(0); }
+  }// KC-RPMD
 
 //  return F;
 }

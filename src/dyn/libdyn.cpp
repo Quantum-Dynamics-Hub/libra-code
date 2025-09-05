@@ -272,6 +272,7 @@ void export_dyn_variables_objects(){
       .def("get_ampl_dia", &dyn_variables::get_ampl_dia)
       .def("get_q_mm", &dyn_variables::get_q_mm)
       .def("get_p_mm", &dyn_variables::get_p_mm)
+      .def("get_ave_decoherence_rates", &dyn_variables::get_ave_decoherence_rates)
       .def("get_proj_adi", &dyn_variables::get_proj_adi)
       .def("get_dm_adi", expt_get_dm_adi_v1)
       .def("get_dm_adi", expt_get_dm_adi_v2)
@@ -291,6 +292,10 @@ void export_dyn_variables_objects(){
       .def("get_momenta_aux", expt_get_momenta_aux)
       .def("get_nab_phase", expt_get_nab_phase)
       .def("get_qtsh_f_nc", &dyn_variables::get_qtsh_f_nc)
+      .def("get_m_aux_var", &dyn_variables::get_m_aux_var)
+      .def("get_y_aux_var", &dyn_variables::get_y_aux_var)
+      .def("get_p_aux_var", &dyn_variables::get_p_aux_var)
+      .def("get_f_aux_var", &dyn_variables::get_f_aux_var)
 
       .def("init_nuclear_dyn_var", &dyn_variables::init_nuclear_dyn_var)
       .def("compute_average_kinetic_energy", expt_compute_average_kinetic_energy_v1)
@@ -325,6 +330,7 @@ void export_dyn_variables_objects(){
       .def("init_active_states", &dyn_variables::init_active_states)
       .def("init_active_states_dia", &dyn_variables::init_active_states_dia)
       .def("init_electronic_dyn_var", &dyn_variables::init_electronic_dyn_var)
+      .def("init_auxiliary_variables", &dyn_variables::init_auxiliary_variables)
 
       .def("compute_average_dm", &dyn_variables::compute_average_dm)
       .def("compute_average_se_pop", &dyn_variables::compute_average_se_pop)
@@ -337,6 +343,8 @@ void export_dyn_variables_objects(){
       .def("compute_tcnbra_thermostat_energy", &dyn_variables::compute_tcnbra_thermostat_energy)
 
       .def("save_curr_dm_into_prev", &dyn_variables::save_curr_dm_into_prev)
+
+      .def("compute_kcrpmd_ekin", &dyn_variables::compute_kcrpmd_ekin)
 
   ;
 }
@@ -1072,6 +1080,10 @@ void export_Dyn_objects(){
   void (*expt_propagate_electronic_v1)
   (dyn_variables& dyn_var, nHamiltonian& ham, nHamiltonian& ham_prev, dyn_control_params& prms) = &propagate_electronic;
   def("propagate_electronic", expt_propagate_electronic_v1);
+
+  void (*expt_propagate_electronic_kcrpmd_v1)
+  (dyn_variables& dyn_var, nHamiltonian& ham, dyn_control_params& prms, Random& rnd) = &propagate_electronic_kcrpmd;
+  def("propagate_electronic_kcrpmd", expt_propagate_electronic_kcrpmd_v1);
 
 /*
   void (*expt_compute_dynamics_v1)

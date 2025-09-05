@@ -31,6 +31,7 @@
 //#include "ensemble/libensemble.h"
 #include "dyn_control_params.h"
 #include "dyn_variables.h"
+#include "../Units.h"
 
 
 /// liblibra namespace

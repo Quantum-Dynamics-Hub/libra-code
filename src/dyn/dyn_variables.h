@@ -539,19 +539,24 @@ class dyn_variables{
   int kcrpmd_vars_status;
   
   /** 
-    The classical auxiliary electronic variable
+    The classical auxiliary electronic variable mass
   */ 
-  vector<double> auxiliary_y;
+  vector<double> m_aux_var;
 
   /** 
-    The classical auxiliary electronic variable velocity
+    The classical auxiliary electronic variable coordinate
   */ 
-  vector<double> auxiliary_vy;
+  vector<double> y_aux_var;
+
+  /** 
+    The classical auxiliary electronic variable momentum
+  */ 
+  vector<double> p_aux_var;
 
   /** 
     The classical auxiliary electronic variable force
   */ 
-  vector<double> auxiliary_fy;
+  vector<double> f_aux_var;
 
 
   ///================= Misc ===================
@@ -576,6 +581,12 @@ class dyn_variables{
   */
   vector< vector< vector<double> > > coherence_factors;
 
+  ///====================== For average decoherence rates
+  /*
+    Stores the decoherence rates between states averaged over all trajectories
+  */
+
+  MATRIX* ave_decoherence_rates;
 
   ///====================== In dyn_variables.cpp =====================
 
@@ -628,6 +639,11 @@ class dyn_variables{
   MATRIX get_momenta_aux(int i){ return *p_aux[i]; }
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
+  MATRIX get_ave_decoherence_rates(){ return *ave_decoherence_rates; }
+  vector<double> get_m_aux_var(){ return m_aux_var; }
+  vector<double> get_y_aux_var(){ return y_aux_var; }
+  vector<double> get_p_aux_var(){ return p_aux_var; }
+  vector<double> get_f_aux_var(){ return f_aux_var; }
   
   void get_current_timestep(bp::dict params){
     std::string key;
@@ -675,6 +691,7 @@ class dyn_variables{
   void init_density_matrix(bp::dict _params);
   void init_active_states(bp::dict _params, Random& rnd);
   void init_active_states_dia(bp::dict _params, Random& rnd);
+  void init_auxiliary_variables(bp::dict _params, Random& rnd);
 
   void init_electronic_dyn_var(bp::dict params, Random& rnd);
 
@@ -690,6 +707,8 @@ class dyn_variables{
   double compute_tcnbra_thermostat_energy();
 
   void save_curr_dm_into_prev();
+
+  double compute_kcrpmd_ekin();
 
 
 
