@@ -15,5 +15,8 @@ __all__ = [ "fssh_g_jt",
             "fssh_h_plus",
             "fssh_v_jt",
             "fssh_v_minus",
-            "fssh_v_plus"
+            "fssh_v_plus",
+            "ida_fssh_g_minus",
+            "ida_fssh_h_minus",
+            "ida_fssh_v_minus"
           ]

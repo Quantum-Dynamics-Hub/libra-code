@@ -31,8 +31,6 @@ __maintainer__ = "Alexey V. Akimov"
 __email__ = "alexvakimov@gmail.com"
 __url__ = "https://github.com/Quantum-Dynamics-Hub/libra-code"
 
-
-
 import torch
 import torch.fft
 import numpy as np
@@ -52,39 +50,6 @@ def Martens_model(q, params):
     Vb = params.get("Vb", 0.0106)
     Vc = params.get("Vc", 0.0)
     return Va * (sech(2.0*q[0]))**2 + 0.5 * Vb * (q[1] + Vc * (q[0]**2 - 1.0 ) )**2
-
-
-# Define Tully's simple avoided crossing diabatic potential matrix
-def tully_potential_matrix(Q, params):
-    """
-    Q: Tensor with shape [ndof, Ngrid]
-    Returns diabatic potential matrix [2, 2, Ngrid]
-    """
-    x = Q[0]  # Assume 1D nuclear coordinate
-    
-    A = params.get("A", 0.01)
-    B = params.get("B", 1.6)
-    C = params.get("C", 0.005)
-    D = params.get("D", 1.0)
-   
-
-    # Diabatic state 1 potential
-    V11 = torch.where(
-    x >= 0,
-    A * (1 - torch.exp(-B * x)),
-    -A * (1 - torch.exp(B * x))
-    ) 
-    V22 = -V11                         # Diabatic state 2 potential (mirror)
-    V12 = C * torch.exp(-D * x**2)    # Coupling between diabatic states
-    
-    shape = x.shape
-    Vmat = torch.zeros((*shape, 2, 2), dtype=torch.cfloat)
-    Vmat[..., 0, 0] = V11
-    Vmat[..., 1, 1] = V22
-    Vmat[..., 0, 1] = V12
-    Vmat[..., 1, 0] = torch.conj(V12)
-
-    return Vmat
 
 
 def gaussian_wavepacket(q, params):

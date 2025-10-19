@@ -121,6 +121,34 @@ def rho_mv_cauchy(q, Q, sigma):
     return f
 
 
+def rho_mv_cauchy_vec(q, Q, sigma):
+    """
+    This is a vectorized version of the function
+    q: (..., ndof)  # evaluation points (can be many)
+    Q: (ntraj, ndof)  # trajectory centers
+    sigma: float or tensor
+    """
+    ntraj, ndof = Q.shape[-2], Q.shape[-1]
+
+    num = torch.lgamma(torch.tensor(0.5 * (ndof + 1), dtype=torch.float64))
+    denom = (
+        torch.lgamma(torch.tensor(0.5, dtype=torch.float64)) +
+        0.5 * ndof * math.log(math.pi) +
+        ndof * math.log(float(sigma))
+    )
+    norm = torch.exp(num - denom)
+
+    # broadcasting: (N, 1, ndof) - (1, ntraj, ndof) -> (N, ntraj, ndof)
+    diff = q.unsqueeze(1) - Q.unsqueeze(0)
+    r2 = (diff**2).sum(dim=-1)  # (N, ntraj)
+
+    LZ = (1.0 + r2 / sigma**2) ** (-(ndof + 1) / 2)  # (N, ntraj)
+
+    f = (1.0 / ntraj) * norm * LZ.sum(dim=1)  # (N,)
+    return f
+
+
+
 
 def quantum_potential_original(Q, sigma, mass, TBF):
     """
@@ -324,7 +352,7 @@ def compute_derivatives_hess(q, function, function_params):
     return f, grad, hess
 
 
-def init_variables(ntraj, opt):
+def init_variables(ntraj, mass=2000.0, omega=0.004, Q=[-1.0, 0.0], P=[3.0, 0.0]):
     """
     So far, this is only good for very specific cases - the models
     from Wang-Martens-Zheng paper:
@@ -342,19 +370,19 @@ def init_variables(ntraj, opt):
 
     """
 
-    mass = 2000.0
-    omega = 0.004
+    #mass = 2000.0
+    #omega = 0.004
     
     sigma_q = np.sqrt(0.5/(mass*omega))
     sigma_p = np.sqrt(0.5*mass*omega)
             
-    q_mean = torch.tensor([[-1.0, 0.0]]*ntraj)
+    q_mean = torch.tensor([Q]*ntraj)
     q_std = torch.tensor([[ sigma_q, sigma_q]]*ntraj)
     q = torch.normal(q_mean, q_std)
 
-    p_mean = torch.tensor([[ 3.0 , 0.0]]*ntraj)
-    if opt == 2:
-        p_mean = torch.tensor([[ 4.0 , 0.0]]*ntraj)
+    p_mean = torch.tensor([P]*ntraj)
+    #if opt == 2:
+    #    p_mean = torch.tensor([[ 4.0 , 0.0]]*ntraj)
     p_std = torch.tensor([[ sigma_p, sigma_p]]*ntraj)
     p = torch.normal(p_mean, p_std)
 
@@ -404,7 +432,7 @@ def md( q, p, mass_mat, params ):
     q_traj = torch.zeros( nsteps, ntraj, ndof )
     p_traj = torch.zeros( nsteps, ntraj, ndof )
     t = torch.zeros(nsteps)
-    P = torch.zeros(nsteps)
+    P = torch.zeros(nsteps, 2)   # based on hard cutoff and soft cutoff
     E = torch.zeros(nsteps, 4 )  # kin, pot, quantum, tot
 
     print("Starting MD")
@@ -419,12 +447,23 @@ def md( q, p, mass_mat, params ):
     E[0,0] = torch.sum( 0.5 * p**2/ mass_mat)/ntraj
     E[0,1] = E_pot.detach()/ntraj
     E[0,3] = E[0,0] + E[0,1] + E[0,2]    
-    P[0] = 0.0
     t[0] = 0.0
 
     #q = q.detach().clone().requires_grad_(True)
     q_traj[0,:,:] = q.detach()
     p_traj[0,:,:] = p.detach()
+
+    # Compute the transmission probability - hard cutoff approach
+    a = q[:,0].detach()  # x-component only
+    P[0,0] = a.masked_fill(a>0, 1).masked_fill(a<0, 0).sum()/ntraj # we sum up the elements that are larger than 0.0
+
+    # Compute the transmission probability with smooth correction
+    #a = q[:, 0].detach()  # x-component only
+    weights = 0.5 + (1.0 / torch.pi) * torch.atan(a / sigma)
+    P[0,1] = weights.mean()   # average over all trajectories
+
+    if 0%print_period==0:
+        print(t[0].item(), E[0])
 
     for i in range(1,nsteps):
         q = q.detach().clone().requires_grad_(True)
@@ -443,6 +482,7 @@ def md( q, p, mass_mat, params ):
             
         p = p + 0.5 * f * dt
 
+
         E[i,0] = torch.sum( 0.5 * p**2/ mass_mat)/ntraj
         E[i,1] = E_pot.detach()/ntraj
         E[i,3] = E[i,0] + E[i,1] + E[i,2]
@@ -450,9 +490,16 @@ def md( q, p, mass_mat, params ):
         q_traj[i,:,:] = q.detach()
         p_traj[i,:,:] = p.detach()
     
-        # Compute the transmission probability
+   
+        # Compute the transmission probability - hard cutoff approach
         a = q[:,0].detach()  # x-component only
-        P[i] = a.masked_fill(a>0, 1).masked_fill(a<0, 0).sum()/ntraj # we sum up the elements that are larger than 0.0
+        P[i,0] = a.masked_fill(a>0, 1).masked_fill(a<0, 0).sum()/ntraj # we sum up the elements that are larger than 0.0
+
+        # Compute the transmission probability with smooth correction
+        #a = q[:, 0].detach()  # x-component only
+        weights = 0.5 + (1.0 / torch.pi) * torch.atan(a / sigma)
+        P[i,1] = weights.mean()   # average over all trajectories
+
 
         if i%print_period==0:
             print(t[i].item(), E[i])

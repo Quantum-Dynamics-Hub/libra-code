@@ -91,7 +91,7 @@ def plot_pop(_plt, t, P, plot_params):
     _plt.xlabel('Time, fs', fontsize=axes_label_fontsize[0])
     _plt.ylabel('Probability', fontsize=axes_label_fontsize[1])
 
-    _plt.plot(t[:]/units.fs2au, P.detach(), label=F"{round(P[-1].item(), 4)}", linewidth=Lw, color=colors[clrs_index[0]])
+    _plt.plot(t[:]/units.fs2au, P[:,0].detach(), label=F"{round(P[-1,0].item(), 4)}", linewidth=Lw, color=colors[clrs_index[0]])
 
     _plt.legend(fontsize=legend_fontsize)
     _plt.tight_layout()

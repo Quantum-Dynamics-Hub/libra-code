@@ -18,10 +18,12 @@ __all__ = ["Beswick_Jortner",
            "Libra",
            "LVC",
            "Martens",
+           "Martens_for_exact_pytorch",
            "Morse",
            "Phenol",
            "Shin_Metiu",
            "SSY",
            "Subotnik",
-           "Tully"
+           "Tully",
+           "Tully_for_exact_pytorch"
            ]
