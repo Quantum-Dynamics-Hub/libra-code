@@ -5,7 +5,7 @@ from functools import reduce
 from liblibra_core import *
 
 """
-.. module:: models_shin_meitu model 
+.. module:: models_shin_meitu and dvr calculations
    :platform: Unix, Windows
    :synopsis: This module implements the Shin-meitu model (SM1 and SM2)
 .. moduleauthor:: Yuchen Wang
@@ -28,6 +28,16 @@ from liblibra_core import *
 # Kinetic Energy Matrix
 # ---------------------------------------------------------------
 def kinetic_energy_matrix(N, dr):
+    """
+    Construct the kinetic energy matrix in a sine DVR (Discrete Variable Representation) basis.
+
+    Parameters:
+    - N : int - Number of grid points
+    - dr : float - Grid spacing
+
+    Returns:
+    - T : ndarray (N x N) - Kinetic energy matrix
+    """
     T = np.zeros((N, N))
     prefactor = 0.5
     for i in range(N):
@@ -103,7 +113,8 @@ def V_en_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
 # ---------------------------------------------------------------
 # Derivative of Potential: Model 1
 # ---------------------------------------------------------------
-  """
+def V_en_deri_matrix_sm1(r_list, R, L_sm1, Rc_sm1):
+    """
     Compute the derivative of the potential energy (model 1) with respect to R.
 
     Parameters:
@@ -115,8 +126,6 @@ def V_en_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
     Returns:
     - dV : ndarray (N x N) - Diagonal matrix of potential derivatives
     """
-
-def V_en_deri_matrix_sm1(r_list, R, L_sm1, Rc_sm1):
     r_list = np.asarray(r_list)
     dV = np.zeros_like(r_list)
     for sigma in [+1, -1]:
@@ -130,6 +139,7 @@ def V_en_deri_matrix_sm1(r_list, R, L_sm1, Rc_sm1):
 # ---------------------------------------------------------------
 # Derivative of Potential: Model 2
 # ---------------------------------------------------------------
+def V_en_deri_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
     """
     Compute the derivative of the potential energy (model 2) with respect to R.
 
@@ -143,7 +153,6 @@ def V_en_deri_matrix_sm1(r_list, R, L_sm1, Rc_sm1):
     Returns:
     - dV_matrix : ndarray (N x N) - Diagonal matrix of potential derivatives
     """
-def V_en_deri_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
     r_list = np.asarray(r_list)
     dV = np.zeros_like(r_list)
 
@@ -175,14 +184,36 @@ def dipole_matrix(r_list, R):
 
 # ===============================================================
 # DVR Calculation (returns obj)
+# This function computes the adiabatic Hamiltonian, its derivative with 
+# respect to nuclear coordinate R, and nonadiabatic couplings.
+# 
+# The result is packaged into an object compatible with later 
+# dynamics codes (e.g., surface hopping or polariton dynamics).
 # ===============================================================
 
 def compute_model(q, params, full_id=None):
     """
-    Compute single-point Shin-Metiu DVR data and return as an obj.
-    Compatible with later dynamics/polariton codes.
-    """
+    Compute single-point Shin-Metiu DVR data and return as an object.
 
+    Parameters:
+    - q : float or object with get() method
+        The current nuclear coordinate R (or an object providing it).
+    - params : dict
+        Dictionary of model parameters, including:
+            - N : int, number of grid points
+            - r_min, r_max : float, grid range
+            - model : int (1 or 2), chooses between potential models
+            - nstates : int, number of adiabatic states to keep
+            - model-specific parameters (L_sm1, Rc_sm1, etc.)
+    - full_id : optional
+        Identifier used to retrieve correct nuclear coordinate from q.
+
+    Returns:
+    - obj : object
+        Contains DVR results including adiabatic Hamiltonian,
+        nonadiabatic couplings, and transformation matrices.
+    """
+    # --- Extract grid parameters --- 
     N = params["N"]
     nstates = params["nstates"]
     model = params["model"]
@@ -197,7 +228,8 @@ def compute_model(q, params, full_id=None):
         R = q
     else:
         R = q.get(0, indx)
-
+    
+    # --- Get nuclear coordinate R ---
     # Construct Hamiltonian
     if model == 1:
         L_sm1 = params["L_sm1"]
@@ -212,31 +244,35 @@ def compute_model(q, params, full_id=None):
         dV = V_en_deri_matrix_sm2(r_grid, R, L_sm2, a_sm2, af_sm2)
     else:
         raise ValueError(F"Unknown model parameter {model} for Shin-Metiu Model.")
+    # --- Construct Hamiltonian H = T + V --- 
     T = kinetic_energy_matrix(N, dr)
     H = T + V
 
+    # --- Diagonalize H to get adiabatic states and energies ---
     eigvals, eigvecs = np.linalg.eigh(H)
-    # Transformations to adiabatic representation
-    # <i| dV/dR |j>
+
+    # --- Transformations to adiabatic representation --- 
     dV_adia = reduce(np.dot, (eigvecs.conj().T, dV, eigvecs))
-    # Nonadiabatic couplings
-    # <i| d/dR |j>
+
+    # --- Nonadiabatic couplings  <i| d/dR |j>  ---
     nac = np.zeros_like(dV_adia)
     for p in range(len(eigvals)):
         for q in range(len(eigvals)):
             if p != q:
                 nac[p, q] = dV_adia[p, q] / (eigvals[q] - eigvals[p])
-    # d<i|V|j>/dR
+               
+    # --- Compute dH/dR in adiabatic representation ---
     H_deri = dV_adia + np.dot(np.diag(eigvals), nac) - np.dot(nac, np.diag(eigvals))
 
-    ham_adia = CMATRIX(nstates, nstates)
-    hvib_adi = CMATRIX(nstates, nstates)
-    basis_transform = CMATRIX(nstates, nstates)
-    time_overlap_adi = CMATRIX(nstates, nstates)
-    d1ham_adia = CMATRIXList()
+    # --- Initialize output objects (custom complex matrix containers) ---
+    ham_adia = CMATRIX(nstates, nstates)              # Adiabatic Hamiltonian
+    hvib_adi = CMATRIX(nstates, nstates)              # Vibronic Hamiltonian (same as above)
+    basis_transform = CMATRIX(nstates, nstates)       # Transformation matrix (identity here)
+    time_overlap_adi = CMATRIX(nstates, nstates)      # Time overlap matrix (identity here)
+    d1ham_adia = CMATRIXList()                        # First derivative of adiabatic Hamiltonian
+    dc1_adi = CMATRIXList()                           # Nonadiabatic coupling vectors
     d1ham_adia.append(CMATRIX(nstates, nstates))
-    dc1_adia = CMATRIXList()
-    dc1_adia.append(CMATRIX(nstates, nstates))
+    dc1_adi.append(CMATRIX(nstates, nstates))
 
     for i in range(nstates):
         ham_adia.set(i, i, eigvals[i] + 0.0j)
@@ -247,6 +283,7 @@ def compute_model(q, params, full_id=None):
         for j in range(nstates):
             dc1_adia[0].set(i, j, nac[i,j]+0.0j)
     
+    # --- Create and return result object ---
     class tmp:
         pass
     obj = tmp()
