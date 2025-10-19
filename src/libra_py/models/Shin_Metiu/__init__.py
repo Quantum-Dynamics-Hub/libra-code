@@ -7,5 +7,6 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["polariton"
+__all__ = ["polariton",
+           "shin_metiu_dvr"
           ]
