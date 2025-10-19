@@ -167,6 +167,7 @@ def V_en_deri_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
     dV_matrix = np.diag(dV)
     return dV_matrix
 
+def dipole_matrix(r_list, R):
     """
     Compute the dipole matrix (μ = R - r), diagonal in the position basis.
 
@@ -176,8 +177,7 @@ def V_en_deri_matrix_sm2(r_list, R, L_sm2, a_sm2, af_sm2):
 
     Returns:
     - mu : ndarray (N x N) - Diagonal dipole matrix
-    """ 
-def dipole_matrix(r_list, R):
+    """
     mu = R - np.asarray(r_list)
     return np.diag(mu)
 
