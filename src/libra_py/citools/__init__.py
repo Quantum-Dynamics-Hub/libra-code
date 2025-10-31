@@ -9,5 +9,6 @@
 
 __all__ = ["clebsch_gordan",
            "csf",
+           "interfaces",
            "slatdet"
           ]
