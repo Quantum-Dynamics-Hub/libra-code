@@ -19,6 +19,7 @@
 
 import itertools
 import math
+import numpy as np
 from typing import Generator, Tuple, List, Sequence, Any
 
 # ---------- helpers ----------
@@ -212,4 +213,58 @@ def generate_determinants_with_parity(
         sorted_combo: Tuple[int, ...] = tuple(sorted(original, key=canonical_sort_key))
         parity: int = permutation_parity(original, sorted_combo)
         yield sorted_combo, parity
+
+
+
+def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
+    """
+    Compute the matrix of overlaps between two possibly distinct sets of
+    Slater determinants (α/β spins orthogonal).
+
+    Parameters
+    ----------
+    dets_A : list[tuple[int]]
+        Bra determinants, tuples of signed orbital indices.
+        Positive = alpha, negative = beta.
+
+    dets_B : list[tuple[int]]
+        Ket determinants, tuples of signed orbital indices.
+
+    S_orb : np.ndarray
+        Spatial orbital overlap matrix (n_orb, n_orb).
+
+    complex_valued : bool, optional
+        If True, results are complex-valued. Default is False.
+
+    Returns
+    -------
+    S_AB : np.ndarray
+        Overlap matrix of shape (len(dets_A), len(dets_B)),
+        with elements <D_I^(A) | D_J^(B)>.
+    """
+    dtype = complex if complex_valued else float
+    nA, nB = len(dets_A), len(dets_B)
+    S_AB = np.zeros((nA, nB), dtype=dtype)
+
+    # Precompute α and β orbital indices (0-based)
+    alpha_A = [np.array([abs(o) - 1 for o in d if o > 0], dtype=int) for d in dets_A]
+    beta_A  = [np.array([abs(o) - 1 for o in d if o < 0], dtype=int) for d in dets_A]
+    alpha_B = [np.array([abs(o) - 1 for o in d if o > 0], dtype=int) for d in dets_B]
+    beta_B  = [np.array([abs(o) - 1 for o in d if o < 0], dtype=int) for d in dets_B]
+
+    for i in range(nA):
+        a_i, b_i = alpha_A[i], beta_A[i]
+        for j in range(nB):
+            a_j, b_j = alpha_B[j], beta_B[j]
+
+            # Build α and β submatrices
+            S_a = S_orb[np.ix_(a_i, a_j)]
+            S_b = S_orb[np.ix_(b_i, b_j)]
+
+            # Product of determinants
+            S_AB[i, j] = np.linalg.det(S_a) * np.linalg.det(S_b)
+
+    return S_AB
+
+
 
