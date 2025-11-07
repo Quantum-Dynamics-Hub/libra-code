@@ -120,7 +120,7 @@ def load(dyn_general):
     #  - 7: FSSH2
     #  - 8: FSSH3
     #  - 9: GFSH (original)
-    dyn_general.update({"tsh_method":0 })
+    dyn_general.update({"tsh_method":7 })
 
 
     #Whether to use QTSH - this replaces standard FSSH via the QTSH

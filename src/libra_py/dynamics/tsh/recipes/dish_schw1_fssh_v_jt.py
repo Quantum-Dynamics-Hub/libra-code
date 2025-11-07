@@ -172,7 +172,7 @@ def load(dyn_general):
     #  - 211: along difference of state-specific forces, reverse on frustrated hops
     #
     #  - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
-    dyn_general.update({"momenta_rescaling_algo":101 })  # accept and rescale based on force differences, reverse on frustrated
+    dyn_general.update({"momenta_rescaling_algo":0 })  # accept and rescale based on force differences, reverse on frustrated
 
 
     #=============== Jasper-Truhlar criterion for momentum reversal ==================
@@ -185,7 +185,7 @@ def load(dyn_general):
     #  - 1: use it [ default ] - the velocities are reversed along the direction d_{a,j} if
     #    a) (F_a * d_{a,j}) * (F_j * d_{a,j}) < 0 and b) (v * d_{a,j}) * (F_j * d_{a,j}) < 0 
     #    where a - is the active state index;  Only in effect, if `momenta_rescaling_algo == 201`
-    dyn_general.update({"use_Jasper_Truhlar_criterion":0 })
+    dyn_general.update({"use_Jasper_Truhlar_criterion":1 })
 
 
     ############################ DECOHERENCE #########################
@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":7}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========
@@ -232,7 +232,7 @@ def load(dyn_general):
     #  - 3: Schwartz - pair-wise-based decoherence, (Schwartz 2), using inv_alpha
     #  - 4: Schwartz - mean-field Force-based decoherence (Schwartz 1), but using interaction width
     #  - 5: Gu-Franco 
-    dyn_general.update({"decoherence_times_type":-1 })
+    dyn_general.update({"decoherence_times_type":2 })
 
     #================ Decoherence time parameters ===================    
     # For "decoherence_times_type":1

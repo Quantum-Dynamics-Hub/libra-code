@@ -58,7 +58,7 @@ def load(dyn_general):
     # Options:
     #  - 0: don't [ default ]
     #  - 1: do
-    dyn_general.update({"do_ssy":0 }) 
+    dyn_general.update({"do_ssy":1 }) 
 
 
     ############################# FORCES #################################

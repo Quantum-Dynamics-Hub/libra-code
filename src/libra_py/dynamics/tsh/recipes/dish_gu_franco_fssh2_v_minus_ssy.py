@@ -58,7 +58,7 @@ def load(dyn_general):
     # Options:
     #  - 0: don't [ default ]
     #  - 1: do
-    dyn_general.update({"do_ssy":0 }) 
+    dyn_general.update({"do_ssy":1 }) 
 
 
     ############################# FORCES #################################
@@ -120,7 +120,7 @@ def load(dyn_general):
     #  - 7: FSSH2
     #  - 8: FSSH3
     #  - 9: GFSH (original)
-    dyn_general.update({"tsh_method":0 })
+    dyn_general.update({"tsh_method":7 })
 
 
     #Whether to use QTSH - this replaces standard FSSH via the QTSH
@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":7}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========
@@ -232,10 +232,10 @@ def load(dyn_general):
     #  - 3: Schwartz - pair-wise-based decoherence, (Schwartz 2), using inv_alpha
     #  - 4: Schwartz - mean-field Force-based decoherence (Schwartz 1), but using interaction width
     #  - 5: Gu-Franco 
-    dyn_general.update({"decoherence_times_type":-1 })
+    dyn_general.update({"decoherence_times_type":5 })
 
     #================ Decoherence time parameters ===================    
-    # For "decoherence_times_type":1
+    # For "decoherence_times_type":5
     dyn_general.update( { "decoherence_C_param": 1.0, "decoherence_eps_param":0.1 } )
    
     # For "decoherence_times_type":2 and "decoherence_times_type":3, "decoherence_times_type":4

@@ -120,7 +120,7 @@ def load(dyn_general):
     #  - 7: FSSH2
     #  - 8: FSSH3
     #  - 9: GFSH (original)
-    dyn_general.update({"tsh_method":0 })
+    dyn_general.update({"tsh_method":9 })
 
 
     #Whether to use QTSH - this replaces standard FSSH via the QTSH
@@ -172,7 +172,7 @@ def load(dyn_general):
     #  - 211: along difference of state-specific forces, reverse on frustrated hops
     #
     #  - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
-    dyn_general.update({"momenta_rescaling_algo":101 })  # accept and rescale based on force differences, reverse on frustrated
+    dyn_general.update({"momenta_rescaling_algo":100 })  # accept and rescale based on force differences, reverse on frustrated
 
 
     #=============== Jasper-Truhlar criterion for momentum reversal ==================

@@ -120,7 +120,7 @@ def load(dyn_general):
     #  - 7: FSSH2
     #  - 8: FSSH3
     #  - 9: GFSH (original)
-    dyn_general.update({"tsh_method":0 })
+    dyn_general.update({"tsh_method":7 })
 
 
     #Whether to use QTSH - this replaces standard FSSH via the QTSH
@@ -151,7 +151,7 @@ def load(dyn_general):
     #  - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
     #
     #  - 40: based on possibility to conserve energy using tcnbra_ekin variables (for TC-NBRA)
-    dyn_general.update({"hop_acceptance_algo":10 })
+    dyn_general.update({"hop_acceptance_algo":20 })
 
 
     #=============== Momentum rescaling options =======================
@@ -172,7 +172,7 @@ def load(dyn_general):
     #  - 211: along difference of state-specific forces, reverse on frustrated hops
     #
     #  - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
-    dyn_general.update({"momenta_rescaling_algo":101 })  # accept and rescale based on force differences, reverse on frustrated
+    dyn_general.update({"momenta_rescaling_algo":0 })  # 
 
 
     #=============== Jasper-Truhlar criterion for momentum reversal ==================
@@ -185,7 +185,7 @@ def load(dyn_general):
     #  - 1: use it [ default ] - the velocities are reversed along the direction d_{a,j} if
     #    a) (F_a * d_{a,j}) * (F_j * d_{a,j}) < 0 and b) (v * d_{a,j}) * (F_j * d_{a,j}) < 0 
     #    where a - is the active state index;  Only in effect, if `momenta_rescaling_algo == 201`
-    dyn_general.update({"use_Jasper_Truhlar_criterion":0 })
+    dyn_general.update({"use_Jasper_Truhlar_criterion":1 })
 
 
     ############################ DECOHERENCE #########################
@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":-1}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========

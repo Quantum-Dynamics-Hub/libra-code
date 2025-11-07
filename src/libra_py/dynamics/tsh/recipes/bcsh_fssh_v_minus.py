@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":3}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========

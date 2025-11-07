@@ -58,7 +58,7 @@ def load(dyn_general):
     # Options:
     #  - 0: don't [ default ]
     #  - 1: do
-    dyn_general.update({"do_ssy":0 }) 
+    dyn_general.update({"do_ssy":1 }) 
 
 
     ############################# FORCES #################################
@@ -151,7 +151,7 @@ def load(dyn_general):
     #  - 33: accept hops with the probability taken from the updated quantum Boltzmann distribution (experimental)
     #
     #  - 40: based on possibility to conserve energy using tcnbra_ekin variables (for TC-NBRA)
-    dyn_general.update({"hop_acceptance_algo":10 })
+    dyn_general.update({"hop_acceptance_algo":21 })
 
 
     #=============== Momentum rescaling options =======================
@@ -172,7 +172,7 @@ def load(dyn_general):
     #  - 211: along difference of state-specific forces, reverse on frustrated hops
     #
     #  - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
-    dyn_general.update({"momenta_rescaling_algo":101 })  # accept and rescale based on force differences, reverse on frustrated
+    dyn_general.update({"momenta_rescaling_algo":210 })  # accept and rescale based on force differences, reverse on frustrated
 
 
     #=============== Jasper-Truhlar criterion for momentum reversal ==================
@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":7}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========
@@ -232,7 +232,7 @@ def load(dyn_general):
     #  - 3: Schwartz - pair-wise-based decoherence, (Schwartz 2), using inv_alpha
     #  - 4: Schwartz - mean-field Force-based decoherence (Schwartz 1), but using interaction width
     #  - 5: Gu-Franco 
-    dyn_general.update({"decoherence_times_type":-1 })
+    dyn_general.update({"decoherence_times_type":2 })
 
     #================ Decoherence time parameters ===================    
     # For "decoherence_times_type":1

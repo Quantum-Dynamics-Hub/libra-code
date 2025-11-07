@@ -120,7 +120,7 @@ def load(dyn_general):
     #  - 7: FSSH2
     #  - 8: FSSH3
     #  - 9: GFSH (original)
-    dyn_general.update({"tsh_method":0 })
+    dyn_general.update({"tsh_method":7 })
 
 
     #Whether to use QTSH - this replaces standard FSSH via the QTSH
@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":1}) 
+    dyn_general.update({ "decoherence_algo":-1}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========

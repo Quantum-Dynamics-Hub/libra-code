@@ -58,7 +58,7 @@ def load(dyn_general):
     # Options:
     #  - 0: don't [ default ]
     #  - 1: do
-    dyn_general.update({"do_ssy":0 }) 
+    dyn_general.update({"do_ssy":1 }) 
 
 
     ############################# FORCES #################################
@@ -172,7 +172,7 @@ def load(dyn_general):
     #  - 211: along difference of state-specific forces, reverse on frustrated hops
     #
     #  - 40: does not rescale velocities, but rescales  tcnbra_ekin variables
-    dyn_general.update({"momenta_rescaling_algo":101 })  # accept and rescale based on force differences, reverse on frustrated
+    dyn_general.update({"momenta_rescaling_algo":100 })  # accept and rescale based on force differences, reverse on frustrated
 
 
     #=============== Jasper-Truhlar criterion for momentum reversal ==================
