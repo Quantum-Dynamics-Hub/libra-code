@@ -49,7 +49,14 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosummary',
     'sphinx.ext.extlinks',
-    'recommonmark'
+    'myst_parser'
+]
+
+language = 'en'
+
+myst_enable_extensions = [
+    "colon_fence",
+    "deflist",
 ]
 
 
