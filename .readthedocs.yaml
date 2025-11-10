@@ -1,9 +1,5 @@
 version: "2"
 
-# Tell Read the Docs to use the 'devel' branch as the default build source
-defaults:
-  version: devel
-
 build:
   os: "ubuntu-22.04"
   tools:
