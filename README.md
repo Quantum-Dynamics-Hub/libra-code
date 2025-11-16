@@ -10,6 +10,9 @@ This is the main page of the computational chemistry methodology discovery libra
 This resource is actively developed, but the older tutorials may not fully reflect the current stage of the code itself, so the 
 tutorials demonstrating the older features may be failing - please let us know if you need to use any of those and run into problems.
 
+* [Read-the-Docs documentation](https://libra-documentation.readthedocs.io/en/latest/)
+This is far from being complete. The work in progress...
+
 * [old program website](https://quantum-dynamics-hub.github.io/libra/index.html)
 Not maintained for long time, but may still contain some useful info on some topics
 
