@@ -308,10 +308,22 @@ void dish_rev2023(dyn_variables& dyn_var, nHamiltonian& ham,
 
   /// Advance coherence times
   coherence_time.add(-1, -1, prms.dt);
-
   /// Update coherence intervals
   MATRIX coherence_interval(nst, ntraj);
-  coherence_interval = coherence_intervals(Coeff, decoherence_rates);
+  // If it is Schwartz 1
+  if(prms.decoherence_times_type==2 || prms.decoherence_times_type==4){
+    for(traj=0; traj < ntraj; traj++){
+      for(int i=0; i<nst; i++){
+        double tt = 1e+10;
+        if( fabs(decoherence_rates[traj].get(i,i))>0.0){ tt = 1.0/decoherence_rates[traj].get(i,i); }
+        coherence_interval.set(i, traj, tt );
+      }//nst
+    }//ntraj
+  }
+  // Otherwise
+  else {
+    coherence_interval = coherence_intervals(Coeff, decoherence_rates);
+  }
 
   // Determine the if any state may be subject to decoherence event
   vector<int> decohered_states( decoherence_event(coherence_time, coherence_interval, prms.dish_decoherence_event_option, rnd) );

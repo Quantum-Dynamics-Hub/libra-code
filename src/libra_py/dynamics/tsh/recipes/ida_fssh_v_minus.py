@@ -205,7 +205,7 @@ def load(dyn_general):
     #  - 7: DISH, rev2023
     #  - 8: diabatic IDA, experimental
     #  - 9: simple decoherence, experimental
-    dyn_general.update({ "decoherence_algo":-1}) 
+    dyn_general.update({ "decoherence_algo":1}) 
 
 
     #==== Option to control the instantaneous decoherence methodology ========
@@ -232,7 +232,7 @@ def load(dyn_general):
     #  - 3: Schwartz - pair-wise-based decoherence, (Schwartz 2), using inv_alpha
     #  - 4: Schwartz - mean-field Force-based decoherence (Schwartz 1), but using interaction width
     #  - 5: Gu-Franco 
-    dyn_general.update({"decoherence_times_type":1 })
+    dyn_general.update({"decoherence_times_type":-1 })
 
     #================ Decoherence time parameters ===================    
     # For "decoherence_times_type":1
