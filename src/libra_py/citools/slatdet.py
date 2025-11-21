@@ -1,3 +1,4 @@
+from __future__ import annotations
 # *********************************************************************************
 # * Copyright (C) 2025 Alexey V. Akimov
 # *
@@ -214,7 +215,69 @@ def generate_determinants_with_parity(
         parity: int = permutation_parity(original, sorted_combo)
         yield sorted_combo, parity
 
+def generate_single_excitations(active_orbitals: List[int], nelec: int):
+    """
+    Generate the ground-state determinant first, followed by all single-excitation
+    determinants (sorted + parity), for a closed-shell reference inside an active space.
 
+    Parameters
+    ----------
+    active_orbitals : list[int]
+        Ordered list of spatial orbital numbers in the active space.
+        Example: [1,2,3,4,5,6,7,8,9,10]
+
+    nelec : int
+        Number of electrons in the active space. Must be even for closed-shell.
+        Example: 10 -> 5 occupied spatial orbitals (paired).
+
+    Yields
+    ------
+    (det_sorted, parity)
+        det_sorted: tuple of signed spin-orbitals (canonical order)
+        parity: +1 or -1
+    """
+    if nelec % 2 != 0:
+        raise ValueError("Closed-shell reference requires an even number of electrons.")
+
+    n_occ = nelec // 2
+    occ = active_orbitals[:n_occ]
+    virt = active_orbitals[n_occ:]
+
+    # -----------------------------
+    # 1. Ground state determinant
+    # -----------------------------
+    ref_raw = []
+    for o in occ:
+        ref_raw.append(+o)  # alpha
+        ref_raw.append(-o)  # beta
+
+    ref_sorted = tuple(sorted(ref_raw, key=canonical_sort_key))
+    ref_parity = permutation_parity(tuple(ref_raw), ref_sorted)
+
+    # yield ground-state first
+    yield ref_sorted, ref_parity
+
+    # -----------------------------
+    # 2. Single excitations
+    # -----------------------------
+    for o in occ:
+        for v in virt:
+
+            # α-spin excitation: +o → +v
+            det_raw = list(ref_raw)
+            det_raw.remove(+o)
+            det_raw.append(+v)
+            det_sorted = tuple(sorted(det_raw, key=canonical_sort_key))
+            parity = permutation_parity(tuple(det_raw), det_sorted)
+            yield det_sorted, parity
+
+            # β-spin excitation: -o → -v
+            det_raw = list(ref_raw)
+            det_raw.remove(-o)
+            det_raw.append(-v)
+            det_sorted = tuple(sorted(det_raw, key=canonical_sort_key))
+            parity = permutation_parity(tuple(det_raw), det_sorted)
+            yield det_sorted, parity
 
 def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
     """
