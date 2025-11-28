@@ -163,6 +163,76 @@ def build_minimal_csf_basis(
 
     return min_basis, transposed_basis
 
+def build_minimal_csf_basis_singlet(
+    configs: List[Tuple[int, ...]],
+    active_space: List[int],
+    nelec: int,
+    max_unpaired: int
+) -> Tuple[List[Tuple[Any, ...]], List[Tuple[Any, ...]]]:
+    """
+    Construct a minimal CSF (Configuration State Function) basis
+    from raw MOPAC/Libra configurations.
+
+    Parameters
+    ----------
+    configs : list[tuple[int]]
+        Configurations extracted from Libra or MOPAC output (raw orbital numbers).
+    active_space : list[int]
+        List of active orbital numbers defining the active space.
+    nelec : int
+        Total number of electrons.
+    max_unpaired : int
+        Twice the target spin projection (2*Ms).
+        For example, 0 corresponds to singlet-only configurations.
+
+    Returns
+    -------
+    min_basis : list[tuple]
+        List of matching determinants (CSFs) as (configuration, phase) tuples.
+    transposed_basis : list[tuple]
+        Transposed representation, i.e. `list(zip(*min_basis))`.
+        Each element groups together all configurations or all phases across the basis.
+
+    Notes
+    -----
+    - Each entry in `min_basis` corresponds to a determinant that matches
+      one of the given MOPAC configurations, within the spin constraint `max_unpaired`.
+    - `transposed_basis` is convenient for splitting the basis into
+      separate lists of determinants and phases.
+    - If no matches are found, `transposed_basis` is returned as an empty list.
+
+    Example
+    -------
+    >>> import numpy as np
+    >>> # Example input from MOPAC/Libra
+    >>> configs0_raw = [(6, -6, 7, -7, 9, -8)]
+    >>> active_space = [6, 7, 8, 9, 10, 11]
+    >>> nelec = 6
+    >>> max_unpaired = 0   # singlet configurations only
+    >>>
+    >>> min_basis, (all_confs, all_phases) = build_minimal_csf_basis(
+    ...     configs0_raw, active_space, nelec, max_unpaired
+    ... )
+    >>>
+    >>> print(len(min_basis))
+    19
+    >>> print(all_confs[0])
+    (6, -6, 7, -7, 8, -8)
+    >>> print(all_phases[0])
+    1
+    """
+
+    # Generate all possible determinants (with parity) for the given active space
+#    dets: List[Tuple[Any, ...]] = list(sd.generate_determinants_with_parity(active_space, nelec))
+
+    min_basis: List[Tuple[Any, ...]] = []
+    for det, phase in sd.generate_single_excitations(active_space, nelec):
+        min_basis.append((det, phase))
+
+    # Avoid error when basis is empty
+    transposed_basis: List[Tuple[Any, ...]] = list(zip(*min_basis)) if min_basis else []
+
+    return min_basis, transposed_basis
 
 
 
@@ -392,3 +462,72 @@ def configs_and_T_matrix(
     return mapped_basis, T
 
 
+def configs_and_T_matrix_singlet(
+    configs0_raw: List[Tuple[int, ...]],
+    active_space: List[int],
+    orbital_space: List[int],
+    nelec: int,
+    S: int,
+    Ms: int
+) -> Tuple[List[Tuple[int, ...]], "CMATRIX"]:
+    """
+    Generate the minimal active-space configurations mapped to a given orbital space
+    and the configuration-to-CSF transformation matrix for a CAS with given spin.
+
+    Parameters
+    ----------
+    configs0_raw : list[tuple[int]]
+        List of raw configurations from Libra/MOPAC (signed orbital indices).
+    active_space : list[int]
+        Orbitals defining the active space used to generate the minimal determinant basis.
+    orbital_space : list[int]
+        Orbital indices used for mapping configurations (output will be relative to this space).
+    nelec : int
+        Number of active electrons.
+    S : int
+        Total spin quantum number.
+    Ms : int
+        Spin projection quantum number.
+
+    Returns
+    -------
+    mapped_basis : list[tuple[int, ...]]
+        List of minimal configurations mapped to the specified `orbital_space`,
+        with signs preserved (positive = α-spin, negative = β-spin).
+    T : CMATRIX
+        Complex-valued configuration-to-CSF transformation matrix.
+
+    Example
+    -------
+    >>> # Build configurations and T matrix for singlet CAS
+    >>> mapped_basis, T = configs_and_T_matrix(
+    ...     configs0_raw,
+    ...     active_space=[6, 7, 8, 9, 10, 11],
+    ...     orbital_space=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+    ...     nelec=6,
+    ...     S=0,
+    ...     Ms=0
+    ... )
+    >>> # mapped_basis shows minimal determinants mapped to orbital_space indices
+    >>> print(mapped_basis[:5])
+    [(5, -5, 6, -6, 7, -7),
+     (5, -5, 6, -6, 7, -8),
+     (5, -5, 6, -6, -7, 8),
+     (5, -5, 6, -6, 7, -9),
+     (5, -5, 6, -6, -7, 9)]
+    >>> # T is the configuration-to-CSF transformation matrix
+    >>> print("Shape of T:", T.num_of_rows, "x", T.num_of_cols)
+    """
+
+    # 1. Build minimal SD basis with spin constraint 2*Ms
+    min_basis, (all_confs, all_phases) = build_minimal_csf_basis_singlet(
+        configs0_raw, active_space, nelec, 2*Ms
+    )
+
+    # 2. Map configurations to the specified orbital space
+    mapped_basis = map_to_active_indices(all_confs, orbital_space)
+
+    # 3. Compute configuration-to-CSF transformation matrix
+    T = conf2csf_matrix(min_basis, all_confs, all_phases, S, Ms)
+
+    return mapped_basis, T
