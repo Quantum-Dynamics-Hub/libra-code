@@ -75,18 +75,21 @@ class ldr_solver:
 
         self.S, self.H = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device), torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
         self.U = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
+        self.Shalf = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
         
         self.time = []
         self.kinetic_energy = []
         self.potential_energy = []
         self.total_energy = []
         self.population_right = []
+        self.denmat = []
         self.norm = []
         self.C_save = []
 
     def chi_overlap(self):
         """
-        Compute nuclear overlap matrix Snucl[i, j] for the mesh qmesh.
+        Compute nuclear overlap matrix Snucl[i, j] for the mesh qmesh 
+        from the Gaussian basis, g(x; q) = \exp(-\alpha * (x-q)**2).
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]    # (N, N, D)
         exponent = -0.5 * torch.sum(self.alpha * delta**2, dim=2)  # (N, N)
@@ -95,7 +98,7 @@ class ldr_solver:
     def chi_kinetic(self):
         r"""
         Compute nuclear kinetic energy matrix Tnucl[i,j] = <g(x; qgrid[i]) | T | g(x; qgrid[j])>,
-        with T = Σ_ν -½ m_ν^{-1} ∂²/∂x_ν².
+        with T = \sum_{\nu} -0.5* m_ν^{-1} \partial^{2}/\partial x_{\nu}^2.
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]               # (N, N, D)
         tau = self.alpha / (2.0 * self.mass) * (1.0 - self.alpha * delta**2)  # (N, N, D)
@@ -166,7 +169,7 @@ class ldr_solver:
     
         evals_S, evecs_S = torch.linalg.eigh(S)
     
-        S_half = (evecs_S @ torch.diag(evals_S.sqrt().to(dtype=torch.cdouble)) @ evecs_S.T).to(dtype=torch.cdouble)
+        self.S_half = (evecs_S @ torch.diag(evals_S.sqrt().to(dtype=torch.cdouble)) @ evecs_S.T).to(dtype=torch.cdouble)
         S_invhalf = (evecs_S @ torch.diag((1.0 / evals_S).sqrt().to(dtype=torch.cdouble)) @ evecs_S.T).to(dtype=torch.cdouble)
     
         H_ortho = S_invhalf @ H @ S_invhalf
@@ -176,7 +179,7 @@ class ldr_solver:
         exp_diag = torch.diag(torch.exp(-1j * evals_H * dt))
         U_ortho = evecs_H @ exp_diag @ evecs_H.conj().T
     
-        self.U = S_invhalf @ U_ortho @ S_half
+        self.U = S_invhalf @ U_ortho @ self.S_half
 
 
     def initialize_C(self):
@@ -251,6 +254,8 @@ class ldr_solver:
             self.norm.append(torch.sqrt(torch.vdot(self.Ccurr, overlap)))
         if "population_right" in self.properties_to_save:
             self.population_right.append(self.compute_populations())
+        if "denmat" in self.properties_to_save:
+            self.denmat.append(self.compute_denmat())
         if "kinetic_energy" in self.properties_to_save:
             self.kinetic_energy.append(self.compute_kinetic_energy())
         if "potential_energy" in self.properties_to_save:
@@ -277,6 +282,40 @@ class ldr_solver:
         P = torch.sum(C_blocks.conj() * SC_blocks, dim=1).real
     
         return P
+    
+    def compute_denmat_raw(self):
+        """
+        Compute electronic density matrix for a single step without the orthogonalization.
+        """
+        N, s = self.ngrids, self.nstates
+        Cvec = self.Ccurr
+    
+        # Compute SC once: shape (ndim,)
+        SC = self.S @ Cvec
+    
+        C_blocks = Cvec.view(s, N)
+        SC_blocks = SC.view(s, N)
+    
+        # \rho_ij = \sum_n C_i,n^* (SC)_j,n
+        rho = SC_blocks.conj() @ C_blocks.T 
+    
+        return rho
+
+    def compute_denmat(self):
+        """
+        Compute electronic density matrix for a single step without the orthogonalization.
+        """
+        N, s = self.ngrids, self.nstates
+        Cvec = self.Ccurr
+    
+        # Orthogonalize coefficients: C_ortho = S^{1/2} C
+        C_ortho = self.S_half @ Cvec
+      
+        C_blocks = C_ortho.view(s, N)
+    
+        rho = C_blocks @ C_blocks.conj().T # (s, s)
+    
+        return rho
 
     def compute_kinetic_energy(self):
         """
@@ -355,6 +394,7 @@ class ldr_solver:
                      "potential_energy":self.potential_energy,
                      "total_energy":self.total_energy,
                      "population_right":self.population_right,
+                     "denmat":self.denmat,
                      "norm":self.norm
                     }, F"{self.prefix}.pt" )
 
