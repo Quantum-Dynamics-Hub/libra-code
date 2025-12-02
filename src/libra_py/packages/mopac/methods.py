@@ -564,7 +564,7 @@ def mopac_compute_adi(q, params, full_id):
                                                                    active_space=CAS[0], 
                                                                    orbital_space = actual_orbital_space,
                                                                    nelec=CAS[1], S=mult_S, Ms=mult_Ms)
-    else
+    else:
         configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix(configs_raw_curr, 
                                                                    active_space=CAS[0], 
                                                                    orbital_space = actual_orbital_space,
