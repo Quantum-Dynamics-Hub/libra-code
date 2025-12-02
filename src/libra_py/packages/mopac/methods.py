@@ -488,7 +488,7 @@ def mopac_compute_adi(q, params, full_id):
             * **params[i]["CAS"]**  (list of of ints, int): the list represents the indices of spatial orbitals used in CAS definition in INDO-CI
                 calculations, absoluted values; the "int" represents the number of electrons in the active space. For example, if the HOMO is 8
                 and and CAS was (6, 3) - 6 orbitals with 3 doubly-filled orbitals, then one would use: [ [6,7,8,  9, 10, 11], 6]
-
+            * **params[i]["is_single_excitation"]** ( bool or int): 0 - consider full configuration space, 1 - use single excitation specific methods
     Returns:
         PyObject: obj, with the members:
 
@@ -541,7 +541,7 @@ def mopac_compute_adi(q, params, full_id):
     CAS = params[itraj]["CAS"]
     mult_S = params[itraj]["mult_S"]
     mult_Ms = params[itraj]["mult_Ms"]
-
+    is_single_excitation = params[itraj]["is_single_excitation"]
     natoms = len(labels)
     ndof = 3 * natoms
 
@@ -559,12 +559,16 @@ def mopac_compute_adi(q, params, full_id):
       "orbital_space":orbital_space,
       "nstates":nstates
     })
-
-    configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix(configs_raw_curr, 
+    if is_single_excitation:
+        configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix_singlet(configs_raw_curr, 
                                                                    active_space=CAS[0], 
                                                                    orbital_space = actual_orbital_space,
                                                                    nelec=CAS[1], S=mult_S, Ms=mult_Ms)
-
+    else
+        configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix(configs_raw_curr, 
+                                                                   active_space=CAS[0], 
+                                                                   orbital_space = actual_orbital_space,
+                                                                   nelec=CAS[1], S=mult_S, Ms=mult_Ms)
     # Get the properties at the previous time-step
     E_prev, MO_prev, E_CI_prev, CI_prev, configs_prev, configs_raw_prev = None, None, None, None, None, None
     CSF_coeff_prev = None
