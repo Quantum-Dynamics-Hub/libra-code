@@ -488,7 +488,7 @@ def mopac_compute_adi(q, params, full_id):
             * **params[i]["CAS"]**  (list of of ints, int): the list represents the indices of spatial orbitals used in CAS definition in INDO-CI
                 calculations, absoluted values; the "int" represents the number of electrons in the active space. For example, if the HOMO is 8
                 and and CAS was (6, 3) - 6 orbitals with 3 doubly-filled orbitals, then one would use: [ [6,7,8,  9, 10, 11], 6]
-            * **params[i]["is_single_excitation"]** ( bool or int): 0 - consider full configuration space, 1 - use single excitation specific methods
+            * **params[i]["is_singlet_excitation"]** ( bool or int): 0 - consider full configuration space [ default ], 1 - use single excitation specific methods
     Returns:
         PyObject: obj, with the members:
 
@@ -521,7 +521,7 @@ def mopac_compute_adi(q, params, full_id):
                       "mopac_working_directory": "mopac_wd",
                       "mopac_input_prefix": "input_", "mopac_output_prefix": "output_",
                       "dt": 1.0 * units.fs2au, "do_Lowdin": 0, 
-                      "CAS":[ [1,2], 2], "mult_S":0, "mult_Ms":0
+                      "CAS":[ [1,2], 2], "mult_S":0, "mult_Ms":0, "is_singlet_excitation":0
                       }
     comn.check_input(params[itraj], default_params, critical_params)
 
@@ -541,7 +541,7 @@ def mopac_compute_adi(q, params, full_id):
     CAS = params[itraj]["CAS"]
     mult_S = params[itraj]["mult_S"]
     mult_Ms = params[itraj]["mult_Ms"]
-    is_single_excitation = params[itraj]["is_single_excitation"]
+    is_singlet_excitation = params[itraj]["is_singlet_excitation"]
     natoms = len(labels)
     ndof = 3 * natoms
 
@@ -559,7 +559,7 @@ def mopac_compute_adi(q, params, full_id):
       "orbital_space":orbital_space,
       "nstates":nstates
     })
-    if is_single_excitation:
+    if is_singlet_excitation:
         configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix_singlet(configs_raw_curr, 
                                                                    active_space=CAS[0], 
                                                                    orbital_space = actual_orbital_space,
