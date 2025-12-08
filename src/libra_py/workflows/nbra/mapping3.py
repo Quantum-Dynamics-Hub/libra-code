@@ -21,7 +21,8 @@
 
 import os, sys, math
 import numpy as np
-from .mapping import sd2indx 
+from .mapping import sd2indx
+import libra_py.data_conv as data_conv 
 
 # Fisrt, we add the location of the library to test to the PYTHON path
 if sys.platform == "cygwin":
@@ -188,7 +189,7 @@ def ovlp_arb_2(_SD1, _SD2, S, active_space=None, verbose=False):
 
 
 
-def ovlp_mat_arb(SD1, SD2, S, active_space=None):
+def ovlp_mat_arb(SD1, SD2, _S, active_space=None):
     """Compute a matrix of overlaps in the SD basis
 
     Args:
@@ -202,25 +203,30 @@ def ovlp_mat_arb(SD1, SD2, S, active_space=None):
             occupied in SD with index ```iSD``` and how
             SeeAlso: ```inp``` in the ```sd2indx(inp)``` function
 
-        S ( CMATRIX(K,K) ): is the matrix in the full space of 1-el orbitals. Note - the mapped indices should not
-            be larger than K-1
+        _S ( numpy array(N,N) ): is the matrix in the space of 1-el orbital. 
+            Note - the mapped indices should not be larger than K-1
 
         active_space ( list of ints ): indices of the orbitals (starting from 1) to
             include into consideration. If None - all the orbitals will be used [ default: None ]
 
     Returns:
-        CMATRIX(N, M): overlap matrix composed of elements <SD1(i)|SD2(j)>
+        numpy.array(N, M): overlap matrix composed of elements <SD1(i)|SD2(j)>
 
     """
 
+    # For transition compatibility
+    S = None
+    if type(_S)==CMATRIX or type(_S)==MATRIX:
+        S = data_conv.MATRIX2nparray(_S, _dtype=np.complex128)
+    else:
+        S = _S
+
     N, M = len(SD1), len(SD2)
-    res = np.zeros( (N, M), dtype=np.float64 ) #CMATRIX(N, M)
+    res = np.zeros( (N, M), dtype=np.float64 )
 
     for n in range(0, N):
         for m in range(0, M):
-            res[n, m] = ovlp_arb(SD1[n], SD2[m], S, active_space, 0) 
-            #res.set(n, m, val)
-            #res[n, m] = val
+            res[n, m] = ovlp_arb(SD1[n], SD2[m], S, active_space, 0)
 
     return res
 
