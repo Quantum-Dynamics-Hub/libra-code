@@ -26,8 +26,10 @@ if sys.platform == "cygwin":
 elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
-from libra_py.workflows.nbra.mapping import sd2indx
+from libra_py.workflows.nbra.mapping import sd2indx, ovlp_arb
 
+
+#=============================== testing sd2indx ============================
 def generate():
     """
     Run this function to see what is the current results 
@@ -43,6 +45,7 @@ def generate():
                 out, p = sd2indx(inp, nbasis=6, do_sort=do_sort, user_notation=user_notation)
                 print(F"{inp} do_sort={do_sort}, user_notation={user_notation} -> {out}, {p}" )
 
+#generate()
 
 # Test cases
 test_data = [
@@ -83,4 +86,81 @@ def test_sd2indx(inp, do_sort, user_notation, expected_out, expected_p):
 
     assert out == expected_out, f"Output mismatch for inp={inp}, do_sort={do_sort}, user_notation={user_notation}"
     assert p == expected_p, f"Phase mismatch for inp={inp}, do_sort={do_sort}, user_notation={user_notation}"
+
+
+#================================== testing ovlp_arb =================================
+def generate2():
+    S = np.eye(6)
+    S[0,0] = 0.91
+    S[1,1] = -0.98
+    S[3,3] = 0.91
+    S[4,4] = -0.98
+
+    basis = [ [1,-1, 2, -2],
+                 [-1,1, 2, -2],
+                 [1,-1, 2, -3],
+                 [1,-1,-2, 3]
+               ]
+    for inp1 in basis:
+        for inp2 in basis:
+            # We should always sort - to get user-input-independent results
+            # We always use doubled matrix notation - so that the translations work as intended
+            out1, _ = sd2indx(inp1, nbasis=6, do_sort=do_sort, user_notation=user_notation)
+            out2, _ = sd2indx(inp2, nbasis=6, do_sort=do_sort, user_notation=user_notation)
+            x = ovlp_arb(inp1, inp2, S, None, False)
+            print(F"<{inp1}|{inp2}> = <{out1}|{out2}> = {x}")
+
+
+#generate2()
+
+
+basis = [
+    [1, -1, 2, -2],
+    [-1, 1, 2, -2],
+    [1, -1, 2, -3],
+    [1, -1, -2, 3],
+]
+
+
+# Expected results
+expected = {
+    ((1,-1, 2,-2), (1,-1, 2,-2)): 0.79530724,
+    ((1,-1, 2,-2), (-1,1, 2,-2)): 0.79530724,
+    ((1,-1, 2,-2), (1,-1, 2,-3)): 0.0,
+    ((1,-1, 2,-2), (1,-1,-2, 3)): 0.0,
+
+    ((-1,1, 2,-2), (1,-1, 2,-2)): 0.79530724,
+    ((-1,1, 2,-2), (-1,1, 2,-2)): 0.79530724,
+    ((-1,1, 2,-2), (1,-1, 2,-3)): 0.0,
+    ((-1,1, 2,-2), (1,-1,-2, 3)): 0.0,
+
+    ((1,-1, 2,-3), (1,-1, 2,-2)): 0.0,
+    ((1,-1, 2,-3), (-1,1, 2,-2)): 0.0,
+    ((1,-1, 2,-3), (1,-1, 2,-3)): -0.8115380000000001,
+    ((1,-1, 2,-3), (1,-1,-2, 3)): 0.0,
+
+    ((1,-1,-2, 3), (1,-1, 2,-2)): 0.0,
+    ((1,-1,-2, 3), (-1,1, 2,-2)): 0.0,
+    ((1,-1,-2, 3), (1,-1, 2,-3)): 0.0,
+    ((1,-1,-2, 3), (1,-1,-2, 3)): -0.8115380000000001,
+}
+
+@pytest.mark.parametrize("inp1", basis)
+@pytest.mark.parametrize("inp2", basis)
+def test_overlap(inp1, inp2):
+
+    key = (tuple(inp1), tuple(inp2))
+    x_expected = expected[key]
+
+    # Build the S matrix
+    S = np.eye(6)
+    S[0,0] = 0.91
+    S[1,1] = -0.98
+    S[3,3] = 0.91
+    S[4,4] = -0.98
+
+    x = ovlp_arb(inp1, inp2, S, None, False)
+
+    # Numerical tolerance
+    assert np.isclose(x, x_expected, atol=1e-12)
 

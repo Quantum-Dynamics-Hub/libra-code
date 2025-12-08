@@ -112,7 +112,7 @@ def sd2indx(inp, nbasis=0, do_sort=False, user_notation=0):
 
 
 
-def ovlp_arb(_SD1, _SD2, S, active_space=None, do_sort=False, user_notation=0, verbose=False):
+def ovlp_arb(_SD1, _SD2, S, active_space=None, verbose=False):
     """Compute the overlap of two generic SDs: <SD1|SD2>
     This functions translates the explicit use of two Python `for` loops
     into a more efficient way using numpy
@@ -128,15 +128,6 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, do_sort=False, user_notation=0, v
 
         active_space ( list of ints ): indices of the orbitals (starting from 1) to
             include into consideration. If None - all the orbitals will be used [ default: None ]
-
-        do_sort ( Boolean ): the flag to tell whether the indices should be sorted in
-            a particular order (according to canonic ordering defined in the `citools.slatdet`):
-                - True - for new scheme (needed for the SAC) [default]
-                - use with False for Pyxaid mapping!
-
-        user_notation (int):
-            - 0 : short-hand - in this case, the mapping goes into [0, N) range [default - because it has been used for a while]
-            - 1 : extended - in this case, the mapping goes into [0, 2*N) range
 
         verbose ( Bool ): whether to print some extra info [ default: False] 
 
@@ -169,33 +160,27 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, do_sort=False, user_notation=0, v
     # Apply the determinant formula
     det_size = len(SD1)
     s = np.zeros( (det_size, det_size), dtype=np.float64); 
-    """ Commented on 7/22/2025
-    # ============================== The numpy version of the above double-for-loops
-    # Find the tensor product of the SD1 and SD2
-    SD_tensor_product = np.tensordot(SD1, SD2, axes=0)
-    # Next, find the sign of these elementwise multiplications
-    SD_tensor_product_sign = np.sign(SD_tensor_product)
-    # Now, find where we have alpha-beta indices so that the 
-    negative_sign_indices = np.where(SD_tensor_product_sign < 0)
-    s[negative_sign_indices] = 0
-    """
+    
     # Let's build the matrix related to sd1 and sd2 from the KS orbitals
-    # For this, we reuire to turn each element into matrix indices
-    sd1,_,_ = sd2indx(SD1, nbasis, do_sort, user_notation)
-    sd2,_,_ = sd2indx(SD2, nbasis, do_sort, user_notation)
+    # For this, we require to turn each element into matrix indices
+    sd1, p1 = sd2indx(SD1, nbasis, do_sort=True, user_notation=1)
+    sd2, p2 = sd2indx(SD2, nbasis, do_sort=True, user_notation=1)
 
+    if verbose==True:
+        print(sd1, sd2)
+        print(p1, p2)
 
     """ 
-    ALEXEY: Instead of this trick, use user_notation = 1
+    #ALEXEY on 12/08/2025: Instead of this trick, we use user_notation = 1 above
 
     # What about beta indices?! We should add `nbasis/2` to them. This is added on 7/22/2025
     # With this simple approach, there is no need for tensor product or the `if else` clause brought
     # previously since the elements corresponding to the alpha-beta orbitals are already
     # zero in the two-spinor format of the KS matrices :)
+
     beta_indices = np.where(np.array(SD1) < 0)
     sd1 = np.array(sd1)
     sd1[beta_indices] += int(nbasis/2)
-
     beta_indices = np.where(np.array(SD2) < 0)
     sd2 = np.array(sd2)
     sd2[beta_indices] += int(nbasis/2)
@@ -207,13 +192,14 @@ def ovlp_arb(_SD1, _SD2, S, active_space=None, do_sort=False, user_notation=0, v
     
     if verbose==True:
         print(s)
+
     res = np.linalg.det(s)
 
     return res
 
 
 
-def ovlp_mat_arb(SD1, SD2, _S, active_space=None, do_sort=False, user_notation=0, verbose=False):
+def ovlp_mat_arb(SD1, SD2, _S, active_space=None, verbose=False):
     """Compute a matrix of overlaps in the SD basis
 
     Args:
@@ -232,15 +218,6 @@ def ovlp_mat_arb(SD1, SD2, _S, active_space=None, do_sort=False, user_notation=0
 
         active_space ( list of ints ): indices of the orbitals (starting from 1) to
             include into consideration. If None - all the orbitals will be used [ default: None ]
-
-        do_sort ( Boolean ): the flag to tell whether the indices should be sorted in
-            a particular order (according to canonic ordering defined in the `citools.slatdet`):
-                - True - for new scheme (needed for the SAC) [default]
-                - use with False for Pyxaid mapping!
-
-        user_notation (int):
-            - 0 : short-hand - in this case, the mapping goes into [0, N) range [default - because it has been used for a while]
-            - 1 : extended - in this case, the mapping goes into [0, 2*N) range
 
         verbose ( Bool ): whether to print some extra info [ default: False]
 
@@ -261,7 +238,7 @@ def ovlp_mat_arb(SD1, SD2, _S, active_space=None, do_sort=False, user_notation=0
 
     for n in range(0, N):
         for m in range(0, M):
-            res[n, m] = ovlp_arb(SD1[n], SD2[m], S, active_space, do_sort, user_notation, verbose)
+            res[n, m] = ovlp_arb(SD1[n], SD2[m], S, active_space, verbose)
 
     return res
 
