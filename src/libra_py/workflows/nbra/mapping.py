@@ -29,6 +29,8 @@ if sys.platform == "cygwin":
 elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
+import libra_py.citools.slatdet as slatdet
+
 # from libra_py import *
 
 
@@ -53,7 +55,7 @@ def sd2indx(inp, nbasis=0, do_sort=False, user_notation=0):
             spatial components ) in the selected active space [currently not really used!]
 
         do_sort ( Boolean ): the flag to tell whether the indices should be sorted in
-            a particular order:
+            a particular order (according to canonic ordering defined in the `citools.slatdet`):
                 - True - for new scheme (needed for the SAC) [default]
                 - use with False for Pyxaid mapping!
 
@@ -64,6 +66,7 @@ def sd2indx(inp, nbasis=0, do_sort=False, user_notation=0):
 
     Returns:
         list of ints: the indices of the orbitals occupied in this SD (different convention)
+        integer: parity - reordering of the returned SD compared to the original ordering of spin-orbitals in the input
 
     Example:
 
@@ -90,6 +93,16 @@ def sd2indx(inp, nbasis=0, do_sort=False, user_notation=0):
 
     """
 
+    inp = np.asarray(inp)
+
+    spat = np.where(
+        inp > 0,
+        inp - 1,
+        np.abs(inp) - 1 + (int(nbasis/2) if user_notation == 1 else 0)
+    )
+
+
+    """
     sz = len(inp)
 
     spat = []
@@ -106,14 +119,17 @@ def sd2indx(inp, nbasis=0, do_sort=False, user_notation=0):
                 res = res + int(nbasis / 2)
             spat.append(res)
 
+    """
     # Rearrange in ascending order: this is needed for
     # a consistency of the final results among different orbitals
     # Warning! But the reordering messes up the mapping procedure, so it
     # is better not to have it. Note sure what effect it might have on spin-adaptation
     # though
     out = list(spat)
+    parity = 1
     if do_sort:
-        out = sorted(spat)
+        out = sorted(spat, key=slatdet.canonical_sort_key)
+        parity = slatdet.permutation_parity(spat, out)
 
     return out
 
