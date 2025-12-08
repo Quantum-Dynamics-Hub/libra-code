@@ -160,7 +160,7 @@ def read_qe_schema(filename, verbose=0):
 
     forces = []
     for a in pool2:
-        if a is not '\n' and a is not '':
+        if a not in ('\n', ''):
             forces.append(float(a))
 
     if len(forces) % 3 != 0:
