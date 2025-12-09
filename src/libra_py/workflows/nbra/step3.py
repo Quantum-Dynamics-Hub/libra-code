@@ -43,7 +43,7 @@ if sys.platform == "cygwin":
 elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
-from . import mapping, mapping3, step2_many_body, step3_many_body
+from . import mapping, step2_many_body, step3_many_body
 import util.libutil as comn
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.units as units
@@ -2737,46 +2737,29 @@ def compute_sd_overlaps_in_parallel(step, params):
                       [active_space, :][:, active_space]).real
     # This is not needed anymore as we use the numpy approach
     # that works with numpy array of the matrices below
-    # st_ks = data_conv.nparray2MATRIX(st_ks)
-    # s_ks_1 = data_conv.nparray2MATRIX(s_ks_1)
-    # s_ks_2 = data_conv.nparray2MATRIX(s_ks_2)
     x = sp.load_npz(F'{res_dir_1}/St_ks_{step+start_time}.npz').todense() 
     print("original dimensions of the S and ST matrices", x.shape )
     print("the dimensions of the reduced S and ST matrices", st_ks.shape)
 
     # Computing the overlaps for SDs
     t2 = time.time()
-    #print("sd_states_reindexed_sorted[step] = ", sd_states_reindexed_sorted[step])
-    #print("sd_states_reindexed_sorted[step+1] = ", sd_states_reindexed_sorted[step+1])
     
     if params['apply_orthonormalization']:
-        s_sd_1 = mapping3.ovlp_mat_arb(
+        s_sd_1 = mapping.ovlp_mat_arb(
             sd_states_reindexed_sorted[step],
             sd_states_reindexed_sorted[step],
             s_ks_1,
             None)
-            #use_minimal=False,
-            #use_mo_approach=False).real
-        s_sd_2 = mapping3.ovlp_mat_arb(
+        s_sd_2 = mapping.ovlp_mat_arb(
             sd_states_reindexed_sorted[step + 1], 
             sd_states_reindexed_sorted[step + 1], 
             s_ks_2, 
             None)
-            #use_minimal=False, 
-            #use_mo_approach=False).real
 
-    st_sd = mapping3.ovlp_mat_arb(sd_states_reindexed_sorted[step],
+    st_sd = mapping.ovlp_mat_arb(sd_states_reindexed_sorted[step],
                                  sd_states_reindexed_sorted[step + 1],
                                  st_ks,
                                  None)
-                                 #use_minimal=False,
-                                 #use_mo_approach=False).real
-    # s_sd_1 = data_conv.MATRIX2nparray(s_sd_1)
-    # s_sd_2 = data_conv.MATRIX2nparray(s_sd_2)
-    # st_sd = data_conv.MATRIX2nparray(st_sd)
-    # print("flag GS of step", step  , sd_states_reindexed_sorted[step][0])
-    # print("flag GS of step", step+1, sd_states_reindexed_sorted[step+1][0])
-    # print("flag np.diag(st_sd):", np.diag(st_sd))
 
     if params['apply_orthonormalization']:
         print('Applying orthonormalization for SDs for step', step)
