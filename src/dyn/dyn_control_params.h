@@ -527,15 +527,9 @@ class dyn_control_params{
 
   /**
     KC-RPMD kinetic constraint switching parameter c
-    Default: 0.5
+    Default: 1.0
   */
   double kcrpmd_c;
-
-  /**
-    KC-RPMD free energy switching parameter d
-    Default: 3.0
-  */
-  double kcrpmd_d;
 
   /**
     KC-RPMD Langevin frictional coefficient within donor-acceptor basin 

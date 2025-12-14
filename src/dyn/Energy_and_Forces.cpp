@@ -288,8 +288,7 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
       double a = prms.kcrpmd_a; 
       double b = prms.kcrpmd_b; 
       double c = prms.kcrpmd_c; 
-      double d = prms.kcrpmd_d; 
-      Veff = ham.kcrpmd_effective_potential(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c, d);
+      Veff = ham.kcrpmd_effective_potential(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c);
       for(itraj=0; itraj<ntraj; itraj++){
         id[1] = itraj;
         res[itraj] = Veff;
@@ -438,8 +437,7 @@ void update_forces(dyn_control_params& prms, dyn_variables& dyn_vars, nHamiltoni
      double a = prms.kcrpmd_a; 
      double b = prms.kcrpmd_b; 
      double c = prms.kcrpmd_c; 
-     double d = prms.kcrpmd_d; 
-     *dyn_vars.f = ham.kcrpmd_effective_force(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c, d);
+     *dyn_vars.f = ham.kcrpmd_effective_force(dyn_vars.y_aux_var, *dyn_vars.q, *dyn_vars.iM, beta, eta, a, b, c);
     }
 
     // Adiabatic 
