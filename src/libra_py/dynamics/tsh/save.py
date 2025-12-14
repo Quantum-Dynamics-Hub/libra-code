@@ -428,6 +428,7 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
     """
 
     dt = params["dt"]
+    nprint = params["nprint"]
 
     Ekin, Epot, Etot = 0.0, 0.0, 0.0
     dEkin, dEpot, dEtot, Etherm = 0.0, 0.0, 0.0, 0.0
@@ -438,10 +439,12 @@ def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0):
         t = i
 
     # Timestep
-    saver.save_scalar(t, "timestep", i)
+    #saver.save_scalar(t, "timestep", i)
+    saver.save_scalar(t, "timestep", nprint * i)
 
     # Actual time
-    saver.save_scalar(t, "time", dt * i)
+    #saver.save_scalar(t, "time", dt * i)
+    saver.save_scalar(t, "time", dt * nprint * i)
 
     # Average kinetic energy
     Ekin = dyn_var.compute_average_kinetic_energy()
@@ -951,10 +954,16 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
     txt2_output_level = params["txt2_output_level"]
 
     nsteps = params["nsteps"]
+    nprint = params["nprint"]
     print_freq = int(params["progress_frequency"] * nsteps)
 
     if i % print_freq == 0:
         print(F" step= {i}")
+
+    if i % nprint == 0:
+        i = int(i / nprint)
+    else:
+        return None
 
     # =========== Using: def save_hdf5_1D_new(saver, i, params, dyn_var, ham, txt_type=0) =========
 
