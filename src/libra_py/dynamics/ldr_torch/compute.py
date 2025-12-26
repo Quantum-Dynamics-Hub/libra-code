@@ -49,6 +49,7 @@ class ldr_solver:
         self.alpha = torch.tensor(params.get("alpha", [18.0]), dtype=torch.float64, device=self.device)
         self.qgrid = torch.tensor(params.get("qgrid", [[-10 + i * 0.1] for i in range(int((10 - (-10)) / 0.1) + 1)] ), dtype=torch.float64, device=self.device) #(N, D)
         self.ngrids = len(self.qgrid) # N
+        self.ndof = self.qgrid.shape[1] 
         self.nstates = params.get("nstates", 2)
         self.istate = params.get("istate", 0)
         self.elec_ampl = params.get("elec_ampl", torch.tensor([1.0+0.j]*self.ngrids, dtype=torch.cdouble))
@@ -82,6 +83,7 @@ class ldr_solver:
         self.kinetic_energy = []
         self.potential_energy = []
         self.total_energy = []
+        self.average_pos = []
         self.population_right = []
         self.denmat = []
         self.norm = []
@@ -97,7 +99,7 @@ class ldr_solver:
         self.Snucl = torch.exp(exponent)
 
     def chi_kinetic(self):
-        r"""
+        """
         Compute nuclear kinetic energy matrix Tnucl[i,j] = <g(x; qgrid[i]) | T | g(x; qgrid[j])>,
         with T = \sum_{\nu} -0.5* m_ν^{-1} \partial^{2}/\partial x_{\nu}^2.
         """
@@ -106,7 +108,7 @@ class ldr_solver:
         tau_sum = torch.sum(tau, dim=2)                                       # (N, N)
     
         self.Tnucl = self.Snucl * tau_sum                                     # (N, N)
-    
+
     def build_compound_overlap(self):
         """
         Build the compound nuclear-electronic overlap matrix self.S (ndim, ndim)
@@ -263,6 +265,8 @@ class ldr_solver:
             self.potential_energy.append(self.compute_potential_energy())
         if "total_energy" in self.properties_to_save:
             self.total_energy.append(self.compute_total_energy())
+        if "average_pos" in self.properties_to_save:
+            self.average_pos.append(self.compute_average_pos())
         if "C_save" in self.properties_to_save:
             self.C_save.append(self.Ccurr)
         
@@ -308,9 +312,8 @@ class ldr_solver:
     
         # Rebuild compound kinetic matrix: T4D * Selec4D
         Selec4D = self.Selec.view(s, N, s, N)
-        T4D = self.Tnucl.unsqueeze(0).unsqueeze(2)  # (1, n, 1, m)
-        T4D_compound = Selec4D * T4D
-        T_compound = T4D_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
+        T4D = self.Tnucl[None, :, None, :]
+        T_compound = (Selec4D * T4D).reshape(ndim, ndim)
     
         Cvec = self.Ccurr
     
@@ -327,11 +330,10 @@ class ldr_solver:
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
         Selec4D = self.Selec.view(s, N, s, N)
-        S4D = self.Snucl.unsqueeze(0).unsqueeze(2)  # (1, n, 1, m)
+        S4D = self.Snucl[None, :, None, :]
         Ej4D = self.E[None, None, :, :]  # (1,1,j,m)
     
-        V4D_compound = Selec4D * (Ej4D * S4D)
-        V_compound = V4D_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
+        V_compound = (Selec4D * (Ej4D * S4D)).reshape(ndim, ndim)
     
         Cvec = self.Ccurr
     
@@ -351,7 +353,31 @@ class ldr_solver:
         denom = torch.vdot(Cvec, self.S @ Cvec).real
     
         return numer / denom
+
+    def compute_average_pos(self):
+        """
+        Compute average position as <q_i> = \sum_i C^+ Q C / C^+ S C for a single step.
+        """
+        N, s, ndim = self.ngrids, self.nstates, self.ndim
         
+        Cvec = self.Ccurr
+
+        denom = torch.vdot(Cvec, self.S @ Cvec).real
+        Selec4D = self.Selec.view(s, N, s, N)
+        
+        avg_q = []
+        for idof in range(self.ndof):
+            q_med = 0.5 * (self.qgrid[:, None, idof] + self.qgrid[None,:,idof])
+            Qnucl = self.Snucl * q_med 
+            Q4D = Qnucl[None, :, None, :]
+            Q4D_compound = Selec4D * Q4D
+            Q_compound = Q4D_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
+
+            numer = torch.vdot(Cvec, Q_compound @ Cvec).real
+            avg_q.append(numer / denom)
+
+        return avg_q
+
     def save(self):
         torch.save( {"q0":self.q0,
                      "p0":self.p0,
@@ -376,6 +402,7 @@ class ldr_solver:
                      "kinetic_energy":self.kinetic_energy,
                      "potential_energy":self.potential_energy,
                      "total_energy":self.total_energy,
+                     "average_pos":self.average_pos,
                      "population_right":self.population_right,
                      "denmat":self.denmat,
                      "norm":self.norm
