@@ -51,7 +51,8 @@ class ldr_solver:
         self.ngrids = len(self.qgrid) # N
         self.nstates = params.get("nstates", 2)
         self.istate = params.get("istate", 0)
-        
+        self.elec_ampl = params.get("elec_ampl", torch.tensor([1.0+0.j]*self.ngrids, dtype=torch.cdouble))
+
         self.save_every_n_steps = params.get("save_every_n_steps", 1)
         self.properties_to_save = params.get("properties_to_save", ["time", "population_right"])
         self.dt = params.get("dt", 0.01)
@@ -220,7 +221,7 @@ class ldr_solver:
             delta_eta = -0.5 * torch.dot(xi0 + p0, q0) + 0.5 * torch.dot(xig, qgrid[n]).conj()
             exponent = -1.j * 0.5 * torch.dot(delta_xi, torch.matmul(delta_A_inv, delta_xi)) + 1.j * delta_eta
     
-            self.C0[index] = torch.exp(exponent)
+            self.C0[index] = self.elec_ampl[n] * torch.exp(exponent)
     
         # Normalize
         overlap = torch.matmul(self.S, self.C0)
