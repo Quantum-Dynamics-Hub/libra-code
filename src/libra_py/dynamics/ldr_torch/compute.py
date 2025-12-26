@@ -283,28 +283,10 @@ class ldr_solver:
         P = torch.sum(C_blocks.conj() * SC_blocks, dim=1).real
     
         return P
-    
-    def compute_denmat_raw(self):
-        """
-        Compute electronic density matrix for a single step without the orthogonalization.
-        """
-        N, s = self.ngrids, self.nstates
-        Cvec = self.Ccurr
-    
-        # Compute SC once: shape (ndim,)
-        SC = self.S @ Cvec
-    
-        C_blocks = Cvec.view(s, N)
-        SC_blocks = SC.view(s, N)
-    
-        # \rho_ij = \sum_n C_i,n^* (SC)_j,n
-        rho = SC_blocks.conj() @ C_blocks.T 
-    
-        return rho
 
     def compute_denmat(self):
         """
-        Compute electronic density matrix for a single step without the orthogonalization.
+        Compute electronic density matrix for a single step using the orthogonalization.
         """
         N, s = self.ngrids, self.nstates
         Cvec = self.Ccurr
