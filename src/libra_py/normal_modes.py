@@ -1,8 +1,8 @@
 # *********************************************************************************
-# * Copyright (C) 2018-2019 Alexey V. Akimov
+# * Copyright (C) 2018-2025 Alexey V. Akimov
 # *
 # * This file is distributed under the terms of the GNU General Public License
-# * as published by the Free Software Foundation, either version 2 of
+# * as published by the Free Software Foundation, either version 3 of
 # * the License, or (at your option) any later version.
 # * See the file LICENSE in the root directory of this distribution
 # * or <http://www.gnu.org/licenses/>.
@@ -45,444 +45,676 @@ elif sys.platform == "linux" or sys.platform == "linux2":
     from liblibra_core import *
 
 from . import units
+from . import md_align
 
 
-def covariance_matrix(X, M, flag):
-    """Computes the covariance matrix
+import numpy as np
 
-    Computes the covariance matrix $$K^x = <sqrt(m_i * m_j) * x_i * x_j }>$$
 
-    Args:
-        X ( MATRIX(ndof, nsteps) ): data collected along a trajectory: can be R, V, or A
-        M ( MATRIX(ndof, 1) ): masses of all DOFs
-        flag ( int ): controls how to compute variance
 
-            * 0 - using the data as they are (no centering)
-            * 1 - using the fluctuations of the data around the mean (do centering)
+def covariance_matrix(X, M, flag=1):
+    """
+    Compute the mass-weighted covariance matrix of trajectory data.
 
-    Returns:
-        MATRIX(ndof, ndof): the matrix of covariance of all DOFs averaged over the trajectory
+    The covariance matrix is defined as
 
+        K_ij = 1/2 ⟨ sqrt(m_i m_j) x_i x_j ⟩
+
+    or, if centered (flag = 1),
+
+        K_ij = 1/2 ⟨ sqrt(m_i m_j)
+                     (x_i - ⟨x_i⟩)(x_j - ⟨x_j⟩) ⟩
+
+    where ⟨·⟩ denotes averaging over trajectory steps.
+
+    Parameters
+    ----------
+    X : np.ndarray, shape (ndof, nsteps)
+        Trajectory data (e.g., coordinates, velocities, or accelerations).
+
+    M : array_like, shape (ndof,)
+        Masses associated with each degree of freedom.
+
+    flag : {0, 1}, optional
+        Controls centering:
+        - 0 : use raw data (no mean subtraction)
+        - 1 : use fluctuations around the mean (default)
+
+    Returns
+    -------
+    K : np.ndarray, shape (ndof, ndof)
+        Mass-weighted covariance matrix averaged over the trajectory.
+
+    Notes
+    -----
+    - Mass weighting is performed using sqrt(m_i).
+    - The prefactor 1/2 is included to match the legacy implementation.
+    - Averaging is done over the trajectory dimension (axis=1).
+    - This form is commonly used in harmonic analysis,
+      PCA, and normal-mode–like decompositions of MD data.
+
+    Examples
+    --------
+    Compute the mass-weighted covariance of Cartesian coordinates:
+
+    >>> R, E = read_trajectory("traj.xyz")
+    >>> M = names_to_masses(E, PT)
+    >>> K = covariance_matrix(R, M, flag=1)
+
+    Diagonalize the covariance matrix to obtain principal modes:
+
+    >>> eigvals, eigvecs = np.linalg.eigh(K)
+
+    Use uncentered data (no subtraction of the mean):
+
+    >>> K_raw = covariance_matrix(R, M, flag=0)
     """
 
-    ndof = X.num_of_rows
-    nsteps = X.num_of_cols
+    X = np.asarray(X, dtype=float)
+    M = np.asarray(M, dtype=float)
 
-    # To speed-up the calculations, minimize the number of sqrt calls
-    sM = MATRIX(ndof, 1)
-    for i in range(0, ndof):
-        sM.set(i, math.sqrt(M.get(i)))
+    if X.ndim != 2:
+        raise ValueError("X must be a 2D array of shape (ndof, nsteps)")
+    if M.ndim != 1 or M.shape[0] != X.shape[0]:
+        raise ValueError("M must be a 1D array of length ndof")
 
-    K = None
-    if flag == 0:
-        K = covariance(X)
-    elif flag == 1:
-        dX = deviation(X)
-        K = covariance(dX)
+    # Center data if requested
+    if flag == 1:
+        X = X - X.mean(axis=1, keepdims=True)
+    elif flag != 0:
+        raise ValueError("flag must be 0 (no centering) or 1 (centering)")
 
-    # Compute the covariance matrix
-    for i in range(0, ndof):
-        for j in range(0, ndof):
-            mij = sM.get(i) * sM.get(j)
-            K.scale(i, j, 0.5 * mij)
+    # Mass weighting
+    sM = np.sqrt(M)[:, None]   # shape (ndof, 1)
+    Xmw = sM * X               # mass-weighted data
+
+    # Covariance with prefactor 1/2
+    K = 0.5 * (Xmw @ Xmw.T) / Xmw.shape[1]
 
     return K
 
 
-def visualize_modes(E, R, U, M, w, params):
+
+def normal_modes_from_eigenvectors(eta, M):
+    """
+    Convert mass-weighted eigenvectors to Cartesian normal modes.
+
+    The transformation is
+
+        Δx = M^{-1/2} η
+
+    where:
+        - η are mass-weighted eigenvectors
+        - M is the Cartesian mass vector
+
+    Parameters
+    ----------
+    eta : np.ndarray, shape (ndof, nmodes) or (ndof,)
+        Mass-weighted eigenvectors, typically obtained from
+        diagonalizing a mass-weighted covariance or Hessian matrix.
+
+    M : array_like, shape (ndof,)
+        Cartesian mass vector (each atomic mass repeated for x, y, z).
+
+    Returns
+    -------
+    dx : np.ndarray, shape (ndof, nmodes) or (ndof,)
+        Cartesian normal modes.
+
+    Notes
+    -----
+    - No normalization is enforced; normalization conventions depend
+      on whether the eigenvectors came from a covariance or Hessian.
+    - This operation is equivalent to left-multiplying by a diagonal
+      matrix M^{-1/2}.
+    - For Hessian-based normal modes, this recovers physical
+      displacement directions in Cartesian space.
+    - For Hessian-based normal modes, frequencies are obtained from eigenvalues of
+      M^{−1/2} H M^{−1/2}
+    - For covariance-based modes, eigenvalues correspond to variances, not frequencies
+    - Translational and rotational modes should be projected out before diagonalization
+
+    Examples
+    --------
+    From a covariance matrix:
+
+    >>> R, E = read_trajectory("traj.xyz")
+    >>> M = names_to_masses(E, PT)
+    >>> K = covariance_matrix(R, M)
+    >>> w, eta = np.linalg.eigh(K)
+    >>> dx = normal_modes_from_eigenvectors(eta, M)
+
+    Single mode extraction:
+
+    >>> dx0 = normal_modes_from_eigenvectors(eta[:, 0], M)
+
+    Reshape modes to (nat, 3):
+
+    >>> nat = len(E)
+    >>> modes_xyz = dx.reshape(3*nat, -1).T.reshape(-1, nat, 3)
     """
 
-    This function "visualizes" a particular collective modes for a particular set of data.
-    The visualization means we generate an "xyz" file, showing the trajectory with defined number
-    of repetitions of the mode.
+    eta = np.asarray(eta, dtype=float)
+    M = np.asarray(M, dtype=float)
+
+    if M.ndim != 1:
+        raise ValueError("M must be a 1D array of length ndof")
+
+    ndof = M.shape[0]
+
+    if eta.ndim == 1:
+        if eta.shape[0] != ndof:
+            raise ValueError("eta and M must have the same length")
+        return eta / np.sqrt(M)
+
+    elif eta.ndim == 2:
+        if eta.shape[0] != ndof:
+            raise ValueError("eta must have shape (ndof, nmodes)")
+        return eta / np.sqrt(M)[:, None]
+
+    else:
+        raise ValueError("eta must be a 1D or 2D array")
+
+
+def compute_thermal_normal_modes(
+    R,
+    M,
+    method="QHA",
+    V=None,
+    A=None,
+    F=None,
+    temperature=None,
+    remove_rigid=False,
+):
+    """
+    Unified covariance-based normal-mode analysis at finite temperature.
+
+    This function implements several related but conceptually distinct
+    normal-mode definitions based on covariance matrices sampled from MD.
+
+    ----------------------------------------------------------------------
+    METHODS IMPLEMENTED
+    ----------------------------------------------------------------------
+
+    PCA (Essential Dynamics)
+    -----------------------
+    Matrix:
+        C^r_ij = < δr_i δr_j >
+
+    Interpretation:
+        Eigenvectors → collective motions with largest positional variance
+        Eigenvalues  → variances
+
+    Use when:
+        - Interested in dominant conformational changes
+        - No physical frequencies required
+
+    ----------------------------------------------------------------------
+
+    QHA (Quasi-Harmonic Analysis)
+    -----------------------------
+    Matrix:
+        K^r_ij = 1/2 < sqrt(m_i m_j) δr_i δr_j >
+
+    Frequencies:
+        ω_i^2 = k_B T / λ_i
+
+    Interpretation:
+        Effective free-energy curvature at finite temperature
+
+    Use when:
+        - Near-equilibrium fluctuations
+        - Moderate anharmonicity
+        - Want thermally averaged vibrational spectrum
+
+    Reference:
+        Brooks, B. R.; Janezic, D.; Karplus, M. Harmonic Analysis of Large Systems. I. Methodology. 
+        J Comput Chem 1995, 16 (12), 1522–1542. https://doi.org/10.1002/jcc.540161209.
+
+    ----------------------------------------------------------------------
+
+    Strachan-V (Velocity covariance)
+    --------------------------------
+    Matrix:
+        K^v_ij = 1/2 < sqrt(m_i m_j) v_i v_j >
+
+    Frequencies:
+        (2πν_i)^2 = λ_i^v / λ_i^r
+
+    Interpretation:
+        Eigenvalues represent kinetic energy per mode
+
+    Use when:
+        - Well-converged velocities
+        - Avoid explicit temperature dependence
+
+    Reference:
+        Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics or Monte Carlo 
+        Simulations. The Journal of Chemical Physics 2004, 120 (1), 1–4. https://doi.org/10.1063/1.1635364.
+
+    ----------------------------------------------------------------------
+
+    Strachan-A (Acceleration covariance)
+    ------------------------------------
+    Matrix:
+        K^a_ij = 1/2 < sqrt(m_i m_j) a_i a_j >
+
+    Frequencies:
+        (2πν_i)^4 = λ_i^a / λ_i^r
+
+    Interpretation:
+        Force-derived vibrational modes
+
+    Use when:
+        - Reliable forces
+        - Strong anharmonicity
+
+    Reference:
+        Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics or Monte Carlo                                                                        Simulations. The Journal of Chemical Physics 2004, 120 (1), 1–4. https://doi.org/10.1063/1.1635364.
+
+    ----------------------------------------------------------------------
+
+    Pereverzev Thermal Hessian
+    --------------------------
+    Matrix:
+        H_ij(T) = β < F_i F_j > ,   β = 1 / (k_B T)
+
+    Mass-weighted form:
+        H̃_ij = β < sqrt(m_i) F_i sqrt(m_j) F_j >
+
+    Eigenproblem:
+        H̃ η = ω^2 η
+
+    Interpretation:
+        Finite-temperature generalization of the Hessian
+
+    Use when:
+        - Strong anharmonicity
+        - Liquids / fluxional clusters
+        - Instantaneous Hessians are noisy or unavailable
+
+    Reference:
+        - Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix: Application to 
+          Crystalline Explosives PETN and RDX. The Journal of Chemical Physics 2015, 142 (13), 134110. https://doi.org/10.1063/1.4916614.
+
+        - Martinez, M.; Gaigeot, M.-P.; Borgis, D.; Vuilleumier, R. Extracting Effective Normal Modes from Equilibrium Dynamics 
+          at Finite Temperature. The Journal of Chemical Physics 2006, 125 (14), 144106. https://doi.org/10.1063/1.2346678.
+
+    ----------------------------------------------------------------------
+
+    PARAMETERS
+    ----------------------------------------------------------------------
+    R : ndarray, shape (3N, nsteps)
+        Cartesian coordinates (Bohr).
+
+    M : ndarray, shape (3N,)
+        Mass vector (atomic units).
+
+    method : str
+        One of:
+        "PCA", "QHA", "Strachan-V", "Strachan-A", "Pereverzev"
+
+    V : ndarray, optional
+        Velocities, shape (3N, nsteps).
+
+    A : ndarray, optional
+        Accelerations, shape (3N, nsteps).
+
+    F : ndarray, optional
+        Forces, shape (3N, nsteps), required for Pereverzev.
+
+    temperature : float, optional
+        Temperature in Kelvin (required for QHA and Pereverzev).
+
+    remove_rigid : bool, default False
+        Project out translations and rotations using md_align.project_out_rigid.
+
+    ----------------------------------------------------------------------
+    RETURNS
+    ----------------------------------------------------------------------
+    results : dict
+        Keys:
+        - eigvals       : eigenvalues (a.u.)
+        - eigvecs       : mass-weighted eigenvectors
+        - modes_cart    : Cartesian normal modes
+        - frequencies   : frequencies (cm^-1), if defined
+    """
+
+    ndof, nsteps = R.shape
+    sqrtM = np.sqrt(M)
+
+    # --------------------------------------------------
+    # Optional rigid-body projection
+    # --------------------------------------------------
+    if remove_rigid:
+        R_proj = np.zeros_like(R)
+        for t in range(nsteps):
+            R_proj[:, t] = md_align.project_out_rigid(R[:, t], R[:, t], M)
+        R = R_proj
+
+        if V is not None:
+            Vp = np.zeros_like(V)
+            for t in range(nsteps):
+                Vp[:, t] = md_align.project_out_rigid(V[:, t], R[:, t], M)
+            V = Vp
+
+        if A is not None:
+            Ap = np.zeros_like(A)
+            for t in range(nsteps):
+                Ap[:, t] = md_align.project_out_rigid(A[:, t], R[:, t], M)
+            A = Ap
+
+        if F is not None:
+            Fp = np.zeros_like(F)
+            for t in range(nsteps):
+                Fp[:, t] = md_align.project_out_rigid(F[:, t], R[:, t], M)
+            F = Fp
+
+
+    # --------------------------------------------------
+    # Covariance helper
+    # --------------------------------------------------
+    def covariance(X, center):
+        if center:
+            X = X - X.mean(axis=1, keepdims=True)
+        return (X @ X.T) / X.shape[1]
+
+    # --------------------------------------------------
+    # Positional covariance (always needed)
+    # --------------------------------------------------
+    Crr = covariance(R, center=True)
+    Kx = 0.5 * (sqrtM[:, None] * sqrtM[None, :]) * Crr
+
+    eigvals_x, eigvecs_x = np.linalg.eigh(Kx)
+    idx = np.argsort(eigvals_x)
+    eigvals_x = eigvals_x[idx]
+    eigvecs_x = eigvecs_x[:, idx]
+
+    results = {
+        "eigvals": eigvals_x,
+        "eigvecs": eigvecs_x,
+        "modes_cart": eigvecs_x / sqrtM[:, None],
+    }
+
+    # --------------------------------------------------
+    # Method-specific frequencies
+    # --------------------------------------------------
+    if method == "PCA":
+        return results
+
+    if method == "QHA":
+        if temperature is None:
+            raise ValueError("Temperature required for QHA")
+        omega = np.sqrt(units.kB * temperature / eigvals_x)
+        results["frequencies"] = omega / units.inv_cm2Ha
+        return results
+
+    if method == "Strachan-V":
+        Kv = 0.5 * (sqrtM[:, None] * sqrtM[None, :]) * covariance(V, center=False)
+        eigvals_v, _ = np.linalg.eigh(Kv)
+        eigvals_v = eigvals_v[idx]
+        omega = np.sqrt(eigvals_v / eigvals_x)
+        results["frequencies"] = omega / units.inv_cm2Ha
+        return results
+
+    if method == "Strachan-A":
+        Ka = 0.5 * (sqrtM[:, None] * sqrtM[None, :]) * covariance(A, center=False)
+        eigvals_a, _ = np.linalg.eigh(Ka)
+        eigvals_a = eigvals_a[idx]
+        omega = (eigvals_a / eigvals_x) ** 0.25
+        results["frequencies"] = omega / units.inv_cm2Ha
+        return results
+
+    if method == "Pereverzev":
+        if F is None or temperature is None:
+            raise ValueError("Forces and temperature required for Pereverzev")
+        beta = 1.0 / (units.kB * temperature)
+        inv_sqrtM = 1.0 / sqrtM
+
+        Cff = covariance(F, center=False)
+        H_eff = beta * (inv_sqrtM[:, None] * inv_sqrtM[None, :]) * Cff
+        #A = F/M[:, None]
+        #H_eff = beta * (sqrtM[:, None] * sqrtM[None, :]) * covariance(A, center=False)
+        eigvals, eigvecs = np.linalg.eigh(H_eff)
+        idx = np.argsort(eigvals)
+        results["eigvals"] = eigvals[idx]
+        results["eigvecs"] = eigvecs[:, idx]
+        results["modes_cart"] = eigvecs[:, idx] / sqrtM[:, None]
+        results["frequencies"] = np.sqrt(eigvals[idx]) / units.inv_cm2Ha
+        return results
+
+    raise ValueError(f"Unknown method: {method}")
+
+
+
+def write_nmd(
+    filename,
+    R_eq,
+    modes,
+    atom_names,
+    masses=None,
+    eigenvalues=None,
+    title="Normal modes",
+):
+    """
+    Write a ProDy/VMD-compatible NMD (Normal Mode Data) file.
+
+    This implementation follows the official ProDy NMD specification:
+    http://www.bahargroup.org/prody/manual/reference/dynamics/nmdfile.html
+
+    Parameters
+    ----------
+    filename : str
+        Output .nmd file.
+
+    R_eq : ndarray, shape (3N,)
+        Equilibrium Cartesian coordinates (e.g., Å).
+
+    modes : ndarray, shape (3N, nmodes)
+        Normal mode eigenvectors. If masses are provided, these are
+        assumed to be mass-weighted eigenvectors η.
+
+    atom_names : list[str], length N
+        Atom or element names (written as `atomnames`).
+
+    masses : ndarray, shape (3N,), optional
+        Cartesian mass vector. If provided, modes are converted via:
+            Δx = M^{-1/2} η
+
+    eigenvalues : ndarray, shape (nmodes,), optional
+        Eigenvalues associated with the modes.
+        Used to define a scaling factor per mode.
+
+    title : str
+        Descriptive title written using the `name` field.
+
+    Examples
+    --------
+    Compute the mass-weighted covariance of Cartesian coordinates:
+
+    >>> write_nmd(
+    ...     filename="modes.nmd",
+    ...     R_eq=R[:, 0],          # equilibrium geometry
+    ...     modes=eigvecs_x,       # mass-weighted eigenvectors η
+    ...     atom_names=E,          # e.g. ["Ti", "O", "O", ...]
+    ...     masses=M,              # length 3N
+    ...     eigenvalues=eigvals_x,
+    ...     title="Strachan covariance normal modes",
+    ... )
+
+    """
+
+    R_eq = np.asarray(R_eq, dtype=float)
+    modes = np.asarray(modes, dtype=float)
+
+    N = len(atom_names)
+    nmodes = modes.shape[1]
+
+    if R_eq.shape != (3 * N,):
+        raise ValueError("R_eq must have shape (3N,)")
+
+    if modes.shape[0] != 3 * N:
+        raise ValueError("modes must have shape (3N, nmodes)")
+
+    # -------------------------------------------------
+    # Convert mass-weighted modes to Cartesian Δx
+    # -------------------------------------------------
+    if masses is not None:
+        masses = np.asarray(masses, dtype=float)
+        if masses.shape != (3 * N,):
+            raise ValueError("masses must have shape (3N,)")
+        modes_cart = modes / np.sqrt(masses[:, None])
+    else:
+        modes_cart = modes.copy()
+
+    # -------------------------------------------------
+    # Normalize modes (recommended for NMWiz)
+    # -------------------------------------------------
+    for k in range(nmodes):
+        norm = np.linalg.norm(modes_cart[:, k])
+        if norm > 0:
+            modes_cart[:, k] /= norm
+
+    # -------------------------------------------------
+    # Scaling factors (optional, per ProDy spec)
+    # -------------------------------------------------
+    if eigenvalues is not None:
+        eigenvalues = np.asarray(eigenvalues, dtype=float)
+        if eigenvalues.shape != (nmodes,):
+            raise ValueError("eigenvalues must have shape (nmodes,)")
+        scales = [
+            np.sqrt(1.0 / ev) if ev > 0.0 else 1.0
+            for ev in eigenvalues
+        ]
+    else:
+        scales = [1.0] * nmodes
+
+    #--------------------------------------------------
+    # Map names to ids
+    #--------------------------------------------------
+    name_to_id = {}
+    resids = [name_to_id.setdefault(n, len(name_to_id)) for n in atom_names]
+
+
+    # -------------------------------------------------
+    # Write NMD file
+    # -------------------------------------------------
+    with open(filename, "w") as f:
+
+        # Title
+        f.write(f"name {title}\n")
+
+        # Atom names (single line!)
+        f.write("atomnames " + " ".join(atom_names) + "\n")
+
+        # Residue names (single line!)
+        f.write("resnames " + " ".join(atom_names) + "\n")
+
+        # Residue ids (single line!)
+        f.write("resids " + " ".join(str(x) for x in resids) + "\n")
+
+        # Coordinates (single line!)
+        coord_str = " ".join(f"{x:.8f}" for x in R_eq)
+        f.write(f"coordinates {coord_str}\n")
+
+        # Modes (each on one line)
+        for k in range(nmodes):
+            mode_str = " ".join(f"{v:.8e}" for v in modes_cart[:, k])
+            f.write(f"mode {k+1} {scales[k]:.8e} {mode_str}\n")
+
+    print(f"Wrote NMD file: {filename}")
+
+
+
+
+def visualize_modes(E, R, eta, M, frequencies, params):
+    """
+    Visualize selected normal modes by generating XYZ trajectories.
+
+    The visualization is performed by constructing a synthetic trajectory
+    corresponding to sinusoidal motion along selected normal modes.
 
     Args:
-        E ( list of ndof/3 ): atom names (elements) of all atoms
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        U ( MATRIX(ndof, ndof) ): eigenvectors defining the collective modes in terms of the original DOFs, see the theory
-        M ( MATRIX(ndof x 1) ): masses of all DOFs
-        w ( list of ndof doubles ): frequencies of all modes
-        params ( dictionary ): parameters controlling how to do the visualization. Contains keyword-value pairs:
+        E (list of str, length N):
+            Atom names.
 
-            * **params["scale"]** ( double ): mode amplification factor (for better visualization)
-            * **params["print_modes"]** ( list of integers ): indices of the modes to handle.
-              Indexing starts with 0 and should be consistent
-              with other data arrays provided - e.g. "w"
-            * **params["prefix"]** ( string ): the name of the prefix of the files, to where the modes are printed out
-            * **params["nperiods"]** ( integer ): the number of periods of motion to repeat
-            * **params["nsteps"]** ( integer ): how many steps should be in the "visualization" trajectory.
-              Controls the resolution of the modes
+        R (ndarray, shape (3N,)):
+            Reference Cartesian geometry in atomic units.
+
+        eta (ndarray, shape (3N, 3N)):
+            Mass-weighted normal-mode eigenvectors.
+
+        M (ndarray, shape (3N,)):
+            Masses of Cartesian degrees of freedom (in a.u.).
+
+        frequencies (ndarray, shape (3N,)):
+            Mode frequencies in cm^{-1}.
+
+        params (dict):
+            Visualization parameters:
+                - "scale" (float): mode amplification factor
+                - "print_modes" (list[int]): indices of modes to visualize
+                - "prefix" (str): output filename prefix
+                - "nperiods" (int): number of oscillation periods
+                - "nsteps" (int): number of frames per trajectory
 
     Returns:
-        None: Simply prints out a number of files with the trajectories (using Angstrom units) showing the
-            periodic motion along the modes of interest
+        None
+        Writes XYZ files with animated normal-mode motion (in Angstrom).
 
-    Note:
-        All quantities are in atomic units
+    Notes:
+        Cartesian displacements are obtained from mass-weighted modes via:
+            Δx = M^{-1/2} η
 
+        Frequencies are converted internally as:
+            ω (a.u.) = ν (cm^{-1}) × units.inv_cm2Ha
     """
 
-    ndof = R.num_of_rows
-    nat = int(ndof / 3)
+    R = np.asarray(R)
+    eta = np.asarray(eta)
+    M = np.asarray(M)
+    frequencies = np.asarray(frequencies)
 
-    scl = params["scale"]
+    ndof = R.size
+    nat = ndof // 3
+
+    sqrtM = np.sqrt(M)
+    scale = params["scale"]
+
+    # Convert frequencies from cm^{-1} to atomic units
+    omega_au = frequencies * units.inv_cm2Ha
 
     for mode in params["print_modes"]:
 
-        filename = params["prefix"] + "_mode%i.xyz" % (mode)
+        filename = f"{params['prefix']}_mode{mode}.xyz"
 
-        dt = 0.0
-        if w.get(mode) > 0.0:
-            dt = 2.0 * math.pi * params["nperiods"] / (w.get(mode) * params["nsteps"])
-
-        f = open(filename, "w")
-        for t in range(0, params["nsteps"]):
-            f.write("%i\n" % (nat))
-            f.write("step %i = \n" % (t))
-
-            for at in range(0, nat):
-                x = (R.get(3 * at + 0, 0) + (U.get(3 * at + 0, mode) / math.sqrt(M.get(3 * at + 0)))
-                     * math.sin(w.get(mode) * t * dt) * scl) / units.Angst
-                y = (R.get(3 * at + 1, 0) + (U.get(3 * at + 1, mode) / math.sqrt(M.get(3 * at + 1)))
-                     * math.sin(w.get(mode) * t * dt) * scl) / units.Angst
-                z = (R.get(3 * at + 2, 0) + (U.get(3 * at + 2, mode) / math.sqrt(M.get(3 * at + 2)))
-                     * math.sin(w.get(mode) * t * dt) * scl) / units.Angst
-
-                f.write("%s  %8.5f %8.5f %8.5f \n" % (E[at], x, y, z))
-
-        f.close()
-
-
-def compute_cov(R, V, A, M, E, params):
-    """
-
-    Computes and visualizes (as the trajectories) normal modes following the
-    methods described in:
-
-    (1) Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics
-    or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.
-
-    Args:
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps
-        A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps
-        M ( MATRIX(ndof x 1) ): masses of all DOFs
-        E ( list of ndof/3 strings ): atom names (elements) of all atoms
-        params ( dictionary ): parameters controlling the computations, including the
-            visualization (see the visualize_modes(E, R, U, w, params) description).
-            Contains keyword-value pairs:
-
-            * **params["verbosity"]** (int): level to control verbosity
-            * **params["visualize"]** (int): flag to control whether we want to produce additional files (with normal modes)
-                - 0 - not to
-                - 1 - do it
-
-    Returns:
-        tuple: (w, w_inv_cm, U_v,  w2, w2_inv_cm, U_a), where:
-            * w ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix
-            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix, in cm^-1 units
-            * U_v ( MATRIX(ndof,ndof) ): eigenvectors of the velocity covariance matrix
-            * w2 ( MATRIX(ndof,1) ): frequencies from the acceleration covariance matrix
-            * w2_inv_cm ( MATRIX(ndof,1) ): frequencies from the acceleration covariance matrix, in cm^-1 units
-            * U_a ( MATRIX(ndof,ndof) ): eigenvectors of the acceleration covariance matrix
-
-    Note:
-        All quantities are in atomic units
-
-    """
-    verbosity = params["verbosity"]
-
-    if verbosity > 0:
-        print("========= Normal modes calculations according to: =============================")
-        print("Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
-        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n")
-
-    ndof = R.num_of_rows
-    nat = ndof / 3
-    cov_flag = params["cov_flag"]
-
-    if verbosity > 0:
-        print("Computing covariance matrix of positions\n")
-    K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
-    if verbosity > 0:
-        print("Computing covariance matrix of velocities\n")
-    K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
-    if verbosity > 0:
-        print("Computing covariance matrix of accelerations\n")
-    K_a = CMATRIX(covariance_matrix(A, M, cov_flag))
-
-    w_r = CMATRIX(ndof, ndof)
-    U_r = CMATRIX(ndof, ndof)
-    w_v = CMATRIX(ndof, ndof)
-    U_v = CMATRIX(ndof, ndof)
-    w_a = CMATRIX(ndof, ndof)
-    U_a = CMATRIX(ndof, ndof)
-
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of positions\n")
-    solve_eigen_nosort(K_r, w_r, U_r, 0)
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of velocities\n")
-    solve_eigen_nosort(K_v, w_v, U_v, 0)
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of accelerations\n")
-    solve_eigen_nosort(K_a, w_a, U_a, 0)
-
-    if verbosity > 1:
-        print("K_r:")
-        K_r.show_matrix()
-        print("K_r eigenvalues:")
-        w_r.show_matrix()
-        print("K_r eigenvectors:")
-        U_r.show_matrix()
-
-        print("K_v:")
-        K_v.show_matrix()
-        print("K_v eigenvalues:")
-        w_v.show_matrix()
-        print("K_v eigenvectors:")
-        U_v.show_matrix()
-
-        print("K_a:")
-        K_a.show_matrix()
-        print("K_a eigenvalues:")
-        w_a.show_matrix()
-        print("K_a eigenvectors:")
-        U_a.show_matrix()
-
-    w = MATRIX(ndof, 1)
-    for dof in range(0, ndof):
-        if w_r.get(dof, dof).real > 0.0:
-            w.set(dof, 0, math.sqrt(math.fabs(w_v.get(dof, dof).real / w_r.get(dof, dof).real)))
+        omega = omega_au[mode]
+        if omega > 0.0:
+            dt = 2.0 * math.pi * params["nperiods"] / (omega * params["nsteps"])
         else:
-            w.set(dof, 0, 0.0)
-    w_inv_cm = w / units.inv_cm2Ha
-    if verbosity > 0:
-        print("Angular frequencies (derived from w_v/w_r)")
-        w_inv_cm.show_matrix()
+            dt = 0.0
 
-    w2 = MATRIX(ndof, 1)
-    for dof in range(0, ndof):
-        if w_r.get(dof, dof).real > 0.0:
-            w2.set(dof, 0, math.pow(math.fabs(w_a.get(dof, dof).real / w_r.get(dof, dof).real), 0.25))
-        else:
-            w2.set(dof, 0, 0.0)
-    w2_inv_cm = w2 / units.inv_cm2Ha
-    if verbosity > 0:
-        print("Angular frequencies (derived from w_a/w_r)")
-        w2_inv_cm.show_matrix()
+        # Cartesian displacement for this mode
+        dx = eta[:, mode] / sqrtM
 
-    if params["visualize"] == 1:
-        if verbosity > 0:
-            print("Visualizing modes based on velocities covariance\n")
-        prefix = params["prefix"]
-        params.update({"prefix": prefix + "_velocity"})
-        visualize_modes(E, R, U_v.real(), M, w, params)
+        with open(filename, "w") as f:
+            for t in range(params["nsteps"]):
 
-        if verbosity > 0:
-            print("Visualizing modes based on accelerations covariance\n")
-        params.update({"prefix": prefix + "_acceleration"})
-        visualize_modes(E, R, U_a.real(), M, w2, params)
+                phase = math.sin(omega * t * dt)
+                Rt = R + scale * phase * dx
 
-    if verbosity > 0:
-        print("========= Done with the Normal modes calculations =============================")
+                f.write(f"{nat}\n")
+                f.write(f"mode {mode}, step {t}\n")
 
-    return w, w_inv_cm, U_v.real(), w2, w2_inv_cm, U_a.real()
+                Rt_xyz = Rt.reshape(nat, 3) / units.Angst
 
-
-def compute_cov1(R, V, M, E, params):
-    """Same as compute_cov, except that we don't use the acceleration data
-
-    Computes and visualizes (as the trajectories) normal modes following the
-    methods described in:
-
-    (1) Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics
-    or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.
-
-    Args:
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
-        V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
-        M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
-        E ( list of ndof/3 strings ): atom names (elements) of all atoms
-        params ( dictionary ): parameters controlling the computations, including the
-            visualization (see the visualize_modes(E, R, U, w, params) description).
-            Contains keyword-value pairs:
-
-            * **params["verbosity"]** (int): level to control verbosity
-            * **params["visualize"]** (int): flag to control whether we want to produce additional files (with normal modes)
-                - 0 - not to
-                - 1 - do it
-
-    Returns:
-        tuple: (w, w_inv_cm, U_v), where:
-            * w ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix
-            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from the velocity covariance matrix, in cm^-1 units
-            * U_v ( MATRIX(ndof,ndof) ): eigenvectors of the velocity covariance matrix
-
-    Note:
-        All quantities are in atomic units
-
-    """
-    verbosity = params["verbosity"]
-
-    if verbosity > 0:
-        print("========= Normal modes calculations according to: =============================")
-        print("Strachan, A. Normal Modes and Frequencies from Covariances in Molecular Dynamics\
-        or Monte Carlo Simulation. J. Chem. Phys. 2003, 120, 1-4.\n")
-
-    ndof = R.num_of_rows
-    nat = ndof / 3
-    cov_flag = params["cov_flag"]
-
-    if verbosity > 0:
-        print("Computing covariance matrix of positions\n")
-    K_r = CMATRIX(covariance_matrix(R, M, cov_flag))
-    if verbosity > 0:
-        print("Computing covariance matrix of velocities\n")
-    K_v = CMATRIX(covariance_matrix(V, M, cov_flag))
-
-    w_r = CMATRIX(ndof, ndof)
-    U_r = CMATRIX(ndof, ndof)
-    w_v = CMATRIX(ndof, ndof)
-    U_v = CMATRIX(ndof, ndof)
-
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of positions\n")
-    solve_eigen_nosort(K_r, w_r, U_r, 0)
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of velocities\n")
-    solve_eigen_nosort(K_v, w_v, U_v, 0)
-
-    if verbosity > 1:
-        print("K_r:")
-        K_r.show_matrix()
-        print("K_r eigenvalues:")
-        w_r.show_matrix()
-        print("K_r eigenvectors:")
-        U_r.show_matrix()
-
-        print("K_v:")
-        K_v.show_matrix()
-        print("K_v eigenvalues:")
-        w_v.show_matrix()
-        print("K_v eigenvectors:")
-        U_v.show_matrix()
-
-    w = MATRIX(ndof, 1)
-    for dof in range(0, ndof):
-        if w_r.get(dof, dof).real > 0.0:
-            w.set(dof, 0, math.sqrt(math.fabs(w_v.get(dof, dof).real / w_r.get(dof, dof).real)))
-        else:
-            w.set(dof, 0, 0.0)
-    w_inv_cm = w / units.inv_cm2Ha
-    if verbosity > 0:
-        print("Angular frequencies (derived from w_v/w_r)")
-        w_inv_cm.show_matrix()
-
-    if params["visualize"] == 1:
-        if verbosity > 0:
-            print("Visualizing modes based on velocities covariance\n")
-        prefix = params["prefix"]
-        params.update({"prefix": prefix + "_velocity"})
-        visualize_modes(E, R, U_v.real(), M, w, params)
-
-    if verbosity > 0:
-        print("========= Done with the Normal modes calculations =============================")
-
-    return w, w_inv_cm, U_v.real()
-
-
-def compute_cov2(R, A, M, E, T, params):
-    """
-
-    Computes and visualizes (as the trajectories) normal modes following the
-    methods described in:
-
-    (1) Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:
-    Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.
-
-    Args:
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps
-        M ( MATRIX(ndof x 1) ): masses of all DOFs
-        E ( list of ndof/3 strings ): atom names (elements) of all atoms
-        T ( double ): temperature of simulation (in K)
-        params ( dictionary ): parameters controlling the computations, including the
-            visualization (see the visualize_modes(E, R, U, w, params) description).
-            Contains keyword-value pairs:
-
-            * **params["verbosity"]** ( int ): level to control verbosity
-            * **params["visualize"]** ( int ): flag to control whether we want to produce additional files (with normal modes)
-                - 0 - not to
-                - 1 - do it
-
-    Returns:
-        tuple: (w_a, w_inv_cm, U_a), where:
-
-            * w_a ( MATRIX(ndof,1) ): frequencies - Hessian eigenvalues
-            * w_inv_cm ( MATRIX(ndof,1) ): frequencies from - Hessian eigenvalues, in cm^-1 units
-            * U_a ( MATRIX(ndof,ndof) ): Hessian eigenvectors
-
-    Note:
-        All quantities are in atomic units
-
-    """
-
-    verbosity = params["verbosity"]
-
-    if verbosity > 0:
-        print("========= Normal modes calculations according to: =============================")
-        print("Pereverzev, A.; Sewell, T. D. Obtaining the Hessian from the Force Covariance Matrix:\
-        Application to Crystalline Explosives PETN and RDX. J. Chem. Phys. 2015, 142, 134110.\n")
-
-    ndof = R.num_of_rows
-    nat = ndof / 3
-    cov_flag = params["cov_flag"]
-
-    if verbosity > 0:
-        print("Computing covariance matrix of accelerations\n")
-    K_a = None
-    if cov_flag == 0:
-        K_a = CMATRIX(covariance(A))
-    elif cov_flag == 1:
-        dA = deviation(A)
-        K_a = CMATRIX(covariance(dA))
-
-    k = units.boltzmann / units.hartree
-    K_a *= (1.0 / (k * T))
-
-    if verbosity > 0:
-        print("Eigenvalue solver for covariance matrix of accelerations\n")
-    w_a = CMATRIX(ndof, ndof)
-    U_a = CMATRIX(ndof, ndof)
-    solve_eigen_nosort(K_a, w_a, U_a, 0)
-
-    if verbosity > 1:
-        print("K_a:")
-        K_a.show_matrix()
-        print("K_a eigenvalues:")
-        w_a.show_matrix()
-        print("K_a eigenvectors:")
-        U_a.show_matrix()
-
-    w = MATRIX(ndof, 1)
-    for dof in range(0, ndof):
-        if w_a.get(dof, dof).real > 0.0:
-            w.set(dof, 0, math.sqrt(w_a.get(dof, dof).real))
-    w_inv_cm = w / units.inv_cm2Ha
-    if verbosity > 0:
-        print("Frequencies (cm^-1)")
-        w_inv_cm.show_matrix()
-
-    if params["visualize"] > 0:
-        if verbosity > 0:
-            print("Visualizing modes based on accelerations covariance matrix\n")
-        visualize_modes(E, R, U_a.real(), M, w, params)
-
-    if verbosity > 0:
-        print("========= Done with the Normal modes calculations =============================")
-
-    return w_a, w_inv_cm, U_a.real()
+                for at in range(nat):
+                    f.write(
+                        f"{E[at]:2s} "
+                        f"{Rt_xyz[at,0]:10.5f} "
+                        f"{Rt_xyz[at,1]:10.5f} "
+                        f"{Rt_xyz[at,2]:10.5f}\n"
+                    )
 
 
 def compute_dynmat(R, D, M, E, params):
