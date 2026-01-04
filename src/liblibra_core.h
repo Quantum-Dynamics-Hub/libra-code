@@ -47,16 +47,12 @@
 #include "chemobjects/libchemobjects.h"
 
 #include "cell/libcell.h"
-#include "pot/libpot.h"
-#include "forcefield/libforcefield.h"
 
 #include "control_parameters/libcontrol_parameters.h"
 #include "model_parameters/libmodel_parameters.h"
 #include "basis_setups/libbasis_setups.h"
 #include "libint2_wrappers/liblibint2_wrappers.h"
 
-
-#include "atomistic/libatomistic.h"
 
 #include "nhamiltonian/libnhamiltonian.h"
 
@@ -67,8 +63,8 @@
 #include "dyn/libdyn.h"
 
 #include "converters/libconverters.h"
-#include "scripts/libscripts.h"
-#include "qchem_tools/libqchem_tools.h"
+//#include "scripts/libscripts.h"
+//#include "qchem_tools/libqchem_tools.h"
 #include "solvers/libsolvers.h"
 
 #include "integrators/libintegrators.h"

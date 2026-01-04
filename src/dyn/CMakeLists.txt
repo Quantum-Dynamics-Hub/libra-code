@@ -16,11 +16,6 @@ ADD_SUBDIRECTORY("thermostat")
 MESSAGE("Going into subdirectory barostat...")
 ADD_SUBDIRECTORY("barostat")
 
-MESSAGE("Going into subdirectory wfcgrid...")
-ADD_SUBDIRECTORY("wfcgrid")
-
-MESSAGE("Going into subdirectory wfcgrid2...")
-ADD_SUBDIRECTORY("wfcgrid2")
 
 #MESSAGE("Going into subdirectory ensemble...")
 #ADD_SUBDIRECTORY("ensemble")
@@ -65,8 +60,6 @@ TARGET_LINK_LIBRARIES(dyn
                       heom
                       qtag
                       gwp
-                      wfcgrid
-                      wfcgrid2
                       barostat thermostat
                       electronic 
                       nuclear
@@ -78,8 +71,6 @@ TARGET_LINK_LIBRARIES(dyn_stat
                       heom_stat
                       qtag_stat
                       gwp_stat
-                      wfcgrid_stat 
-                      wfcgrid2_stat 
                       barostat_stat thermostat_stat 
                       electronic_stat 
                       nuclear_stat 

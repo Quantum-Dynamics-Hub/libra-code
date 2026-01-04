@@ -51,13 +51,10 @@ using namespace librigidbody;
 
 using namespace libchemobjects;
 using namespace libcell;
-using namespace libpot;
-using namespace libforcefield;
 
 using namespace libcontrol_parameters;
 using namespace libnhamiltonian;
 
-using namespace libatomistic;
 using namespace libmodels;
 
 using namespace libfgr;
@@ -65,8 +62,8 @@ using namespace libivr;
 using namespace libdyn;
 
 using namespace libconverters;
-using namespace libscripts;
-using namespace libqchem_tools;
+//using namespace libscripts;
+//using namespace libqchem_tools;
 using namespace libsolvers;
 using namespace libintegrators;
 
@@ -110,15 +107,11 @@ void export_libra_core_objects(){
   export_chemobjects_objects();
   export_Cell_objects();
 
-  export_Pot_objects();
-  export_forcefield_objects();
-
 
   export_Control_Parameters_objects();
   export_Model_Parameters_objects();
   export_basis_setups_objects();
 
-  export_atomistic_objects();
 
   export_nhamiltonian_objects();
 
@@ -128,8 +121,8 @@ void export_libra_core_objects(){
   export_Dyn_objects();
 
   export_converters_objects();
-  export_scripts_objects();
-  export_qchem_tools_objects();
+//  export_scripts_objects();
+//  export_qchem_tools_objects();
 
   export_solvers_objects();
 

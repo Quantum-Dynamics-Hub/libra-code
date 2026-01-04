@@ -34,12 +34,12 @@ namespace libconverters{
 
 void export_converters_objects(){
 
-  void (*expt_system_to_nuclear_v1)(System& syst, Nuclear& nucl) = &system_to_nuclear;
-  void (*expt_nuclear_to_system_v1)(Nuclear& nucl, System& syst) = &nuclear_to_system;
+  //void (*expt_system_to_nuclear_v1)(System& syst, Nuclear& nucl) = &system_to_nuclear;
+  //void (*expt_nuclear_to_system_v1)(Nuclear& nucl, System& syst) = &nuclear_to_system;
 
 
-  def("system_to_nuclear", expt_system_to_nuclear_v1);
-  def("nuclear_to_system", expt_nuclear_to_system_v1);
+//  def("system_to_nuclear", expt_system_to_nuclear_v1);
+//  def("nuclear_to_system", expt_nuclear_to_system_v1);
 
 
   vector<int> (*expt_Py2Cpp_v1)(boost::python::list x) = &Py2Cpp;
