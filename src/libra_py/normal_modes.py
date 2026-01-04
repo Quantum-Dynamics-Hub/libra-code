@@ -792,62 +792,79 @@ def compute_dynmat(R, D, M, E, params):
     return w, w_inv_cm, U_a
 
 
-def get_xyz(E, R, M, U, mode):
+
+def normal2xyz(elements, R, M, U, mode, mass_weighted=True, comment="Normal mode"):
     """
+    Generate an XYZ-format string for visualizing a normal mode.
 
-    This function returns a string in the xyz format with X, Y, Z and UX, UY, UZ
-    where X,Y,Z are the coordinates, UX, UY, UZ - vectors coming from those coordinates - e.g. normal modes
+    Each atom line contains:
+        X, Y, Z     : Cartesian coordinates
+        UX, UY, UZ  : displacement vector components of the selected normal mode
 
-    Args:
-        E ( list of ndof/3 strings ): atom names (elements) of all atoms
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        M ( MATRIX(ndof x 1) ): masses of all DOFs
-        U ( MATRIX(ndof x ndof) ): a matrix containing normal mode vectors
-        mode ( int ): index of the normal mode that we want to visualize
+    Parameters
+    ----------
+    elements : list of str, length = nat
+        Atomic symbols (one per atom).
+    R : np.ndarray, shape (3*nat,) or (nat, 3)
+        Cartesian coordinates in Angstrom.
+    M : np.ndarray or None, shape (3*nat,) or (nat, 3)
+        Masses associated with each Cartesian degree of freedom.
+        Required only if mass_weighted=True.
+    U : np.ndarray, shape (3*nat, ndof)
+        Normal-mode eigenvectors. Each column corresponds to one mode.
+    mode : int
+        Index of the normal mode to visualize (column index of U).
+    mass_weighted : bool, optional
+        If True, divide displacement vectors by sqrt(mass) for each DOF.
+        Default is True.
+    comment : str, optional
+        Comment line written to the XYZ file.
 
-    Returns:
-        string: A string representing an xyz file
-
-    """
-
-    natoms = len(E)
-    res = "%3i\nComment\n" % (natoms)
-
-    for i in range(0, natoms):
-        x, y, z = R.get(3 * i, 0), R.get(3 * i + 1, 0), R.get(3 * i + 2, 0)
-        ux = U.get(3 * i + 0, mode) / math.sqrt(M.get(3 * i + 0))
-        uy = U.get(3 * i + 1, mode) / math.sqrt(M.get(3 * i + 1))
-        uz = U.get(3 * i + 2, mode) / math.sqrt(M.get(3 * i + 2))
-
-        res = res + "%s  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f\n" % (E[i], x, y, z, ux, uy, uz)
-
-    return res
+    Returns
+    -------
+    xyz_str : str
+        String containing the XYZ-formatted data.
 
 
-def get_xyz2(E, R, U, mode):
-    """
-
-    This function returns a string in the xyz format with X, Y, Z and UX, UY, UZ
-    where X,Y,Z are the coordinates, UX, UY, UZ - vectors coming from those coordinates - e.g. normal modes
-
-    Args:
-        E ( list of ndof/3 string ): atom names (elements) of all atoms
-        R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps
-        U ( MATRIX(ndof x ndof) ): a matrix containing normal mode vectors
-        mode ( int ): index of the normal mode that we want to visualize
-
-    Returns:
-        string: A string representing an xyz file
+    Examples
+    --------
+    >>> normal2xyz(E, R, M, U, mode, mass_weighted=True)
+    >>> normal2xyz(E, R, None, U, mode, mass_weighted=False)
 
     """
 
-    natoms = len(E)
-    res = "%3i\nComment\n" % (natoms)
+    elements = list(elements)
+    nat = len(elements)
 
-    for i in range(0, natoms):
-        x, y, z = R.get(3 * i, 0), R.get(3 * i + 1, 0), R.get(3 * i + 2, 0)
-        ux, uy, uz = U.get(3 * i + 0, mode), U.get(3 * i + 1, mode), U.get(3 * i + 2, mode)
+    # --- reshape coordinates if needed ---
+    R = np.asarray(R)
+    if R.ndim == 1:
+        R = R.reshape(nat, 3)
 
-        res = res + "%s  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f  %5.3f\n" % (E[i], x, y, z, ux, uy, uz)
+    # --- extract mode vector ---
+    mode_vec = U[:, mode].reshape(nat, 3)
 
-    return res
+    # --- apply mass weighting if requested ---
+    if mass_weighted:
+        if M is None:
+            raise ValueError("Mass array M must be provided when mass_weighted=True")
+
+        M = np.asarray(M)
+        if M.ndim == 1:
+            M = M.reshape(nat, 3)
+
+        mode_vec = mode_vec / np.sqrt(M)
+
+    # --- build XYZ string ---
+    lines = [f"{nat}", comment]
+
+    for elt, (x, y, z), (ux, uy, uz) in zip(elements, R, mode_vec):
+        lines.append(
+            f"{elt:2s}  "
+            f"{x:10.5f} {y:10.5f} {z:10.5f}  "
+            f"{ux:10.5f} {uy:10.5f} {uz:10.5f}"
+        )
+
+    return "\n".join(lines) + "\n"
+
+

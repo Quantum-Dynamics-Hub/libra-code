@@ -43,6 +43,7 @@ import os
 import sys
 import math
 import re
+import numpy as np
 
 if sys.platform == "cygwin":
     from cyglibra_core import *
@@ -1399,120 +1400,180 @@ def xyz2inp(out_filename, templ_filename, wd, prefix, t0, tmax, dt):
     f.close()
 
 
+
+import numpy as np
+import re
+
+
 def get_QE_normal_modes(filename, verbosity=0):
     """
+    Read a Quantum ESPRESSO phonon (.dyn) file and extract atomic structure,
+    masses, normal-mode eigenvectors, and frequencies.
 
-    This function reads the QE phonon calculations output files
-    to get the key information for further normal modes visualization
-    or other types of calculations related to normal modes
+    Parameters
+    ----------
+    filename : str
+        Name of the QE .dyn file produced by a phonon calculation.
+    verbosity : int, optional
+        Controls the amount of printed output:
+            0 : no extra output (default)
+            1 : basic information
+            2 : detailed arrays
 
-    Args:
-        filename ( string ): the name of a .dyn file produced by QE code
-        verbosity ( int ) to control the amount of printouts
-
-            * 0 - no extra output (default)
-            * 1 - print extra stuff
-
-    Returns:
-        tuple: (Elts, R, U), where:
-
-        * Elts ( list of nat string ): labels of all atoms, nat - is the number of atoms
-        * R ( MATRIX(3*nat x 1) ): coordinates of all atoms [Angstrom]
-        * U ( MATRIX(ndof x ndof) ): eigenvectors, defining the normal modes
-
-    Example:
-        >>> get_QE_normal_modes("silicon.dyn1", 1)     # verbose output
-        >>> get_QE_normal_modes("Cs4SnBr6_T200.dyn1")  # not verbose output
-
+    Returns
+    -------
+    Elts : list of str, length = nat
+        Atomic element symbols for each atom.
+    R : np.ndarray, shape (3*nat,)
+        Cartesian coordinates of all atoms (as written in the .dyn file).
+    M : np.ndarray, shape (3*nat,)
+        Masses associated with each Cartesian degree of freedom
+        (atomic mass repeated for x, y, z).
+    U : np.ndarray, shape (3*nat, 3*nat)
+        Normal-mode eigenvectors. Each column corresponds to one phonon mode.
+    freqs_THz : np.ndarray, shape (3*nat,)
+        Phonon frequencies in THz.
+    freqs_cm1 : np.ndarray, shape (3*nat,)
+        Phonon frequencies in cm^-1.
     """
 
-    # ========= Read in the file and determine the key dimensions =======
-    f = open(filename, 'r')
-    A = f.readlines()
-    f.close()
+    # ===================== Read file =====================
+    with open(filename, "r") as f:
+        lines = f.readlines()
 
-    tmp = A[2].split()
-    nspec = int(float(tmp[0]))  # number of types of atoms (species)
-    nat = int(float(tmp[1]))     # number of atoms
+    # ===================== System size =====================
+    nspec, nat = map(int, lines[2].split()[:2])
+
     if verbosity > 0:
-        print("%i atoms of %i types" % (nat, nspec))
+        print(f"{nat} atoms, {nspec} species")
 
-    # ============= Determine the types of atoms ===============
-    pfreq_indx = '(?P<freq_indx>' + rgl.INT + ')'
-    pAtom_type = '(?P<Atom_type>' + rgl.INT + ')' + rgl.SP
-    pAtom_type2 = '(?P<Atom_type2>' + rgl.INT + ')' + rgl.SP
-    PHRASE1 = '\'(?P<Atom_element>[a-zA-Z]+)\\s+\'' + rgl.SP
+    # ===================== Species definitions =====================
+    # Format:
+    #   1  'Cs  '   121130.939779379
+    species_re = re.compile(
+        r"^\s*(\d+)\s+'([A-Za-z]+)\s*'\s+([-\d.Ee+]+)"
+    )
 
-    last_index = 0
-    E = {}
-    for a in A:
-        m1 = re.search(pAtom_type + PHRASE1 + rgl.pX_val, a)
-        if m1 is not None:
-            ind = int(float(a[m1.start('Atom_type'):m1.end('Atom_type')]))
-            elt = a[m1.start('Atom_element'):m1.end('Atom_element')]
-            E.update({ind: elt})
-            last_index = A.index(a)
+    species_to_element = {}
+    species_to_mass = {}
+
+    for line in lines:
+        m = species_re.match(line)
+        if m:
+            idx = int(m.group(1))
+            elt = m.group(2)
+            mass = float(m.group(3))
+
+            species_to_element[idx] = elt
+            species_to_mass[idx] = mass
+
+    if len(species_to_element) != nspec:
+        raise RuntimeError(
+            f"Expected {nspec} species, found {len(species_to_element)}"
+        )
+
     if verbosity > 0:
-        print("atom type index - element type mapping: ", E)
+        print("Species → element:", species_to_element)
+        print("Species → mass:", species_to_mass)
 
-    # ============= Get the coordinates ========================
-    R = MATRIX(3 * nat, 1)
+    # ===================== Atomic coordinates =====================
+    # Format:
+    #   atom_index  species_index   x   y   z
+    coord_re = re.compile(
+        r"^\s*(\d+)\s+(\d+)\s+([-\d.Ee+]+)\s+([-\d.Ee+]+)\s+([-\d.Ee+]+)"
+    )
+
     Elts = []
+    R = np.zeros(3 * nat)
+    M = np.zeros(3 * nat)
 
-    cnt = 0
-    for i in range(last_index + 1, last_index + 1 + nat):
-        tmp = A[i].split()
-        ind = int(float(tmp[1]))
-        x = float(tmp[2])
-        y = float(tmp[3])
-        z = float(tmp[4])
+    coord_count = 0
 
-        Elts.append(E[ind])
-        R.set(3 * cnt + 0, 0, x)
-        R.set(3 * cnt + 1, 0, y)
-        R.set(3 * cnt + 2, 0, z)
-        cnt = cnt + 1
+    for line in lines:
+        m = coord_re.match(line)
+        if not m:
+            continue
 
-    if verbosity > 0:
-        print("Your system's elements = \n", Elts)
+        atom_idx = int(m.group(1))
+        species_idx = int(m.group(2))
+
+        # Accept only true atomic positions
+        if atom_idx < 1 or atom_idx > nat:
+            continue
+        if species_idx < 1 or species_idx > nspec:
+            continue
+
+        x = float(m.group(3))
+        y = float(m.group(4))
+        z = float(m.group(5))
+
+        Elts.append(species_to_element[species_idx])
+        R[3*coord_count:3*coord_count+3] = [x, y, z]
+        M[3*coord_count:3*coord_count+3] = species_to_mass[species_idx]
+
+        coord_count += 1
+        if coord_count == nat:
+            break
+
+    if coord_count != nat:
+        raise RuntimeError(
+            f"Found {coord_count} atomic positions, expected {nat}"
+        )
+
     if verbosity > 1:
-        print("Your system's coordinates = \n")
-        R.show_matrix()
+        print("Coordinates:")
+        print(R.reshape(nat, 3))
+        print("Atomic masses:")
+        print(M.reshape(nat, 3)[:, 0])
 
-    # =========== Now look for frequencies ===============
+    # ===================== Normal modes and frequencies =====================
     ndof = 3 * nat
-    U = MATRIX(ndof, ndof)
+    U = np.zeros((ndof, ndof))
+    freqs_THz = np.zeros(ndof)
+    freqs_cm1 = np.zeros(ndof)
 
-    pattern = 'freq \\(\\s+' + pfreq_indx + '\\) \\=\\s+' + rgl.pX_val + \
-        '\\[THz\\] \\=\\s+' + rgl.pY_val + '\\[cm\\-1\\]\\s+'
-    sz = len(A)
-    cnt = 0
-    for i in range(0, sz):
-        m1 = re.search(pattern, A[i])
-        if m1 is not None:
-            ind = A[i][m1.start('freq_indx'):m1.end('freq_indx')]
-            freq1 = A[i][m1.start('X_val'):m1.end('X_val')]
-            freq2 = A[i][m1.start('Y_val'):m1.end('Y_val')]
-            # print ind, freq1, freq2
+    freq_re = re.compile(
+        r"freq\s+\(\s*(\d+)\s*\)\s*=\s*([-\d.Ee+]+)\s*\[THz\]\s*=\s*([-\d.Ee+]+)\s*\[cm\-1\]"
+    )
 
-            for j in range(0, nat):
-                tmp = A[i + j + 1].split()
-                x = float(tmp[1])
-                y = float(tmp[3])
-                z = float(tmp[5])
+    mode_index = 0
+    i = 0
+    nlines = len(lines)
 
-                U.set(3 * j + 0, cnt, x)
-                U.set(3 * j + 1, cnt, y)
-                U.set(3 * j + 2, cnt, z)
+    while i < nlines:
+        m = freq_re.search(lines[i])
+        if m:
+            freqs_THz[mode_index] = float(m.group(2))
+            freqs_cm1[mode_index] = float(m.group(3))
 
-            i = i + nat
-            cnt = cnt + 1
+            # Next nat lines are eigenvectors
+            for j in range(nat):
+                tokens = lines[i + j + 1].split()
+                x = float(tokens[1])
+                y = float(tokens[3])
+                z = float(tokens[5])
+
+                U[3*j:3*j+3, mode_index] = [x, y, z]
+
+            mode_index += 1
+            i += nat
+        i += 1
+
+    if mode_index != ndof and verbosity > 0:
+        print(
+            f"Warning: read {mode_index} modes, expected {ndof}"
+        )
 
     if verbosity > 1:
-        print("Eigenvectors = \n")
-        U.show_matrix()
+        print("Frequencies (THz):")
+        print(freqs_THz)
+        print("Frequencies (cm^-1):")
+        print(freqs_cm1)
+        print("Eigenvector matrix U:")
+        print(U)
 
-    return Elts, R, U
+    return Elts, R, M, U, freqs_THz, freqs_cm1
+
 
 
 def run_qe(params, t, dirname0, dirname1):
