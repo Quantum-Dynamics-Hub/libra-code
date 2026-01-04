@@ -565,21 +565,67 @@ def read_qe_wfc(filename, orb_list, verbose=0):
 
 
 def read_md_data(filename):
-    """Read in the QE MD data stored in an XML file
+    """
+    Read molecular dynamics data from a Quantum ESPRESSO XML output file.
 
-    Args:
-        filename (string): the name of the xml file that contains an MD data
-            this function is specifically tailored for the QE output format
+    This routine parses a QE MD trajectory stored in XML format and constructs
+    NumPy arrays for atomic coordinates, velocities, accelerations, and masses.
+    Velocities and accelerations are evaluated at mid–time steps using
+    central finite differences.
 
-    Returns:
-        tuple: (R, V, A, M, E), where:
+    The function assumes:
+      - A fixed time step throughout the trajectory
+      - Constant atomic species and masses
+      - Forces and positions available at every MD step
 
-        * R ( MATRIX(ndof x nsteps-1) ): coordinates of all DOFs for all mid-timesteps [Bohr]
-        * V ( MATRIX(ndof x nsteps-1) ): velocities of all DOFs for all mid-timesteps [a.u. of velocity]
-        * A ( MATRIX(ndof x nsteps-1) ): accelerations of all DOFs for all mid-timesteps [a.u. of acceleration]
-        * M ( MATRIX(ndof x 1) ): masses of all DOFs [a.u. of mass]
-        * E (list of ndof/3): atom names (elements) of all atoms
+    Parameters
+    ----------
+    filename : str
+        Path to the Quantum ESPRESSO XML file containing MD data.
 
+    Returns
+    -------
+    R : np.ndarray, shape (ndof, nsteps-1)
+        Cartesian coordinates of all degrees of freedom evaluated at
+        mid–time steps:
+            R_i(t+1/2) = 0.5 * [ D_i(t+1) + D_i(t) ]
+        Units: Bohr.
+
+    V : np.ndarray, shape (ndof, nsteps-1)
+        Cartesian velocities of all degrees of freedom evaluated at
+        mid–time steps using a central finite difference:
+            V_i(t+1/2) = [ D_i(t+1) - D_i(t) ] / (2 * dt)
+        Units: atomic units of velocity.
+
+    A : np.ndarray, shape (ndof, nsteps-1)
+        Cartesian accelerations of all degrees of freedom evaluated at
+        mid–time steps:
+            A_i(t+1/2) = 0.5 * [ f_i(t+1) + f_i(t) ] / M_i
+        Units: atomic units of acceleration.
+
+    M : np.ndarray, shape (ndof,)
+        Mass associated with each Cartesian degree of freedom.
+        Each atomic mass is repeated three times (x, y, z).
+        Units: atomic units of mass.
+
+    E : list of str, length nat
+        Atomic species labels (element names) in the order they appear
+        in the trajectory.
+
+    Notes
+    -----
+    - `ndof = 3 * nat`, where `nat` is the number of atoms.
+    - Mid–point quantities are defined for `nsteps - 1` time intervals.
+    - Atomic masses are read from the QE `atomic_species` section and
+      converted from amu to atomic units.
+    - Memory allocation uses `np.empty`; all entries are explicitly filled.
+
+    Examples
+    --------
+    >>> R, V, A, M, E = read_md_data("md.xml")
+    >>> R.shape
+    (3 * nat, nsteps - 1)
+    >>> M[:3]   # mass of atom 1 repeated for x, y, z
     """
 
     # Default (empty) context object
@@ -614,9 +660,13 @@ def read_md_data(filename):
         PT.update({name: mass * units.amu})
 
     # ========== Read the raw coordinates and assign masses ==========
-    D = MATRIX(3 * nat, nsteps)  # coordinates
-    f = MATRIX(3 * nat, nsteps)
-    M = MATRIX(3 * nat, 1)
+    D = np.empty((3 * nat, nsteps), dtype=float) # coordinates
+    f = np.empty((3 * nat, nsteps), dtype=float)
+    M = np.empty((3 * nat,), dtype=float)
+
+#    D = MATRIX(3 * nat, nsteps)  # coordinates
+#    f = MATRIX(3 * nat, nsteps)
+#    M = MATRIX(3 * nat, 1)
     E = []
 
     for t in range(0, nsteps):
@@ -627,15 +677,19 @@ def read_md_data(filename):
         for i in range(0, nat):
             xyz_str = atoms[i].get("", "").split(' ')
             name = atoms[i].get("<xmlattr>/name", "X")
-            D.set(3 * i + 0, t, float(xyz_str[0]))
-            D.set(3 * i + 1, t, float(xyz_str[1]))
-            D.set(3 * i + 2, t, float(xyz_str[2]))
+            D[3*i+0, t] = float(xyz_str[0])
+            D[3*i+1, t] = float(xyz_str[1])
+            D[3*i+2, t] = float(xyz_str[2])
+
+            #D.set(3 * i + 0, t, float(xyz_str[0]))
+            #D.set(3 * i + 1, t, float(xyz_str[1]))
+            #D.set(3 * i + 2, t, float(xyz_str[2]))
 
             # =========== And masses ==========
             if t == 0:
-                M.set(3 * i + 0, 0, PT[name])
-                M.set(3 * i + 1, 0, PT[name])
-                M.set(3 * i + 2, 0, PT[name])
+                M[3 * i + 0] = PT[name]
+                M[3 * i + 1] = PT[name]
+                M[3 * i + 2] = PT[name]
                 E.append(name)
 
         # ========== Forces  =========
@@ -645,12 +699,28 @@ def read_md_data(filename):
         for i in range(0, sz):
             xyz_str = frcs[i].split()
             if len(xyz_str) == 3:
-                f.set(3 * cnt + 0, t, float(xyz_str[0]))
-                f.set(3 * cnt + 1, t, float(xyz_str[1]))
-                f.set(3 * cnt + 2, t, float(xyz_str[2]))
+                f[3 * cnt + 0, t] = float(xyz_str[0])
+                f[3 * cnt + 1, t] = float(xyz_str[1])
+                f[3 * cnt + 2, t] = float(xyz_str[2])
                 cnt = cnt + 1
 
     # ====== Compute velocities and coordinates at the mid-points ========
+    # Allocate arrays
+    R = np.empty((3 * nat, nsteps - 1))
+    V = np.empty((3 * nat, nsteps - 1))
+    A = np.empty((3 * nat, nsteps - 1))
+
+    # Midpoints in time
+    R[:] = 0.5 * (D[:, 1:] + D[:, :-1])
+
+    # Central finite-difference velocity
+    V[:] = 0.5 * (D[:, 1:] - D[:, :-1]) / dt
+
+    # Average force divided by mass
+    A[:] = 0.5 * (f[:, 1:] + f[:, :-1]) / M[:, None]
+
+
+    """
     R = MATRIX(3 * nat, nsteps - 1)
     V = MATRIX(3 * nat, nsteps - 1)
     A = MATRIX(3 * nat, nsteps - 1)
@@ -660,6 +730,7 @@ def read_md_data(filename):
             R.set(i, t, 0.5 * (D.get(i, t + 1) + D.get(i, t)))
             V.set(i, t, (0.5 / dt) * (D.get(i, t + 1) - D.get(i, t)))
             A.set(i, t, 0.5 * (f.get(i, t + 1) + f.get(i, t)) / M.get(i))
+    """
 
     return R, V, A, M, E
 
