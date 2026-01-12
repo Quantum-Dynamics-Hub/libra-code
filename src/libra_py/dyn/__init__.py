@@ -7,6 +7,15 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["control_params",
-           "local_diabatization"
-           ]
+__all__ = ["backends",
+           "control_params",
+           "core",
+           "decoherence",
+           "experiments",
+           "hamiltonians",
+           "local_diabatization",
+           "observables",
+           "propagation",
+           "spawning",
+           "utils",
+          ]

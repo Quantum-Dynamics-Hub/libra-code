@@ -1,4 +1,20 @@
-**High-level principles for module splitting**
+# 1. Design principles (explicit)
+
+- TrajectoryBasisFunction (TBF) = nuclear wavepacket
+
+- Trajectory = one electron–nuclear wavefunction
+
+- Batch = ensemble of independent wavefunctions
+
+- Heavy numerics live in shared tensor buffers
+
+- Objects store topology and views, not data copies
+
+- Tensor ranks are not hard-coded
+
+
+
+# 2. High-level principles for module splitting
 
 Data structures ≠ algorithms
 
@@ -11,7 +27,7 @@ Stable core ≠ experimental physics
 No circular imports
 
 
-**Import direction rule (very important)**
+# 3. Import direction rule (very important)
 
 Allowed direction:
 core → propagation → spawning → experiments
