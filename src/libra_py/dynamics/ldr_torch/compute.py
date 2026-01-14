@@ -41,7 +41,7 @@ class ldr_solver:
         self.prefix = params.get("prefix", "ldr-solution")
         self.device = params.get("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
         self.hbar = 1.0
-        self.Hamiltonian_scheme = "symmetrized"
+        self.hamiltonian_scheme = "symmetrized"
         self.q0 = torch.tensor(params.get("q0", [0.0]), dtype=torch.float64, device=self.device)
         self.p0 = torch.tensor(params.get("p0", [0.0]), dtype=torch.float64, device=self.device)
         self.k = torch.tensor(params.get("k", [0.001]), dtype=torch.float64, device=self.device)
@@ -62,22 +62,22 @@ class ldr_solver:
 
         self.E = params.get("E", torch.zeros(self.nstates, self.ngrids, device=self.device) )
 
-        Selec_default = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
+        s_elec_default = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
         for i in range(self.nstates):
             start, end = i * self.ngrids, (i + 1) * self.ngrids
-            Selec_default[start:end, start:end] = torch.eye(self.ngrids, device=self.device)            
-        self.Selec = params.get("Selec", Selec_default )   
+            s_elec_default[start:end, start:end] = torch.eye(self.ngrids, device=self.device)            
+        self.s_elec = params.get("s_elec", s_elec_default )   
 
         # Computed with LDR methods
         self.C0 = torch.zeros(self.ndim, dtype=torch.cdouble, device=self.device)
-        self.Ccurr = torch.zeros(self.ndim, dtype=torch.cdouble, device=self.device)
+        self.C_curr = torch.zeros(self.ndim, dtype=torch.cdouble, device=self.device)
 
-        self.Snucl = torch.eye(self.ngrids, dtype=torch.cdouble, device=self.device)
-        self.Tnucl = torch.zeros(self.ngrids, self.ngrids, dtype=torch.cdouble, device=self.device)
+        self.s_nucl = torch.eye(self.ngrids, dtype=torch.cdouble, device=self.device)
+        self.t_nucl = torch.zeros(self.ngrids, self.ngrids, dtype=torch.cdouble, device=self.device)
 
         self.S, self.H = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device), torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
         self.U = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
-        self.Shalf = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
+        self.S_half = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
         
         self.time = []
         self.kinetic_energy = []
@@ -91,23 +91,23 @@ class ldr_solver:
 
     def chi_overlap(self):
         """
-        Compute nuclear overlap matrix Snucl[i, j] for the mesh qmesh 
+        Compute nuclear overlap matrix s_nucl[i, j] for the mesh qmesh 
         from the Gaussian basis, g(x; q) = \exp(-\alpha * (x-q)**2).
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]    # (N, N, D)
         exponent = -0.5 * torch.sum(self.alpha * delta**2, dim=2)  # (N, N)
-        self.Snucl = torch.exp(exponent)
+        self.s_nucl = torch.exp(exponent)
 
     def chi_kinetic(self):
         """
-        Compute nuclear kinetic energy matrix Tnucl[i,j] = <g(x; qgrid[i]) | T | g(x; qgrid[j])>,
+        Compute nuclear kinetic energy matrix t_nucl[i,j] = <g(x; qgrid[i]) | T | g(x; qgrid[j])>,
         with T = \sum_{\nu} -0.5* m_ν^{-1} \partial^{2}/\partial x_{\nu}^2.
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]               # (N, N, D)
         tau = self.alpha / (2.0 * self.mass) * (1.0 - self.alpha * delta**2)  # (N, N, D)
         tau_sum = torch.sum(tau, dim=2)                                       # (N, N)
     
-        self.Tnucl = self.Snucl * tau_sum                                     # (N, N)
+        self.t_nucl = self.s_nucl * tau_sum                                   # (N, N)
 
     def build_compound_overlap(self):
         """
@@ -115,50 +115,50 @@ class ldr_solver:
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
-        # Reshape Selec[a, b] -> (i, n, j, m) with:
+        # Reshape s_elec[a, b] -> (i, n, j, m) with:
         #   a = i * N + n
         #   b = j * N + m
-        Selec4D = self.Selec.view(s, N, s, N) # (i, n, j, m)
+        s_elec_4d = self.s_elec.view(s, N, s, N) # (i, n, j, m)
     
-        Snucl4D = self.Snucl.unsqueeze(0).unsqueeze(2) # (1, n, 1, m)
+        s_nucl_4d = self.s_nucl.unsqueeze(0).unsqueeze(2) # (1, n, 1, m)
     
-        S4D = Selec4D * Snucl4D
+        S_4d = s_elec_4d * s_nucl_4d
     
         # Reshape back to (ndim, ndim) with compound indices
-        self.S = S4D.permute(0, 1, 2, 3).reshape(ndim, ndim)
+        self.S = S_4d.permute(0, 1, 2, 3).reshape(ndim, ndim)
 
     def build_compound_hamiltonian(self):
         """
         Build the compound nuclear-electronic Hamiltonian self.H (ndim, ndim) using different schemes.
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
-        scheme = self.Hamiltonian_scheme
-        Selec4D = self.Selec.view(s, N, s, N)       # (s, N, s, N)
-        T4D = self.Tnucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
-        S4D = self.Snucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
+        scheme = self.hamiltonian_scheme
+        s_elec_4d = self.s_elec.view(s, N, s, N)      # (s, N, s, N)
+        T_4d = self.t_nucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
+        S_4d = self.s_nucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
     
         if scheme == 'as_is': # For showing the original non-Hermitian form, not intended to use
-            Ej4D = self.E[None, None, :, :]           # (1, 1, s, N)
-            bracket4D = T4D + Ej4D * S4D
+            E_j_4d = self.E[None, None, :, :]   # (1, 1, s, N)
+            bracket_4d = T_4d + E_j_4d * S_4d
         elif scheme == 'symmetrized':
-            Ei4D = self.E[:, :, None, None]   # (s, N, 1, 1)
-            Ej4D = self.E[None, None, :, :]   # (1, 1, s, N)
-            Eavg4D = 0.5 * (Ei4D + Ej4D)      # (s, N, s, N)
-            bracket4D = T4D + Eavg4D * S4D
+            E_i_4d = self.E[:, :, None, None]   # (s, N, 1, 1)
+            E_j_4d = self.E[None, None, :, :]   # (1, 1, s, N)
+            E_avg_4d = 0.5 * (E_i_4d + E_j_4d)  # (s, N, s, N)
+            bracket_4d = T_4d + E_avg_4d * S_4d
         elif scheme == 'diagonal':
             # Build Kronecker deltas for electronic and nuclear indices
             delta_ij = torch.eye(s, device=self.device).unsqueeze(1).unsqueeze(3)  # (s, 1, s, 1)
             delta_nm = torch.eye(N, device=self.device).unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
-            delta4D = delta_ij * delta_nm
+            delta_4d = delta_ij * delta_nm
             
-            Ej4D = self.E[None, None, :, :] # (1, 1, s, N)
-            bracket4D = T4D + Ej4D * S4D * delta4D
+            E_j_4d = self.E[None, None, :, :] # (1, 1, s, N)
+            bracket_4d = T_4d + E_j_4d * S_4d * delta_4d
 
         else:
             raise ValueError(f"Unknown Hamiltonian scheme: {scheme}")
     
-        H4D = Selec4D * bracket4D
-        self.H = H4D.reshape(ndim, ndim)
+        H_4d = s_elec_4d * bracket_4d
+        self.H = H_4d.reshape(ndim, ndim)
 
     def compute_propagator(self):
         """
@@ -236,14 +236,14 @@ class ldr_solver:
         Propagate coefficient.
         """
         # Initialize first step with normalized initial wavefunction
-        self.Ccurr = self.C0.clone()
+        self.C_curr = self.C0.clone()
 
         print(F"step = 0")
         self.save_results(0)
         
         for step in range(1, self.nsteps):
-            Cvec = self.Ccurr.clone()
-            self.Ccurr = self.U @ Cvec
+            C_vec = self.C_curr.clone()
+            self.C_curr = self.U @ C_vec
 
             if step % self.save_every_n_steps == 0:
                 print(F"step = {step}")
@@ -253,8 +253,8 @@ class ldr_solver:
         if "time" in self.properties_to_save:
             self.time.append(step*self.dt)
         if "norm" in self.properties_to_save:
-            overlap = torch.matmul(self.S, self.Ccurr)
-            self.norm.append(torch.sqrt(torch.vdot(self.Ccurr, overlap)))
+            overlap = torch.matmul(self.S, self.C_curr)
+            self.norm.append(torch.sqrt(torch.vdot(self.C_curr, overlap)))
         if "population_right" in self.properties_to_save:
             self.population_right.append(self.compute_populations())
         if "denmat" in self.properties_to_save:
@@ -268,19 +268,19 @@ class ldr_solver:
         if "average_pos" in self.properties_to_save:
             self.average_pos.append(self.compute_average_pos())
         if "C_save" in self.properties_to_save:
-            self.C_save.append(self.Ccurr)
+            self.C_save.append(self.C_curr)
         
     def compute_populations(self):
         """
         Compute electronic state population for a single step.
         """
         N, s = self.ngrids, self.nstates
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
         
         # Compute SC once: shape (ndim,)
-        SC = self.S @ Cvec
+        SC = self.S @ C_vec
     
-        C_blocks = Cvec.view(s, N)
+        C_blocks = C_vec.view(s, N)
         SC_blocks = SC.view(s, N)
     
         # Compute P[i] = sum_j <C_j|S_{ji}|C_i> = Re[ sum_N (C_j*) * SC_j ]
@@ -293,10 +293,10 @@ class ldr_solver:
         Compute electronic density matrix for a single step using the orthogonalization.
         """
         N, s = self.ngrids, self.nstates
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
     
         # Orthogonalize coefficients: C_ortho = S^{1/2} C
-        C_ortho = self.S_half @ Cvec
+        C_ortho = self.S_half @ C_vec
       
         C_blocks = C_ortho.view(s, N)
     
@@ -310,15 +310,15 @@ class ldr_solver:
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
-        # Rebuild compound kinetic matrix: T4D * Selec4D
-        Selec4D = self.Selec.view(s, N, s, N)
-        T4D = self.Tnucl[None, :, None, :]
-        T_compound = (Selec4D * T4D).reshape(ndim, ndim)
+        # Rebuild compound kinetic matrix: T_4d * s_elec_4d
+        s_elec_4d = self.s_elec.view(s, N, s, N)
+        T_4d = self.t_nucl[None, :, None, :]
+        T_compound = (s_elec_4d * T_4d).reshape(ndim, ndim)
     
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
     
-        numer = torch.vdot(Cvec, T_compound @ Cvec).real
-        denom = torch.vdot(Cvec, self.S @ Cvec).real
+        numer = torch.vdot(C_vec, T_compound @ C_vec).real
+        denom = torch.vdot(C_vec, self.S @ C_vec).real
     
         return numer / denom
     
@@ -329,16 +329,16 @@ class ldr_solver:
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
     
-        Selec4D = self.Selec.view(s, N, s, N)
-        S4D = self.Snucl[None, :, None, :]
-        Ej4D = self.E[None, None, :, :]  # (1,1,j,m)
+        s_elec_4d = self.s_elec.view(s, N, s, N)
+        S_4d = self.s_nucl[None, :, None, :]
+        E_j_4d = self.E[None, None, :, :]  # (1,1,j,m)
     
-        V_compound = (Selec4D * (Ej4D * S4D)).reshape(ndim, ndim)
+        V_compound = (s_elec_4d * (E_j_4d * S_4d)).reshape(ndim, ndim)
     
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
     
-        numer = torch.vdot(Cvec, V_compound @ Cvec).real
-        denom = torch.vdot(Cvec, self.S @ Cvec).real
+        numer = torch.vdot(C_vec, V_compound @ C_vec).real
+        denom = torch.vdot(C_vec, self.S @ C_vec).real
     
         return numer / denom
     
@@ -347,10 +347,10 @@ class ldr_solver:
         """
         Compute total energy as C^+ H C / C^+ S C for a single step.
         """
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
     
-        numer = torch.vdot(Cvec, self.H @ Cvec).real
-        denom = torch.vdot(Cvec, self.S @ Cvec).real
+        numer = torch.vdot(C_vec, self.H @ C_vec).real
+        denom = torch.vdot(C_vec, self.S @ C_vec).real
     
         return numer / denom
 
@@ -360,20 +360,20 @@ class ldr_solver:
         """
         N, s, ndim = self.ngrids, self.nstates, self.ndim
         
-        Cvec = self.Ccurr
+        C_vec = self.C_curr
 
-        denom = torch.vdot(Cvec, self.S @ Cvec).real
-        Selec4D = self.Selec.view(s, N, s, N)
+        denom = torch.vdot(C_vec, self.S @ C_vec).real
+        s_elec_4d = self.s_elec.view(s, N, s, N)
         
         avg_q = []
         for idof in range(self.ndof):
             q_med = 0.5 * (self.qgrid[:, None, idof] + self.qgrid[None,:,idof])
-            Qnucl = self.Snucl * q_med 
-            Q4D = Qnucl[None, :, None, :]
-            Q4D_compound = Selec4D * Q4D
-            Q_compound = Q4D_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
+            q_nucl = self.s_nucl * q_med 
+            Q_4d = q_nucl[None, :, None, :]
+            Q_4d_compound = s_elec_4d * Q_4d
+            Q_compound = Q_4d_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
 
-            numer = torch.vdot(Cvec, Q_compound @ Cvec).real
+            numer = torch.vdot(C_vec, Q_compound @ C_vec).real
             avg_q.append(numer / denom)
 
         return avg_q
@@ -387,16 +387,16 @@ class ldr_solver:
                      "qgrid":self.qgrid,
                      "nstates":self.nstates,
                      "istate":self.istate,
-                     "Snucl":self.Snucl,
-                     "Tnucl":self.Tnucl,
+                     "s_nucl":self.s_nucl,
+                     "t_nucl":self.t_nucl,
                      "E":self.E,
-                     "Selec":self.Selec,
+                     "s_elec":self.s_elec,
                      "S":self.S,
                      "H":self.H,
                      "U":self.U,
                      "C_save":self.C_save,
                      "save_every_n_steps":self.save_every_n_steps,
-                     "Hamiltonian_scheme": self.Hamiltonian_scheme,
+                     "hamiltonian_scheme": self.hamiltonian_scheme,
                      "dt":self.dt, "nsteps":self.nsteps,
                      "time":self.time,
                      "kinetic_energy":self.kinetic_energy,
