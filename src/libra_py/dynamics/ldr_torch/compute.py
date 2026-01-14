@@ -120,12 +120,12 @@ class ldr_solver:
         #   b = j * N + m
         s_elec_4d = self.s_elec.view(s, N, s, N) # (i, n, j, m)
     
-        s_nucl_4d = self.s_nucl.unsqueeze(0).unsqueeze(2) # (1, n, 1, m)
+        s_nucl_4d = self.s_nucl[None, :, None, :] # (1, n, 1, m)
     
         S_4d = s_elec_4d * s_nucl_4d
     
         # Reshape back to (ndim, ndim) with compound indices
-        self.S = S_4d.permute(0, 1, 2, 3).reshape(ndim, ndim)
+        self.S = S_4d.reshape(ndim, ndim)
 
     def build_compound_hamiltonian(self):
         """
@@ -134,8 +134,8 @@ class ldr_solver:
         N, s, ndim = self.ngrids, self.nstates, self.ndim
         scheme = self.hamiltonian_scheme
         s_elec_4d = self.s_elec.view(s, N, s, N)      # (s, N, s, N)
-        T_4d = self.t_nucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
-        S_4d = self.s_nucl.unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
+        T_4d = self.t_nucl[None, :, None, :]          # (1, N, 1, N)
+        S_4d = self.s_nucl[None, :, None, :]          # (1, N, 1, N)
     
         if scheme == 'as_is': # For showing the original non-Hermitian form, not intended to use
             E_j_4d = self.E[None, None, :, :]   # (1, 1, s, N)
@@ -147,8 +147,8 @@ class ldr_solver:
             bracket_4d = T_4d + E_avg_4d * S_4d
         elif scheme == 'diagonal':
             # Build Kronecker deltas for electronic and nuclear indices
-            delta_ij = torch.eye(s, device=self.device).unsqueeze(1).unsqueeze(3)  # (s, 1, s, 1)
-            delta_nm = torch.eye(N, device=self.device).unsqueeze(0).unsqueeze(2)  # (1, N, 1, N)
+            delta_ij = torch.eye(s, device=self.device)[:, None, :, None]  # (s, 1, s, 1)
+            delta_nm = torch.eye(N, device=self.device)[None, :, None, :]  # (1, N, 1, N)
             delta_4d = delta_ij * delta_nm
             
             E_j_4d = self.E[None, None, :, :] # (1, 1, s, N)
@@ -371,7 +371,7 @@ class ldr_solver:
             q_nucl = self.s_nucl * q_med 
             Q_4d = q_nucl[None, :, None, :]
             Q_4d_compound = s_elec_4d * Q_4d
-            Q_compound = Q_4d_compound.permute(0, 1, 2, 3).reshape(ndim, ndim)
+            Q_compound = Q_4d_compound.reshape(ndim, ndim)
 
             numer = torch.vdot(C_vec, Q_compound @ C_vec).real
             avg_q.append(numer / denom)
