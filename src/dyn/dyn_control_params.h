@@ -509,37 +509,37 @@ class dyn_control_params{
  
   /**
     KC-RPMD free energy parameter eta
-    Default: 6.28
+    Default: 6.28 (dimensionless)
   */
   double kcrpmd_eta;
 
   /**
     KC-RPMD kinetic constraint parameter a
-    Default: 0.1
+    Default: 0.1 (dimensionless)
   */
   double kcrpmd_a;
 
   /**
     KC-RPMD heavy-side parameter b
-    Default: 1000.
+    Default: 1000. (dimensionless)
   */
   double kcrpmd_b;
 
   /**
     KC-RPMD kinetic constraint switching parameter c
-    Default: 1.0
+    Default: 1.0 (dimensionless)
   */
   double kcrpmd_c;
 
   /**
     KC-RPMD Langevin frictional coefficient within donor-acceptor basin 
-    Default: 0.0
+    Default: 0.0 a.u. (inverse time)
   */
   double kcrpmd_gamma;
 
   /**
     KC-RPMD Langevin frictional coefficient within kinked-pair regime 
-    Default: 0.0
+    Default: 0.0 a.u. (inverse time)
   */
   double kcrpmd_gammaKP;
 

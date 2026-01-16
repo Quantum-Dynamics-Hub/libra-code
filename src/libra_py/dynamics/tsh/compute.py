@@ -1049,8 +1049,6 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
         save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
-        #if (i % nprint == 0):
-        #    save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
         # ============ Propagate ===========
         index = i + icond
