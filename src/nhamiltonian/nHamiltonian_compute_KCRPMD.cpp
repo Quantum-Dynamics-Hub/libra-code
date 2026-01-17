@@ -23,6 +23,7 @@
 
 #include "nHamiltonian.h"
 #include "../math_meigen/libmeigen.h"
+#include "../Units.h"
 
 /// liblibra namespace
 namespace liblibra{
@@ -75,7 +76,7 @@ vector<MATRIX> nHamiltonian::generate_m_matrices(double beta){
 }
 
 
-double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c){
 /**
   Compute the KC-RPMD effective potential energy
 
@@ -87,7 +88,6 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const
   a - is the kinetic constraint ad-hoc parameter
   b - is the heavyside functional limit parameter
   c - is the constraint switching parameter
-  d - is the free energy conservation switching parameter
 */
 
   if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
@@ -129,11 +129,11 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const
     w = (V0 - V1) / K;
     if((beta * K - 1) < 0.0){
       A = a / (1 + exp(2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * c * (beta * K - 1)));
     }
     else{
       A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
     }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 
@@ -172,7 +172,7 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double>& y_aux_var, const
 }
 
 
-MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c, double d){
+MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MATRIX& q, const MATRIX& invM, double beta, double eta, double a, double b, double c){
 /**
   Compute the KC-RPMD effective nuclear force
 
@@ -184,7 +184,6 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
   a - is the kinetic constraint ad-hoc parameter
   b - is the heavyside functional limit parameter
   c - is the constraint switching parameter
-  d - is the free energy conservation switching parameter
 */
 
   if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
@@ -254,11 +253,11 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
     w = (V0 - V1) / K;
     if((beta * K - 1) < 0.0){
       A = a / (1 + exp(2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * c * (beta * K - 1)));
     }
     else{
       A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
     }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 
@@ -268,11 +267,11 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
     Fw = (F0 - F1 - w * FK) / K;
     if((beta * K - 1) < 0.0){
       FA = -2 * beta * a * c * exp(2 * c * (beta * K - 1)) / pow((1 + exp(2 * c * (beta * K - 1))), 2) * FK;
-      FC = -beta * (eta * sqrt(a / 3.1415) * c * exp(2 * c * (beta * K - 1)) / (pow(sqrt(1 + exp(2 * c * (beta * K - 1))), 3) * (1 + exp(2 * d * (beta * K - 1)))) + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) * 2 * d * exp(2 * d * (beta * K - 1)) / pow((1 + exp(2 * d * (beta * K - 1))), 2)) * FK;
+      FC = -beta * (eta * sqrt(a / M_PI) * c * exp(2 * c * (beta * K - 1)) / (pow(sqrt(1 + exp(2 * c * (beta * K - 1))), 3) * (1 + exp(2 * c * (beta * K - 1)))) + (eta * sqrt(a / M_PI) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) * 2 * c * exp(2 * c * (beta * K - 1)) / pow((1 + exp(2 * c * (beta * K - 1))), 2)) * FK;
     }
     else{
       FA = -2 * beta * a * c * exp(-2 * c * (beta * K - 1)) / pow((1 + exp(-2 * c * (beta * K - 1))), 2) * FK;
-      FC = -beta * (eta * sqrt(a / 3.1415) * c * exp(-(c + 2 * d) * (beta * K - 1)) / (pow(sqrt(1 + exp(-2 * c * (beta * K - 1))), 3) * (1 + exp(-2 * d * (beta * K - 1)))) + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * 2 * d * exp(-2 * d * (beta * K - 1)) / pow((1 + exp(-2 * d * (beta * K - 1))), 2)) * FK;
+      FC = -beta * (eta * sqrt(a / M_PI) * c * exp(-(c + 2 * c) * (beta * K - 1)) / (pow(sqrt(1 + exp(-2 * c * (beta * K - 1))), 3) * (1 + exp(-2 * c * (beta * K - 1)))) + (eta * sqrt(a / M_PI) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * 2 * c * exp(-2 * c * (beta * K - 1)) / pow((1 + exp(-2 * c * (beta * K - 1))), 2)) * FK;
     }
     FKP += (pow(w, 2) * FA + 2 * A * w * Fw - FC / C) / beta;
 
@@ -311,7 +310,7 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double>& y_aux_var, const MAT
 }
 
 
-vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_aux_var, double beta, double eta, double a, double b, double c, double d){
+vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_aux_var, double beta, double eta, double a, double b, double c){
 /**
   Compute the KC-RPMD effective auxiliary force
 
@@ -321,7 +320,6 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_
   a - is the kinetic constraint ad-hoc parameter
   b - is the heavyside functional limit parameter
   c - is the constraint switching parameter
-  d - is the free energy conservation switching parameter
 */
 
   if(ham_dia_mem_status==0){ cout<<"Error in kcrpmd_effective_potential(): the diabatic Hamiltonian matrix is not allocated \
@@ -366,11 +364,11 @@ vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(vector<double>& y_
     w = (V0 - V1) / K;
     if((beta * K - 1) < 0.0){
       A = a / (1 + exp(2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) / (1 + exp(2 * c * (beta * K - 1)));
     }
     else{
       A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
-      C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * d * (beta * K - 1)) / (1 + exp(-2 * d * (beta * K - 1)));
+      C = 1 + (eta * sqrt(a / M_PI) * exp(-c * (beta * K - 1)) / sqrt(1 + exp(-2 * c * (beta * K - 1))) - 1) * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
     }
     VKP += (A * pow(w, 2) - log(C)) / beta;
 

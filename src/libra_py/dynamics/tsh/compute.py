@@ -733,6 +733,9 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
             * **dyn_params["nsteps"]** ( int ): the number of the dynamical steps to do [ default: 1 ]
 
 
+            * **dyn_params["nprint"]** ( int ): the number of steps in between data saves [ default: 1 ]
+
+
             * **dyn_params["prefix"]** ( string ): the name of the folder to be created by this function.
                 All the data files will be created in that folder [ default: "out" ]
 
@@ -904,6 +907,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
     # ================= Variables specific to Python version: saving ================
     default_params.update({"nsteps": 1,
+                           "nprint": 1,
                            "prefix": "out",
                            "prefix2": "out2",
                            "hdf5_output_level": -1,
@@ -953,6 +957,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     rep_tdse = dyn_params["rep_tdse"]
     # rep_ham = dyn_params["rep_ham"]
     nsteps = dyn_params["nsteps"]
+    nprint = dyn_params["nprint"]
     dt = dyn_params["dt"]
     phase_correction_tol = dyn_params["phase_correction_tol"]
     hdf5_output_level = dyn_params["hdf5_output_level"]
@@ -989,7 +994,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_params["quantum_dofs"] = list(range(nnucl))
 
     # Initialize savers
-    _savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
+    #_savers = save.init_tsh_savers(dyn_params, model_params, nsteps, ntraj, nnucl, nadi, ndia)
+    _savers = save.init_tsh_savers(dyn_params, model_params, math.ceil(nsteps / nprint), ntraj, nnucl, nadi, ndia)
 
     # Open and close the output files for further writing
     if _savers["txt_saver"] is not None:
