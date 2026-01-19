@@ -25,7 +25,7 @@ import numpy as np
 from . import csf
 from . import slatdet as sd
 
-from liblibra_core import *
+from liblibra_core import MATRIX, CMATRIX
 
 def find_matches(
     config: List[int],
@@ -89,8 +89,6 @@ def find_matches(
     return matches
 
 
-from typing import List, Tuple, Any
-
 def build_minimal_csf_basis(
     configs: List[Tuple[int, ...]],
     active_space: List[int],
@@ -131,8 +129,6 @@ def build_minimal_csf_basis(
 
     Example
     -------
-    >>> import numpy as np
-    >>> # Example input from MOPAC/Libra
     >>> configs0_raw = [(6, -6, 7, -7, 9, -8)]
     >>> active_space = [6, 7, 8, 9, 10, 11]
     >>> nelec = 6
@@ -142,12 +138,9 @@ def build_minimal_csf_basis(
     ...     configs0_raw, active_space, nelec, max_unpaired
     ... )
     >>>
-    >>> print(len(min_basis))
-    19
-    >>> print(all_confs[0])
-    (6, -6, 7, -7, 8, -8)
-    >>> print(all_phases[0])
-    1
+    >>> print(min_basis)
+    [((6, -6, 7, -7, 8, -9), 1),
+     ((6, -6, 7, -7, -8, 9), 1)]
     """
 
     # Generate all possible determinants (with parity) for the given active space
@@ -203,8 +196,6 @@ def build_minimal_csf_basis_singlet(
 
     Example
     -------
-    >>> import numpy as np
-    >>> # Example input from MOPAC/Libra
     >>> configs0_raw = [(6, -6, 7, -7, 9, -8)]
     >>> active_space = [6, 7, 8, 9, 10, 11]
     >>> nelec = 6
@@ -214,20 +205,18 @@ def build_minimal_csf_basis_singlet(
     ...     configs0_raw, active_space, nelec, max_unpaired
     ... )
     >>>
-    >>> print(len(min_basis))
-    19
-    >>> print(all_confs[0])
-    (6, -6, 7, -7, 8, -8)
-    >>> print(all_phases[0])
-    1
+    >>> print(min_basis)
+    [((6, -6, 7, -7, 8, -9), 1),
+     ((6, -6, 7, -7, -8, 9), 1)]
     """
 
     # Generate all possible determinants (with parity) for the given active space
-#    dets: List[Tuple[Any, ...]] = list(sd.generate_determinants_with_parity(active_space, nelec))
+    dets: List[Tuple[Any, ...]] = list(sd.generate_single_excitations(active_space, nelec))
 
     min_basis: List[Tuple[Any, ...]] = []
-    for det, phase in sd.generate_single_excitations(active_space, nelec):
-        min_basis.append((det, phase))
+    for config in configs:
+        matches = find_matches(config, dets, max_unpaired)
+        min_basis.extend(matches)
 
     # Avoid error when basis is empty
     transposed_basis: List[Tuple[Any, ...]] = list(zip(*min_basis)) if min_basis else []
