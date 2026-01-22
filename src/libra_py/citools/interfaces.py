@@ -21,11 +21,12 @@
 from collections import Counter
 from typing import List, Tuple, Iterable, Dict, Any
 import numpy as np
+from scipy.sparse import coo_matrix
 
 from . import csf
 from . import slatdet as sd
 
-from liblibra_core import MATRIX, CMATRIX
+#from liblibra_core import MATRIX, CMATRIX
 
 def find_matches(
     config: List[int],
@@ -297,7 +298,7 @@ def conf2csf_matrix(
     all_phases: List[int],
     S: int = 0,
     Ms: int = 0
-) -> "CMATRIX":
+) -> coo_matrix:
     """
     Build the configuration-to-CSF (Configuration State Function) transformation matrix.
 
@@ -321,9 +322,10 @@ def conf2csf_matrix(
 
     Returns
     -------
-    T : CMATRIX
-        Complex-valued configuration–CSF transformation matrix of shape
-        `(n_determinants, n_CSFS)`.
+    T_sparse : scipy.sparse.coo_matrix
+        Sparse configuration-to-CSF transformation matrix.
+        Rows correspond to determinants in `all_confs`,
+        columns correspond to CSFs in `min_basis`.
 
     Notes
     -----
@@ -363,6 +365,7 @@ def conf2csf_matrix(
 
     ncsfs = len(csfs[(S, Ms)])  # number of CSFs for the given spin manifold
 
+    """
     # Initialize complex transformation matrix
     T = CMATRIX(nconfigs, ncsfs)
 
@@ -374,8 +377,29 @@ def conf2csf_matrix(
                 raise ValueError(f"Determinant {det_tuple} not found in all_confs.")
             i = all_confs.index(det_tuple)
             T.set(i, j, coeff * all_phases[i] * (1.0 + 0j))
+    """
 
-    return T
+    # List to store non-zero entries
+    rows, cols, data = [], [], []
+
+    # Build a dict for faster lookup
+    conf_index = {tuple(conf): i for i, conf in enumerate(all_confs)}
+
+    # Populate sparse T
+    for j, csf_group in enumerate(csfs[(S, Ms)]):
+        for det, coeff in csf_group:
+            det_tuple = tuple(det)
+            i = conf_index.get(det_tuple)
+            if i is None:
+                raise ValueError(f"Determinant {det_tuple} not found in all_confs.")
+            rows.append(i)
+            cols.append(j)
+            data.append(coeff * all_phases[i] * (1.0 + 0j))
+
+    # Convert to a scipy sparse matrix (CSR)
+    T_sparse = coo_matrix((data, (rows, cols)), shape=(nconfigs, ncsfs), dtype=np.complex128)
+
+    return T_sparse
 
 
 
@@ -387,7 +411,7 @@ def configs_and_T_matrix(
     nelec: int,
     S: int,
     Ms: int
-) -> Tuple[List[Tuple[int, ...]], "CMATRIX"]:
+) -> Tuple[List[Tuple[int, ...]], coo_matrix]:
     """
     Generate the minimal active-space configurations mapped to a given orbital space
     and the configuration-to-CSF transformation matrix for a CAS with given spin.
@@ -412,7 +436,7 @@ def configs_and_T_matrix(
     mapped_basis : list[tuple[int, ...]]
         List of minimal configurations mapped to the specified `orbital_space`,
         with signs preserved (positive = α-spin, negative = β-spin).
-    T : CMATRIX
+    T : coo_matrix
         Complex-valued configuration-to-CSF transformation matrix.
 
     Example
@@ -458,7 +482,7 @@ def configs_and_T_matrix_singlet(
     nelec: int,
     S: int,
     Ms: int
-) -> Tuple[List[Tuple[int, ...]], "CMATRIX"]:
+) -> Tuple[List[Tuple[int, ...]], coo_matrix]:
     """
     Generate the minimal active-space configurations mapped to a given orbital space
     and the configuration-to-CSF transformation matrix for a CAS with given spin.
@@ -483,7 +507,7 @@ def configs_and_T_matrix_singlet(
     mapped_basis : list[tuple[int, ...]]
         List of minimal configurations mapped to the specified `orbital_space`,
         with signs preserved (positive = α-spin, negative = β-spin).
-    T : CMATRIX
+    T : coo_matrix
         Complex-valued configuration-to-CSF transformation matrix.
 
     Example
