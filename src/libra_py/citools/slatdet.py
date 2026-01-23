@@ -330,4 +330,100 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
     return S_AB
 
 
+def make_ref_det(nelec, homo_indx):
+    """
+    Construct a reference Slater determinant (closed-shell) in a
+    spin–orbital representation.
+
+    Spin orbitals are labeled by integers:
+      +i  → spin-up orbital i
+      -i  → spin-down orbital i
+
+    The reference determinant corresponds to a closed-shell occupation
+    of orbitals from (ncore + 1) through `homo_indx`, where::
+
+        ncore = nelec // 2
+
+    Parameters
+    ----------
+    nelec : int
+        Total number of electrons.
+
+    homo_indx : int
+        Index of the highest occupied molecular orbital (HOMO).
+
+    Returns
+    -------
+    list of int
+        Reference Slater determinant represented as a list of occupied
+        spin orbitals.
+
+    Notes
+    -----
+    - Assumes a closed-shell electronic structure.
+    - The ordering of spin orbitals follows (i, -i) for each spatial
+      orbital index i.
+    """
+    ncore = nelec // 2
+
+    # Occupy both spin components for each spatial orbital
+    return [
+        spin
+        for i in range(ncore + 1, homo_indx + 1)
+        for spin in (i, -i)
+    ]
+
+
+def make_excitation(ref_det, occ, vir):
+    """
+    Generate a single excitation from a reference Slater determinant.
+
+    This function replaces one occupied spin orbital (`occ`) in the
+    reference determinant with a virtual spin orbital (`vir`).
+
+    Parameters
+    ----------
+    ref_det : list of int
+        Reference Slater determinant represented as a list of occupied
+        spin orbitals.
+
+    occ : int
+        Occupied spin orbital to be removed.
+
+    vir : int
+        Virtual spin orbital to be inserted.
+
+    Returns
+    -------
+    list of int
+        New Slater determinant corresponding to the excitation.
+
+    Raises
+    ------
+    ValueError
+        If `occ` is not present in `ref_det`.
+
+    Notes
+    -----
+    - The returned determinant is a new list; the reference determinant
+      is not modified.
+    - No checks are performed for duplicate occupations or Pauli
+      violations.
+    - Orbital ordering is preserved except for the replaced index.
+    """
+
+    if vir in ref_det:
+        raise ValueError(F"Orbital {vir} is already present in reference determinant, is not valid virtual orbital")
+
+    if occ not in ref_det:
+        raise ValueError(F"Orbital {occ} is not present in reference determinant")
+
+
+    res = list(ref_det)
+
+    # O(N) lookup; acceptable for CI-size determinants
+    idx = res.index(occ)
+    res[idx] = vir
+
+    return res
 
