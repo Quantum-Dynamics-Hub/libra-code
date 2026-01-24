@@ -22,6 +22,7 @@
 import os
 import sys
 import math
+import copy
 import re
 import numpy as np
 
@@ -43,7 +44,7 @@ import libra_py.workflows.nbra.step3 as step3
 
 import libra_py.citools.slatdet as sd
 import libra_py.citools.interfaces as interfaces
-
+import libra_py.citools.ci as ci
 
 def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
     """
@@ -235,18 +236,16 @@ def read_mopac_orbital_info(params_):
             * **params_["nstates"]** ( int ): the number of CI states + ground state to use, `nstates = 2` means 1 ground and 1 excited states
 
     Returns:
-        (Es, MOs, E_CI, CI, configs):
+        (info, MOs, data):
 
-            * Es - MATRIX(nact, nact): the matrix of the MO energies for active MOs
-            * MOs - MATRIX(nao, nact): the matrix of MO-LCAO coefficients for active MOs
-            * E_CI - MATRIX(nci, nci): the matrix of CI energies
-            * CI - MATRIX(nconf, nci): the matrix of CI coefficients in the basis of spin-adapted configurations
-            * sd_basis - (list of lists of `nact` ints): representation of the Slater determinants of `nelec`-electronic
-                 states but with the restriction of using only the orbitals belonging to the active space. This is the reduced basis
-                 The indexing starts from 1.
-            * sd_basis_raw - (list of lists of `nelec` ints): representation of the Slater determinants of `nelec`-electronic
-                 states. The indexing starts from 1. This is the original (raw) basis without the restriction.
-            * actual_orbital_space - (list of ints): the actual active space considered. The indexing starts with 1, not 0.
+            * info (dict): the key numbers (see the notes below)
+            * MOs - (np.ndarray; shape = [nao, nact]): the matrix of MO-LCAO coefficients for active MOs
+            * data ( list of 3 elements):
+              - data[0] - list of `nstates-1` excited (not including the ground state) state energies (a.u.)
+              - data[1] - list of `nstates-1` lists, each containing lists of pairs [i, j] denoting the single excitations 
+                 of the i->j kind entering the expression of the corresponding multiconfigurational state
+              - data[2] - list of the amplitudes of single-particle excitations entering all the excited states, isomorphic
+                 to `data[1]`
 
     Notes:
             * nact - the number of active MOs to be included
@@ -283,10 +282,17 @@ def read_mopac_orbital_info(params_):
 
     # Determine the number of electrons:
     nocc = 0
+    min_occ, max_occ = 0, 0
+    min_vir, max_vir = 0, 0
     for i in range(nlines):
         line = output[i]
         if line.find("RHF CALCULATION, NO. OF DOUBLY OCCUPIED LEVELS") != -1:
             nocc = int(float(line.split()[8]))
+        if line.find("SINGLE excitations FROM orbs") != -1:
+            min_occ = int(float(line.split()[4]))
+            max_occ = int(float(line.split()[6]))
+            min_vir = int(float(line.split()[9]))
+            max_vir = int(float(line.split()[11]))
     nelec = 2 * nocc
 
     # First, let's find where the MOs are and count how many of them we have
@@ -298,22 +304,18 @@ def read_mopac_orbital_info(params_):
             ibeg = i
         if line.find("Reference determinate nber") != -1:
             iend = i
-
         if line.find("ROOT NO.") != -1:
             nmo = int(float(line.split()[-1]))
 
-    if False:  # Make True for debugging
-        print("nmo = ", nmo)
-        print(output[ibeg:iend])
-
     nao = nmo
     actual_orbital_space = list(range(1, nmo + 1))
+
     if params["orbital_space"] is None:
         pass  # defualt - use all orbitals
     else:
         actual_orbital_space = list(params["orbital_space"])
-
     nact = len(actual_orbital_space)
+
 
     # Find the line indices that contain "ROOT NO." keyword
     # the last one will be the `iend`
@@ -325,28 +327,9 @@ def read_mopac_orbital_info(params_):
     break_lines.append(iend)
     nblocks = len(break_lines)
 
-    # Now read energies:
-    E = []
-    for j in range(nblocks - 1):
-        i = break_lines[j]
-        tmp = output[i + 2].split()
-        for e in tmp:
-            ener = float(e)
-            E.append(ener)
-
-    # Es = MATRIX(nmo, nmo)
-    Es = MATRIX(nact, nact)
-    for i in range(nact):
-        j = actual_orbital_space[i] - 1
-        Es.set(i, i, E[j])
-
-    if False:  # Make True for debugging
-        print(E)
-
-    # Now read MOs:
+    #================ Now read MOs: ====================
     mo_indx = 0
-    # MOs = MATRIX(nao, nmo)
-    MOs = MATRIX(nao, nact)
+    MOs = np.zeros( (nao, nact), dtype=np.float64)
 
     for j in range(nblocks - 1):
         i = break_lines[j]
@@ -359,19 +342,16 @@ def read_mopac_orbital_info(params_):
             if (sz == ncols + 3):
                 for a in range(ncols):
                     coeff = float(tmp[3 + a])
-                    # MOs.set(ao_indx, mo_indx + a, coeff)
                     if mo_indx + a + 1 in actual_orbital_space:
                         indx = actual_orbital_space.index(mo_indx + a + 1)
-                        MOs.set(ao_indx, indx, coeff)
+                        MOs[ao_indx, indx] = coeff
                 ao_indx += 1
         mo_indx += ncols
 
-    if False:  # Make True for debugging
-        MOs.show_matrix("MO.txt")
 
     # Find the configurations
     nconfig = 0
-    configs = []
+    configs_dict = {}
     for i in range(nlines):
         line = output[i]
         if line.find("The lowest") != -1 and line.find("spin-adapted configurations of multiplicity=  1"):
@@ -382,34 +362,13 @@ def read_mopac_orbital_info(params_):
                 for iconfig in range(nconfig):
                     tmp = output[i + 4 + iconfig].split()
                     if len(tmp) == 12:
-                        configs.append([1, 1])  # this is the ground state determinant
+                        configs_dict[1] = [1, 1]
                     if len(tmp) == 13:
                         i_orb = int(float(tmp[10].split(")->(")[0]))
                         j_orb = int(float(tmp[11]))
-                        configs.append([i_orb, j_orb])  # orbital indexing from 1 - as in MOPAC
+                        conf_indx = int(float(tmp[0]))
+                        configs_dict[conf_indx] = [i_orb, j_orb]
 
-    # Raw SD basis - using the indixes (starting with 1) used in the original N-electron system
-    sd_basis_raw = []
-    ref = make_ref(nelec, actual_orbital_space)  # make a restricted reference determinant
-    for cnf in configs:
-        sd = make_alpha_excitation(ref, cnf)
-        sd_basis_raw.append(sd)
-
-    # Make the SD basis restructed - so reindex everything according to active_space
-    sd_basis = []
-    for cnf_raw in sd_basis_raw:
-        cnf = []
-        for a in cnf_raw:
-            sign = 1
-            if a < 0.0:
-                sign = -1
-            b = actual_orbital_space.index(abs(a)) + 1
-            cnf.append(sign * b)
-        sd_basis.append(cnf)
-
-    if False:  # Make True for debugging
-        print(F"The number of spin-adapted configurations = {nconfig}")
-        print(F"configs are = {configs}")
 
     # Find the line indices that contain the beginning and end of the CI information
     ci_beg, ci_end = [], []
@@ -435,84 +394,143 @@ def read_mopac_orbital_info(params_):
             print(output[ci_beg[i]:ci_end[i]])
 
     # Now, read the information about CI states
-    E_CI = MATRIX(nci, nci)
-    CI = MATRIX(nconfig, nci)
-    for i in range(nci):
+    confs = []
+    E_CI = []
+    CI = []
+    for i in range(1, nci):
+        ci_i = []
+        conf_i = []
         for j in range(ci_beg[i], ci_end[i]):
             tmp = output[j].split()
             sz = len(tmp)
             if sz == 7:
                 ener = float(tmp[2]) * units.ev2au  # convert to a.u.
-                E_CI.set(i, i, ener)
+                E_CI.append(ener)
             elif sz == 4:
                 if tmp[0] == "Config":
-                    iconf = int(float(tmp[1])) - 1
+                    iconf = int(float(tmp[1])) # - 1
                     coeff = float(tmp[2])
-                    CI.set(iconf, i, coeff)
+                    if iconf > 1:
+                        ci_i.append(coeff)
+                        conf_i.append( configs_dict[ iconf ] )
+                    
+        CI.append(ci_i)
+        confs.append(conf_i)
+
+    data = [E_CI, confs, CI ]
+
+    info = { "nocc":nocc, 
+             "nelec":nelec,
+             "nao":nao, "nmo":nmo,
+             "nci":nci,
+             "min_occ":min_occ, "max_occ":max_occ, 
+             "min_vir":min_vir, "max_vir":max_vir,
+             "nact":nact, "actual_orbital_space": list(actual_orbital_space)
+           }
 
 
-    return Es, MOs, E_CI, CI, sd_basis, sd_basis_raw, actual_orbital_space
+    return info, MOs, data
 
 
 def mopac_compute_adi(q, params, full_id):
     """
+    Run MOPAC calculations for a given trajectory, extract electronic structure
+    information, compute time-dependent electronic properties (energies,
+    overlaps, NACs), and store the current results for use in the next time step.
 
-    This function creates an input for MOPAC, runs such calculations, extracts the current information on
-    state energies and CI vectors, computes the required properties (such as time-overlaps, or NACs, etc.)
-    and stores the current information in the "previous variables", so that we could compute the dependent properties
-    on the next time-step
+    This function is **trajectory-aware**: all parameters and cached data are
+    stored separately for each trajectory and accessed using the trajectory
+    index `itraj = full_id[-1]`.
 
-    Args:
-        q ( MATRIX(ndof, ntraj) ): coordinates of the particle [ units: Bohr ]
-        params ( list of dictionaries ): model parameters, for each trajectory; this parameters variable will be used to
-            also store the previous calculations, but that has to be done separately for each trajectory, i = full_id[-1]. That's why we
-            are making it into a list of dictionaries
+    Parameters
+    ----------
+    q : MATRIX(ndof, ntraj)
+        Nuclear coordinates for all trajectories [Bohr].
+        Each column corresponds to a single trajectory.
 
-            * **params[i]["orbital_space"]** (list of ints): the orbitals to read and use in MO overlaps, the indexing starts with 1, not 0 [default: None]
-            * **params[i]["timestep"]** (int): the index of the timestep for trajectory i [ Required ]
-            * **params[i]["is_first_time"]** (int): the flag indicating if this is the new calculation for this trajectory or not
-              if it is True (1), the current values will be used as if they were previous; if False (0) - the previously stored values
-              will be used [ default: True ]
-            * **params[i]["labels"]** ( list of strings ): the labels of atomic symbolc - for all atoms,
-                and in a order that is consistent with the coordinates (in triples) stored in `q`.
-                The number of this labels is `natoms`, such that `ndof` = 3 * `natoms`. [ Required ]
-            * **params[i]["mopac_exe"]** ( string ):  the full path to `the mopac` executable [ defaut: "mopac" ]
-            * **params_[i]["mopac_run_params"]** ( string ): the control string to define the MOPAC job
-                [default: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2"]
-            * **params[i]["mopac_working_directory"]** ( string ) [ default: "mopac_wd"]
-            * **params[i]["mopac_jobid"]** ( string ) [ default: F"timestep_{timestep}_traj_{i}" ]
-            * **params[i]["mopac_input_prefix"]** ( string ) [ default: "input_" ]
-            * **params[i]["mopac_output_prefix"]** ( string ) [ default: "output_" ]
-            * **params[i]["dt"]** ( float ) - the time interval between the snapshots [ units: a.u.; default: 41 a.u. = 1 fs ]
-            * **params[i]["do_Lowdin"]** ( bool or int): 0 - don't do - use the raw inputs [ defualt ]; 1 - do it - correct for rounding errors
-            * **params[i]["CAS"]**  (list of of ints, int): the list represents the indices of spatial orbitals used in CAS definition in INDO-CI
-                calculations, absoluted values; the "int" represents the number of electrons in the active space. For example, if the HOMO is 8
-                and and CAS was (6, 3) - 6 orbitals with 3 doubly-filled orbitals, then one would use: [ [6,7,8,  9, 10, 11], 6]
-            * **params[i]["is_singlet_excitation"]** ( bool or int): 0 - consider full configuration space [ default ], 1 - use single excitation specific methods
-    Returns:
-        PyObject: obj, with the members:
+    params : list of dict
+        Per-trajectory parameter dictionaries.
+        `params[i]` contains **both input settings and cached data**
+        for trajectory `i`.
 
-            * obj.ham_adi ( CMATRIX(nstates,nstates) ): adiabatic Hamiltonian, in the CI basis
-            * obj.hvib_adi ( CMATRIX(nstates,nstates) ): adiabatic vibronic Hamiltonian, in the CI basis
-            * obj.basis_transform ( CMATRIX(nstates,nstates) ): assumed the identity - don't use it yet!
-            * obj.time_overlap_adi. ( CMATRIX(nstates,nstates) ): time-overlap in the CI basis
+        This function **modifies** `params[i]` in place by storing
+        quantities from the current time step for use at the next step.
 
-        Also, the following key-value pairs right in the input parameters dictionaries will be created/updated:
+        Required keys in `params[i]`:
+            * labels : list[str]
+                Atomic symbols, length = natoms
+            * timestep : int
+                Time step index for this trajectory
 
-           * **params[i]["E_prev"]** (MATRIX(nact, nact)): the diagonal matrix of MO energies in the MO basis belonging to the active space
-           * **params[i]["MO_prev"]** (MATRIX(nao, nact)): the MOs belonging to the active space
-           * **params[i]["E_CI_prev"]** (MATRIX(nstates, nstates)): the diagonal matrix of the CI state energies
-           * **params[i]["CI_prev"]** (MATRIX(nconf, nstates)): the CI eigenvectors in the basis of configuration functions
-           * **params[i]["configs_prev"]** (list of lists): the list of reduced-notation configurations
-           * **params[i]["configs_raw_prev"]** (list of lists): the list of full-notation configurations
+        Optional keys in `params[i]` (defaults applied if missing):
+            * mopac_exe : str
+                Path to MOPAC executable [default: "mopac"]
+            * mopac_run_params : str
+                MOPAC control string
+            * mopac_working_directory : str
+                Directory for MOPAC I/O [default: "mopac_wd"]
+            * mopac_input_prefix : str
+            * mopac_output_prefix : str
+            * dt : float
+                Time step [a.u.]
+            * orbital_space : list[int] or None
+            * nstates : int
+                Number of electronic states (including ground)
+            * CAS : list
+                CAS definition for INDO-CI
+            * mult_S, mult_Ms : int
+                Spin multiplicity parameters
+            * is_singlet_excitation : bool or int
+            * is_first_time : bool
+                If True, current data are treated as previous (first step)
+
+        Cached quantities created/updated in `params[i]`:
+            * MO_prev : ndarray
+                Active-space molecular orbitals from previous step
+            * data_prev : tuple
+                CI energies, configurations, and amplitudes from previous step
+            * is_first_time : bool
+                Set to False after first invocation
+
+    full_id : list[int]
+        Full trajectory identifier; the trajectory index is taken as
+        `itraj = full_id[-1]`.
+
+    Returns
+    -------
+    obj : PyObject
+        Container with computed adiabatic quantities:
+            * obj.ham_adi : CMATRIX(nstates, nstates)
+                Adiabatic electronic Hamiltonian
+            * obj.hvib_adi : CMATRIX(nstates, nstates)
+                Adiabatic vibronic Hamiltonian
+            * obj.time_overlap_adi : CMATRIX(nstates, nstates)
+                CI time-overlap matrix
+            * obj.basis_transform : CMATRIX(nstates, nstates)
+                Basis transformation (currently identity)
 
     """
 
-    # params = dict(params_)
-    sqt2 = math.sqrt(2.0)
-
     Id = Cpp2Py(full_id)
     itraj = Id[-1]
+
+    # Sanity check on params structure
+    if not isinstance(params, (list, tuple)):
+        raise TypeError(
+            "params must be a list (or tuple) of per-trajectory dictionaries; "
+            f"got {type(params)}"
+        )
+
+    if itraj >= len(params):
+        raise IndexError(
+            f"Trajectory index itraj={itraj} out of range for params (len={len(params)})"
+        )
+
+    if not isinstance(params[itraj], dict):
+        raise TypeError(
+            f"params[{itraj}] must be a dictionary; got {type(params[itraj])}"
+        )
+
     coords = q.col(itraj)
 
     critical_params = ["labels", "timestep"]
@@ -549,48 +567,22 @@ def mopac_compute_adi(q, params, full_id):
     # print("================ RUN MOPAC =================\n")
     run_mopac(coords, params[itraj])
 
-    # Read the current output
-    filename = F"{mopac_wd}/{mopac_input_prefix}{mopac_jobid}.out"
-
+    # Read the MOPAC output
     # print("================ READ MOPAC =================\n")
-    # print("cwd = ", os.getcwd(), " reading the file ", filename)
-    E_curr, MO_curr, E_CI_curr, CI_curr, _, configs_raw_curr, actual_orbital_space = read_mopac_orbital_info({
-      "filename": filename, 
-      "orbital_space":orbital_space,
-      "nstates":nstates
-    })
-    if is_singlet_excitation:
-        configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix_singlet(configs_raw_curr, 
-                                                                   active_space=CAS[0], 
-                                                                   orbital_space = actual_orbital_space,
-                                                                   nelec=CAS[1], S=mult_S, Ms=mult_Ms)
-    else:
-        configs_curr, CSF_coeff_curr = interfaces.configs_and_T_matrix(configs_raw_curr, 
-                                                                   active_space=CAS[0], 
-                                                                   orbital_space = actual_orbital_space,
-                                                                   nelec=CAS[1], S=mult_S, Ms=mult_Ms)
-    # Get the properties at the previous time-step
-    E_prev, MO_prev, E_CI_prev, CI_prev, configs_prev, configs_raw_prev = None, None, None, None, None, None
-    CSF_coeff_prev = None
+    filename = F"{mopac_wd}/{mopac_input_prefix}{mopac_jobid}.out"
+    read_params = {"nstates":nstates, "filename":filename, "orbital_space":None}
+    info, MO_curr, data_curr = read_mopac_orbital_info(read_params)
 
-    # print("================ THE REST =================\n")
+    # Get the properties at the previous time-steps
+    MO_prev, data_prev = None, None
     if is_first_time:
         # On the first step, assume the current properties are as the previous
-        E_prev, MO_prev = MATRIX(E_curr), MATRIX(MO_curr)
-        E_CI_prev, CI_prev = MATRIX(E_CI_curr), MATRIX(CI_curr)
-        CSF_coeff_prev = CMATRIX(CSF_coeff_curr)
-        configs_prev = list(configs_curr)
+        MO_prev = copy.deepcopy(MO_curr)
+        data_prev = copy.deepcopy(data_curr)
     else:
         # Otherwise, retrieve the previously-stored data
-        E_prev = params[itraj]["E_prev"]
-        MO_prev = params[itraj]["MO_prev"]
-        E_CI_prev = params[itraj]["E_CI_prev"]
-        CI_prev = params[itraj]["CI_prev"]
-        CSF_coeff_prev = params[itraj]["CSF_coeff_prev"]
-        configs_prev = params[itraj]["configs_prev"]
-
-    #nstates = min(CI_curr.num_of_cols, Nstates)
-    # print("nstates = ", nstates)
+        MO_prev = copy.deepcopy(params[itraj]["MO_prev"])
+        data_prev = copy.deepcopy(params[itraj]["data_prev"])
 
     # Do the calculations - time-overlaps, energies, and Hvib
     obj = tmp()
@@ -600,135 +592,34 @@ def mopac_compute_adi(q, params, full_id):
     obj.basis_transform = CMATRIX(nstates, nstates)
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
     obj.overlap_adi = CMATRIX(nstates, nstates)
-    # Don't do the derivatives yet
-    # obj.d1ham_adi = CMATRIXList();
-    # obj.dc1_adi = CMATRIXList();
-    # for idof in range(ndof):
-    #    obj.d1ham_adi.append( CMATRIX(nstates, nstates) )
-    #    obj.dc1_adi.append( CMATRIX(nstates, nstates) )
 
     #======================= MO ===============================
-    # MO overlaps - needed for Lowdin orthonormalization
-    S_prev, S_curr, U_prev, U_curr = None, None, None, None
-    
-    if do_Lowdin:
-        S_prev = MO_prev.T() * MO_prev
-        im = MATRIX(S_prev);  im *= 0.0
-        S_prev = CMATRIX(S_prev, im)
+    # MO overlaps
+    st_mo_orb = MO_prev.T @ MO_curr
 
-        S_curr = MO_curr.T() * MO_curr
-        im = MATRIX(S_curr);  im *= 0.0
-        S_curr = CMATRIX(S_curr, im)
+    # Make it doubled - block-matrix
+    st_mo = np.kron(np.eye(2), st_mo_orb)
 
-        U_prev = step3.get_Lowdin_general(S_prev).real()
-        U_curr = step3.get_Lowdin_general(S_curr).real()
-    
-    # Time-overlap in the MO basis
-    mo_st = MO_prev.T() * MO_curr
-    if do_Lowdin:
-        mo_st = U_prev.T() * mo_st * U_curr  # Lowdin correction on MOs
+    #================= Compute CI time-overlaps =============
+    ovlp_params = {"homo_indx":info["nocc"], 
+                   "nocc":info["nocc"] - 1, 
+                   "nvirt":info["nmo"] - info["nocc"], 
+                   "nelec":info["nelec"], "nstates":nstates  }
 
-    # Overlaps in the SD basis - for the Lowdin:
-    ci_ovlp_curr = None
-    if do_Lowdin:
-        ident_curr = U_curr.T() * S_curr.real() * U_curr
-        # The original (older) approach
-        #ovlp_sd_curr = mapping2.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, False).real()
+    st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
 
-        # The new way:
-        # I don't like this way - we need to fix it later
-        ident_curr = data_conv.MATRIX2nparray(ident_curr).real  # MATRIX -> real np array
-        ovlp_sd_curr = mapping3.ovlp_mat_arb(configs_curr, configs_curr, ident_curr, actual_orbital_space)  # do the calculations
-        ovlp_sd_curr = data_conv.nparray2MATRIX( ovlp_sd_curr )  # real np array -> MATRIX
-
-        # 10/31/2025 - no need to scale the SD overlaps
-        #ovlp_sd_curr.scale(-1, 0, sqt2)
-        #ovlp_sd_curr.scale(0, -1, sqt2)
-        #ovlp_sd_curr.scale(0, 0, 0.5)
- 
-        # CSF:
-        T_curr = MATRIX(CSF_coeff_curr.real())    
-        ovlp_csf_curr = T_curr.T() * ovlp_sd_curr * T_curr
-
-
-        ident_prev = U_prev.T() * S_prev.real() * U_prev
-        #ovlp_sd_prev = mapping2.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, False).real()
-
-        ident_prev = data_conv.MATRIX2nparray(ident_prev).real  # MATRIX -> real np array
-        ovlp_sd_prev = mapping3.ovlp_mat_arb(configs_prev, configs_prev, ident_prev, actual_orbital_space)  # do the calculations
-        ovlp_sd_prev = data_conv.nparray2MATRIX( ovlp_sd_prev )  # complex np array -> CMATRIX
-
-        #ovlp_sd_prev.scale(-1, 0, sqt2)
-        #ovlp_sd_prev.scale(0, -1, sqt2)
-        #ovlp_sd_prev.scale(0, 0, 0.5)
-
-        # CSF:
-        T_prev = MATRIX(CSF_coeff_prev.real())
-        ovlp_csf_prev = T_prev.T() * ovlp_sd_prev * T_prev
-
-
-        ovlp_ci_curr = CI_curr.T() * ovlp_csf_curr * CI_curr
-        im = MATRIX(ovlp_ci_curr);  im *= 0.0
-        ovlp_ci_curr = CMATRIX(ovlp_ci_curr, im)
-
-        ovlp_ci_prev = CI_prev.T() * ovlp_csf_prev * CI_prev
-        im = MATRIX(ovlp_ci_prev);  im *= 0.0
-        ovlp_ci_prev = CMATRIX(ovlp_ci_prev, im)
-
-        U_prev = step3.get_Lowdin_general(ovlp_ci_prev).real()
-        U_curr = step3.get_Lowdin_general(ovlp_ci_curr).real()
-
-        # Now corrected CI states overlap
-        ci_ovlp_curr = U_curr.T() * ovlp_ci_curr.real() * U_curr
-
-    else:
-        # Overlap in MO basis:
-        S_curr = MO_curr.T() * MO_curr
-
-        # Overlap in SD basis:
-        S_curr_np = data_conv.MATRIX2nparray(S_curr).real  # MATRIX -> real np array
-        ovlp_sd_curr_np = sd.slater_overlap_matrix(configs_curr, configs_curr, S_curr_np)  # do the calculations
-        ovlp_sd_curr = data_conv.nparray2MATRIX( ovlp_sd_curr_np )  # complex np array -> MATRIX
-
-        # CSF:
-        T_curr = MATRIX(CSF_coeff_curr.real())
-        ovlp_csf_curr = T_curr.T() * ovlp_sd_curr * T_curr
-        ci_ovlp_curr = CI_curr.T() * ovlp_csf_curr * CI_curr
-
-
-    #========== Time-overlap in the SD basis ===============
-    # First, let's convert the MO overlaps to numpy format
-    mo_st_np = data_conv.MATRIX2nparray(mo_st).real  # MATRIX -> real np array
-    # Next, compute the matrix of SD overlaps
-    time_ovlp_sd_np = sd.slater_overlap_matrix(configs_prev, configs_curr, mo_st_np)
-    # Convert them back
-    time_ovlp_sd = data_conv.nparray2MATRIX( time_ovlp_sd_np )  # complex np array -> MATRIX
-
-
-    #=========== Time-overlap in the CSF basis =============
-    T_prev = MATRIX(CSF_coeff_prev.real())
-    T_curr = MATRIX(CSF_coeff_curr.real())
-    time_ovlp_csf = T_prev.T() * time_ovlp_sd * T_curr
-
-    #============ Time-overlap in the CI basis ============
-    time_ovlp_ci = CI_prev.T() * time_ovlp_csf * CI_curr
-    if do_Lowdin:
-        time_ovlp_ci = U_prev.T() * time_ovlp_ci * U_curr  # Lowdin correction on CIs
-
-    # Now, populate the allocated matrices
+    #=============== Now, populate the allocated matrices ======================
     for istate in range(nstates):
-        energ = 0.5 * (E_CI_curr.get(istate, istate) + E_CI_prev.get(istate, istate))
+        energ = 0.0
+        if istate > 0:
+            energ = float(0.5 * (data_prev[0][istate-1] + data_curr[0][istate-1]))
+
         obj.ham_adi.set(istate, istate, energ * (1.0 + 0.0j))
         obj.hvib_adi.set(istate, istate, energ * (1.0 + 0.0j))
         obj.basis_transform.set(istate, istate, 1.0 + 0.0j)  # assume identity
 
         for jstate in range(nstates):
-            obj.time_overlap_adi.set(istate, jstate, time_ovlp_ci.get(istate, jstate) * (1.0 + 0.0j))
-            if ci_ovlp_curr is not None:
-                obj.overlap_adi.set(istate, jstate, ci_ovlp_curr.get(istate, jstate) * (1.0 + 0.0j))
-        # Don't do this yet
-        # for idof in range(ndof):
-        #    obj.d1ham_adi[idof].set(istate, istate, grad.get(idof, 0) * (1.0+0.0j) )
+            obj.time_overlap_adi.set(istate, jstate, float(st_ci[istate, jstate]) * (1.0 + 0.0j))
 
     # Update the Hvib:
     for istate in range(nstates):
@@ -739,12 +630,8 @@ def mopac_compute_adi(q, params, full_id):
 
     # Now, make the current the previous and reset the flag `is_first_time` to False
     # Note - we directly modify the input parameters
-    params[itraj]["E_prev"] = E_curr
-    params[itraj]["MO_prev"] = MO_curr
-    params[itraj]["E_CI_prev"] = E_CI_curr
-    params[itraj]["CI_prev"] = CI_curr
-    params[itraj]["configs_prev"] = configs_curr
-    params[itraj]["CSF_coeff_prev"] = CSF_coeff_curr
+    params[itraj]["MO_prev"] = copy.deepcopy(MO_curr)
+    params[itraj]["data_prev"] = copy.deepcopy(data_curr)
     params[itraj]["is_first_time"] = False
 
     return obj
