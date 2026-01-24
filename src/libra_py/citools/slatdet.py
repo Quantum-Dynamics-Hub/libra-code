@@ -332,46 +332,39 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
 
 def make_ref_det(nelec, homo_indx):
     """
-    Construct a reference Slater determinant (closed-shell) in a
-    spin–orbital representation.
+    Construct a closed-shell reference determinant in spin-orbital notation.
 
     Spin orbitals are labeled by integers:
       +i  → spin-up orbital i
       -i  → spin-down orbital i
 
-    The reference determinant corresponds to a closed-shell occupation
-    of orbitals from (ncore + 1) through `homo_indx`, where::
-
-        ncore = nelec // 2
-
     Parameters
     ----------
     nelec : int
-        Total number of electrons.
-
+        Total number of electrons (must be even).
     homo_indx : int
-        Index of the highest occupied molecular orbital (HOMO).
+        HOMO spatial orbital index (1-based).
 
     Returns
     -------
-    list of int
-        Reference Slater determinant represented as a list of occupied
-        spin orbitals.
-
-    Notes
-    -----
-    - Assumes a closed-shell electronic structure.
-    - The ordering of spin orbitals follows (i, -i) for each spatial
-      orbital index i.
+    list[int]
+        Spin-orbital occupation list, using +i (alpha) and -i (beta).
     """
-    ncore = nelec // 2
+    if nelec % 2 != 0:
+        raise ValueError("Closed-shell reference requires an even number of electrons")
 
-    # Occupy both spin components for each spatial orbital
+    nocc = nelec // 2
+    lowest_occ = homo_indx - nocc + 1
+
+    if lowest_occ < 1:
+        raise ValueError("Not enough orbitals below HOMO to place all electrons")
+
     return [
         spin
-        for i in range(ncore + 1, homo_indx + 1)
+        for i in range(lowest_occ, homo_indx + 1)
         for spin in (i, -i)
     ]
+
 
 
 def make_excitation(ref_det, occ, vir):

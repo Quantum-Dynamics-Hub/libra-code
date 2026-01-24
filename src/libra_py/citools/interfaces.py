@@ -22,6 +22,7 @@ from collections import Counter
 from typing import List, Tuple, Iterable, Dict, Any
 import numpy as np
 from scipy.sparse import coo_matrix
+from scipy import sparse
 
 from . import csf
 from . import slatdet as sd
@@ -916,7 +917,11 @@ def sd_and_csf_overlaps_singlet(
     # ==================================================================
     # Overlap matrices
     # ==================================================================
-    st_mo_dense = st_mo.todense()
+    st_mo_dense = None # st_mo.todense()
+    if sparse.issparse(st_mo):
+        st_mo_dense = st_mo.toarray(dtype=np.float64)
+    else:
+        st_mo_dense = np.asarray(st_mo, dtype=np.float64)
 
     st_sd = sd.slater_overlap_matrix(
         dets, dets, st_mo_dense, complex_valued=False
