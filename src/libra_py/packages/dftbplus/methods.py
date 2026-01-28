@@ -14,7 +14,7 @@
    :synopsis: This module implements functions for dealing with the outputs from DFTB+ package
 
 .. moduleauthor::
-       Alexey V. Akimov
+       Alexey V. Akimov, Thomas A. Niehaus
 
 """
 
@@ -23,6 +23,7 @@ import os
 import sys
 import math
 import re
+import struct
 import numpy as np
 
 if sys.platform == "cygwin":
@@ -913,3 +914,474 @@ def dftb_traj2xyz_traj(in_filename, out_filename):
 
         f.write(res)
     f.close()
+
+def read_spx_mappings(filename):
+    """
+    Parses SPX.DAT and returns:
+    1. rpa_map: [ini, fin, spin] -> rpa_idx
+    2. transition_lookup: [rpa_idx] -> (ini, fin, spin)
+    3. max_spin: 0 for unpolarized/Up-only, 1 if Down exists
+    Indices follow Python usage and start with 0
+    """
+    temp_data = []
+    max_orb = 0
+    max_rpa_idx = 0
+    actual_max_spin = 0
+    
+    # Mapping for spin characters
+    spin_map = {'U': 0, 'D': 1}
+
+    with open(filename, 'r') as f:
+        for line in f:
+            if not line.strip() or '#' in line or '===' in line:
+                continue
+            
+            parts = line.split()
+            if len(parts) < 6:
+                continue
+
+            try:
+                idx = int(parts[0]) - 1  # 0-indexed rpa_idx
+                m = int(parts[3]) - 1    # 0-indexed ini
+                n = int(parts[5]) - 1    # 0-indexed fin
+                
+                # Check for spin character
+                s_val = 0
+                if len(parts) > 6:
+                    s_char = parts[6].upper()
+                    s_val = spin_map.get(s_char, 0)
+                    if s_val > actual_max_spin:
+                        actual_max_spin = s_val
+                
+                temp_data.append((m, n, s_val, idx))
+                
+                # Track max values for array sizing
+                max_orb = max(max_orb, m, n)
+                max_rpa_idx = max(max_rpa_idx, idx)
+                
+            except (ValueError, IndexError):
+                continue
+
+    # 1. Forward Map: [ini, fin, spin] -> rpa_idx
+    # Use actual_max_spin + 1 to determine depth (1 or 2)
+    rpa_map = np.full((max_orb + 1, max_orb + 1, actual_max_spin + 1), -1, dtype=int)
+
+    # 2. Reverse Map: [rpa_idx] -> [ini, fin, spin]
+    transition_lookup = np.zeros((max_rpa_idx + 1, 3), dtype=int)
+
+    # Fill both structures
+    for m, n, s, idx in temp_data:
+        rpa_map[m, n, s] = idx
+        transition_lookup[idx] = [m, n, s]
+        
+    return rpa_map, transition_lookup, actual_max_spin
+
+# --- Usage ---
+# rpa_map, trans_lookup, max_s = read_spx_mappings("SPX.DAT")
+# print(f"Max Spin Index: {max_s}") # 0 for Restricted, 1 for Unrestricted
+
+def parse_tagged_file(file_path):
+    data_dict = {}
+    
+    with open(file_path, 'r') as f:
+        content = f.read()
+
+    # Split by lines and filter empty ones
+    lines = [line.strip() for line in content.split('\n') if line.strip()]
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        
+        # Identify header: contains tag and exactly 3 colons
+        if line.count(':') >= 3:
+            parts = [p.strip() for p in line.split(':')]
+            tag = parts[0]
+            dtype_str = parts[1]
+            dim = int(parts[2])
+            shape_str = parts[3]
+            
+            # 1. Determine Shape and Total Elements
+            if dim == 0:
+                shape = (1,)
+                total_elements = 1
+            else:
+                # Convert "3,23" -> (3, 23)
+                shape = tuple(int(s) for s in shape_str.split(',') if s)
+                total_elements = np.prod(shape)
+            
+            # 2. Collect data values
+            data_values = []
+            i += 1
+            while len(data_values) < total_elements and i < len(lines):
+                if lines[i].count(':') >= 3: # Safety break if header is missing data
+                    break
+                # Replace Fortran 'D' with 'E' for float conversion
+                clean_line = lines[i].replace('D', 'E')
+                data_values.extend(clean_line.split())
+                i += 1
+            
+            # 3. Convert and Return as Scalar or Array
+            if dim == 0:
+                # Return as a simple Python number
+                val = float(data_values[0])
+                data_dict[tag] = int(val) if dtype_str == 'integer' else val
+            else:
+                # Create NumPy array
+                array = np.array(data_values, dtype=float)
+                # Use Fortran order 'F' because Fortran fills columns first
+                data_dict[tag] = array.reshape(shape, order='F')
+        else:
+            i += 1
+            
+    return data_dict
+# --- Usage ---
+# Load the file into a data dictionary
+# results = parse_tagged_file("autotes.tag")
+
+# Accessing a 0D (Scalar) value by tag name 
+# energy = results['mermin_energy']  # Returns an int or float
+
+# Accessing a 1D or 2D (Array) value
+# coords = results['end_coords']  # Returns a NumPy array
+
+
+def read_mo_matrix(filename, ndim, spin_polarized=False):
+    """
+    Reads MO eigenvectors and always returns a 3D array of shape (spin, ndim, ndim).
+    Spin 1: [4B Integer][ndim*ndim*8B Matrix]
+    Spin 2: [ndim*ndim*8B Matrix]
+    """
+    mo_data = []
+
+    with open(filename, 'rb') as f:
+        # --- RECORD 1 (Spin Up / Total) ---
+        
+        # 1. Read the extra integer header (4 bytes)
+        header_int = np.fromfile(f, dtype='i4', count=1)[0]
+        
+        # 2. Read the matrix
+        matrix_up = np.fromfile(f, dtype='f8', count=ndim*ndim)
+        mo_data.append(matrix_up.reshape((ndim, ndim), order='F'))
+        
+        # --- RECORD 2 (Spin Down) ---
+        if spin_polarized:
+            
+            # 2. Read the matrix directly (no header integer here as specified)
+            matrix_down = np.fromfile(f, dtype='f8', count=ndim*ndim)
+            mo_data.append(matrix_down.reshape((ndim, ndim), order='F'))
+            
+    # Returns a 3D array: (1, ndim, ndim) or (2, ndim, ndim)
+    return np.array(mo_data)
+
+def read_xplusy_binary(filename):
+    """
+    Reads XplusY.BIN (Stream Unformatted)
+    Matches: dp = real64 (8 bytes), ii = int32 (4 bytes), sign = char (1 byte)
+    """
+    results = []
+    
+    with open(filename, 'rb') as f:
+        # Step 1: Read Header
+        # nmat (i4), nExc (i4)
+        header_data = f.read(8)
+        if len(header_data) < 8: return None
+        nmat, nexc = struct.unpack('ii', header_data)
+        
+        for _ in range(nexc):
+            # Step 3: Root Header
+            # ii (i4), sign (c1)
+            ii = struct.unpack('i', f.read(4))[0]
+            sign = f.read(1).decode('ascii')
+            
+            # Handling the Energy Slot
+            # The Fortran code writes sqrt(eval) [8 bytes] OR '-' [1 byte]
+            # This is tricky for stream binary. We check the next byte.
+            peek = f.read(1)
+            if peek == b'-':
+                ene = None
+                # No 8-byte float followed, move on
+            else:
+                # Put the peeked byte back and read as float64
+                f.seek(-1, os.SEEK_CUR) 
+                ene = struct.unpack('d', f.read(8))[0]
+            
+            # Step 4: Read xpy vector (nmat * 8 bytes)
+            # Only read vector if energy was positive (based on your snippet logic)
+            if ene is not None:
+                vector = np.fromfile(f, dtype='f8', count=nmat)
+            else:
+                vector = np.array([])
+
+            results.append({
+                'root': ii,
+                'sign': sign,
+                'energy': ene,
+                'vector': vector
+            })
+            
+    return nmat, nexc, results
+
+def read_xplusy_ascii(filename):
+    """
+    Reads XplusY.DAT (Formatted Text)
+    """
+    results = []
+    with open(filename, 'r') as f:
+        lines = [line.strip() for line in f if line.strip()]
+        
+        # Header
+        nmat, nexc = map(int, lines[0].split())
+        
+        idx = 1
+        while idx < len(lines):
+            # Root Header: ii, sign, sqrt(eval)
+            parts = lines[idx].split()
+            ii = int(parts[0])
+            sign = parts[1]
+            
+            val_str = parts[2]
+            if val_str == '-':
+                ene = None
+                vector = np.array([])
+                idx += 1
+            else:
+                ene = float(val_str)
+                # Vector follows on subsequent lines, 6 elements per line
+                num_vec_lines = (nmat + 5) // 6
+                vec_raw = " ".join(lines[idx+1 : idx+1+num_vec_lines])
+                vector = np.fromstring(vec_raw, sep=' ')
+                idx += 1 + num_vec_lines
+            
+            results.append({
+                'root': ii,
+                'sign': sign,
+                'energy': ene,
+                'vector': vector
+            })
+            
+    return nmat, nexc, results
+
+def read_overlap_matrix(filename, n_orb):
+    """
+    Reads the ASCII overlap matrix using np.loadtxt.
+    n_orb: dimension of the square matrix.
+    """
+    # np.loadtxt handles the ES24.15 format automatically.
+    # We skip 6 lines and read the entire flat block.
+    flat_data = np.loadtxt(filename, skiprows=5)
+    
+    # Reshape: 'F' order is mandatory because Fortran flattens matrices column-first.
+    # Shape becomes (n_orb, n_orb)
+    matrix = flat_data.reshape((n_orb, n_orb), order='F')
+    
+    return matrix
+
+def check_unity_deviation(A):
+    """
+    Calculates the deviation of matrix A from the Identity matrix.
+    """
+    n = A.shape[0]
+    identity = np.eye(n)
+    
+    # Calculate the residual matrix
+    residual = A - identity
+    
+    # Maximum absolute deviation
+    max_dev = np.max(np.abs(residual))
+    
+    print(f"--- Matrix Deviation Analysis ({n}x{n}) ---")
+    print(f"Max Absolute Deviation: {max_dev:.2e}")
+
+def read_nacv(filename):
+    """
+    Parses NACV.DAT into a 4D array: [state_i, state_j, dim, atomindex]
+    - state_i, state_j: Use raw values from file (1-based if file is 1-based)
+    - dim, atomindex: 0-based
+    """
+    couplings_dict = {}
+    max_state = 0
+    num_atoms = 0
+
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+    line_idx = 0
+    while line_idx < len(lines):
+        line = lines[line_idx].strip()
+        if not line:
+            line_idx += 1
+            continue
+        
+        parts = line.split()
+        # Header line: state_i state_j
+        if len(parts) == 2:
+            si, sj = int(parts[0]), int(parts[1])
+            max_state = max(max_state, si, sj)
+            
+            coord_block = []
+            line_idx += 1
+            
+            # Read vector components
+            while line_idx < len(lines):
+                sub_parts = lines[line_idx].split()
+                if len(sub_parts) == 2: # Next state pair reached
+                    break
+                if len(sub_parts) == 3: # X, Y, Z
+                    coord_block.append([float(x) for x in sub_parts])
+                line_idx += 1
+            
+            couplings_dict[(si, sj)] = np.array(coord_block)
+            num_atoms = len(coord_block)
+        else:
+            line_idx += 1
+
+    # Array shape: [state_i, state_j, dim, atomindex]
+    # We use max_state + 1 so that index 'n' corresponds to state 'n'
+    shape = (max_state + 1, max_state + 1, 3, num_atoms)
+    nacv = np.zeros(shape)
+
+    for (si, sj), vectors in couplings_dict.items():
+        # vectors.T converts (Atoms, 3) -> (3, Atoms)
+        # This makes Dim 0-indexed (0=X, 1=Y, 2=Z) 
+        # and AtomIndex 0-indexed (0 to N-1)
+        nacv[si, sj, :, :] = vectors.T
+        
+        # Standard anti-symmetry for NACVs
+        nacv[sj, si, :, :] = -vectors.T
+
+    return nacv
+
+# --- Example of how to access the data ---
+# data = read_nacv("NACV.DAT")
+# x_comp_atom_0 = data[1, 2, 0, 0] # State 1, State 2, X-dim, 1st Atom
+
+
+
+# --- Usage Examples ---
+# dftb_in.hsd that creates all data files:
+# Geometry = GenFormat {
+# 2  C
+# N  H
+# 1 1    0.4660890295E-01   -0.1121033973E-15   -0.1279328402E-31
+# 2 2    0.1104519097E+01    0.1121033973E-15    0.1279328402E-31
+# }
+# Driver = {}
+# 
+# Hamiltonian = DFTB { 
+#    SCC = Yes
+#    SCCTolerance = 1.0E-10
+#    MaxAngularMomentum = {
+#        N = "p"
+#        H = "s"
+#    }
+#    SpinPolarisation = Colinear {
+#        UnpairedElectrons = 2
+#    }
+#    SpinConstants = {
+#        N = {-0.026} # HOMO Wpp
+#        H = {-0.072} # HOMO Wss
+#    }
+#    SlaterKosterFiles = Type2FileNames {
+#        Prefix = {/data1/niehaus/SK-SVN/mio-1-1/}
+#        Separator = "-"
+#        Suffix = ".skf"
+#    }
+#    Filling = Fermi {
+#        Temperature [K] = 40
+#    }
+#}
+#ExcitedState {
+#    Casida {
+#        NrOfExcitations = 5
+#	StateOfInterest = 1
+#	WriteSPTransitions = Yes
+#       WriteXplusY = Yes
+#       #StateCouplings = {0 2}
+#	#WriteXplusYAscii = Yes
+#       Diagonaliser = Stratmann{}
+#    }
+#}
+#Options {
+#  WriteAutotestTag = Yes
+#  #WriteHS = Yes
+#}
+#Analysis {
+#  WriteEigenvectors = Yes
+#  EigenvectorsAsText = Yes    
+#  PrintForces = Yes 
+#}
+## Run this twice. Once with WriteHS = Yes uncommented. 
+
+au2ev = 27.211386
+## SPX
+rpa_map, rpa_lookup, max_spin = read_spx_mappings("SPX.DAT")
+
+# Case A: You know the orbitals, want the index
+# "What is the index for lowest -> highest MO, Spin Up?"
+ndim = rpa_map.shape[0]
+print('RPA index:', rpa_map[0,ndim-1, 0])
+
+# Case B: You have an index (e.g., from an xpy vector), want the orbitals
+# "What transition does RPA index 8 represent?"
+idx = 8
+m, n, s = rpa_lookup[idx]
+print(f"Index {idx+1} corresponds to: Orbital {m+1} -> Orbital {n+1} (Spin {s})")
+
+## X+Y 
+# For older versions of dftb+, the binary file XplusY.BIN is not available
+#nmat, nexc, results = read_xplusy_ascii("XplusY.DAT")
+nmat, nexc, results = read_xplusy_binary("XplusY.BIN")
+
+# Access a specific Root (e.g., Root 2, which is index 1)
+ridx = 1
+root_data = results[ridx]
+print(f"Energy for root {ridx+1}: {au2ev*root_data['energy']} eV")
+# Extract the xpy vector (the RPA eigenvector)
+# This is a 1D NumPy array of length 'nmat'
+xpy = root_data['vector']
+
+# Checking norm of vector
+print(f'First entries X+Y eigenvector for root {ridx+1}: {xpy[0:5]}')
+for iRoot in range(nexc):
+    root_data = results[iRoot]
+    xpy = root_data['vector']
+    # Note that (X+Y)(X-Y) = 1, this is just a rough check of normalization
+    print(f'X+Y norm for root {iRoot+1}: {sum(xpy[:]**2)}')    
+
+## MO data
+ndim = rpa_map.shape[1]
+spin_polarized = bool(rpa_map.shape[2]-1)
+mo = read_mo_matrix("eigenvec.bin", ndim, spin_polarized=spin_polarized)
+# mo[spin,mu,i] corresponds to c_mu_i
+
+## Overlap matrix
+S = read_overlap_matrix('oversqr.dat', ndim)
+for iSpin in range(mo.shape[0]):
+    print(f"Checking MO orthornormality for spin {iSpin}") 
+    d = np.dot(S, mo[iSpin,:,:])
+    mat = np.dot(mo[iSpin,:,:].T, d)
+    check_unity_deviation(mat)
+
+## autotest.tag
+results = parse_tagged_file("autotest.tag")
+forces = results['forces']
+# If in DFTB+ PrintForces = yes, the forces under the forces tag are for the excited state StateOfInterest 
+# Forces are given in Hartree / Bohr
+print(f'x-component of force on second atom:  {forces[0,1]}')
+
+
+## NACV.DAT (not available for spin-polarized systems)
+# NACV  are given in 1 / Bohr
+if os.path.exists("NACV.DAT"):
+    nacv = read_nacv("NACV.DAT")
+    print(f'S1 to S2 NACV, y-component of atom 3: {nacv[1,2,1,2]}')
+
+
+
+
+
+
+
+
+
