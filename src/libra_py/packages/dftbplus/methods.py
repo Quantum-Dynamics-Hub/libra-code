@@ -922,6 +922,10 @@ def read_spx_mappings(filename):
     2. transition_lookup: [rpa_idx] -> (ini, fin, spin)
     3. max_spin: 0 for unpolarized/Up-only, 1 if Down exists
     Indices follow Python usage and start with 0
+
+    --- Usage ---
+    rpa_map, trans_lookup, max_s = read_spx_mappings("SPX.DAT")
+    print(f"Max Spin Index: {max_s}") # 0 for Restricted, 1 for Unrestricted
     """
     temp_data = []
     max_orb = 0
@@ -976,11 +980,21 @@ def read_spx_mappings(filename):
         
     return rpa_map, transition_lookup, actual_max_spin
 
-# --- Usage ---
-# rpa_map, trans_lookup, max_s = read_spx_mappings("SPX.DAT")
-# print(f"Max Spin Index: {max_s}") # 0 for Restricted, 1 for Unrestricted
 
 def parse_tagged_file(file_path):
+    """
+    --- Usage ---
+    Load the file into a data dictionary
+    results = parse_tagged_file("autotes.tag")
+
+    Accessing a 0D (Scalar) value by tag name
+    energy = results['mermin_energy']  # Returns an int or float
+
+    Accessing a 1D or 2D (Array) value
+    coords = results['end_coords']  # Returns a NumPy array
+
+    """
+
     data_dict = {}
     
     with open(file_path, 'r') as f:
@@ -1035,15 +1049,6 @@ def parse_tagged_file(file_path):
             i += 1
             
     return data_dict
-# --- Usage ---
-# Load the file into a data dictionary
-# results = parse_tagged_file("autotes.tag")
-
-# Accessing a 0D (Scalar) value by tag name 
-# energy = results['mermin_energy']  # Returns an int or float
-
-# Accessing a 1D or 2D (Array) value
-# coords = results['end_coords']  # Returns a NumPy array
 
 
 def read_mo_matrix(filename, ndim, spin_polarized=False):
@@ -1198,6 +1203,11 @@ def read_nacv(filename):
     Parses NACV.DAT into a 4D array: [state_i, state_j, dim, atomindex]
     - state_i, state_j: Use raw values from file (1-based if file is 1-based)
     - dim, atomindex: 0-based
+
+    # --- Example of how to access the data ---
+    # data = read_nacv("NACV.DAT")
+    # x_comp_atom_0 = data[1, 2, 0, 0] # State 1, State 2, X-dim, 1st Atom
+
     """
     couplings_dict = {}
     max_state = 0
@@ -1252,130 +1262,6 @@ def read_nacv(filename):
 
     return nacv
 
-# --- Example of how to access the data ---
-# data = read_nacv("NACV.DAT")
-# x_comp_atom_0 = data[1, 2, 0, 0] # State 1, State 2, X-dim, 1st Atom
-
-
-
-# --- Usage Examples ---
-# dftb_in.hsd that creates all data files:
-# Geometry = GenFormat {
-# 2  C
-# N  H
-# 1 1    0.4660890295E-01   -0.1121033973E-15   -0.1279328402E-31
-# 2 2    0.1104519097E+01    0.1121033973E-15    0.1279328402E-31
-# }
-# Driver = {}
-# 
-# Hamiltonian = DFTB { 
-#    SCC = Yes
-#    SCCTolerance = 1.0E-10
-#    MaxAngularMomentum = {
-#        N = "p"
-#        H = "s"
-#    }
-#    SpinPolarisation = Colinear {
-#        UnpairedElectrons = 2
-#    }
-#    SpinConstants = {
-#        N = {-0.026} # HOMO Wpp
-#        H = {-0.072} # HOMO Wss
-#    }
-#    SlaterKosterFiles = Type2FileNames {
-#        Prefix = {/data1/niehaus/SK-SVN/mio-1-1/}
-#        Separator = "-"
-#        Suffix = ".skf"
-#    }
-#    Filling = Fermi {
-#        Temperature [K] = 40
-#    }
-#}
-#ExcitedState {
-#    Casida {
-#        NrOfExcitations = 5
-#	StateOfInterest = 1
-#	WriteSPTransitions = Yes
-#       WriteXplusY = Yes
-#       #StateCouplings = {0 2}
-#	#WriteXplusYAscii = Yes
-#       Diagonaliser = Stratmann{}
-#    }
-#}
-#Options {
-#  WriteAutotestTag = Yes
-#  #WriteHS = Yes
-#}
-#Analysis {
-#  WriteEigenvectors = Yes
-#  EigenvectorsAsText = Yes    
-#  PrintForces = Yes 
-#}
-## Run this twice. Once with WriteHS = Yes uncommented. 
-
-au2ev = 27.211386
-## SPX
-rpa_map, rpa_lookup, max_spin = read_spx_mappings("SPX.DAT")
-
-# Case A: You know the orbitals, want the index
-# "What is the index for lowest -> highest MO, Spin Up?"
-ndim = rpa_map.shape[0]
-print('RPA index:', rpa_map[0,ndim-1, 0])
-
-# Case B: You have an index (e.g., from an xpy vector), want the orbitals
-# "What transition does RPA index 8 represent?"
-idx = 8
-m, n, s = rpa_lookup[idx]
-print(f"Index {idx+1} corresponds to: Orbital {m+1} -> Orbital {n+1} (Spin {s})")
-
-## X+Y 
-# For older versions of dftb+, the binary file XplusY.BIN is not available
-#nmat, nexc, results = read_xplusy_ascii("XplusY.DAT")
-nmat, nexc, results = read_xplusy_binary("XplusY.BIN")
-
-# Access a specific Root (e.g., Root 2, which is index 1)
-ridx = 1
-root_data = results[ridx]
-print(f"Energy for root {ridx+1}: {au2ev*root_data['energy']} eV")
-# Extract the xpy vector (the RPA eigenvector)
-# This is a 1D NumPy array of length 'nmat'
-xpy = root_data['vector']
-
-# Checking norm of vector
-print(f'First entries X+Y eigenvector for root {ridx+1}: {xpy[0:5]}')
-for iRoot in range(nexc):
-    root_data = results[iRoot]
-    xpy = root_data['vector']
-    # Note that (X+Y)(X-Y) = 1, this is just a rough check of normalization
-    print(f'X+Y norm for root {iRoot+1}: {sum(xpy[:]**2)}')    
-
-## MO data
-ndim = rpa_map.shape[1]
-spin_polarized = bool(rpa_map.shape[2]-1)
-mo = read_mo_matrix("eigenvec.bin", ndim, spin_polarized=spin_polarized)
-# mo[spin,mu,i] corresponds to c_mu_i
-
-## Overlap matrix
-S = read_overlap_matrix('oversqr.dat', ndim)
-for iSpin in range(mo.shape[0]):
-    print(f"Checking MO orthornormality for spin {iSpin}") 
-    d = np.dot(S, mo[iSpin,:,:])
-    mat = np.dot(mo[iSpin,:,:].T, d)
-    check_unity_deviation(mat)
-
-## autotest.tag
-results = parse_tagged_file("autotest.tag")
-forces = results['forces']
-# If in DFTB+ PrintForces = yes, the forces under the forces tag are for the excited state StateOfInterest 
-# Forces are given in Hartree / Bohr
-print(f'x-component of force on second atom:  {forces[0,1]}')
-
-
-## NACV.DAT (not available for spin-polarized systems)
-# NACV  are given in 1 / Bohr
-if os.path.exists("NACV.DAT"):
-    nacv = read_nacv("NACV.DAT")
-    print(f'S1 to S2 NACV, y-component of atom 3: {nacv[1,2,1,2]}')
 
 
 
