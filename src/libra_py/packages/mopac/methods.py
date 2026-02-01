@@ -534,7 +534,8 @@ def mopac_compute_adi(q, params, full_id):
     coords = q.col(itraj)
 
     critical_params = ["labels", "timestep"]
-    default_params = {"mopac_exe": "mopac", "is_first_time": True, "orbital_space": None, "nstates":2,
+    default_params = {"mopac_exe": "mopac", "is_first_time": True, "orbital_space": None, "active_space": None,
+                      "nstates":2,
                       "mopac_run_params": "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
                       "mopac_working_directory": "mopac_wd",
                       "mopac_input_prefix": "input_", "mopac_output_prefix": "output_",
@@ -553,6 +554,7 @@ def mopac_compute_adi(q, params, full_id):
     mopac_input_prefix = params[itraj]["mopac_input_prefix"]
     mopac_output_prefix = params[itraj]["mopac_output_prefix"]
     orbital_space = params[itraj]["orbital_space"]
+    active_space = params[itraj]["active_space"]
     nstates = params[itraj]["nstates"]
     dt = params[itraj]["dt"]
     do_Lowdin = params[itraj]["do_Lowdin"]
@@ -604,8 +606,9 @@ def mopac_compute_adi(q, params, full_id):
     ovlp_params = {"homo_indx":info["nocc"], 
                    "nocc":info["nocc"] - 1, 
                    "nvirt":info["nmo"] - info["nocc"], 
-                   "nelec":info["nelec"], "nstates":nstates  }
-
+                   "nelec":info["nelec"], "nstates":nstates,
+                   "active_space":active_space
+                   }
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
 
     #=============== Now, populate the allocated matrices ======================

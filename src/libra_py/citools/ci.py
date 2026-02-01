@@ -65,6 +65,9 @@ def overlap(st_mo, data1, data2, params):
                 Total number of electrons
             nstates : int
                 Total number of electronic states, including the ground state
+            active_space : iterable of int, optional
+                Spatial orbital indices (1-based) defining the active space for
+                spin adaptation. If None, all available orbitals are used.
 
     Returns
     -------
@@ -94,6 +97,7 @@ def overlap(st_mo, data1, data2, params):
     nvirt = params["nvirt"]
     nelec = params["nelec"]
     nstates = params["nstates"]
+    active_space = params["active_space"]
 
     if nstates <= 1:
         raise ValueError("nstates must include at least one excited state")
@@ -131,6 +135,7 @@ def overlap(st_mo, data1, data2, params):
         nelec,
         homo_indx,
         common_sd_basis,
+        active_space
     )
 
     # ------------------------------------------------------------------
