@@ -125,6 +125,16 @@ def overlap(st_mo, data1, data2, params):
         nstates, common_sd_basis, data2[1], data2[2]
     )
 
+    #-------------------------------------------------------------------
+    # Get the effective number of electrons - only those that are in the
+    # active space
+    #-------------------------------------------------------------------
+    nelec_eff = 0
+    if active_space is None:
+        nelec_eff = nelec
+    else:
+        nelec_eff = 2 * sum(i <= homo_indx for i in active_space)
+
     # ------------------------------------------------------------------
     # SD and CSF overlap matrices (singlet)
     # ------------------------------------------------------------------
@@ -132,7 +142,7 @@ def overlap(st_mo, data1, data2, params):
         st_mo,
         lowest_orbital,
         highest_orbital,
-        nelec,
+        nelec_eff,
         homo_indx,
         common_sd_basis,
         active_space

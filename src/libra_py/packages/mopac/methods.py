@@ -534,13 +534,14 @@ def mopac_compute_adi(q, params, full_id):
     coords = q.col(itraj)
 
     critical_params = ["labels", "timestep"]
-    default_params = {"mopac_exe": "mopac", "is_first_time": True, "orbital_space": None, "active_space": None,
+    default_params = {"mopac_exe": "mopac", "is_first_time": True, "orbital_space": None,
                       "nstates":2,
                       "mopac_run_params": "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
                       "mopac_working_directory": "mopac_wd",
                       "mopac_input_prefix": "input_", "mopac_output_prefix": "output_",
                       "dt": 1.0 * units.fs2au, "do_Lowdin": 0, 
-                      "CAS":[ [1,2], 2], "mult_S":0, "mult_Ms":0, "is_singlet_excitation":0
+                      "CAS":[ [1,2], 2], "mult_S":0, "mult_Ms":0, "is_singlet_excitation":0,
+                      "nelec_act_space":None
                       }
     comn.check_input(params[itraj], default_params, critical_params)
 
@@ -554,7 +555,6 @@ def mopac_compute_adi(q, params, full_id):
     mopac_input_prefix = params[itraj]["mopac_input_prefix"]
     mopac_output_prefix = params[itraj]["mopac_output_prefix"]
     orbital_space = params[itraj]["orbital_space"]
-    active_space = params[itraj]["active_space"]
     nstates = params[itraj]["nstates"]
     dt = params[itraj]["dt"]
     do_Lowdin = params[itraj]["do_Lowdin"]
@@ -562,6 +562,7 @@ def mopac_compute_adi(q, params, full_id):
     mult_S = params[itraj]["mult_S"]
     mult_Ms = params[itraj]["mult_Ms"]
     is_singlet_excitation = params[itraj]["is_singlet_excitation"]
+    nelec_act_space = params[itraj]["nelec_act_space"]
     natoms = len(labels)
     ndof = 3 * natoms
 
@@ -574,6 +575,17 @@ def mopac_compute_adi(q, params, full_id):
     filename = F"{mopac_wd}/{mopac_input_prefix}{mopac_jobid}.out"
     read_params = {"nstates":nstates, "filename":filename, "orbital_space":None}
     info, MO_curr, data_curr = read_mopac_orbital_info(read_params)
+
+    #================= Construct active space ==================
+    active_space = None
+    if nelec_act_space is None:
+        active_space = info["actual_orbital_space"]
+    else: 
+        min_indx = info["nocc"] - nelec_act_space//2 + 1
+        if min_indx > info["min_occ"]:
+            min_elec = ((info["nocc"] - info["min_occ"]) + 1 )*2
+            raise ValueError(f"The `nelec_act_space` should be at least { min_elec }")
+        active_space = list(range(min_indx, info["nmo"]+1))
 
     # Get the properties at the previous time-steps
     MO_prev, data_prev = None, None
@@ -602,7 +614,7 @@ def mopac_compute_adi(q, params, full_id):
     # Make it doubled - block-matrix
     st_mo = np.kron(np.eye(2), st_mo_orb)
 
-    #================= Compute CI time-overlaps =============
+    #================= Compute CI time-overlaps ============= 
     ovlp_params = {"homo_indx":info["nocc"], 
                    "nocc":info["nocc"] - 1, 
                    "nvirt":info["nmo"] - info["nocc"], 
