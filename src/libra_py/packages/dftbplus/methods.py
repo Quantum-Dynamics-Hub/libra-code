@@ -917,16 +917,114 @@ def dftb_traj2xyz_traj(in_filename, out_filename):
 
 def read_spx_mappings(filename):
     """
-    Parses SPX.DAT and returns:
-    1. rpa_map: [ini, fin, spin] -> rpa_idx
-    2. transition_lookup: [rpa_idx] -> (ini, fin, spin)
-    3. max_spin: 0 for unpolarized/Up-only, 1 if Down exists
-    Indices follow Python usage and start with 0
+    Parse an SPX.DAT file and construct forward and reverse mappings
+    between orbital transitions and RPA indices.
 
-    --- Usage ---
-    rpa_map, trans_lookup, max_s = read_spx_mappings("SPX.DAT")
-    print(f"Max Spin Index: {max_s}") # 0 for Restricted, 1 for Unrestricted
+    This function reads an SPX.DAT file (as produced e.g. by TDDFT/RPA
+    implementations) and builds:
+
+    1. rpa_map[ini, fin, spin] -> rpa_idx
+       A forward lookup table mapping a transition from orbital `ini`
+       to orbital `fin` with a given spin to its corresponding RPA index.
+
+    2. transition_lookup[rpa_idx] -> (ini, fin, spin)
+       A reverse lookup table mapping an RPA index back to the
+       corresponding transition.
+
+    3. actual_max_spin
+       Indicates whether spin-down transitions are present:
+           - 0 : restricted / unpolarized (only spin-up or no spin label)
+           - 1 : unrestricted (both U and D spins present)
+
+    All indices returned by this function are **0-based**, following
+    standard Python conventions, even if the SPX.DAT file uses 1-based
+    indexing.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the SPX.DAT file to be parsed.
+
+    Returns
+    -------
+    rpa_map : ndarray of shape (n_orb, n_orb, n_spin)
+        Integer array mapping (ini, fin, spin) -> rpa_idx.
+        Entries without a corresponding transition are set to -1.
+
+    transition_lookup : ndarray of shape (n_rpa, 3)
+        Integer array where each row is (ini, fin, spin) corresponding
+        to a given rpa_idx.
+
+    actual_max_spin : int
+        Maximum spin index encountered:
+            0 for restricted / spin-unpolarized calculations
+            1 if spin-down ('D') transitions exist
+
+    Notes
+    -----
+    Expected SPX.DAT format (simplified):
+
+        idx  ...  ini  ...  fin  [spin]
+
+    where:
+        - idx  : RPA transition index (1-based)
+        - ini  : initial orbital index (1-based)
+        - fin  : final orbital index (1-based)
+        - spin : optional spin label ('U' or 'D')
+
+    Lines that are empty, contain '#', or contain '===' are ignored.
+    Malformed lines are skipped silently.
+
+    Spin mapping used internally:
+        'U' -> 0
+        'D' -> 1
+
+    If no spin label is present, spin is assumed to be 0.
+
+    Examples
+    --------
+    **Restricted / spin-unpolarized calculation**
+
+    >>> rpa_map, trans_lookup, max_spin = read_spx_mappings("SPX.DAT")
+    >>> print(max_spin)
+    0
+
+    Look up the RPA index for a transition from orbital 2 to 5:
+    >>> idx = rpa_map[2, 5, 0]
+    >>> print(idx)
+    17
+
+    Reverse lookup (from RPA index to transition):
+    >>> ini, fin, spin = trans_lookup[17]
+    >>> print(ini, fin, spin)
+    2 5 0
+
+    **Unrestricted / spin-polarized calculation**
+
+    >>> rpa_map, trans_lookup, max_spin = read_spx_mappings("SPX.DAT")
+    >>> print(max_spin)
+    1
+
+    Spin-up transition (U):
+    >>> idx_u = rpa_map[1, 4, 0]
+
+    Spin-down transition (D):
+    >>> idx_d = rpa_map[1, 4, 1]
+
+    Reverse lookup:
+    >>> trans_lookup[idx_d]
+    array([1, 4, 1])
+
+    **Iterating over all RPA transitions**
+
+    >>> for idx, (ini, fin, spin) in enumerate(trans_lookup):
+    ...     print(idx, ini, fin, spin)
+
+    See Also
+    --------
+    TDDFT, RPA, Casida equations, transition-density analysis
     """
+
     temp_data = []
     max_orb = 0
     max_rpa_idx = 0
@@ -983,18 +1081,71 @@ def read_spx_mappings(filename):
 
 def parse_tagged_file(file_path):
     """
-    --- Usage ---
-    Load the file into a data dictionary
-    results = parse_tagged_file("autotes.tag")
+    Parse a tagged ASCII data file and return its contents as a dictionary.
 
-    Accessing a 0D (Scalar) value by tag name
-    energy = results['mermin_energy']  # Returns an int or float
+    The file is assumed to consist of *tagged data blocks*, where each block
+    starts with a header line describing the data, followed by one or more
+    lines containing the numerical values.
 
-    Accessing a 1D or 2D (Array) value
-    coords = results['end_coords']  # Returns a NumPy array
+    File format
+    -----------
+    Each data block has the form:
 
+        <tag> : <dtype> : <dim> : <shape>
+        <data values ...>
+
+    where:
+
+    * ``tag``   : string identifier used as the dictionary key
+    * ``dtype`` : data type specifier (e.g. ``integer`` or ``real``)
+    * ``dim``   : dimensionality of the data
+                  - 0 → scalar
+                  - 1 → vector
+                  - 2 → matrix (or higher-rank array if supported)
+    * ``shape`` : comma-separated list of dimensions
+                  (ignored for ``dim = 0``)
+
+    Example
+    -------
+    Scalar value:
+        mermin_energy : real : 0 :
+        -123.456D+00
+
+    2D array:
+        end_coords : real : 2 : 3,23
+        1.0D+00  2.0D+00  ...
+        ...
+
+    Parameters
+    ----------
+    file_path : str
+        Path to the tagged ASCII file to be parsed.
+
+    Returns
+    -------
+    data_dict : dict
+        Dictionary mapping tag names to parsed data.
+
+        * Scalars (``dim = 0``) are returned as Python ``int`` or ``float``.
+        * Arrays (``dim ≥ 1``) are returned as ``numpy.ndarray`` objects,
+          reshaped according to the specified shape.
+
+    Usage
+    -----
+    >>> results = parse_tagged_file("autotes.tag")
+    >>> energy = results["mermin_energy"]      # float or int
+    >>> coords = results["end_coords"]         # NumPy array
+
+    Notes
+    -----
+    * Empty lines are ignored.
+    * Numerical values written using Fortran ``D`` exponents (e.g. ``1.0D+03``)
+      are automatically converted to standard ``E`` notation.
+    * Array data are reshaped using **Fortran (column-major) ordering**
+      (``order='F'``), which matches how Fortran writes multi-dimensional arrays.
+    * If fewer data values than expected are encountered, parsing stops at the
+      next header line as a safety measure.
     """
-
     data_dict = {}
     
     with open(file_path, 'r') as f:
@@ -1053,9 +1204,55 @@ def parse_tagged_file(file_path):
 
 def read_mo_matrix(filename, ndim, spin_polarized=False):
     """
-    Reads MO eigenvectors and always returns a 3D array of shape (spin, ndim, ndim).
-    Spin 1: [4B Integer][ndim*ndim*8B Matrix]
-    Spin 2: [ndim*ndim*8B Matrix]
+    Read molecular orbital (MO) eigenvector matrices from a binary file
+    written in Fortran unformatted (stream) style.
+
+    The function always returns a 3D NumPy array with shape
+    ``(nspin, ndim, ndim)``, where ``nspin`` is 1 for non–spin-polarized
+    calculations and 2 for spin-polarized ones.
+
+    Binary layout
+    -------------
+    The file is assumed to contain MO coefficient matrices written in
+    **column-major (Fortran) order** with the following layout:
+
+    * Record 1 (spin-up or total):
+        - 4-byte integer header (typically a Fortran record marker or
+          auxiliary integer; its value is not used)
+        - ``ndim × ndim`` double-precision floating-point numbers (float64)
+
+    * Record 2 (spin-down, only if ``spin_polarized=True``):
+        - ``ndim × ndim`` double-precision floating-point numbers (float64)
+        - No leading integer header is assumed for this record
+
+    Parameters
+    ----------
+    filename : str
+        Path to the binary file containing the MO eigenvector matrices.
+    ndim : int
+        Dimension of the MO matrix (number of basis functions or orbitals).
+        Each MO matrix has shape ``(ndim, ndim)``.
+    spin_polarized : bool, optional
+        If ``True``, the file is assumed to contain separate spin-up and
+        spin-down MO matrices. If ``False`` (default), only a single
+        matrix (spin-up or total) is read.
+
+    Returns
+    -------
+    mo_matrices : numpy.ndarray, shape (nspin, ndim, ndim)
+        Molecular orbital coefficient matrices.
+        * ``nspin = 1`` for non–spin-polarized calculations
+        * ``nspin = 2`` for spin-polarized calculations
+
+    Notes
+    -----
+    * The reshape uses ``order='F'`` because the matrices are written
+      column-by-column by Fortran. Using NumPy's default row-major order
+      would produce an incorrect matrix.
+    * No validation is performed on the integer header; it is read and
+      discarded.
+    * The function assumes the file uses native endianness and 8-byte
+      floating-point values (``float64``).
     """
     mo_data = []
 
@@ -1129,8 +1326,116 @@ def read_xplusy_binary(filename):
 
 def read_xplusy_ascii(filename):
     """
-    Reads XplusY.DAT (Formatted Text)
+    Read XplusY.BIN written in Fortran *stream unformatted* mode and
+    extract excitation vectors and energies.
+
+    This routine parses the XplusY.BIN file typically produced by
+    TDDFT / RPA / Casida solvers, where the file contains a header
+    followed by per-root data blocks with optional energies and
+    X+Y vectors.
+
+    The binary layout is assumed to be **Fortran stream unformatted**
+    (i.e., no record markers).
+
+    Data type conventions (matching Fortran code):
+        - dp   : REAL*8   (float64, 8 bytes)
+        - ii   : INTEGER*4 (int32, 4 bytes)
+        - sign : CHARACTER*1 (1 byte)
+
+    Parameters
+    ----------
+    filename : str
+        Path to the `XplusY.BIN` file.
+
+    Returns
+    -------
+    nmat : int
+        Length of each X+Y vector (number of matrix elements).
+
+    nexc : int
+        Number of excitation roots stored in the file.
+
+    results : list of dict
+        One dictionary per excitation root with keys:
+
+        - 'root'   : int
+            Root index (as stored in the file; typically 1-based).
+        - 'sign'   : str
+            Sign character associated with the root (usually '+' or '-').
+        - 'energy' : float or None
+            Excitation energy. If the Fortran code wrote a '-' instead
+            of a floating-point value, this is set to None.
+        - 'vector' : ndarray, shape (nmat,)
+            X+Y vector for this root. Empty if `energy is None`.
+
+    Notes
+    -----
+    File structure (byte-level, sequential):
+
+    1. Global header
+       - nmat : int32 (4 bytes)
+       - nexc : int32 (4 bytes)
+
+    2. For each excitation root:
+       - root index (ii) : int32 (4 bytes)
+       - sign            : char*1 (1 byte)
+
+       - energy field:
+           * Either a single '-' character (1 byte), indicating
+             an invalid or skipped root
+           * OR sqrt(eigenvalue) written as float64 (8 bytes)
+
+       - X+Y vector:
+           * Present only if energy is written
+           * nmat × float64 (8 × nmat bytes)
+
+    Because this is a *stream* binary file, detecting whether an
+    energy is present requires peeking at the next byte and
+    conditionally rewinding the file pointer.
+
+    Examples
+    --------
+    **Basic usage**
+
+    >>> nmat, nexc, results = read_xplusy_binary("XplusY.BIN")
+    >>> print(nmat, nexc)
+    120 10
+
+    **Access energy and vector of the first root**
+
+    >>> root0 = results[0]
+    >>> print(root0['root'], root0['sign'], root0['energy'])
+    1 + 3.457812
+
+    >>> xpy = root0['vector']
+    >>> print(xpy.shape)
+    (120,)
+
+    **Handling missing energies**
+
+    >>> for r in results:
+    ...     if r['energy'] is None:
+    ...         print(f"Root {r['root']} has no energy")
+
+    **Iterating over all valid roots**
+
+    >>> for r in results:
+    ...     if r['energy'] is not None:
+    ...         norm = np.linalg.norm(r['vector'])
+    ...         print(r['root'], r['energy'], norm)
+
+    **Typical TDDFT / RPA workflow**
+
+    >>> nmat, nexc, roots = read_xplusy_binary("XplusY.BIN")
+    >>> energies = np.array([r['energy'] for r in roots if r['energy'] is not None])
+    >>> vectors  = np.array([r['vector'] for r in roots if r['energy'] is not None])
+
+    See Also
+    --------
+    read_spx_mappings : Mapping between orbital transitions and RPA indices
+    Casida equation, TDDFT, RPA, excitation vectors
     """
+
     results = []
     with open(filename, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
@@ -1169,8 +1474,35 @@ def read_xplusy_ascii(filename):
 
 def read_overlap_matrix(filename, n_orb):
     """
-    Reads the ASCII overlap matrix using np.loadtxt.
-    n_orb: dimension of the square matrix.
+    Read an ASCII overlap matrix written in Fortran format and return it as
+    a NumPy array.
+
+    The file is assumed to contain a square overlap matrix stored as a
+    flat list of numbers in **column-major (Fortran) order**, preceded by
+    a fixed-length header.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the ASCII file containing the overlap matrix.
+        The numerical values are assumed to be written in a format such as
+        ES24.15 (or similar), which `numpy.loadtxt` can parse automatically.
+    n_orb : int
+        Number of orbitals. The overlap matrix dimension is
+        (n_orb, n_orb).
+
+    Returns
+    -------
+    matrix : numpy.ndarray, shape (n_orb, n_orb)
+        Overlap matrix reconstructed in the correct two-dimensional form.
+
+    Notes
+    -----
+    * The first 5 lines of the file are treated as a header and skipped.
+    * The remaining data are read as a one-dimensional array.
+    * The reshape uses `order='F'` because Fortran writes matrices
+      column-by-column, whereas NumPy defaults to row-major (C) order.
+      Using the wrong order would result in a transposed or scrambled matrix.
     """
     # np.loadtxt handles the ES24.15 format automatically.
     # We skip 6 lines and read the entire flat block.
@@ -1200,14 +1532,64 @@ def check_unity_deviation(A):
 
 def read_nacv(filename):
     """
-    Parses NACV.DAT into a 4D array: [state_i, state_j, dim, atomindex]
-    - state_i, state_j: Use raw values from file (1-based if file is 1-based)
-    - dim, atomindex: 0-based
+    Parse a NACV.DAT file and return nonadiabatic coupling vectors (NACVs)
+    as a 4D NumPy array.
 
-    # --- Example of how to access the data ---
-    # data = read_nacv("NACV.DAT")
-    # x_comp_atom_0 = data[1, 2, 0, 0] # State 1, State 2, X-dim, 1st Atom
+    The returned array has the shape:
 
+        nacv[state_i, state_j, dim, atom_index]
+
+    where:
+        * state_i, state_j : electronic state indices as they appear in
+          the file (typically 1-based if the file is 1-based)
+        * dim              : Cartesian component (0 = X, 1 = Y, 2 = Z)
+        * atom_index       : atom index (0-based)
+
+    File format
+    -----------
+    The file is assumed to consist of repeated blocks of the form:
+
+        state_i  state_j
+        x_1  y_1  z_1
+        x_2  y_2  z_2
+        ...
+        x_N  y_N  z_N
+
+    where N is the number of atoms. Each block gives the NACV
+    ⟨ψ_i | ∇_R | ψ_j⟩ for all atoms.
+
+    Parameters
+    ----------
+    filename : str
+        Path to the NACV.DAT file.
+
+    Returns
+    -------
+    nacv : numpy.ndarray, shape (nstate+1, nstate+1, 3, natoms)
+        Nonadiabatic coupling vectors.
+
+        The array is sized as ``(max_state + 1, max_state + 1, 3, natoms)``
+        so that index ``n`` corresponds directly to electronic state ``n``
+        without shifting (i.e., state indices are *not* converted to 0-based).
+
+    Usage example
+    -------------
+    >>> nacv = read_nacv("NACV.DAT")
+    >>> x_comp_atom_0 = nacv[1, 2, 0, 0]  # State 1 → 2, X component, atom 1
+
+    Notes
+    -----
+    * The number of atoms is inferred from the length of the coordinate block.
+    * Cartesian components are stored as:
+        - 0 → X
+        - 1 → Y
+        - 2 → Z
+    * Atom indices are 0-based.
+    * The function enforces the standard NACV antisymmetry:
+        ⟨ψ_i | ∇ | ψ_j⟩ = −⟨ψ_j | ∇ | ψ_i⟩
+    * All unassigned state pairs are initialized to zero.
+    * No unit conversion is performed; values are returned in the units
+      used in the input file (typically Bohr⁻¹ or a.u.).
     """
     couplings_dict = {}
     max_state = 0
@@ -1261,13 +1643,6 @@ def read_nacv(filename):
         nacv[sj, si, :, :] = -vectors.T
 
     return nacv
-
-
-
-
-
-
-
 
 
 
