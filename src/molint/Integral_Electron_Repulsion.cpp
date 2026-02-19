@@ -31,7 +31,7 @@ void eri_aux1
 ){
 
   int maxL = (l1+l2); // this is correct
-  int L,i,r,l;
+  int L,i,r;
 
   binomial_expansion(l1,l2,a,b,f,dfda,dfdb, 1); // 1 - is_derivs
 

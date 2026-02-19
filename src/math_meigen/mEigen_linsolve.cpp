@@ -84,8 +84,6 @@ bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double Nor
     std::cout<<"Not implemented. Exiting...\n";
     exit(0);
 
-    int i,j;   // counters
-
     if(A.n_rows!=A.n_cols){
         std::cout<<"Error: The matrix A in equation A * x = b must be square\n"; exit(1);  // N
     }
@@ -98,9 +96,6 @@ bool linsys_solver(const MATRIX& A, MATRIX& X, const MATRIX& B, const double Nor
     if(X.n_cols!=1){
         std::cout<<"Error: The matrices x and b in equation A * x = b should be column-vectors (num_of_cols ==1) \n"; exit(1); 
     }
-
-    // Set dimentions
-    int N = A.n_rows; // the dimension of the matrix A (square)
 
 /*
     // Convert out matrices to the Eigen types:

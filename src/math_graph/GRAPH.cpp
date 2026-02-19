@@ -137,9 +137,9 @@ int is_included(Path& p,Path& P){
 int is_included(Path& p,vector<Path>& P){
 // Check if any of P[i] or (P[i] XOR P[j]) is included in p
     int res = 0;
-    for(int i=0;i<P.size();i++){
+    for(auto i=0u;i<P.size();i++){
         if(is_included(P[i],p)) { res = 1; }
-        for(int j=0;j<P.size();j++){
+        for(auto j=0u;j<P.size();j++){
             Path tmp;
             path_xor(P[i],P[j],tmp);
             if(tmp.size()>0){
@@ -155,7 +155,7 @@ int is_included(Path& p,vector<Path>& P){
 void show_path(Path& p){
 
    cout<<"(";
-   for(int i=0;i<p.size();i++){
+   for(auto i=0u;i<p.size();i++){
    cout<<p[i];
    }
    cout<<")";
@@ -165,7 +165,7 @@ void show_path(Path& p){
 void show_paths(vector<Path>& p){
 
    cout<<"[ ";
-   for(int i=0;i<p.size();i++){
+   for(auto i=0u;i<p.size();i++){
    show_path(p[i]);
    cout<<" ";
    }

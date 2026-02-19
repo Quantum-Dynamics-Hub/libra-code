@@ -163,7 +163,6 @@ double VdW_Ewald3D(vector<VECTOR>& r, vector<int>& types, int max_type, vector<d
   // Reciprocal sum contribution
   double E2 = 0.0;
   double sum1 = 0.0;
-  double sum2 = 0.0;
   double fact;
   VECTOR h;  // reciprocal space lattice translation vectors
   VECTOR f_mod; // force
@@ -983,7 +982,7 @@ double Vdw_LJ2_no_excl(VECTOR* r,                                               
 
     int excl_indx = -1;
     // find the index of the array of exclusions involving atom at_indx1 as a first atom
-    for(int excl=0;excl<excl_scales.size();excl++){
+    for(auto excl=0u;excl<excl_scales.size();excl++){
       if(excl_scales[excl][0].at_indx1==at_indx1){ excl_indx = excl; break; }
     }
 
@@ -1208,7 +1207,6 @@ double LJ_Coulomb(VECTOR* r, VECTOR* g, VECTOR* m, VECTOR* f,
   double SW,sig,eps,en;
   VECTOR dSW,fmod;
   int na,nb,nc;
-  int xshift,yshift,zshift;
   double r2,energy;
   VECTOR dij,rij,gij,mij,f1,f2,f12;
   VECTOR tv1,tv2,tv3,g1,g2,g3,tv;

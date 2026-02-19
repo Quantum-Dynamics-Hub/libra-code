@@ -60,7 +60,7 @@ void sqrt_matrix(CMATRIX& S, CMATRIX& S_half, CMATRIX& S_i_half, double thresh, 
   }
 
 
-  int i,j;
+  int i;
  
   // Let us first diagonalize the overlap matrix S
   int sz = S.n_cols;  
@@ -132,7 +132,7 @@ void exp_matrix(CMATRIX& res, CMATRIX& S, complex<double> dt, int do_phase_corre
   }
 
 
-  int i,j;
+  int i;
  
   // Let us first diagonalize the input matrix x
   int sz = S.n_cols;  

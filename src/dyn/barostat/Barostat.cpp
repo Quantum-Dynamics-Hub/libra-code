@@ -253,7 +253,6 @@ void Barostat::load(boost::property_tree::ptree& pt,std::string path,int& status
 */
 
 
-  int st;
   status = 0;
 
   libio::load(pt,path+".Nf_t",Nf_t,is_Nf_t); if(is_Nf_t==1) { status=1;}

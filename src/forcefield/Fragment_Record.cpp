@@ -129,7 +129,6 @@ void save(boost::property_tree::ptree& pt,std::string path,vector<Fragment_Recor
 
 
 void Fragment_Record::load(boost::property_tree::ptree& pt,std::string path,int& status){
-  int st;
   status = 0;
 
   libio::load(pt,path+".Fragment_ff_type",Fragment_ff_type,is_Fragment_ff_type); if(is_Fragment_ff_type==1) { status=1;}
