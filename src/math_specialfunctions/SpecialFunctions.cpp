@@ -93,7 +93,6 @@ double sin_(double x){
     double c3 = (1.0/5040.0);
     double c4 = (1.0/362880.0);
     double c5 = (1.0/39916800.0);
-    double c6 = (1.0/6227020800.0);
 
     if(fabs(x)>tol){  res = (sin(x)/x); }
     else{ // Use Maclaurin series
