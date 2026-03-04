@@ -54,7 +54,7 @@ import libra_py.data_savers as data_savers
 
 # ===================== HEOM output ====================
 
-def init_heom_data(saver, hdf5_output_level, _nsteps, _nquant):
+def init_heom_data(saver, hdf5_output_level, _nsteps, _nquant, _nn_tot):
 
     if hdf5_output_level >= 1:
         # Time axis (integer steps)
@@ -67,8 +67,13 @@ def init_heom_data(saver, hdf5_output_level, _nsteps, _nquant):
         # System's density matrix
         saver.add_dataset("denmat", (_nsteps, _nquant, _nquant), "C")
 
+    if hdf5_output_level >= 4:
+        # Auxiliary density matrices
+        saver.add_dataset("auxdenmat", (_nsteps, _nn_tot-1, _nquant, _nquant), "C")
 
-def init_heom_savers(params, nquant):
+
+#def init_heom_savers(params, nquant):
+def init_heom_savers(params, nquant, nn_tot):
 
     # ================ Create savers ==================
     prefix = params["prefix"]
@@ -87,7 +92,8 @@ def init_heom_savers(params, nquant):
     if hdf5_output_level > 0:
         _savers["hdf5_saver"] = data_savers.hdf5_saver(F"{prefix}/data.hdf", properties_to_save)
         _savers["hdf5_saver"].set_compression_level(params["use_compression"], params["compression_level"])
-        init_heom_data(_savers["hdf5_saver"], hdf5_output_level, params["nsteps"], nquant)
+        #init_heom_data(_savers["hdf5_saver"], hdf5_output_level, params["nsteps"], nquant)
+        init_heom_data(_savers["hdf5_saver"], hdf5_output_level, math.ceil(params["nsteps"] / params["nprint"]), nquant, nn_tot)
 
     # ====== TXT ========
     if params["txt_output_level"] > 0:
@@ -98,26 +104,40 @@ def init_heom_savers(params, nquant):
 
     if mem_output_level > 0:
         _savers["mem_saver"] = data_savers.mem_saver(properties_to_save)
-        init_heom_data(_savers["mem_saver"], mem_output_level, params["nsteps"], nquant)
+        #init_heom_data(_savers["mem_saver"], mem_output_level, params["nsteps"], nquant)
+        init_heom_data(_savers["mem_saver"], mem_output_level, math.ceil(params["nsteps"] / params["nprint"]), nquant, nn_tot)
 
     return _savers
 
 
-def save_heom_hdf5(step, saver, params, denmat):
+#def save_heom_hdf5(step, saver, params, denmat):
+def save_heom_hdf5(step, saver, params, rho_unpacked):
 
     dt = params["dt"]
+    nprint = params["nprint"]
     hdf5_output_level = params["hdf5_output_level"]
+
+    if step % nprint == 0:
+        step = int(step / nprint)
+    else:
+        return None
 
     if hdf5_output_level >= 1:
         # Timestep
-        saver.save_scalar(step, "timestep", step)
+        saver.save_scalar(step, "timestep", nprint * step)
 
         # Actual time
-        saver.save_scalar(step, "time", step * dt)
+        saver.save_scalar(step, "time", nprint * step * dt)
 
     if hdf5_output_level >= 3:
         # Average adiabatic density matrices
-        saver.save_matrix(step, "denmat", denmat)
+        #saver.save_matrix(step, "denmat", denmat)
+        saver.save_matrix(step, "denmat", rho_unpacked[0])
+
+    if hdf5_output_level >= 4:
+        nn_tot = len(rho_unpacked)
+        for n in range(1,nn_tot):
+            saver.save_multi_matrix(step, n-1, "auxdenmat", rho_unpacked[n])
 
 
 def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
@@ -129,7 +149,8 @@ def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
 
     # Save properties
     if _savers["hdf5_saver"] is not None:
-        save_heom_hdf5(step, _savers["hdf5_saver"], params, rho_unpacked[0])
+        #save_heom_hdf5(step, _savers["hdf5_saver"], params, rho_unpacked[0])
+        save_heom_hdf5(step, _savers["hdf5_saver"], params, rho_unpacked)
 
     if _savers["txt_saver"] is not None:
         pass
@@ -137,4 +158,5 @@ def save_heom_data(_savers, step, print_freq, params, rho_unpacked):
     if _savers["mem_saver"] is not None:
         prms = dict(params)
         prms["hdf5_output_level"] = prms["mem_output_level"]
-        save_heom_hdf5(step, _savers["mem_saver"], prms, rho_unpacked[0])
+        #save_heom_hdf5(step, _savers["mem_saver"], prms, rho_unpacked[0])
+        save_heom_hdf5(step, _savers["mem_saver"], prms, rho_unpacked)
