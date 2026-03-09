@@ -47,6 +47,8 @@ namespace libheom{
 /// General hierarchy setup
 int compute_nn_tot(int d, int max_tier);
 
+int count_trailing_zeros(const vector<int>& v);
+
 vector< vector<int> > gen_next_level(vector< vector<int> >& parents);
 
 void gen_hierarchy(int d, int max_tier, int verbosity,

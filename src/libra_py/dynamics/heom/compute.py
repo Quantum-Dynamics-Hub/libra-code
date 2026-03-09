@@ -473,7 +473,9 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             update_filters(rho_scaled, params, aux_memory)
 
         # ================= Propagation for one timestep ==================================
+        #print("MADE IT TO RK4 STEP") # These lines were not here, remove
         rho_scaled = RK4(rho_scaled, params["dt"], compute_heom_derivatives, params)
+        #print("PASSED AN RK4 STEP") # These lines were not here, remove
 
     end = time.time()
     print(F"Calculations took {end - start} seconds")
