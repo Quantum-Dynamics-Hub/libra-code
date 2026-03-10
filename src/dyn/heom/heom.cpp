@@ -20,6 +20,7 @@
 #include "../../math_linalg/liblinalg.h"
 #include "../../math_specialfunctions/libspecialfunctions.h"
 #include "libheom.h"
+#include <unordered_map>
 
 namespace liblibra{
 namespace libdyn{
@@ -28,6 +29,7 @@ namespace libheom{
 using namespace libutil;
 using namespace liblinalg;
 using namespace libspecialfunctions;
+using std::unordered_map;
 
 
 
@@ -62,6 +64,178 @@ int compute_nn_tot(int d, int max_tier){
 
 
 
+//vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
+//    /**
+//    This function is similar to gen_next_level, except it takes a list of
+//    parent vectors of integers and generates the list of the children for 
+//    all of the parent inputs.
+//    */
+//
+//    int num_parents = parents.size();
+//    int num_children = parents[0].size(); // per parent
+//
+//    vector< vector<int> > next_level;
+//
+//    for(int i=0; i<num_parents; i++){
+//        for(int j=0;j<num_children; j++){
+//
+//            vector<int> child = parents[i];
+//            child[j] += 1;
+//
+//            if(! is_included(child, next_level) ){  next_level.push_back(child);  }
+//
+//        }// for j
+//    }// for i
+//
+//    return next_level;
+//}
+//
+//
+//
+//void gen_hierarchy(int d, int max_tier, int verbosity,
+//                   vector< vector<int> >& all_vectors, 
+//                   vector< vector<int> >& vec_plus, 
+//                   vector< vector<int> >& vec_minus){
+//    /**
+//
+//    d  - is the size of the simplex, in HEOM it will be taken as nquant * (KK+1)
+//
+//    max_tier - is the maximal tier of the vectors to be generated, the tier is
+//    devined by the sum of the vector elements
+//
+//    all_vectors - a list of the d-dimensional vectors of ints 
+//
+//    vec_plus : vec_plus[n][k] - index of the vector for which k-th element is +1 of that of the n-th vector
+//
+//    vec_minus : vec_minus[n][k] - index of the vector for which k-th element is -1 of that of the n-th vector
+//
+//    The vec_minus and vec_plus contain -1 for the situation when there is no such a vector included in 
+//    the current hierarchy structure
+// 
+//    */
+//
+//    int i, j, k;
+//
+// 
+//    vector< vector<int> > all_coordinates; //  for each vector - the coordinates are (L, i)
+//    vector<int> tier_nums; // the number of the nodes for the tier up to a given one
+//
+//    vector< vector<int> > parents(1, vector<int>(d, 0));
+//
+//    for(int tier=0; tier<=max_tier; tier++){
+//
+//        int iparent = 0;
+//        int num_parents = parents.size();
+//
+//        for(i=0; i<num_parents; i++){            
+//            all_vectors.push_back( parents[i] );
+//            vector<int> coord(2,0);
+//            coord[0] = tier;
+//            coord[1] = iparent;
+//            all_coordinates.push_back( coord );
+//            iparent += 1;            
+//
+//        }// for i
+//
+//        tier_nums.push_back( all_vectors.size() ) ;
+//
+//        vector< vector<int> > new_parents = gen_next_level(parents);
+//        parents.resize(new_parents.size());
+//        parents = new_parents;
+//
+//    }// for tier
+//
+//    //#==============================================
+//
+//
+//    int num_nodes = all_vectors.size();
+//    vec_plus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
+//    vec_minus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
+//
+//
+//    for(i=0; i<num_nodes; i++){
+//        int L = all_coordinates[i][0];
+//        int ipos = all_coordinates[i][1];
+//
+//        for(k=0; k<d; k++){
+//            vector<int> np = all_vectors[i];
+//            np[k] += 1;
+//
+//            int max_range = max_tier;
+//            if(L<max_tier){
+//                max_range = tier_nums[L+1];
+//            }
+//
+//            for(j = tier_nums[L]; j < max_range; j++){
+//                if(np == all_vectors[j]){
+//                    vec_plus[i][k] = j;
+//                }
+//            }
+//        }// for k
+//
+//        for(k=0; k<d; k++){
+//            vector<int> nm = all_vectors[i];
+//            nm[k] -= 1;
+//
+//            int min_range = 0;
+//            if(L>=2){
+//                min_range = tier_nums[L-2];
+//            }
+//            for(j=min_range; j<tier_nums[L-1]; j++){
+//                if(nm == all_vectors[j]){
+//                    vec_minus[i][k] = j;
+//                }
+//            }
+//        }// for k
+//    }// for i
+//
+//
+//    if(verbosity>0){
+//        cout<<"Number of nodes = "<<num_nodes<<endl;
+//        cout<<"Tier nums: \n";
+//        for(i=0; i<tier_nums.size(); i++){
+//            cout<<"Tier "<<i<<" nums = "<<tier_nums[i]<<endl;
+//        }
+//    }
+//
+//    if(verbosity>1){
+//        for(i=0; i<num_nodes; i++){
+//            cout<<"index= "<<i<<" ";    
+//            cout<<" vector=["; for(j=0;j<d;j++){ cout<<all_vectors[i][j]<<","; } cout<<"] ";
+//            cout<<" coordinates=["<<all_coordinates[i][0]<<","<<all_coordinates[i][1]<<"] ";
+//            cout<<" vec_plus=["; for(j=0;j<d;j++){ cout<<vec_plus[i][j]<<","; } cout<<"] ";
+//            cout<<" vec_minus=["; for(j=0;j<d;j++){ cout<<vec_minus[i][j]<<","; } cout<<"] ";
+//            cout<<"\n";
+//        }
+//    }
+//
+//}
+
+
+struct VectorHash {
+    size_t operator()(const vector<int>& v) const {
+        size_t seed = v.size();
+        for(auto& i : v){
+            seed ^= i + 0x9e3779b9 + (seed<<6) + (seed>>2);
+        }
+        return seed;
+    }
+};
+
+int count_trailing_zeros(const vector<int>& v) {
+
+    int count = 0;
+
+    for(size_t i = v.size(); i-- > 0; ){
+        if(v[i] == 0)
+            count++;
+        else
+            break;
+    }
+
+    return count;
+}
+
 vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
     /**
     This function is similar to gen_next_level, except it takes a list of
@@ -71,23 +245,26 @@ vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
 
     int num_parents = parents.size();
     int num_children = parents[0].size(); // per parent
+    int num_start = 0; // starting index to begin adding child excitations
 
     vector< vector<int> > next_level;
 
     for(int i=0; i<num_parents; i++){
-        for(int j=0;j<num_children; j++){
-
+        if (i != 0){
+            num_start = num_children - count_trailing_zeros(parents[i]) - 1;
+        }
+        for(int j=num_start;j<num_children; j++){
             vector<int> child = parents[i];
+
             child[j] += 1;
 
-            if(! is_included(child, next_level) ){  next_level.push_back(child);  }
+            next_level.push_back(child);
 
         }// for j
     }// for i
 
     return next_level;
 }
-
 
 
 void gen_hierarchy(int d, int max_tier, int verbosity,
@@ -147,9 +324,12 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
 
 
     int num_nodes = all_vectors.size();
-    vec_plus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
-    vec_minus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
-
+    vec_plus = vector< vector<int> >(num_nodes, vector<int>(d, -1));
+    vec_minus = vector< vector<int> >(num_nodes, vector<int>(d, -1));
+    unordered_map<vector<int>, int, VectorHash> vector_to_index;
+    for(int i=0; i<num_nodes; ++i){
+        vector_to_index[all_vectors[i]] = i;
+    }
 
     for(i=0; i<num_nodes; i++){
         int L = all_coordinates[i][0];
@@ -158,31 +338,16 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
         for(k=0; k<d; k++){
             vector<int> np = all_vectors[i];
             np[k] += 1;
-
-            int max_range = max_tier;
-            if(L<max_tier){
-                max_range = tier_nums[L+1];
+            auto itp = vector_to_index.find(np);
+            if(itp != vector_to_index.end()){
+                vec_plus[i][k] = itp->second;
             }
 
-            for(j = tier_nums[L]; j < max_range; j++){
-                if(np == all_vectors[j]){
-                    vec_plus[i][k] = j;
-                }
-            }
-        }// for k
-
-        for(k=0; k<d; k++){
             vector<int> nm = all_vectors[i];
             nm[k] -= 1;
-
-            int min_range = 0;
-            if(L>=2){
-                min_range = tier_nums[L-2];
-            }
-            for(j=min_range; j<tier_nums[L-1]; j++){
-                if(nm == all_vectors[j]){
-                    vec_minus[i][k] = j;
-                }
+            auto itm = vector_to_index.find(nm);
+            if(itm != vector_to_index.end()){
+                vec_minus[i][k] = itm->second;
             }
         }// for k
     }// for i
