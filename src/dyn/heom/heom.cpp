@@ -409,9 +409,15 @@ vector<int> filter(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance
 
 
 
+//CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
+//        double eta, double temperature, 
+//        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+//        int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
+//        vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
+//        ){
 CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
         double eta, double temperature, 
-        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara,
         int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
         vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
         ){
@@ -479,7 +485,8 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
     for(k=0; k<=KK; k++){
       int sum_over_m = 0;
       for(m=0; m<nquant; m++){  sum_over_m += nvectors[n][m*(KK+1) + k];  }
-      pref +=  sum_over_m * gamma_matsubara[k];
+      //pref +=  sum_over_m * gamma_matsubara[k];
+      pref += static_cast<double>(sum_over_m) * gamma_matsubara[k];
     }// for k
     drho_n_dt -=  pref * rho[n];
 
@@ -602,7 +609,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
     double temperature = 300.0;
     int KK; KK = 0;
 
-    vector<double> gamma_matsubara;
+    //vector<double> gamma_matsubara;
+    vector< complex<double> > gamma_matsubara;
     vector< complex<double> > c_matsubara;
     intList2 nvec, nvec_plus, nvec_minus;
     intList zero, nonzero, adm_list;
@@ -624,7 +632,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
       if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
       if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
-      if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
+      //if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
+      if(key=="gamma_matsubara"){  gamma_matsubara = extract< complexList >(prms.values()[i]); }
       if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
       if(key=="truncation_scheme"){  truncation_scheme = extract< int >(prms.values()[i]); }
       if(key=="do_scale"){  do_scale = extract< int >(prms.values()[i]); }
@@ -654,7 +663,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       // Ihizaki-Tanimura scheme for truncation
       // JPSJ 74 3131, 2005
 
-      truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
+      //truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
+      truncation_prefactor = eta * kB * temperature/gamma_matsubara[0];
 
       if(truncation_scheme==1){
         // 1 - according to Schulten, with real part of Matsubara terms
@@ -677,7 +687,8 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       // This is a bit unoptimized approach to call the bath setups here
       int more = 200;
       int KK_ext = KK + more;
-      vector<double> gamma_matsubara_ext;
+      //vector<double> gamma_matsubara_ext;
+      vector< complex<double> > gamma_matsubara_ext;
       vector< complex<double> > c_matsubara_ext;
       setup_bath(KK_ext, eta, gamma, temperature, gamma_matsubara_ext, c_matsubara_ext);
 
@@ -743,7 +754,8 @@ vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
 }
 
 
-complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
+//complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
+complex<double> compute_matsubara_sum(vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
 /**
   Compute the sum of the c/gamma terms over all Matsubara frequencies
 */
@@ -758,8 +770,10 @@ complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< c
 }
 
 
+//void setup_bath(int KK, double eta, double gamma, double temperature,
+//                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
 void setup_bath(int KK, double eta, double gamma, double temperature,
-                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
+                vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara){
 /** 
   KK - (KK+1) is the number of Matsubara frequencies
   eta - reorganization energy of the bath [Ha]
@@ -776,7 +790,8 @@ void setup_bath(int KK, double eta, double gamma, double temperature,
   double kT = kB * temperature;
 
   c_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
-  gamma_matsubara = vector<double>(KK+1, 0.0 );
+  //gamma_matsubara = vector<double>(KK+1, 0.0 );
+  gamma_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
 
   gamma_matsubara[0] = gamma;
   c_matsubara[0] = 0.5*eta*gamma * ( 1.0/tan( 0.5 * gamma/kT )*one - iota );
@@ -785,7 +800,8 @@ void setup_bath(int KK, double eta, double gamma, double temperature,
 
     gamma_matsubara[k] = 2.0*k*M_PI*kT;
 
-    double g = gamma_matsubara[k];
+    //double g = gamma_matsubara[k];
+    complex<double> g = gamma_matsubara[k];
     c_matsubara[k] = 2*eta*kT * (gamma* g/(g*g - gamma*gamma));
   }
 

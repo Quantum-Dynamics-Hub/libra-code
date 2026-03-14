@@ -366,7 +366,14 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
         init_nonzero.append(1)
 
     # ============ Bath update =====================
-    gamma_matsubara = doubleList()
+    # HARD CODED TESTING START
+    # gamma_matsubara = complexList(); c_matsubara = complexList()
+    # gamma_matsubara.append(0.00011875554277358672+0.00020569068611589459j); c_matsubara.append(1.0375622891586064e-06+5.183989231088768e-07j)
+    # gamma_matsubara.append(0.00011875553817443656-0.00020569069198777661j); c_matsubara.append(7.770085472442286e-07-5.183989231089361e-07j)
+    # gamma_matsubara.append(0.0064664946577970145-1.1533862565492818e-11j); c_matsubara.append(-2.637963184692303e-10+3.0695679915107793e-19j)
+    # HARD CODED TESTING END
+    #gamma_matsubara = doubleList()
+    gamma_matsubara = complexList()
     c_matsubara = complexList()
 
     setup_bath(KK, params["eta"], params["gamma"], params["temperature"], gamma_matsubara, c_matsubara)
