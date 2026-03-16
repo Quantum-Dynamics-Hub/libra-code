@@ -30,36 +30,47 @@ authors:
     given-names: Kosuke
     affiliation: Toyota Central Research and Development Laboratories
     orcid: 0000-0003-3293-2809
-  - family-names: Temen
-    given-names: Story
-    affiliation: University at Buffalo, State University of New York
   - family-names: Suarez
     given-names: Victor
     email: suarez.a.victor@gmail.com
     affiliation: Georgia Institute of Technology
     orcid: 0000-0001-8164-709X
-  - family-names: Yasin
-    given-names: Kosar
-    email: kosaryas@buffalo.edu
+  - family-names: Temen
+    given-names: Story
     affiliation: University at Buffalo, State University of New York
-  - family-names: Khvorost
-    given-names: Taras
-    affiliation: University of California, Los Angeles
-    email: xbopoctt@gmail.com
+  - family-names: Wang
+    given-names: Yuchen
+    email: yw8889@nyu.edu
+    affiliation: New York University
   - family-names: Li
     given-names: Wei
     orcid: 0000-0002-9999-5081
     affiliation: Hunan Agricultural University
     email: liwei0099@gmail.com
-  - family-names: Zhang
-    given-names: Qingxin
-    email: qingxinz@buffalo.edu
+  - family-names: Khvorost
+    given-names: Taras
+    affiliation: University of California, Los Angeles
+    email: xbopoctt@gmail.com
+  - family-names: Yasin
+    given-names: Kosar
+    email: kosaryas@buffalo.edu
     affiliation: University at Buffalo, State University of New York
   - family-names: Sun
     given-names: Xiang
     orcid: 0000-0002-2846-8532
     affiliation: New York University Shanghai
     email: xiang.sun@nyu.edu
+  - family-names: Balducci
+    given-names: Simone
+    affiliation: University of Bologna
+  - family-names: Zhang
+    given-names: Qingxin
+    email: qingxinz@buffalo.edu
+    affiliation: University at Buffalo, State University of New York
+  - family-names: Niehaus
+    given-names: Thomas
+    email: thomas.niehaus@univ-lyon1.fr
+    affiliation: University Claude Bernard Lyon 1
   - family-names: Stippell
     given-names: Elizabeth
     affiliation: University of Southern California
@@ -88,6 +99,6 @@ keywords:
   - DVR
   - Ehrenfest
 license: GPL-3.0+
-version: 5.11.0
-date-released: 2025-11-28
+version: 5.12.0
+date-released: 2026-03-16
 
