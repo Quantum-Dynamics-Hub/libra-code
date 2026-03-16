@@ -211,7 +211,6 @@ vector<double> potential_energies(dyn_control_params& prms, dyn_variables& dyn_v
         int ist = effective_states[itraj];
 
         //CMATRIX& T = *dyn_vars.proj_adi[itraj];
-        int nst = dyn_vars.nadi;
         res[itraj] = ham.get_ham_adi(id).get(ist,ist).real();
       }// for itraj
     }// rep_force == 1

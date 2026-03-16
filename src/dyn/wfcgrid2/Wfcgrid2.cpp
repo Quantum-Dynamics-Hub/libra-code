@@ -94,8 +94,6 @@ void Wfcgrid2::allocate(){
   cout<<"ndof = "<<ndof<<endl;
   for(dof=0; dof<ndof; dof++){  cout<<"Dimension "<<dof<<" has "<<npts[dof]<<" grid points"<<endl;   }
 
-  int dim = nstates * Npts;
-
   // Allocate arrays
   PSI_dia = vector<CMATRIX>(Npts, CMATRIX(nstates, 1));          ///< wavefunction  Npts x nstates x 1
   reciPSI_dia = vector<CMATRIX>(Npts, CMATRIX(nstates,1));      ///< same as PSI but in Fourier (reciprocal) space with 1.0*kmin

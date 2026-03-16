@@ -168,7 +168,7 @@ double Bond_Morse(VECTOR& ri,VECTOR& rj,            /*Inputs*/
 //*                                                                         *
 //***************************************************************************
 
-  double energy,d;
+  double d;
   VECTOR rij = ri-rj;
   d = rij.length();
 /*

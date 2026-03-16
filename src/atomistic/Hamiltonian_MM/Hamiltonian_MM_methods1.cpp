@@ -734,7 +734,6 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
     double SW = 1.0; 
     VECTOR dSW; dSW = 0.0;
     double en = 0.0;
-    double d12;
     if(Box==NULL){
 
     if(is_active){  // This also excludes self-pairs!
@@ -785,7 +784,6 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
 
       Box->get_vectors(tv1,tv2,tv3); 
       Box->inverse().T().get_vectors(g1,g2,g3);
-      int nx,ny,nz; nx = ny = nz = 1;
       double scale = 1.0;//0.5;
       double fscale = 1.0;
       double tscale = 1.0;
@@ -1083,10 +1081,8 @@ double Hamiltonian_MM::calculate(int call_type,int& update_displ2){
       Box->get_vectors(tv1,tv2,tv3);
       Box->inverse().T().get_vectors(g1,g2,g3);
       int nx,ny,nz; nx = ny = nz = 1;
-      double scale = 1.0;//0.5;
       double fscale = 1.0;
       double tscale = 1.0;
-      if(data_elec->r1==data_elec->r2){ scale = 0.5; } // Scaling of self-pairs
 
       xshift = floor(rij*g1+0.5);
       yshift = floor(rij*g2+0.5);

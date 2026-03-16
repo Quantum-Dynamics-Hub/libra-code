@@ -43,9 +43,6 @@ void Wfcgrid2::update_Hamiltonian(bp::object py_funct, bp::object params, int re
   int idof, ipt;
   int has_attr;
 
-  double res; res = 0.0;
-  double nrm; nrm = 0.0;
-
   for(int npt1=0; npt1<Npts; npt1++){
 
     MATRIX q(ndof, 1);

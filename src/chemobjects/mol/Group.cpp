@@ -217,7 +217,7 @@ void Group::set(object at){
 void Group::show_info(){
   std::cout<<"Group "<<globGroup_Index<<" properties: "<<std::endl;
   std::cout<<"Group atom indexes (global) : ";
-  for(int i=0;i<globAtom_Index.size()/*Group_Size*/;i++){
+  for(auto i=0u;i<globAtom_Index.size()/*Group_Size*/;i++){
     std::cout<<globAtom_Index[i]<<"  ";
   }
   std::cout<<std::endl;

@@ -92,8 +92,8 @@ double Angle_Fourier_General(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   VECTOR r12 = r1 - r2;
   VECTOR r32 = r3 - r2;
   VECTOR f12,f32;
-  double d12,d32,cos_theta,sin_theta,theta,diff;
-  double energy,cos_3theta,cos_4theta;
+  double d12,d32,cos_theta,diff;
+  double energy;
   d12 = r12.length();
   d32 = r32.length();
 
@@ -101,8 +101,6 @@ double Angle_Fourier_General(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   cos_theta = (r12*r32)/(d12*d32);
   if (cos_theta >  1.0) { cos_theta = 1.0;}
   else if (cos_theta < -1.0) { cos_theta = -1.0;}
-  sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-  theta = acos(cos_theta);
 
   // Energy and forces
   //diff = -dE/dcos(theta)
@@ -134,7 +132,7 @@ double Angle_Fourier_Special(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   VECTOR r12 = r1 - r2;
   VECTOR r32 = r3 - r2;
   VECTOR f12,f32;
-  double d12,d32,cos_theta,sin_theta,theta,diff;
+  double d12,d32,cos_theta,diff;
   double energy,cos_3theta,cos_4theta;
   d12 = r12.length();
   d32 = r32.length();
@@ -143,8 +141,6 @@ double Angle_Fourier_Special(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   cos_theta = (r12*r32)/(d12*d32);
   if (cos_theta >  1.0) { cos_theta = 1.0;}
   else if (cos_theta < -1.0) { cos_theta = -1.0;}
-  sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-  theta = acos(cos_theta);
 
 //  cout<<endl<<"=============== Special angle ===========================\n";
 //  cout<<"r1 = "<<r1<<" r2 = "<<r2<<" r3 = "<<r3<<endl;
@@ -213,7 +209,7 @@ double Angle_Harmonic_Cos_General(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   VECTOR r12 = r1 - r2;
   VECTOR r32 = r3 - r2;
   VECTOR f12,f32;
-  double d12,d32,cos_theta,sin_theta,theta,diff;
+  double d12,d32,cos_theta,diff;
   double energy;
   d12 = r12.length();
   d32 = r32.length();
@@ -222,8 +218,6 @@ double Angle_Harmonic_Cos_General(VECTOR& r1,VECTOR& r2,VECTOR& r3, /* Inputs */
   cos_theta = (r12*r32)/(d12*d32);
   if (cos_theta >  1.0) { cos_theta = 1.0;}
   else if (cos_theta < -1.0) { cos_theta = -1.0;}
-  sin_theta = sqrt(1.0 - cos_theta * cos_theta);
-  theta = acos(cos_theta);
 
   // Energy
   diff = cos_theta-cos_theta_0;
