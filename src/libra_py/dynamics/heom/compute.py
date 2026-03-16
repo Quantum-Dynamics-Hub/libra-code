@@ -144,7 +144,8 @@ def transform_adm(rho, rho_scaled, aux_memory, params, direction):
         pack_mtx(aux_memory["rho_unpacked"], rho)
 
 
-def run_dynamics(dyn_params, Ham, rho_init):
+#def run_dynamics(dyn_params, Ham, rho_init):
+def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
     """
     This functions integrates the HEOM for a given system's Hamiltonian, initial conditions, and bath parameters
 
@@ -187,6 +188,9 @@ def run_dynamics(dyn_params, Ham, rho_init):
 
             * **dyn_params["nsteps"]** ( int )
                 How many steps of the dynamics to perform [ default: 10 ]
+
+            * **dyn_params["nprint"]** ( int )
+                The number of steps in between data saves [ default: 1 ]
 
             * **dyn_params["verbosity"]** ( int )
                 The level of the run-time printout of any useful information [ default: -1 ]
@@ -317,7 +321,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
                       "temperature": 300.0,
                       "el_phon_couplings": initialize_el_phonon_couplings(Ham.num_of_cols),
 
-                      "dt": 0.1 * units.fs2au, "nsteps": 10,
+                      "dt": 0.1 * units.fs2au, "nsteps": 10, "nprint": 1,
                       "verbosity": -1, "progress_frequency": 0.1,
 
                       "truncation_scheme": 1, "do_scale": 0,
@@ -334,6 +338,7 @@ def run_dynamics(dyn_params, Ham, rho_init):
     comn.check_input(params, default_params, critical_params)
 
     nsteps = params["nsteps"]
+    #nprint = params["nprint"]
     print_freq = int(params["progress_frequency"] * nsteps)
 
     # ============= System ======================
@@ -389,9 +394,16 @@ def run_dynamics(dyn_params, Ham, rho_init):
         aux_memory["drho_unpacked_scaled"].append(CMATRIX(nquant, nquant))
 
     # Initial conditions
-    x_ = Py2Cpp_int(list(range(nquant)))
-    y_ = Py2Cpp_int(list(range(nquant)))
-    push_submatrix(rho, rho_init, x_, y_)
+    if adm_init is None:
+        x_ = Py2Cpp_int(list(range(nquant)))
+        y_ = Py2Cpp_int(list(range(nquant)))
+        push_submatrix(rho, rho_init, x_, y_)
+    else:
+        # should test to make sure that len(adm_init) == nn_tot-1:
+        aux_memory["rho_unpacked"][0] = rho_init
+        for n in range(1,nn_tot):
+            aux_memory["rho_unpacked"][n] = adm_init[n-1]
+        pack_mtx(aux_memory["rho_unpacked"], rho)
 
     # unpack_mtx(aux_memory["rho_unpacked"], rho)
 
@@ -423,7 +435,8 @@ def run_dynamics(dyn_params, Ham, rho_init):
             aux_print_matrices(0, aux_memory["rho_unpacked_scaled"])
 
     # Initialize savers
-    _savers = save.init_heom_savers(params, nquant)
+    #_savers = save.init_heom_savers(params, nquant)
+    _savers = save.init_heom_savers(params, nquant, nn_tot)
 
     # ============== Propagation =============
 
@@ -460,7 +473,9 @@ def run_dynamics(dyn_params, Ham, rho_init):
             update_filters(rho_scaled, params, aux_memory)
 
         # ================= Propagation for one timestep ==================================
+        #print("MADE IT TO RK4 STEP") # These lines were not here, remove
         rho_scaled = RK4(rho_scaled, params["dt"], compute_heom_derivatives, params)
+        #print("PASSED AN RK4 STEP") # These lines were not here, remove
 
     end = time.time()
     print(F"Calculations took {end - start} seconds")
