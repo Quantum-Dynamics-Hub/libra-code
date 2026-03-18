@@ -51,6 +51,7 @@ double Vdw_LJ(VECTOR& ri,VECTOR& rj,          /*Inputs*/
   return energy;
 }
 
+// FIXME: This function is non-void but doesn't return anything
 double Vdw_Buffered14_7(VECTOR& ri,VECTOR& rj,          /*Inputs*/
                         VECTOR& fi,VECTOR& fj,          /*Outputs*/
                         double sigma, double epsilon){  /*Parameters*/
@@ -59,7 +60,7 @@ double Vdw_Buffered14_7(VECTOR& ri,VECTOR& rj,          /*Inputs*/
 //*  u = epsilon * ( 1.07*sigma_{ij}/(r_ij + 0.07 sigma_ij) )^7 [ (1.12 sigma_ij^7 / ( r_ij^7 + 0.12 sigma_ij^7) ) - 2] *
 //*                                                                         *
 //***************************************************************************
-  double energy,r1,r2,r6,r7,r12,d2;
+  double r1,r2,r6,r7;
   double A_term,B_term,AB_term,frac1,frac2,frac3,frac4;
   double sigma3,sigma7,mod;
   sigma3 = sigma*sigma*sigma;
@@ -80,7 +81,6 @@ double Vdw_Buffered14_7(VECTOR& ri,VECTOR& rj,          /*Inputs*/
 
   // -dE/dr
   mod = epsilon* 7.0*(frac2*AB_term + r6*frac1*A_term*B_term);
-  energy = epsilon * AB_term;
 
   fi = mod*rij.unit();
   fj = -fj;

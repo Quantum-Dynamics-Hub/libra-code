@@ -208,7 +208,6 @@ MATRIX3x3 Barostat::ang_vel_scale(double dt,double ksi_r){
 
 */
 
-  double Nf = Nf_t;// + Nf_r;
   MATRIX3x3 I,res; I.identity();
   if(Nf_b==9){ res =  exp(  -dt*(ksi_r/*+(ksi_eps.tr()/Nf)*/)  ) * I; }
   else if(Nf_b==1){ res = exp(-dt*(ksi_r/*+ (3.0/Nf)*ksi_eps_iso*/) ) * I; }

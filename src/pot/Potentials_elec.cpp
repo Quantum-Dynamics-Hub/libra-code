@@ -50,7 +50,7 @@ double Elec_Coulomb(VECTOR& ri,VECTOR& rj,     /*Inputs*/
 
 */
 
-  double energy,r2,r6,r12,d1,d2;
+  double energy,d1,d2;
   VECTOR rij = ri - rj;
   d1 = rij.length();
   d2 = d1 + delta;

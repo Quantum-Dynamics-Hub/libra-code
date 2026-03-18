@@ -192,7 +192,7 @@ void inv_matrix(MATRIX& S, MATRIX& S_inv, double thresh, int do_phase_correction
   }
 
 
-  int i,j;
+  int i;
  
   // Let us first diagonalize the overlap matrix S
   int sz = S.n_cols;  
@@ -273,7 +273,7 @@ void inv_matrix(CMATRIX& S, CMATRIX& S_inv, double thresh, int do_phase_correcti
   }
 
 
-  int i,j;
+  int i;
  
   // Let us first diagonalize the overlap matrix S
   int sz = S.n_cols;  
