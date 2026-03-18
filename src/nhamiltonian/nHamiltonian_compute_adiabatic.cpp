@@ -546,7 +546,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
     if (has_attr) {
 
       check_cmatrix(obj, "ham_adi", nadi, nadi);
-      *ham_adi = extract<CMATRIX>(obj.attr("ham_adi"));
+      //*ham_adi = extract<CMATRIX>(obj.attr("ham_adi"));
+      try {
+        *ham_adi = extract<CMATRIX>(obj.attr("ham_adi"));
+      }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting ham_adi\n";
+        PyErr_Print();
+        throw;
+      }
     }
 
     has_attr = 0;
@@ -554,7 +562,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
     if (has_attr) {
 
       check_cmatrix(obj, "nac_adi", nadi, nadi);
-      *nac_adi = extract<CMATRIX>(obj.attr("nac_adi"));
+      //*nac_adi = extract<CMATRIX>(obj.attr("nac_adi"));
+      try {
+        *nac_adi = extract<CMATRIX>(obj.attr("nac_adi"));
+      }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting nac_adi\n";
+        PyErr_Print();
+        throw;
+      }
     }
 
     has_attr = 0;
@@ -562,7 +578,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
     if (has_attr) {
 
       check_cmatrix(obj, "hvib_adi", nadi, nadi);
-      *hvib_adi = extract<CMATRIX>(obj.attr("hvib_adi"));
+      //*hvib_adi = extract<CMATRIX>(obj.attr("hvib_adi"));
+      try {
+        *hvib_adi = extract<CMATRIX>(obj.attr("hvib_adi"));
+      }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting hvib_adi\n";
+        PyErr_Print();
+        throw;
+      }
     }
 
     has_attr = 0;
@@ -570,7 +594,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
     if (has_attr) {
 
       check_cmatrix(obj, "basis_transform", nadi, nadi);
-      *basis_transform = extract<CMATRIX>(obj.attr("basis_transform"));
+      //*basis_transform = extract<CMATRIX>(obj.attr("basis_transform"));
+      try {
+        *basis_transform = extract<CMATRIX>(obj.attr("basis_transform"));
+      }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting basis_transform\n";
+        PyErr_Print();
+        throw;
+      }
     }
 
     has_attr = 0;
@@ -578,7 +610,15 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
     if (has_attr) {
 
       check_cmatrix(obj, "time_overlap_adi", nadi, nadi);
-      *time_overlap_adi = extract<CMATRIX>(obj.attr("time_overlap_adi"));
+      //*time_overlap_adi = extract<CMATRIX>(obj.attr("time_overlap_adi"));
+      try {
+        *time_overlap_adi = extract<CMATRIX>(obj.attr("time_overlap_adi"));
+      }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting time_overlap_adi\n";
+        PyErr_Print();
+        throw;
+      }
     }
 
     has_attr = 0;
@@ -588,11 +628,21 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
       check_cmatrix_list(obj, "dc1_adi", nadi, nadi, nnucl);
 
       vector<CMATRIX> _dc1_adi(nnucl, CMATRIX(nadi, nadi));
-      _dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));
+      //_dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));
 
-      for (int i = 0; i < nnucl; i++) {
-        *dc1_adi[i] = _dc1_adi[i];
+      try {
+        _dc1_adi = extract<CMATRIXList>(obj.attr("dc1_adi"));
+        for (int i = 0; i < nnucl; i++) {   *dc1_adi[i] = _dc1_adi[i];   }
       }
+      catch (bp::error_already_set const &) {
+        std::cout << "Error extracting dc1_adi\n";
+        PyErr_Print();
+        throw;
+      }
+
+      //for (int i = 0; i < nnucl; i++) {
+      //  *dc1_adi[i] = _dc1_adi[i];
+      //}
     }
 
     has_attr = 0;
