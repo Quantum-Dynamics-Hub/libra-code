@@ -63,155 +63,6 @@ int compute_nn_tot(int d, int max_tier){
 }
 
 
-
-//vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
-//    /**
-//    This function is similar to gen_next_level, except it takes a list of
-//    parent vectors of integers and generates the list of the children for 
-//    all of the parent inputs.
-//    */
-//
-//    int num_parents = parents.size();
-//    int num_children = parents[0].size(); // per parent
-//
-//    vector< vector<int> > next_level;
-//
-//    for(int i=0; i<num_parents; i++){
-//        for(int j=0;j<num_children; j++){
-//
-//            vector<int> child = parents[i];
-//            child[j] += 1;
-//
-//            if(! is_included(child, next_level) ){  next_level.push_back(child);  }
-//
-//        }// for j
-//    }// for i
-//
-//    return next_level;
-//}
-//
-//
-//
-//void gen_hierarchy(int d, int max_tier, int verbosity,
-//                   vector< vector<int> >& all_vectors, 
-//                   vector< vector<int> >& vec_plus, 
-//                   vector< vector<int> >& vec_minus){
-//    /**
-//
-//    d  - is the size of the simplex, in HEOM it will be taken as nquant * (KK+1)
-//
-//    max_tier - is the maximal tier of the vectors to be generated, the tier is
-//    devined by the sum of the vector elements
-//
-//    all_vectors - a list of the d-dimensional vectors of ints 
-//
-//    vec_plus : vec_plus[n][k] - index of the vector for which k-th element is +1 of that of the n-th vector
-//
-//    vec_minus : vec_minus[n][k] - index of the vector for which k-th element is -1 of that of the n-th vector
-//
-//    The vec_minus and vec_plus contain -1 for the situation when there is no such a vector included in 
-//    the current hierarchy structure
-// 
-//    */
-//
-//    int i, j, k;
-//
-// 
-//    vector< vector<int> > all_coordinates; //  for each vector - the coordinates are (L, i)
-//    vector<int> tier_nums; // the number of the nodes for the tier up to a given one
-//
-//    vector< vector<int> > parents(1, vector<int>(d, 0));
-//
-//    for(int tier=0; tier<=max_tier; tier++){
-//
-//        int iparent = 0;
-//        int num_parents = parents.size();
-//
-//        for(i=0; i<num_parents; i++){            
-//            all_vectors.push_back( parents[i] );
-//            vector<int> coord(2,0);
-//            coord[0] = tier;
-//            coord[1] = iparent;
-//            all_coordinates.push_back( coord );
-//            iparent += 1;            
-//
-//        }// for i
-//
-//        tier_nums.push_back( all_vectors.size() ) ;
-//
-//        vector< vector<int> > new_parents = gen_next_level(parents);
-//        parents.resize(new_parents.size());
-//        parents = new_parents;
-//
-//    }// for tier
-//
-//    //#==============================================
-//
-//
-//    int num_nodes = all_vectors.size();
-//    vec_plus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
-//    vec_minus = vector< vector<int> >(num_nodes, vector<int>(d, -1)); 
-//
-//
-//    for(i=0; i<num_nodes; i++){
-//        int L = all_coordinates[i][0];
-//        int ipos = all_coordinates[i][1];
-//
-//        for(k=0; k<d; k++){
-//            vector<int> np = all_vectors[i];
-//            np[k] += 1;
-//
-//            int max_range = max_tier;
-//            if(L<max_tier){
-//                max_range = tier_nums[L+1];
-//            }
-//
-//            for(j = tier_nums[L]; j < max_range; j++){
-//                if(np == all_vectors[j]){
-//                    vec_plus[i][k] = j;
-//                }
-//            }
-//        }// for k
-//
-//        for(k=0; k<d; k++){
-//            vector<int> nm = all_vectors[i];
-//            nm[k] -= 1;
-//
-//            int min_range = 0;
-//            if(L>=2){
-//                min_range = tier_nums[L-2];
-//            }
-//            for(j=min_range; j<tier_nums[L-1]; j++){
-//                if(nm == all_vectors[j]){
-//                    vec_minus[i][k] = j;
-//                }
-//            }
-//        }// for k
-//    }// for i
-//
-//
-//    if(verbosity>0){
-//        cout<<"Number of nodes = "<<num_nodes<<endl;
-//        cout<<"Tier nums: \n";
-//        for(i=0; i<tier_nums.size(); i++){
-//            cout<<"Tier "<<i<<" nums = "<<tier_nums[i]<<endl;
-//        }
-//    }
-//
-//    if(verbosity>1){
-//        for(i=0; i<num_nodes; i++){
-//            cout<<"index= "<<i<<" ";    
-//            cout<<" vector=["; for(j=0;j<d;j++){ cout<<all_vectors[i][j]<<","; } cout<<"] ";
-//            cout<<" coordinates=["<<all_coordinates[i][0]<<","<<all_coordinates[i][1]<<"] ";
-//            cout<<" vec_plus=["; for(j=0;j<d;j++){ cout<<vec_plus[i][j]<<","; } cout<<"] ";
-//            cout<<" vec_minus=["; for(j=0;j<d;j++){ cout<<vec_minus[i][j]<<","; } cout<<"] ";
-//            cout<<"\n";
-//        }
-//    }
-//
-//}
-
-
 struct VectorHash {
     size_t operator()(const vector<int>& v) const {
         size_t seed = v.size();
@@ -221,6 +72,7 @@ struct VectorHash {
         return seed;
     }
 };
+
 
 int count_trailing_zeros(const vector<int>& v) {
 
@@ -235,6 +87,7 @@ int count_trailing_zeros(const vector<int>& v) {
 
     return count;
 }
+
 
 vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
     /**
@@ -265,6 +118,7 @@ vector< vector<int> > gen_next_level(vector< vector<int> >& parents){
 
     return next_level;
 }
+
 
 
 void gen_hierarchy(int d, int max_tier, int verbosity,
@@ -407,14 +261,6 @@ vector<int> filter(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance
 
 
 
-
-
-//CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
-//        double eta, double temperature, 
-//        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
-//        int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
-//        vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
-//        ){
 CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
         double eta, double temperature, 
         vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara,
@@ -485,7 +331,6 @@ CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRI
     for(k=0; k<=KK; k++){
       int sum_over_m = 0;
       for(m=0; m<nquant; m++){  sum_over_m += nvectors[n][m*(KK+1) + k];  }
-      //pref +=  sum_over_m * gamma_matsubara[k];
       pref += static_cast<double>(sum_over_m) * gamma_matsubara[k];
     }// for k
     drho_n_dt -=  pref * rho[n];
@@ -632,7 +477,6 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       if(key=="eta"){  eta = extract<double>(prms.values()[i]); }
       if(key=="gamma"){  gamma = extract<double>(prms.values()[i]); }
       if(key=="temperature"){  temperature = extract<double>(prms.values()[i]); }
-      //if(key=="gamma_matsubara"){  gamma_matsubara = extract< doubleList >(prms.values()[i]); }
       if(key=="gamma_matsubara"){  gamma_matsubara = extract< complexList >(prms.values()[i]); }
       if(key=="c_matsubara"){  c_matsubara = extract< complexList >(prms.values()[i]); }
       if(key=="truncation_scheme"){  truncation_scheme = extract< int >(prms.values()[i]); }
@@ -663,7 +507,6 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       // Ihizaki-Tanimura scheme for truncation
       // JPSJ 74 3131, 2005
 
-      //truncation_prefactor = complex<double>(eta * kB * temperature/gamma_matsubara[0], 0.0);
       truncation_prefactor = eta * kB * temperature/gamma_matsubara[0];
 
       if(truncation_scheme==1){
@@ -687,7 +530,6 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
       // This is a bit unoptimized approach to call the bath setups here
       int more = 200;
       int KK_ext = KK + more;
-      //vector<double> gamma_matsubara_ext;
       vector< complex<double> > gamma_matsubara_ext;
       vector< complex<double> > c_matsubara_ext;
       setup_bath(KK_ext, eta, gamma, temperature, gamma_matsubara_ext, c_matsubara_ext);
@@ -734,7 +576,6 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms){
 
 
 
-
 vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
 /**
   Compute the matrices  Q_m = |m><m| - the simplest type of the coupling of electrons to phonons
@@ -754,7 +595,7 @@ vector<CMATRIX> initialize_el_phonon_couplings(int nquant){
 }
 
 
-//complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
+
 complex<double> compute_matsubara_sum(vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK){
 /**
   Compute the sum of the c/gamma terms over all Matsubara frequencies
@@ -770,8 +611,7 @@ complex<double> compute_matsubara_sum(vector< complex<double> >& gamma_matsubara
 }
 
 
-//void setup_bath(int KK, double eta, double gamma, double temperature,
-//                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara){
+
 void setup_bath(int KK, double eta, double gamma, double temperature,
                 vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara){
 /** 
@@ -790,7 +630,6 @@ void setup_bath(int KK, double eta, double gamma, double temperature,
   double kT = kB * temperature;
 
   c_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
-  //gamma_matsubara = vector<double>(KK+1, 0.0 );
   gamma_matsubara = vector< complex<double> >(KK+1, complex<double>(0.0, 0.0) );
 
   gamma_matsubara[0] = gamma;
@@ -800,17 +639,12 @@ void setup_bath(int KK, double eta, double gamma, double temperature,
 
     gamma_matsubara[k] = 2.0*k*M_PI*kT;
 
-    //double g = gamma_matsubara[k];
     complex<double> g = gamma_matsubara[k];
     c_matsubara[k] = 2*eta*kT * (gamma* g/(g*g - gamma*gamma));
   }
 
 
 }
-
-
-
-
 
 
 

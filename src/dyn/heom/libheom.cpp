@@ -61,13 +61,6 @@ void export_heom_objects(){
   def("filter", expt_filter_v1);
 
 
-  //CMATRIX (*expt_compute_deriv_n_v1)
-  //(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
-  // double eta, double temperature,
-  // vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
-  // int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
-  // vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
-  //) = &compute_deriv_n;
   CMATRIX (*expt_compute_deriv_n_v1)
   (int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
    double eta, double temperature,
@@ -89,15 +82,10 @@ void export_heom_objects(){
   (int nquant) = &initialize_el_phonon_couplings;
   def("initialize_el_phonon_couplings", expt_initialize_el_phonon_couplings_v1);
 
-  //complex<double> (*expt_compute_matsubara_sum_v1)
-  //(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK) = &compute_matsubara_sum;
   complex<double> (*expt_compute_matsubara_sum_v1)
   (vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK) = &compute_matsubara_sum;
   def("compute_matsubara_sum", expt_compute_matsubara_sum_v1);
 
-  //void (*expt_setup_bath_v1)
-  //(int KK, double eta, double gamma, double temperature, 
-  // vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara) = &setup_bath;
   void (*expt_setup_bath_v1)
   (int KK, double eta, double gamma, double temperature, 
    vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara) = &setup_bath;

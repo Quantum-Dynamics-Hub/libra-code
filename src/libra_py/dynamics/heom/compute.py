@@ -366,13 +366,6 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
         init_nonzero.append(1)
 
     # ============ Bath update =====================
-    # HARD CODED TESTING START
-    # gamma_matsubara = complexList(); c_matsubara = complexList()
-    # gamma_matsubara.append(0.00011875554277358672+0.00020569068611589459j); c_matsubara.append(1.0375622891586064e-06+5.183989231088768e-07j)
-    # gamma_matsubara.append(0.00011875553817443656-0.00020569069198777661j); c_matsubara.append(7.770085472442286e-07-5.183989231089361e-07j)
-    # gamma_matsubara.append(0.0064664946577970145-1.1533862565492818e-11j); c_matsubara.append(-2.637963184692303e-10+3.0695679915107793e-19j)
-    # HARD CODED TESTING END
-    #gamma_matsubara = doubleList()
     gamma_matsubara = complexList()
     c_matsubara = complexList()
 
@@ -406,13 +399,11 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
         y_ = Py2Cpp_int(list(range(nquant)))
         push_submatrix(rho, rho_init, x_, y_)
     else:
-        # should test to make sure that len(adm_init) == nn_tot-1:
+        # make sure that len(adm_init) == nn_tot-1:
         aux_memory["rho_unpacked"][0] = rho_init
         for n in range(1,nn_tot):
             aux_memory["rho_unpacked"][n] = adm_init[n-1]
         pack_mtx(aux_memory["rho_unpacked"], rho)
-
-    # unpack_mtx(aux_memory["rho_unpacked"], rho)
 
     # ========== Scale working ADMs ====================
     if params["verbosity"] >= 2 and params["do_scale"] == 1:
@@ -442,7 +433,6 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             aux_print_matrices(0, aux_memory["rho_unpacked_scaled"])
 
     # Initialize savers
-    #_savers = save.init_heom_savers(params, nquant)
     _savers = save.init_heom_savers(params, nquant, nn_tot)
 
     # ============== Propagation =============
@@ -480,9 +470,7 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             update_filters(rho_scaled, params, aux_memory)
 
         # ================= Propagation for one timestep ==================================
-        #print("MADE IT TO RK4 STEP") # These lines were not here, remove
         rho_scaled = RK4(rho_scaled, params["dt"], compute_heom_derivatives, params)
-        #print("PASSED AN RK4 STEP") # These lines were not here, remove
 
     end = time.time()
     print(F"Calculations took {end - start} seconds")
