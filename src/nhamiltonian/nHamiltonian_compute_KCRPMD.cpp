@@ -86,7 +86,7 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double> &y_aux_var,
                                                 const MATRIX &q,
                                                 const MATRIX &invM, double beta,
                                                 double eta, double a, double b,
-                                                double c, double d) {
+                                                double c) {
   /**
     Compute the KC-RPMD effective potential energy
 
@@ -152,7 +152,7 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double> &y_aux_var,
       A = a / (1 + exp(2 * c * (beta * K - 1)));
       C = 1 +
           (eta * sqrt(a / 3.1415) / sqrt(1 + exp(2 * c * (beta * K - 1))) - 1) /
-              (1 + exp(2 * d * (beta * K - 1)));
+              (1 + exp(2 * c * (beta * K - 1)));
     } else {
       A = a * exp(-2 * c * (beta * K - 1)) / (1 + exp(-2 * c * (beta * K - 1)));
       C = 1 + (eta * sqrt(a / 3.1415) * exp(-c * (beta * K - 1)) /
@@ -208,7 +208,7 @@ double nHamiltonian::kcrpmd_effective_potential(vector<double> &y_aux_var,
 MATRIX nHamiltonian::kcrpmd_effective_force(vector<double> &y_aux_var,
                                             const MATRIX &q, const MATRIX &invM,
                                             double beta, double eta, double a,
-                                            double b, double c, double d) {
+                                            double b, double c) {
   /**
     Compute the KC-RPMD effective nuclear force
 
@@ -398,7 +398,7 @@ MATRIX nHamiltonian::kcrpmd_effective_force(vector<double> &y_aux_var,
 
 vector<double> nHamiltonian::kcrpmd_effective_auxiliary_force(
     vector<double> &y_aux_var, double beta, double eta, double a, double b,
-    double c, double d) {
+    double c) {
   /**
     Compute the KC-RPMD effective auxiliary force
 
