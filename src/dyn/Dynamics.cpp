@@ -1227,7 +1227,6 @@ void propagate_electronic_kcrpmd(dyn_variables &dyn_var, nHamiltonian &Ham,
   double a = prms.kcrpmd_a;
   double b = prms.kcrpmd_b;
   double c = prms.kcrpmd_c;
-  double d = prms.kcrpmd_d;
   double eta = prms.kcrpmd_eta;
   double gam = prms.kcrpmd_gamma;
   double gamKP = prms.kcrpmd_gammaKP;
@@ -1245,7 +1244,7 @@ void propagate_electronic_kcrpmd(dyn_variables &dyn_var, nHamiltonian &Ham,
       p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
       y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt;
       f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta,
-                                                           a, b, c, d))[0];
+                                                           a, b, c))[0];
       p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
     } else {
       sigma = sqrt(2.0 * gamKP / (beta * m_aux_var[0]));
@@ -1260,7 +1259,7 @@ void propagate_electronic_kcrpmd(dyn_variables &dyn_var, nHamiltonian &Ham,
       y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt +
                       0.5 * theta / sqrt(3.0) * sigma * sqrt(pow(dt, 3));
       f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta,
-                                                           a, b, c, d))[0];
+                                                           a, b, c))[0];
       p_aux_var[0] +=
           0.5 * xi * sigma * m_aux_var[0] * sqrt(dt) +
           0.5 * (f_aux_var[0] - gamKP * p_aux_var[0]) * dt -
@@ -1273,7 +1272,7 @@ void propagate_electronic_kcrpmd(dyn_variables &dyn_var, nHamiltonian &Ham,
       p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
       y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt;
       f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta,
-                                                           a, b, c, d))[0];
+                                                           a, b, c))[0];
       p_aux_var[0] += 0.5 * f_aux_var[0] * dt;
     } else {
       sigma = sqrt(2.0 * gam / (beta * m_aux_var[0]));
@@ -1288,7 +1287,7 @@ void propagate_electronic_kcrpmd(dyn_variables &dyn_var, nHamiltonian &Ham,
       y_aux_var[0] += p_aux_var[0] / m_aux_var[0] * dt +
                       0.5 * theta / sqrt(3.0) * sigma * sqrt(pow(dt, 3));
       f_aux_var[0] = (Ham.kcrpmd_effective_auxiliary_force(y_aux_var, beta, eta,
-                                                           a, b, c, d))[0];
+                                                           a, b, c))[0];
       p_aux_var[0] +=
           0.5 * xi * sigma * m_aux_var[0] * sqrt(dt) +
           0.5 * (f_aux_var[0] - gam * p_aux_var[0]) * dt -

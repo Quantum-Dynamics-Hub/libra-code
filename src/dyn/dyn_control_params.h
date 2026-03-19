@@ -531,8 +531,6 @@ class dyn_control_params{
   */
   double kcrpmd_c;
 
-  double kcrpmd_d;
-
   /**
     KC-RPMD Langevin frictional coefficient within donor-acceptor basin 
     Default: 0.0 a.u. (inverse time)

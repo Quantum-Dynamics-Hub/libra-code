@@ -144,7 +144,6 @@ def transform_adm(rho, rho_scaled, aux_memory, params, direction):
         pack_mtx(aux_memory["rho_unpacked"], rho)
 
 
-#def run_dynamics(dyn_params, Ham, rho_init):
 def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
     """
     This functions integrates the HEOM for a given system's Hamiltonian, initial conditions, and bath parameters
@@ -278,6 +277,10 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
                     The density matrix evolution
                     *_output_level >= 3
 
+                - **auxdenmat** ( CMATRIXList(nn_tot-1, nstates, nstates) )
+                    The auxiliary density matrices excluding the 0th order denmat.
+                    *_output_level >= 4
+
                 [ default: [ "timestep", "time", "denmat" ] ]
 
 
@@ -307,6 +310,10 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             Is the initial density matrix describing the quantum system.
             It's dimensions must be the same as those of the `Ham` variable.
 
+        adm ( CMATRIXList(nn_tot-1, nstates, nstates) )
+            Is the initial auxiliary density matrices describing the quantum system.
+            Does not include the 0th order adm, indexing starts at n=1, should have a length of nn_tot-1.
+            By default the adm's are initialized as 0 matricies.
 
 
     """
@@ -338,7 +345,6 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
     comn.check_input(params, default_params, critical_params)
 
     nsteps = params["nsteps"]
-    #nprint = params["nprint"]
     print_freq = int(params["progress_frequency"] * nsteps)
 
     # ============= System ======================
@@ -366,7 +372,7 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
         init_nonzero.append(1)
 
     # ============ Bath update =====================
-    gamma_matsubara = doubleList()
+    gamma_matsubara = complexList()
     c_matsubara = complexList()
 
     setup_bath(KK, params["eta"], params["gamma"], params["temperature"], gamma_matsubara, c_matsubara)
@@ -399,13 +405,11 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
         y_ = Py2Cpp_int(list(range(nquant)))
         push_submatrix(rho, rho_init, x_, y_)
     else:
-        # should test to make sure that len(adm_init) == nn_tot-1:
+        assert (len(adm_init) == nn_tot-1), f"adm_init CMATRIXList must be of length nn_tot-1."
         aux_memory["rho_unpacked"][0] = rho_init
         for n in range(1,nn_tot):
             aux_memory["rho_unpacked"][n] = adm_init[n-1]
         pack_mtx(aux_memory["rho_unpacked"], rho)
-
-    # unpack_mtx(aux_memory["rho_unpacked"], rho)
 
     # ========== Scale working ADMs ====================
     if params["verbosity"] >= 2 and params["do_scale"] == 1:
@@ -435,7 +439,6 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             aux_print_matrices(0, aux_memory["rho_unpacked_scaled"])
 
     # Initialize savers
-    #_savers = save.init_heom_savers(params, nquant)
     _savers = save.init_heom_savers(params, nquant, nn_tot)
 
     # ============== Propagation =============
@@ -473,9 +476,7 @@ def run_dynamics(dyn_params, Ham, rho_init, adm_init=None):
             update_filters(rho_scaled, params, aux_memory)
 
         # ================= Propagation for one timestep ==================================
-        #print("MADE IT TO RK4 STEP") # These lines were not here, remove
         rho_scaled = RK4(rho_scaled, params["dt"], compute_heom_derivatives, params)
-        #print("PASSED AN RK4 STEP") # These lines were not here, remove
 
     end = time.time()
     print(F"Calculations took {end - start} seconds")

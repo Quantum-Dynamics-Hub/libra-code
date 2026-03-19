@@ -59,10 +59,9 @@ void gen_hierarchy(int d, int max_tier, int verbosity,
 
 /// General calculations
 vector<int> filter(vector<CMATRIX>& rho, vector<int>& adm_list, double tolerance, int do_zeroing);
-
 CMATRIX compute_deriv_n(int n, vector<CMATRIX>& rho, CMATRIX& Ham, vector<CMATRIX>& el_phon_coupl,
         double eta, double temperature,
-        vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara,
+        vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara,
         int truncation_scheme, complex<double> truncation_prefactor, int do_scale, vector<int>& nonzero,
         vector< vector<int> >& nvectors, vector< vector<int> >& vec_plus, vector< vector<int> >& vec_minus        
         );
@@ -71,9 +70,9 @@ CMATRIX compute_heom_derivatives(CMATRIX& RHO, bp::dict prms);
 
 /// Bath setup
 vector<CMATRIX> initialize_el_phonon_couplings(int nquant);
-complex<double> compute_matsubara_sum(vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK);
+complex<double> compute_matsubara_sum(vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara, int KK);
 void setup_bath(int KK, double eta, double gamma, double temperature,
-                vector<double>& gamma_matsubara, vector< complex<double> >& c_matsubara);
+                vector< complex<double> >& gamma_matsubara, vector< complex<double> >& c_matsubara);
 
 
 /// Auxiliary functions
