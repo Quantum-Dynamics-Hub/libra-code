@@ -20,7 +20,7 @@
 """
 
 
-import os, sys, math, re, struct, copy
+import os, sys, math, re, struct, copy, subprocess
 import numpy as np
 
 from liblibra_core import *
@@ -1537,20 +1537,26 @@ def read_nacv(filename):
 
 def create_odin_inp(params):
     """
-    Generate the input string for the ODIN overlap program.
+    Generate the input string for the ODIN overlap program in a thread-safe manner.
 
     This function constructs the text input required by the ODIN code
-    (https://github.com/thomas-niehaus/odin) for computing overlap and
-    Hamiltonian-related quantities from Slater–Koster files and a GEN
-    geometry file.
+    (https://github.com/thomas-niehaus/odin) for computing atomic orbital
+    overlap matrices from a GEN-format geometry file and Slater–Koster data.
 
-    The function:
+    The function is designed to be safe for parallel execution by avoiding
+    any dependence on the global working directory. It explicitly accesses
+    files using a provided working directory while keeping file paths
+    relative within the ODIN input itself.
 
-        1. Reads the provided GEN file.
-        2. Extracts the list of chemical elements from the second line.
-        3. Appends the corresponding maximum angular momentum (ℓ_max)
-           values for each element.
-        4. Returns the complete ODIN input as a formatted string.
+    The function performs the following steps:
+
+        1. Resolves the full path to the GEN geometry file using the provided
+           working directory.
+        2. Reads the GEN file and extracts the list of atomic element symbols
+           from the second line.
+        3. Maps each element to its maximum angular momentum (ℓ_max) using
+           the provided dictionary.
+        4. Constructs and returns the ODIN input string.
 
     Parameters
     ----------
@@ -1560,12 +1566,13 @@ def create_odin_inp(params):
         Optional keys
         -------------
         filename : str, optional
-            Path to the GEN-format geometry file for which overlaps
-            will be computed.
+            Name of the GEN-format geometry file (relative to the working
+            directory). This name is also written into the ODIN input file.
             Default: "x1.gen"
 
         slakos_prefix : str, optional
-            Directory prefix containing the Slater–Koster (.skf) files.
+            Directory prefix containing Slater–Koster (.skf) files.
+            This path is written directly into the ODIN input.
             Default: "./"
 
         max_ang_mom : dict[str, int], optional
@@ -1574,46 +1581,84 @@ def create_odin_inp(params):
             Example: {"H": 1, "C": 2}
             Default: {"H": 1, "C": 2}
 
+        working_directory : str, optional
+            Directory where the GEN file is located. This is used only for
+            reading the file safely in parallel environments.
+            Default: "."
+
     Returns
     -------
     str
-        The formatted ODIN input file content as a single string.
-        This string can be written directly to a file and used as
-        standard input for the ODIN executable.
+        A formatted string containing the ODIN input. This string is intended
+        to be written to a file (e.g., "odin.inp") and passed as standard input
+        to the ODIN executable.
 
     Raises
     ------
-    SystemExit
-        If an element present in the GEN file is not found in the
-        ``max_ang_mom`` dictionary.
+    FileNotFoundError
+        If the specified GEN file does not exist in the working directory.
+
+    ValueError
+        If the GEN file is malformed (e.g., too short) or if it contains
+        elements that are not present in the ``max_ang_mom`` dictionary.
 
     Notes
     -----
-    - The GEN file must follow the standard DFTB+ GEN format.
-    - The second line of the GEN file is assumed to contain the list
-      of element symbols.
-    - The function does not validate physical consistency of the
-      angular momentum assignments.
-    - The returned string is not automatically written to disk.
+    - The GEN file must follow the standard DFTB+ GEN format, where the
+      second line contains the list of element symbols.
+    - The filename written into the ODIN input remains relative, as ODIN
+      resolves it with respect to its working directory.
+    - This function does not modify any files or execute external programs.
+    - Designed for use in parallel workflows (e.g., multi-trajectory dynamics),
+      where each trajectory operates in its own working directory.
+
+    Side Effects
+    ------------
+    None. This function only reads a file and returns a string.
+
+    Example
+    -------
+    >>> params = {
+    >>>     "filename": "geom.gen",
+    >>>     "working_directory": "wd_itraj0",
+    >>>     "slakos_prefix": "../mio/FinalSK/",
+    >>>     "max_ang_mom": {"H": 1, "O": 2}
+    >>> }
+    >>> inp_str = create_odin_inp(params)
+    >>> print(inp_str)
+
     """
 
-    filename = params.get("filename", "x1.gen") # gen file
-    slakos_prefix = params.get("slakos_prefix", "./") # prefix to the file where the Slater-Koster files are located
-    max_l = params.get("max_ang_mom", {"H":1, "C":2} )  # maximal angular momentum numbers for elements
+    filename = params.get("filename", "x1.gen")   # keep relative for ODIN
+    slakos_prefix = params.get("slakos_prefix", "./")
+    max_l = params.get("max_ang_mom", {"H": 1, "C": 2})
+    wd = params.get("working_directory", ".")
 
-    res = F"'{filename}'\n'{slakos_prefix}'\n'-'\n'.skf'\n"
-    f = open(filename)
-    A = f.readlines()
-    f.close()
+    # -------- Full path for reading --------
+    gen_path = os.path.join(wd, filename)
 
-    elts = A[1].split()
-    print(elts)
+    if not os.path.exists(gen_path):
+        raise FileNotFoundError(f"GEN file not found: {gen_path}")
+
+    # -------- Read GEN file safely --------
+    with open(gen_path, "r") as f:
+        lines = f.readlines()
+
+    if len(lines) < 2:
+        raise ValueError(f"Invalid GEN file (too short): {gen_path}")
+
+    elts = lines[1].split()
+
+    # -------- Build ODIN input --------
+    res = f"'{filename}'\n'{slakos_prefix}'\n'-'\n'.skf'\n"
+
     for elt in elts:
-        if elt in max_l.keys():
-            res = F"{res} {max_l[elt]} "
+        if elt in max_l:
+            res += f" {max_l[elt]} "
         else:
-            print(F"Element: {elt} is not present in the input `max_l` parameter\n max_l = {max_l}")
-            sys.exit(0)
+            raise ValueError(
+                f"Element '{elt}' not found in max_ang_mom: {max_l}"
+            )
 
     return res
 
@@ -1621,22 +1666,23 @@ def create_odin_inp(params):
 
 def run_odin(params):
     """
-    Execute the ODIN program to compute atomic orbital overlap matrices.
+    Execute the ODIN program in a thread-safe manner within a specified working directory.
 
-    This function prepares the required ODIN input file ("odin.inp"),
-    runs the ODIN executable, and computes overlap-related quantities
-    based on the provided GEN geometry file and Slater–Koster parameters.
+    This function prepares the ODIN input file, executes the ODIN binary,
+    and produces atomic orbital overlap data (e.g., "oversqr.dat") required
+    for nonadiabatic dynamics and electronic structure post-processing.
 
-    Specifically, the function:
+    The function is designed for parallel workflows (e.g., multi-trajectory
+    simulations) by avoiding any dependence on the global working directory.
+    All file operations and execution occur inside a user-specified directory.
 
-        1. Generates the ODIN input string using ``create_odin_inp``.
-        2. Writes the input to the file "odin.inp".
-        3. Executes the ODIN program using standard input redirection.
-        4. Produces overlap output files (e.g., "oversqr.dat").
+    The function performs the following steps:
 
-    ODIN is a post-processing tool for DFTB that computes atomic orbital
-    overlap matrices and related quantities from Slater–Koster files and
-    molecular geometries.
+        1. Ensures the working directory exists (creates it if necessary).
+        2. Generates the ODIN input string using ``create_odin_inp``.
+        3. Writes the input to "odin.inp" inside the working directory.
+        4. Executes the ODIN program using the input file via standard input.
+        5. Captures standard output and error streams for diagnostics.
 
     Parameters
     ----------
@@ -1646,16 +1692,23 @@ def run_odin(params):
         Optional keys
         -------------
         ODIN_EXE : str, optional
-            Path or name of the ODIN executable.
-            Must be accessible from the system PATH or specified explicitly.
+            Name or path of the ODIN executable.
+            Must be accessible via the system PATH or specified explicitly.
             Default: "odin"
 
+        working_directory : str, optional
+            Directory in which the ODIN calculation will be executed.
+            All input and output files are created in this directory.
+            Default: "."
+
         filename : str, optional
-            Path to the GEN-format geometry file used for overlap calculations.
+            Name of the GEN-format geometry file used for overlap calculations.
+            This file must exist in the working directory.
             Default: "x1.gen"
 
         slakos_prefix : str, optional
-            Directory prefix containing the Slater–Koster (.skf) files.
+            Directory prefix containing Slater–Koster (.skf) files.
+            Passed to ODIN via the input file.
             Default: "./"
 
         max_ang_mom : dict[str, int], optional
@@ -1667,38 +1720,85 @@ def run_odin(params):
     Returns
     -------
     None
-        This function does not return a value. It executes ODIN and produces
-        output files in the current working directory.
+        The function executes ODIN and produces output files in the working
+        directory. No value is returned.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the required GEN file is not found (raised by ``create_odin_inp``).
+
+    ValueError
+        If the GEN file is malformed or contains unknown elements
+        (raised by ``create_odin_inp``).
+
+    subprocess.CalledProcessError
+        If the ODIN executable fails. In this case, the function prints
+        captured stdout and stderr before re-raising the exception.
 
     Side Effects
     ------------
-    - Creates or overwrites the file "odin.inp".
-    - Executes an external program via ``os.system``.
+    - Creates or overwrites the file "odin.inp" in the working directory.
+    - Executes the ODIN binary.
     - Generates ODIN output files, typically including:
         oversqr.dat : atomic orbital overlap matrix (square format)
+    - Captures and buffers stdout/stderr from the ODIN process.
 
     Notes
     -----
     - The ODIN executable must be installed and accessible.
     - The GEN file and Slater–Koster files must be present and consistent.
-    - No error handling is performed for failed ODIN execution.
-    - Output files are written to the current working directory.
+    - File paths inside the ODIN input are kept relative to the working
+      directory to ensure compatibility with ODIN.
+    - This function avoids ``os.chdir`` and is safe for concurrent execution
+      across multiple trajectories.
 
-    References
-    ----------
-    ODIN GitHub repository:
-    https://github.com/thomas-niehaus/odin
+    Example
+    -------
+    >>> params = {
+    >>>     "ODIN_EXE": "odin",
+    >>>     "working_directory": "wd_itraj0",
+    >>>     "filename": "doubled_geometry.gen",
+    >>>     "slakos_prefix": "../mio/FinalSK/",
+    >>>     "max_ang_mom": {"H": 1, "O": 2}
+    >>> }
+    >>> run_odin(params)
+
     """
 
-    EXE = params.get("ODIN_EXE", "odin")
+    exe = params.get("ODIN_EXE", "odin")
+    wd = params.get("working_directory", ".")
+    gen_file = params.get("filename", "x1.gen")
+
+    # Ensure working directory exists
+    os.makedirs(wd, exist_ok=True)
+
+    # -------- Create input content --------
     inp = create_odin_inp(params)
-    f = open("odin.inp", "w")
-    f.write(F"{inp}")
-    f.close()
-    os.system(F"{EXE} < odin.inp")
 
+    # -------- Write input file --------
+    inp_path = os.path.join(wd, "odin.inp")
 
+    with open(inp_path, "w") as f:
+        f.write(inp)
 
+    # -------- Run ODIN safely --------
+    try:
+        with open(inp_path, "r") as fin:
+            result = subprocess.run(
+                [exe],
+                stdin=fin,
+                cwd=wd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
+
+    except subprocess.CalledProcessError as e:
+        print("ODIN execution failed")
+        print("STDOUT:\n", e.stdout.decode())
+        print("STDERR:\n", e.stderr.decode())
+        raise
 
 
 def write_dftb_gen(filename, atom_labels, coordinates, periodic=False):
@@ -1770,22 +1870,26 @@ def write_dftb_gen(filename, atom_labels, coordinates, periodic=False):
 
 
 
-def make_dftb_input(params):
+
+def make_dftb_input(params, ground_state=True, working_directory="."):
     """
-    Generate a DFTB+ input file ("dftb_in.hsd") for ground-state SCC-DFTB and
-    excited-state TD-DFTB (Casida formalism) calculations.
+    Generate a DFTB+ input file ("dftb_in.hsd") in a thread-safe manner.
 
-    This function constructs a complete DFTB+ input file using parameters
-    provided in the ``params`` dictionary. Missing parameters are automatically
-    filled with reasonable defaults. The generated file is written to the
-    current working directory as "dftb_in.hsd".
+    This function constructs a complete DFTB+ input file for either
+    ground-state SCC-DFTB or excited-state TD-DFTB (Casida formalism)
+    calculations and writes it to a specified working directory.
 
-    The input includes the following sections:
+    Unlike earlier implementations, this version avoids reliance on the
+    global working directory and is safe for parallel execution (e.g.,
+    multi-trajectory dynamics), where each calculation runs in its own
+    directory.
+
+    The generated input file includes the following sections:
 
         - Geometry (GenFormat)
         - Driver
         - Hamiltonian (SCC-DFTB)
-        - ExcitedState (Casida TD-DFTB)
+        - ExcitedState (Casida TD-DFTB, if requested)
         - Options
         - Analysis
 
@@ -1793,28 +1897,27 @@ def make_dftb_input(params):
     ----------
     params : dict
         Dictionary containing DFTB+ input parameters. All keys are optional.
-        The following keys are recognized:
 
         Geometry and general:
         ---------------------
         gen_file : str, optional
-            Path to the GEN format geometry file.
+            Name of the GEN-format geometry file (relative to the working
+            directory).
             Default: "x1.gen"
 
         Driver : str, optional
-            Driver block specifying geometry optimization, MD, or single-point
-            calculation. Must be valid DFTB+ HSD syntax.
-            Default: "{}" (single-point calculation)
+            Driver block specifying calculation type (e.g., geometry
+            optimization, MD, or single-point). Must be valid HSD syntax.
+            Default: "{}"
 
         Hamiltonian parameters:
         -----------------------
         sk_prefix : str, optional
-            Path prefix for Slater-Koster files.
+            Path prefix for Slater–Koster files.
             Default: "mio/FinalSK/"
 
         MaxAngularMomentum : str, optional
-            Block specifying maximum angular momentum per element.
-            Must be valid HSD syntax.
+            HSD block specifying maximum angular momentum per element.
             Default:
                 {
                     O = "p"
@@ -1880,18 +1983,39 @@ def make_dftb_input(params):
             Print atomic forces ("Yes"/"No").
             Default: "Yes"
 
+    ground_state : bool, optional
+        If True, generate input for ground-state SCC-DFTB.
+        If False, generate input for excited-state TD-DFTB (Casida).
+
+        Note:
+        For excited-state runs, ``StateOfInterest`` is internally forced
+        to 1 to ensure compatibility with force calculations.
+
+        Default: True
+
+    working_directory : str, optional
+        Directory where the input file will be written. The directory is
+        created if it does not exist.
+
+        Default: "."
+
     Returns
     -------
     None
-        Writes the file "dftb_in.hsd" to disk. No value is returned.
+        The function writes "dftb_in.hsd" to the specified directory.
+
+    Side Effects
+    ------------
+    - Creates or overwrites "dftb_in.hsd" in the working directory.
+    - Creates the working directory if it does not exist.
 
     Notes
     -----
-    - The function assumes that all string parameters are valid DFTB+ HSD syntax.
-    - This function does not validate physical correctness of the parameters.
-    - Existing "dftb_in.hsd" file will be overwritten.
-    - Designed for use in automated workflows such as molecular dynamics,
-      excited-state dynamics, and high-throughput simulations.
+    - The function assumes all string parameters are valid DFTB+ HSD syntax.
+    - No validation of physical correctness is performed.
+    - File paths inside the input file (e.g., GEN file) are kept relative
+      to the working directory, as expected by DFTB+.
+    - This function does not execute DFTB+; it only prepares the input file.
 
     Examples
     --------
@@ -1902,7 +2026,7 @@ def make_dftb_input(params):
     >>>     "NrOfExcitations": 10,
     >>>     "StateOfInterest": 2
     >>> }
-    >>> make_dftb_input(params)
+    >>> make_dftb_input(params, ground_state=False, working_directory="wd_itraj0")
 
     Custom angular momentum:
 
@@ -1915,22 +2039,25 @@ def make_dftb_input(params):
     >>>     }
     >>>     '''
     >>> }
-    >>> make_dftb_input(params)
+    >>> make_dftb_input(params, working_directory="wd_test")
 
     """
 
-    # Read in the parameters
+    # -------- Parameters --------
     gen_file = params.get("gen_file", "x1.gen")
     sk_prefix = params.get("sk_prefix", "mio/FinalSK/")
     Driver = params.get("Driver", "{}")
+
     MaxAngularMomentum = params.get("MaxAngularMomentum",
                       """{ O = "p" 
                           H = "s" 
                      }
                      """)
+
     Symmetry = params.get("Symmetry", "Singlet")
     NrOfExcitations = params.get("NrOfExcitations", 5)
     StateOfInterest = params.get("StateOfInterest", 1)
+
     WriteSPTransitions = params.get("WriteSPTransitions", "Yes")
     WriteXplusY = params.get("WriteXplusY", "Yes")
     WriteXplusYAscii = params.get("WriteXplusYAscii", "Yes")
@@ -1946,19 +2073,22 @@ def make_dftb_input(params):
                          """Fermi {
                          Temperature [K] = 40    
                          }
-                         """
-                        )
+                         """)
 
+    # -------- Fix for excited-state forces --------
+    if not ground_state:
+        StateOfInterest = 1
 
-    scf_template = F"""Geometry = GenFormat {{  
+    # -------- Templates --------
+    scf_template_excited = f"""Geometry = GenFormat {{  
   <<< "{gen_file}"
 }}
-Driver = { Driver }
+Driver = {Driver}
 
 Hamiltonian = DFTB {{
     SCC = Yes
     SCCTolerance = 1.0E-10
-    MaxAngularMomentum = { MaxAngularMomentum }
+    MaxAngularMomentum = {MaxAngularMomentum}
     SlaterKosterFiles = Type2FileNames {{
         Prefix = "{sk_prefix}"
         Separator = "-"
@@ -1990,27 +2120,65 @@ Analysis {{
 }}
 """
 
-    f = open("dftb_in.hsd", "w")
-    f.write(scf_template)
-    f.close()
+    scf_template_ground = f"""Geometry = GenFormat {{
+  <<< "{gen_file}"
+}}
+Driver = {Driver}
 
+Hamiltonian = DFTB {{
+    SCC = Yes
+    SCCTolerance = 1.0E-10
+    MaxAngularMomentum = {MaxAngularMomentum}
+    SlaterKosterFiles = Type2FileNames {{
+        Prefix = "{sk_prefix}"
+        Separator = "-"
+        Suffix = ".skf"
+    }}
+    Filling = {Filling}
+}}
+
+Options {{
+  WriteAutotestTag = {WriteAutotestTag}
+  WriteHS = {WriteHS}
+}}
+Analysis {{
+  WriteEigenvectors = {WriteEigenvectors}
+  EigenvectorsAsText = {EigenvectorsAsText}
+  PrintForces = {PrintForces}
+}}
+"""
+
+    # -------- Ensure directory exists --------
+    os.makedirs(working_directory, exist_ok=True)
+
+    # -------- Write file safely --------
+    input_path = os.path.join(working_directory, "dftb_in.hsd")
+
+    with open(input_path, "w") as f:
+        if ground_state:
+            f.write(scf_template_ground)
+        else:
+            f.write(scf_template_excited)
 
 
 def run_dftb(coords, params):
     """
-    Run a DFTB+ calculation for a given molecular geometry.
+    Execute a DFTB+ calculation in a thread-safe manner within a specified working directory.
 
-    This function prepares and executes a DFTB+ calculation in a dedicated
-    working directory. It performs the following steps:
+    This function prepares input files, runs ground-state and excited-state
+    DFTB+ calculations, and stores all outputs in a dedicated working directory.
+    It is designed for parallel workflows (e.g., multi-trajectory simulations),
+    where each trajectory runs independently without interfering with others.
 
-        1. Creates (if necessary) a working directory.
+    The function performs the following steps:
+
+        1. Ensures the working directory exists.
         2. Writes a GEN-format geometry file using the provided coordinates.
-        3. Generates the DFTB+ input file ("dftb_in.hsd").
-        4. Executes the DFTB+ binary.
-        5. Returns to the original working directory.
-
-    The function is designed for automated workflows such as molecular
-    dynamics, nonadiabatic dynamics, or high-throughput simulations.
+        3. Generates a ground-state DFTB+ input file and executes DFTB+.
+        4. Renames the ground-state output file ("autotest.tag") to
+           "autotest_ground_state.tag".
+        5. Generates an excited-state (TD-DFTB) input file and executes DFTB+.
+        6. Captures standard output and error streams for diagnostics.
 
     Parameters
     ----------
@@ -2018,10 +2186,10 @@ def run_dftb(coords, params):
         Cartesian atomic coordinates. Expected shape is (3*N,) or (3*N, 1),
         where N is the number of atoms. Coordinates are assumed to be in
         atomic units (Bohr) and are internally converted to Angstroms
-        before writing the GEN file.
+        when writing the GEN file.
 
     params : dict
-        Dictionary containing run configuration parameters.
+        Dictionary containing DFTB+ execution parameters.
 
         Required keys:
         --------------
@@ -2032,44 +2200,60 @@ def run_dftb(coords, params):
         --------------
         exe : str, optional
             Name or path of the DFTB+ executable.
+            Must be accessible via the system PATH or specified explicitly.
             Default: "dftb+"
 
         dftb_run_params : dict, optional
-            Dictionary of parameters passed to ``make_dftb_input`` to
-            construct the "dftb_in.hsd" file.
+            Dictionary of parameters passed to ``make_dftb_input`` for
+            constructing the "dftb_in.hsd" file.
             Default: {}
 
         working_directory : str, optional
             Directory where the calculation will be executed.
-            If it does not exist, it will be created.
+            All input and output files are created in this directory.
             Default: "wd"
 
         gen_file : str, optional
-            Name of the GEN-format geometry file.
+            Name of the GEN-format geometry file (relative to the working
+            directory).
             Default: "x1.gen"
 
     Returns
     -------
     None
-        The function executes DFTB+ and produces output files in the
-        working directory. No values are returned.
+        The function executes DFTB+ and produces output files in the working
+        directory. No value is returned.
 
-    Notes
-    -----
-    - The function assumes that the DFTB+ executable is available in the
-      system PATH unless an explicit path is provided via ``exe``.
-    - Existing files in the working directory may be overwritten.
-    - No error handling is performed for failed DFTB+ runs.
-    - The function changes the current working directory during execution
-      and restores it afterward (relative path "../").
+    Raises
+    ------
+    subprocess.CalledProcessError
+        If the DFTB+ executable fails. In this case, stdout and stderr are
+        captured and can be inspected from the exception object.
 
     Side Effects
     ------------
-    - Creates or modifies files in the specified working directory.
-    - Executes an external system command via ``os.system``.
+    - Creates or modifies files in the working directory, including:
+        - GEN geometry file (e.g., "x1.gen")
+        - DFTB+ input file ("dftb_in.hsd")
+        - Output files such as:
+            autotest.tag
+            autotest_ground_state.tag
+            detailed.out, band.out, etc. (depending on DFTB+ settings)
+    - Executes the DFTB+ binary twice (ground-state and excited-state runs).
 
-    Example
-    -------
+    Notes
+    -----
+    - The function avoids the use of ``os.chdir`` and instead uses the
+      ``cwd`` argument of ``subprocess.run`` to ensure thread safety.
+    - File paths inside the DFTB+ input file are kept relative to the
+      working directory, as expected by DFTB+.
+    - The ground-state calculation is always executed first, followed by
+      the excited-state calculation.
+    - If the file "autotest.tag" is produced by the ground-state run, it is
+      renamed to "autotest_ground_state.tag" to preserve both results.
+
+    Examples
+    --------
     >>> coords = np.array([
     >>>     0.0, 0.0, 0.0,
     >>>     0.0, 0.0, 1.0,
@@ -2077,45 +2261,58 @@ def run_dftb(coords, params):
     >>> ])
     >>> params = {
     >>>     "labels": ["O", "H", "H"],
-    >>>     "working_directory": "run1",
+    >>>     "working_directory": "wd_itraj0",
     >>>     "dftb_run_params": {
     >>>         "NrOfExcitations": 5,
     >>>         "StateOfInterest": 1
     >>>     }
     >>> }
     >>> run_dftb(coords, params)
+
     """
 
-
-    # Get the parameters
     labels = params["labels"]
     exe = params.get("exe", "dftb+")
-    dftb_run_params = params.get("dftb_run_params", {}  )
+    dftb_run_params = params.get("dftb_run_params", {})
     wd = params.get("working_directory", "wd")
     gen_file = params.get("gen_file", "x1.gen")
 
-    natoms = len(labels)
-    ndof = 3 * natoms
+    # Ensure directory exists
+    os.makedirs(wd, exist_ok=True)
 
-    # Create working directory, if doesn't exist
-    if not os.path.exists(wd):
-        os.mkdir(wd)
+    # -------- File paths --------
+    gen_path = os.path.join(wd, gen_file)
+    gs_tag = os.path.join(wd, "autotest_ground_state.tag")
+    tag = os.path.join(wd, "autotest.tag")
 
-    # Go into that directory
-    os.chdir(wd)
+    # -------- Write GEN file --------
+    write_dftb_gen(gen_path, labels, coords / units.Angst, periodic=False)
 
-    # Make the gen file
-    write_dftb_gen(gen_file, labels, coords/units.Angst, periodic=False)
+    # -------- Ground state --------
+    make_dftb_input(dftb_run_params, ground_state=True, working_directory=wd)
 
-    # Make the input file itself
-    make_dftb_input(dftb_run_params)
-    
-    # Run DFTB+ calculations
-    os.system(F"{exe}")
+    subprocess.run(
+        [exe],
+        cwd=wd,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
-    # Go back to the original directory
-    os.chdir("../")
+    # Rename file safely
+    if os.path.exists(tag):
+        os.replace(tag, gs_tag)
 
+    # -------- Excited state --------
+    make_dftb_input(dftb_run_params, ground_state=False, working_directory=wd)
+
+    subprocess.run(
+        [exe],
+        cwd=wd,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
 def read_dftb_orbital_info(params_):
     """
@@ -2358,314 +2555,246 @@ def read_dftb_orbital_info(params_):
 class tmp:
     pass
 
+
 def dftb_compute_adi(q, params, full_id):
     """
-    Compute adiabatic Hamiltonian, vibronic Hamiltonian, and time-overlap matrices
+    Compute adiabatic electronic properties and derivative couplings for one trajectory
     using DFTB+ electronic structure and ODIN orbital overlap calculations.
 
-    This function performs a single electronic structure step for one trajectory,
-    computes molecular orbitals (MOs), CI states, and their time-overlaps between
-    consecutive time steps, and constructs the adiabatic vibronic Hamiltonian.
+    This function performs a single-time-step electronic structure evaluation
+    for a trajectory in nonadiabatic dynamics. It computes molecular orbitals (MOs),
+    CI states, and their overlaps between consecutive time steps, constructing
+    the adiabatic Hamiltonian, vibronic Hamiltonian, and derivative couplings.
 
-    This is designed for trajectory-based nonadiabatic dynamics methods such as:
-        - FSSH
+    The function is designed for trajectory-based nonadiabatic methods, such as:
+        - FSSH (Fewest Switches Surface Hopping)
         - Ehrenfest dynamics
         - Mapping-based methods
-        - Exact factorization / quantum trajectory methods
+        - Exact factorization / quantum trajectory approaches
+
+    Workflow
+    --------
+    1. Extract nuclear coordinates for the trajectory.
+    2. Run ground-state and excited-state DFTB+ calculations in a trajectory-specific directory.
+    3. Generate a "doubled" geometry file to compute AO overlaps with ODIN.
+    4. Read molecular orbitals, CI coefficients, and excitation energies.
+    5. Compute:
+        - Time-overlap matrices between consecutive CI states
+        - Adiabatic Hamiltonian
+        - Vibronic Hamiltonian
+        - Forces from DFTB+ outputs
+        - Derivative couplings (from NACVs and time-overlap)
+    6. Update trajectory-specific previous-state data in `params`.
 
     Parameters
     ----------
     q : MATRIX
         Nuclear coordinates for all trajectories.
+        Shape: (3*N_atoms, N_trajectories)
+        Units: Bohr
+        Column `itraj` corresponds to trajectory `itraj`.
 
-        Shape:
-            (3*N_atoms, N_trajectories)
+    params : dict
+        Dictionary of simulation parameters and trajectory state information.
+        Keys used include:
 
-        Units:
-            Bohr
-
-        Column `itraj` corresponds to the coordinates of trajectory `itraj`.
-
-    params : list of dict
-        List of trajectory-specific parameter dictionaries.
-
-        Each params[itraj] must contain:
-
-        Required keys
-        -------------
-        orbital_space : list of int
-            Active-space molecular orbital indices (1-based indexing).
-
+        Required:
+        ---------
         atom_labels : list of str
-            Atomic symbols, e.g. ["O", "H", "H"]
+            Atomic symbols, e.g., ["O", "H", "H"].
+        orbital_space : dict
+            Active-space molecular orbitals indices.
 
-        Optional keys
-        -------------
-
-        dt : float, default = 41.0
-            Nuclear time step in atomic units (1 fs ≈ 41 a.u.)
-
-        working_directory : str, default = "wd"
-            Directory used for DFTB+ and ODIN calculations.
-
-        dftb_exe : str, default = "dftb+"
-            Path to DFTB+ executable.
-
-        odin_exe : str, default = "odin"
-            Path to ODIN executable.
-
+        Optional / Internal (updated in-place):
+        --------------------------------------
+        dt : float, default=41.0
+            Nuclear time step in atomic units.
         dftb_run_params : dict
-            Parameters controlling DFTB+ calculation, including:
+            Parameters for DFTB+ calculations, e.g. NrOfExcitations, sk_prefix.
+        dftb_exe : str, default="dftb+"
+            Path to DFTB+ executable.
+        odin_exe : str, default="odin"
+            Path to ODIN executable.
+        working_directory_prefix : str, default="wd"
+            Prefix for trajectory-specific directories.
+        is_first_time : dict
+            Dictionary keyed by trajectory index (`itraj`) with boolean values.
+            True indicates that the current step is the first step of this trajectory.
+        act_state : dict
+            Dictionary keyed by trajectory index (`itraj`) with integer values
+            indicating the active electronic state for this trajectory.
+        MO_prev : dict
+            Previous molecular orbitals per trajectory (updated in-place).
+        data_prev : dict
+            Previous CI data per trajectory (updated in-place).
+        coordinates_prev : dict
+            Previous nuclear coordinates per trajectory (updated in-place).
+        ci_threshold : float, default=0.01
+            Threshold for CI truncation.
+        odin_max_ang_mom : dict, optional
+            Maximum angular momentum per element for ODIN.
 
-                NrOfExcitations : int
-                    Number of excited states requested from Casida calculation
-
-                gen_file : str
-                    Geometry file name
-
-                sk_prefix : str
-                    Slater–Koster files directory
-
-        nelec_act_space : int, optional
-            Number of electrons in active space.
-
-        ci_threshold : float, default = 0.01
-            CI amplitude threshold for truncating configurations.
-
-        is_first_time : bool, default = True
-            Indicates whether this is the first step of trajectory.
-
-        Internal state keys (automatically updated)
-        -------------------------------------------
-        MO_prev : ndarray (nao, nact)
-        data_prev : list
-        coordinates_prev : ndarray (3*N_atoms, 1)
-
-    full_id : int
-        Encoded trajectory identifier.
+    full_id : int or object
+        Encoded trajectory identifier (decoded to extract `itraj`).
 
     Returns
     -------
-    obj : object
-        Object containing adiabatic electronic properties.
-
-        Attributes
-        ----------
+    obj : tmp
+        Object containing adiabatic electronic properties for this trajectory.
+        Attributes include:
 
         ham_adi : CMATRIX (nstates, nstates)
-            Adiabatic Hamiltonian matrix (Hartree)
+            Adiabatic Hamiltonian matrix.
 
         hvib_adi : CMATRIX (nstates, nstates)
-            Vibronic Hamiltonian including derivative couplings
+            Vibronic Hamiltonian including derivative couplings.
 
         time_overlap_adi : CMATRIX (nstates, nstates)
-            Time-overlap matrix between electronic states:
-
-                S_ij(t, t+dt) = <Ψ_i(t) | Ψ_j(t+dt)>
+            Time-overlap matrix S_ij(t, t+dt) = <Ψ_i(t)|Ψ_j(t+dt)>.
 
         basis_transform : CMATRIX (nstates, nstates)
-            Basis transformation matrix (currently identity)
+            Basis transformation matrix (currently identity).
 
-        overlap_adi : CMATRIX (nstates, nstates)
-            Placeholder for state overlap matrix
+        d1ham_adi : CMATRIXList
+            List of derivative Hamiltonians with respect to nuclear coordinates.
+
+        dc1_adi : CMATRIXList
+            List of derivative couplings for each nuclear degree of freedom.
 
     Notes
     -----
+    - All computations are performed in trajectory-specific directories to
+      ensure thread safety.
+    - Ground-state (state 0) and excited-state (states 1..nstates-1) calculations
+      are run sequentially using DFTB+.
+    - Overlap matrices are computed by doubling the geometry (previous + current step)
+      and running ODIN.
+    - Forces are extracted from `autotest.tag` for the active state.
+    - Derivative couplings are estimated from the anti-symmetric part of the
+      time-overlap matrix divided by 2*dt:
+          Hvib_ij = E_i δ_ij - i d_ij
+          d_ij = (S_ij - S_ji) / (2 dt)
+    - Energies are in Hartree, time in atomic units, coordinates in Bohr,
+      and overlaps are dimensionless.
+    - `is_first_time` and `act_state` are dictionaries keyed by trajectory index,
+      allowing simultaneous tracking of multiple trajectories in parallel computations.
 
-    Electronic structure workflow
-    -----------------------------
-
-    1. Run DFTB+ to compute:
-        - Molecular orbitals
-        - Excitation energies
-        - CI coefficients
-
-    2. Run ODIN to compute orbital overlaps between consecutive geometries
-
-    3. Construct:
-        - MO overlap matrix
-        - CI state overlap matrix
-        - Adiabatic Hamiltonian
-        - Vibronic Hamiltonian
-
-    Vibronic Hamiltonian definition
-    -------------------------------
-
-    Hvib_ij = E_i δ_ij - i d_ij
-
-    where
-
-        d_ij = (S_ij - S_ji) / (2 dt)
-
-    is the time-derivative coupling.
-
-    Units
-    -----
-
-    Energies:
-        Hartree
-
-    Time:
-        atomic units
-
-    Coordinates:
-        Bohr
-
-    Overlaps:
-        dimensionless
-
-    State indexing
-    --------------
-
-    state 0 = ground state
-    state 1..nstates-1 = excited states
-
+    Example
+    -------
+    >>> obj = dftb_compute_adi_new(q, params, full_id)
+    >>> print(obj.ham_adi)
+    >>> print(obj.dc1_adi[0])
     """
-
     # ================= Decode trajectory index =================
-
     Id = Cpp2Py(full_id)
     itraj = Id[-1]
 
-    # ================= Validate params structure =================
-
-    if not isinstance(params, (list, tuple)):
-        raise TypeError(
-            "params must be a list (or tuple) of per-trajectory dictionaries"
-        )
-
-    if itraj >= len(params):
-        raise IndexError(
-            f"Trajectory index {itraj} out of range (len={len(params)})"
-        )
-
-    if not isinstance(params[itraj], dict):
-        raise TypeError(
-            f"params[{itraj}] must be a dictionary"
-        )
-
-    # ================= Extract nuclear coordinates =================
-
+    # ================= Extract coordinates =================
     coords = q.col(itraj)
     coordinates = data_conv.MATRIX2nparray(coords, float)
-    # shape: (3*N_atoms, 1)
-    # units: Bohr
+
+    ndof = coords.num_of_rows
+    nat = ndof // 3
+
+    # ================= Safe param access =================
+    params.setdefault("MO_prev", {})
+    params.setdefault("data_prev", {})
+    params.setdefault("coordinates_prev", {})
+    params.setdefault("is_first_time", {})
+    params.setdefault("act_state", {})
+
+    is_first_time = params["is_first_time"].get(itraj, True)
+    act_state = params["act_state"].get(itraj, 0)
 
     # ================= Read parameters =================
+    dt = float(params.get("dt", 41.0))
+    dftb_run_params = params.get("dftb_run_params", {})
+    atom_labels = params["atom_labels"]
 
-    dt = float(params[itraj].get("dt", 41.0))
-    dftb_run_params = params[itraj].get("dftb_run_params", {})
-    atom_labels = params[itraj]["atom_labels"]
-    dftb_exe = params[itraj].get("dftb_exe", "dftb+")
-    wd = params[itraj].get("working_directory", "wd")
-    gen_file = dftb_run_params.get("gen_file", "x1.gen")
-    sk_prefix = dftb_run_params.get("sk_prefix", "../mio/FinalSK/")
-    odin_max_ang_mom = params[itraj].get(
-        "odin_max_ang_mom",
-        {"H": 1, "O": 2}
-    )
-    odin_exe = params[itraj].get("odin_exe", "odin")
-    orbital_space = params[itraj]["orbital_space"]
-    nstates = dftb_run_params.get("NrOfExcitations", 1) + 1
-    is_first_time = params[itraj].get("is_first_time", True)
-    nelec_act_space = params[itraj].get("nelec_act_space", None)
-    ci_threshold = params[itraj].get("ci_threshold", 0.01)
+    wd_prefix = params.get("working_directory_prefix", "wd")
+    wd = f"{wd_prefix}_itraj{itraj}"
 
     # ================= Run DFTB+ =================
+    dftb_params = copy.deepcopy(dftb_run_params)
+    dftb_params["StateOfInterest"] = act_state
 
-    dftb_params = dftb_run_params
-    make_dftb_input(dftb_params)
+    #make_dftb_input(dftb_params)
     prms1 = {
         "labels": atom_labels,
-        "exe": dftb_exe,
+        "exe": params.get("dftb_exe", "dftb+"),
         "dftb_run_params": dftb_params,
         "working_directory": wd,
-        "gen_file": gen_file,
+        "gen_file": dftb_run_params.get("gen_file", "x1.gen"),
     }
     run_dftb(coordinates, prms1)
 
-    # ================= Run ODIN overlap calculation =================
-
+    # ================= Previous coordinates =================
     if is_first_time:
-        coordinates_prev = copy.deepcopy(coordinates)
+        coordinates_prev = coordinates.copy()
     else:
-        coordinates_prev = copy.deepcopy(
-            params[itraj]["coordinates_prev"]
-        )
+        coordinates_prev = params["coordinates_prev"].get(itraj, coordinates).copy()
 
+    # ================= ODIN =================
     double_labels = atom_labels * 2
+    double_coords = np.concatenate((coordinates_prev, coordinates), axis=0)
 
-    double_coords = np.concatenate(
-        (coordinates_prev, coordinates),
-        axis=0
+    gen_path = os.path.join(wd, "doubled_geometry.gen")
+
+    write_dftb_gen(
+        gen_path,
+        double_labels,
+        double_coords / units.Angst
     )
-
-    os.chdir(wd)
-    write_dftb_gen( "doubled_geometry.gen",double_labels, double_coords / units.Angst )
+    
     odin_params = {
-        "ODIN_EXE": odin_exe,
+        "ODIN_EXE": params.get("odin_exe", "odin"),
         "filename": "doubled_geometry.gen",
-        "slakos_prefix": sk_prefix,
-        "max_ang_mom": odin_max_ang_mom,
+        "working_directory": wd,
+        "slakos_prefix": dftb_run_params.get("sk_prefix", "../mio/FinalSK/"),
+        "max_ang_mom": params.get("odin_max_ang_mom", {"H": 1, "O": 2}),
     }
 
-    create_odin_inp(odin_params)
+    #create_odin_inp(odin_params)
     run_odin(odin_params)
-    os.chdir("../")
 
     # ================= Read electronic structure =================
+    nstates = dftb_run_params.get("NrOfExcitations", 1) + 1
 
     read_params = {
         "nstates": nstates,
-        "orbital_space": orbital_space,
+        "orbital_space": params["orbital_space"],
         "source_directory": wd,
-        "ci_threshold": ci_threshold,
+        "ci_threshold": params.get("ci_threshold", 0.01),
     }
 
     info, MO_curr, data_curr = read_dftb_orbital_info(read_params)
 
-    # ================= Read AO overlap matrix =================
-
+    # ================= Overlap =================
     ndim = info["nmo"]
-    S = read_overlap_matrix( f"{wd}/oversqr.dat", 2 * ndim )
-    s_ao_curr = S[ndim:, ndim:]
+    S = read_overlap_matrix(f"{wd}/oversqr.dat", 2 * ndim)
+
     st_ao = S[:ndim, ndim:]
 
-    # ================= Construct active space =================
-
-    if nelec_act_space is None:
-        active_space = info["actual_orbital_space"]
-    else:
-        min_indx = info["nocc"] - nelec_act_space // 2 + 1
-        if min_indx > info["min_occ"]:
-            raise ValueError("Active space too small for requested electrons")
-        active_space = list( range(min_indx, info["nmo"] + 1) )
-
-    # ================= Retrieve previous step data =================
-
+    # ================= Previous electronic data =================
     if is_first_time:
-        MO_prev = copy.deepcopy(MO_curr)
+        MO_prev = MO_curr.copy()
         data_prev = copy.deepcopy(data_curr)
     else:
-        MO_prev = copy.deepcopy(params[itraj]["MO_prev"])
-        data_prev = copy.deepcopy(params[itraj]["data_prev"])
+        MO_prev = params["MO_prev"].get(itraj, MO_curr).copy()
+        data_prev = params["data_prev"].get(itraj, data_curr)
 
-    # ================= Allocate output object =================
-
+    # ================= Build object =================
     obj = tmp()
+
     obj.ham_adi = CMATRIX(nstates, nstates)
     obj.nac_adi = CMATRIX(nstates, nstates)
     obj.hvib_adi = CMATRIX(nstates, nstates)
     obj.basis_transform = CMATRIX(nstates, nstates)
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
-    obj.overlap_adi = CMATRIX(nstates, nstates)
 
-    # ================= Compute MO overlap =================
-
+    # ================= Compute overlaps =================
     st_mo_orb = MO_prev.T @ st_ao @ MO_curr
     st_mo = np.kron(np.eye(2), st_mo_orb)
-
-    # ================= Compute CI overlaps =================
 
     ovlp_params = {
         "homo_indx": info["nocc"],
@@ -2673,38 +2802,80 @@ def dftb_compute_adi(q, params, full_id):
         "nvirt": info["nmo"] - info["nocc"],
         "nelec": info["nelec"],
         "nstates": nstates,
-        "active_space": active_space,
+        "active_space": info["actual_orbital_space"],
     }
 
-    st_ci = ci.overlap(st_mo, data_prev, data_curr,ovlp_params )
+    st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
 
     # ================= Populate Hamiltonian =================
-
     for i in range(nstates):
-        energy = 0.0
-        if i > 0:
-            energy = 0.5 * ( data_prev[0][i - 1] + data_curr[0][i - 1] )
+        energy = 0.0 if i == 0 else 0.5 * (
+            data_prev[0][i - 1] + data_curr[0][i - 1]
+        )
+
         obj.ham_adi.set(i, i, energy)
         obj.hvib_adi.set(i, i, energy)
         obj.basis_transform.set(i, i, 1.0)
 
         for j in range(nstates):
-            obj.time_overlap_adi.set( i, j, float(st_ci[i, j])  )
+            obj.time_overlap_adi.set(i, j, float(st_ci[i, j]))
+
+    # ================== Forces ===============================
+    ## autotest.tag
+    results_gs, results_es = None, None
+    results_gs = parse_tagged_file(f"{wd}/autotest_ground_state.tag")
+    results_ex = parse_tagged_file(f"{wd}/autotest.tag")
+
+    #print(F"results_gs = {results_gs}")
+    #print(F"results_ex = {results_ex}")
+
+    forces = None
+    if act_state == 0:
+        forces = results_gs['forces']
+    else:
+        forces = results_ex['forces']
+
+    e0 = results_gs['mermin_energy']
+    print(F"GS energy = {e0}")
+    for i in range(nstates):
+        obj.ham_adi.add(i, i, e0)
+
+
+    obj.d1ham_adi = CMATRIXList()
+    for idof in range(ndof):
+        obj.d1ham_adi.append(CMATRIX(nstates, nstates))
+
+    for iatom in range(nat):
+        obj.d1ham_adi[3 * iatom + 0].set(act_state, act_state, -forces[0, iatom] * (1.0 + 0.0j))
+        obj.d1ham_adi[3 * iatom + 1].set(act_state, act_state, -forces[1, iatom] * (1.0 + 0.0j))
+        obj.d1ham_adi[3 * iatom + 2].set(act_state, act_state, -forces[2, iatom] * (1.0 + 0.0j))
+
+    # ================= Derivative couplings ====================
+    obj.dc1_adi = CMATRIXList()
+    for idof in range(ndof):
+        obj.dc1_adi.append(CMATRIX(nstates, nstates))
+
+    if os.path.exists(f"{wd}/NACV.DAT"):
+        nacv = read_nacv(f"{wd}/NACV.DAT")
+        for iatom in range(nat):
+            for i in range(nstates):
+                for j in range(nstates):
+                    obj.dc1_adi[3 * iatom + 0].set(i, j, nacv[i,j,0,iatom] * (1.0 + 0.0j))
+                    obj.dc1_adi[3 * iatom + 1].set(i, j, nacv[i,j,1,iatom] * (1.0 + 0.0j))
+                    obj.dc1_adi[3 * iatom + 2].set(i, j, nacv[i,j,2,iatom] * (1.0 + 0.0j))
 
     # ================= Compute derivative couplings =================
-
     for i in range(nstates):
         for j in range(i + 1, nstates):
             dij = ( obj.time_overlap_adi.get(i, j) - obj.time_overlap_adi.get(j, i) ) / (2.0 * dt)
             obj.hvib_adi.set(i, j, -1j * dij)
-            obj.hvib_adi.set(j, i, +1j * dij)
-
-    # ================= Store state for next step =================
-    params[itraj]["MO_prev"] = copy.deepcopy(MO_curr)
-    params[itraj]["data_prev"] = copy.deepcopy(data_curr)
-    params[itraj]["coordinates_prev"] = copy.deepcopy(coordinates)
-    params[itraj]["is_first_time"] = False
+            obj.hvib_adi.set(j, i, +1j * dij)            
+            
+    # ================= Store state =================
+    params["MO_prev"][itraj] = MO_curr.copy()
+    params["data_prev"][itraj] = copy.deepcopy(data_curr)
+    params["coordinates_prev"][itraj] = coordinates.copy()
+    params["is_first_time"][itraj] = False
 
     return obj
-
 

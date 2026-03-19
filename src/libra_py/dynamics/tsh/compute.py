@@ -815,7 +815,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # functions with the same input variables without worries that they will be altered
     # inside of each other
 
-    model_params = dict(_model_params)
+    #model_params = dict(_model_params)
+    model_params = copy.deepcopy(_model_params)
     dyn_params = dict(_dyn_params)
 
     nstates = model_params["nstates"]
@@ -1005,6 +1006,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         _savers["txt2_saver"].save_data_txt(F"{prefix2}", properties_to_save, "w", 0)
 
     model_params.update({"timestep": icond})
+
     update_Hamiltonian_variables(dyn_params, dyn_var, ham, ham, compute_model, model_params, 0)
     update_Hamiltonian_variables(dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
 
@@ -1051,10 +1053,12 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
         # ============ Propagate ===========
-        index = i + icond
+        index = i + icond + 1  ### AVA: added +1 on 3/18/2026 for the debug
         if nfiles > 0:
             index = index % nfiles
         model_params.update({"timestep": index})
+        model_params["act_state"] = { itraj : dyn_var.act_states[itraj] for itraj in range(ntraj)  } 
+
 
         compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm)
 
@@ -1118,7 +1122,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
 
     """
 
-    model_params = dict(_model_params)
+    model_params = copy.deepcopy(_model_params)
     dyn_params = dict(_dyn_params)
     init_elec = dict(_init_elec)
     init_nucl = dict(_init_nucl)
@@ -1179,7 +1183,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
     ham.init_all(2, 1)
 
     # Compute internals of the Hamiltonian objects
-    model_params1 = dict(model_params)
+    model_params1 = copy.deepcopy(model_params)
     model_params1.update({"model": model_params["model0"], "timestep": 0})
 
     # We set up this temporary dict such that we we request diabatic Ham calculations
