@@ -2217,6 +2217,13 @@ def run_dftb(coords, params):
             Name of the GEN-format geometry file (relative to the working
             directory).
             Default: "x1.gen"
+ 
+        what_calculation : either "gs", "ex", "both"
+            What kind of calculations to conduct:
+            "gs" - ground state 
+            "ex" - excited state
+            "both" - ex after gs
+            Default: "both"
 
     Returns
     -------
@@ -2276,6 +2283,7 @@ def run_dftb(coords, params):
     dftb_run_params = params.get("dftb_run_params", {})
     wd = params.get("working_directory", "wd")
     gen_file = params.get("gen_file", "x1.gen")
+    what_calculation = params.get("what_calculation", "both")
 
     # Ensure directory exists
     os.makedirs(wd, exist_ok=True)
@@ -2288,31 +2296,34 @@ def run_dftb(coords, params):
     # -------- Write GEN file --------
     write_dftb_gen(gen_path, labels, coords / units.Angst, periodic=False)
 
+
     # -------- Ground state --------
-    make_dftb_input(dftb_run_params, ground_state=True, working_directory=wd)
+    if what_calculation in ["gs", "both"]:
+        make_dftb_input(dftb_run_params, ground_state=True, working_directory=wd)
 
-    subprocess.run(
-        [exe],
-        cwd=wd,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+        subprocess.run(
+            [exe],
+            cwd=wd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
-    # Rename file safely
-    if os.path.exists(tag):
-        os.replace(tag, gs_tag)
+        # Rename file safely
+        if os.path.exists(tag):
+            os.replace(tag, gs_tag)
 
     # -------- Excited state --------
-    make_dftb_input(dftb_run_params, ground_state=False, working_directory=wd)
+    if what_calculation in ["ex", "both"]:
+        make_dftb_input(dftb_run_params, ground_state=False, working_directory=wd)
 
-    subprocess.run(
-        [exe],
-        cwd=wd,
-        check=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+        subprocess.run(
+            [exe],
+            cwd=wd,
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
 def read_dftb_orbital_info(params_):
     """
