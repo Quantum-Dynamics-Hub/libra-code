@@ -1,5 +1,5 @@
 # *********************************************************************************
-# * Copyright (C) 2020 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
+# * Copyright (C) 2026 Mohammad Shakiba, Brendan Smith, Alexey V. Akimov
 # * This file is distributed under the terms of the GNU General Public License
 # * as published by the Free Software Foundation, either version 3 of
 # * the License, or (at your option) any later version.
@@ -17,17 +17,13 @@
 """
 
 
-import os
-import sys
-import math
-import re
+import os, sys, math, re, copy, time, glob
 import numpy as np
 import scipy.sparse as sp
 import scipy.linalg
-import time
-import glob
 from libra_py.workflows.nbra import step2_many_body
 import scipy.io as io
+import libra_py.citools.ci as ci
 
 if sys.platform == "cygwin":
     from cyglibra_core import *
@@ -191,8 +187,313 @@ def cube_file_names_cp2k(params):
     return cube_file_names
 
 
+
 def read_cp2k_tddfpt_log_file(params):
     """
+    Parse a CP2K TD-DFPT log file and extract excitation energies and CI expansion data.
+
+    This function reads the output of a CP2K Time-Dependent Density Functional
+    Perturbation Theory (TD-DFPT) calculation and reconstructs the excited-state
+    wavefunctions in terms of single-particle (Kohn–Sham) excitations.
+
+    In CP2K TD-DFPT, each excited state is represented as a linear combination of
+    single excitations (Slater determinants) of the form:
+
+        |Ψ_I⟩ = Σ_{i→a} C_{i→a}^{(I)} |Φ_i^a⟩
+
+    where:
+        - i denotes an occupied orbital
+        - a denotes a virtual (unoccupied) orbital
+        - C_{i→a}^{(I)} are CI-like expansion coefficients
+        - |Φ_i^a⟩ is a singly-excited Slater determinant
+
+    The function extracts:
+        1. Excitation energies for each TD-DFPT state
+        2. CI basis configurations (orbital transitions i → a)
+        3. Corresponding expansion coefficients
+        4. Spin labels (for UKS calculations)
+
+    Only configurations with coefficient magnitude satisfying:
+
+        |C_{i→a}|^2 > tolerance
+
+    are retained.
+
+    ------------------------------------------------------------------------
+    Args:
+        params (dict): Dictionary of input parameters.
+
+            logfile_name (str, optional):
+                Path to the CP2K log file.
+                Default: "output.log"
+
+            number_of_states (int, optional):
+                Maximum number of excited states to extract.
+                If larger than the number available in the file,
+                it will be truncated automatically.
+
+            ci_threshold (float, optional):
+                Threshold for filtering CI coefficients.
+                Only configurations with |C|^2 > tolerance are kept.
+                Default: 0.001
+
+            isUKS (bool or int, optional):
+                Flag indicating whether the calculation is spin-polarized.
+                - True / 1  → UKS (spin-polarized)
+                - False / 0 → RKS (spin-restricted)
+
+                Affects how the CI lines are parsed and whether spin labels
+                are explicitly read from the log file.
+
+            orbital_space (iterable of int, optional):
+                Subset of orbital indices to define an "active space".
+                If None, all orbitals [1, ..., nmo] are used.
+
+    ------------------------------------------------------------------------
+    Returns:
+
+        info (dict):
+            Dictionary containing system and excitation metadata:
+
+                nocc (int):
+                    Number of occupied orbitals.
+
+                nelec (int):
+                    Total number of electrons.
+
+                nao (int):
+                    Number of atomic orbitals (approximate; set equal to nmo).
+
+                nmo (int):
+                    Total number of molecular orbitals.
+
+                nci (int):
+                    Number of excited states actually returned.
+
+                min_occ, max_occ (int):
+                    Minimum and maximum occupied orbital indices involved
+                    in the CI expansions.
+
+                min_vir, max_vir (int):
+                    Minimum and maximum virtual orbital indices involved
+                    in the CI expansions.
+
+                nact (int):
+                    Size of the active orbital space.
+
+                actual_orbital_space (list of int):
+                    List of orbital indices used in the active space.
+
+        data (list):
+            A list containing:
+
+                excitation_energies (list of float):
+                    Excitation energies (in CP2K units, typically eV).
+
+                ci_basis (list of list of [int, int]):
+                    CI configurations for each state.
+                    Each configuration is represented as:
+                        [i, a]
+                    where i = occupied orbital index,
+                          a = virtual orbital index.
+
+                ci_coefficients (list of list of float):
+                    Corresponding CI coefficients for each configuration.
+
+                spin_components (list of list of string):
+                    Describe spins for the single-particle excitations (no spin-flips)
+
+    ------------------------------------------------------------------------
+    Notes:
+
+        • The parser relies on specific formatting of CP2K output, particularly:
+              - "TDDFPT|" lines for excitation energies
+              - "Excitation analysis" section for CI expansions
+
+        • The function assumes single excitations only (as provided by TD-DFPT).
+
+        • For UKS calculations, spin labels (alpha/beta) are extracted explicitly.
+          For RKS calculations, all excitations are labeled as "alpha".
+
+        • The mapping:
+              occupied orbitals → [1, ..., nocc]
+              virtual orbitals → [nocc+1, ..., nmo]
+          is assumed but not strictly enforced.
+
+        • nao is set equal to nmo, which may not strictly hold in CP2K.
+
+        • The tolerance parameter is important for reducing the size of the CI
+          expansion and focusing on dominant configurations.
+
+    ------------------------------------------------------------------------
+    Potential Improvements:
+
+        - Add unit conversion for excitation energies
+        - Support parsing oscillator strengths
+        - Improve robustness against CP2K format changes
+        - Return spin_components explicitly in the output
+
+    """
+
+    # ===================== Parameters =====================
+    logfile_name = params.get("logfile_name", "output.log")
+    nstates_req = params.get("number_of_states", 1)
+    tol = params.get("ci_threshold", 0.001)
+    isUKS = bool(params.get("isUKS", False))
+    orbital_space = params.get("orbital_space", None)
+
+    # ===================== Read file ======================
+    with open(logfile_name, "r") as f:
+        lines = f.readlines()
+
+    nlines = len(lines)
+
+    # ===================== General info ===================
+    nelec = nocc = nmo = nexcitations = 0
+
+    for line in lines:
+        if "Number of electrons:" in line:
+            nelec = int(float(line.split()[3]))
+        elif "Number of occupied orbitals:" in line:
+            nocc = int(float(line.split()[4]))
+        elif "Number of molecular orbitals:" in line:
+            nmo = int(float(line.split()[4]))
+        elif "TDDFPT| Number of states calculated" in line:
+            nexcitations = int(float(line.split()[5]))
+
+    nao = nmo  # NOTE: may differ in CP2K
+
+    nci = min(nstates_req, nexcitations)
+
+    # Orbital space
+    if orbital_space is None:
+        actual_orbital_space = list(range(1, nmo + 1))
+    else:
+        actual_orbital_space = list(orbital_space)
+
+    nact = len(actual_orbital_space)
+
+    # ===================== Locate sections =================
+    exc_anal_line = None
+    for i, line in enumerate(lines):
+        l = line.lower()
+        if "excitation analysis" in l:
+            exc_anal_line = i
+            break
+
+    if exc_anal_line is None:
+        raise RuntimeError("Could not find 'Excitation analysis' section in log file.")
+
+    # ===================== Excitation energies =============
+    excitation_energies = []
+
+    for i, line in enumerate(lines):
+        if "TDDFPT|" in line and "Molecular" not in lines[i - 1]:
+            parts = line.split()
+            try:
+                excitation_energies.append(float(parts[2]) * units.ev2Ha )
+            except (IndexError, ValueError):
+                continue
+
+    # ===================== State block indices ============
+    state_num_lines = []
+
+    for i in range(exc_anal_line + 5, nlines):
+        tokens = lines[i].split()
+
+        if len(tokens) == 0 or "----" in lines[i]:
+            state_num_lines.append(i)
+            break
+
+        if isUKS:
+            if len(tokens) in (1, 3):
+                state_num_lines.append(i)
+        else:
+            if len(tokens) == 1:
+                state_num_lines.append(i)
+            elif len(tokens) > 1 and tokens[0].isdigit() and not tokens[1].isdigit():
+                state_num_lines.append(i)
+
+    # ===================== CI data ========================
+    ci_basis = []
+    ci_coefficients = []
+    spin_components = []
+
+    for i in range(nci):
+        tmp_basis = []
+        tmp_coeffs = []
+        tmp_spin = []
+
+        for j in range(state_num_lines[i] + 1, state_num_lines[i + 1]):
+            tokens = lines[j].split()
+
+            if not tokens:
+                continue
+
+            try:
+                if isUKS:
+                    coeff = float(tokens[4])
+                    if coeff**2 > tol:
+                        spin = tokens[1].replace("(", "").replace(")", "")
+                        occ = int(tokens[0])
+                        vir = int(tokens[2])
+
+                else:
+                    coeff = float(tokens[2])
+                    if coeff**2 > tol:
+                        spin = "alp"
+                        occ = int(tokens[0])
+                        vir = int(tokens[1])
+
+                if coeff**2 > tol:
+                    tmp_basis.append([occ, vir])
+                    tmp_coeffs.append(coeff)
+                    tmp_spin.append(spin)
+
+            except (IndexError, ValueError):
+                continue
+
+        ci_basis.append(tmp_basis)
+        ci_coefficients.append(tmp_coeffs)
+        spin_components.append(tmp_spin)
+
+    # ===================== Orbital bounds =================
+    min_occ, max_occ = nocc, 1
+    min_vir, max_vir = nmo, nocc + 1
+
+    for state in ci_basis:
+        for occ, vir in state:
+            min_occ = min(min_occ, occ)
+            max_occ = max(max_occ, occ)
+            min_vir = min(min_vir, vir)
+            max_vir = max(max_vir, vir)
+
+    # ===================== Output =========================
+    info = {
+        "nocc": nocc,
+        "nelec": nelec,
+        "nao": nao,
+        "nmo": nmo,
+        "nci": nci,
+        "min_occ": min_occ,
+        "max_occ": max_occ,
+        "min_vir": min_vir,
+        "max_vir": max_vir,
+        "nact": nact,
+        "actual_orbital_space": actual_orbital_space,
+    }
+
+    data = [excitation_energies[:nci], ci_basis, ci_coefficients, spin_components]
+
+    return info, data
+
+
+
+def read_cp2k_tddfpt_log_file_old(params):
+    """
+    A new version is added on 3/22/2026, this one is to be DEPRECATED
+    However, let's keep it for a while to make sure we are backward-compatible, if we need to
+    
     This function reads log files generated from TD-DFPT calculations using CP2K and returns the TD-DFPT
     excitation energies, Slater determinent states in terms of the Kohn-Sham orbital indicies,
     and the Slater determinent coefficients that comprise the multi-configurational electronic states
@@ -2395,4 +2696,281 @@ def compute_mo_overlap(params):
     mo_overlap_matrix = np.linalg.multi_dot([resortted_eig_vect_1, ao_matrix, 
                                              resortted_eig_vect_2.T])
     return mo_overlap_matrix
+
+
+
+
+class tmp:
+    pass
+
+def cp2k_compute_adi(q, params, full_id):
+    """
+    Compute adiabatic electronic properties and time-derivative couplings
+    for a single trajectory using CP2K TDDFPT outputs and precomputed
+    orbital overlap matrices.
+
+    This routine performs a single time-step electronic structure update
+    within trajectory-based nonadiabatic dynamics. It constructs the
+    adiabatic Hamiltonian, vibronic Hamiltonian, and approximate derivative
+    couplings from time-overlap matrices between consecutive electronic states.
+
+    The implementation is suitable for methods such as:
+        - Fewest Switches Surface Hopping (FSSH)
+        - Ehrenfest dynamics
+        - Mapping-based approaches
+        - Exact factorization / quantum trajectory schemes
+
+    Workflow
+    --------
+    1. Extract nuclear coordinates for the selected trajectory.
+    2. Read CP2K TDDFPT results (excitation energies and CI vectors).
+    3. Load molecular orbital (MO) time-overlap matrix from external file.
+    4. Construct CI-state time-overlap matrix using MO overlaps.
+    5. Build:
+        - Adiabatic Hamiltonian (diagonal energies)
+        - Vibronic Hamiltonian (including nonadiabatic couplings)
+        - Time-overlap matrix S(t, t+dt)
+    6. Approximate derivative couplings from finite differences of overlaps.
+    7. Store current electronic and nuclear data for the next time step.
+
+    Parameters
+    ----------
+    q : MATRIX
+        Nuclear coordinates for all trajectories.
+        Shape: (3*N_atoms, N_trajectories)
+        Units: Bohr
+
+    params : dict
+        Dictionary containing simulation parameters and trajectory-specific state.
+
+        Required keys
+        -------------
+        atom_labels : list of str
+            Atomic symbols (e.g., ["O", "H", "H"]).
+        orbital_space : dict
+            Definition of the active molecular orbital space.
+        nstates : int
+            Number of electronic states.
+        logfile_name : str
+            CP2K TDDFPT log file.
+        time_overlap_filename : str
+            File containing MO overlap matrix (NumPy .npz format).
+        lowest_orbital : int
+            Index of the lowest orbital in the active space.
+
+        Optional / internally managed
+        -----------------------------
+        dt : float, default=41.0
+            Nuclear time step (atomic units).
+        working_directory_prefix : str, default="wd"
+            Prefix for trajectory-specific working directories.
+        tolerance : float, default=0.01
+            Threshold for CI truncation.
+        is_first_time : dict
+            Flags indicating first step for each trajectory.
+        act_state : dict
+            Active electronic state index per trajectory.
+        data_prev : dict
+            Previous CI data per trajectory.
+        coordinates_prev : dict
+            Previous nuclear coordinates per trajectory.
+
+    full_id : int or object
+        Encoded trajectory identifier (decoded to obtain trajectory index).
+
+    Returns
+    -------
+    obj : tmp
+        Container with electronic structure data for the trajectory:
+
+        ham_adi : CMATRIX (nstates, nstates)
+            Adiabatic Hamiltonian (diagonal energies).
+
+        hvib_adi : CMATRIX (nstates, nstates)
+            Vibronic Hamiltonian:
+                H_ij = E_i δ_ij - i d_ij
+
+        time_overlap_adi : CMATRIX (nstates, nstates)
+            Time-overlap matrix:
+                S_ij = ⟨Ψ_i(t) | Ψ_j(t+dt)⟩
+
+        basis_transform : CMATRIX (nstates, nstates)
+            Basis transformation matrix (currently identity).
+
+        d1ham_adi : CMATRIXList
+            Derivatives of the Hamiltonian w.r.t nuclear coordinates
+            (currently zero-filled placeholder).
+
+        dc1_adi : CMATRIXList
+            Derivative couplings per nuclear degree of freedom
+            (currently not populated).
+
+    Notes
+    -----
+    - This implementation assumes that CP2K calculations are performed
+      externally and results are read from disk.
+    - Molecular orbital overlaps are provided as a precomputed matrix
+      corresponding to two consecutive geometries ("doubled" system).
+    - CI-state overlaps are constructed using these MO overlaps.
+    - Derivative couplings are approximated using a finite-difference
+      expression based on the antisymmetric part of the overlap matrix:
+
+          d_ij ≈ (S_ij - S_ji) / (2 Δt)
+
+      which leads to the vibronic Hamiltonian:
+
+          H_ij = E_i δ_ij - i d_ij
+
+    - Energies are in Hartree, time in atomic units, coordinates in Bohr.
+
+    Limitations
+    -----------
+    - Forces and analytic nonadiabatic couplings (NACVs) are not currently used.
+    - Accuracy of derivative couplings depends on the time step and overlap quality.
+    - Assumes consistent orbital ordering and phase between time steps.
+
+    Example
+    -------
+    >>> obj = cp2k_compute_adi(q, params, full_id)
+    >>> print(obj.ham_adi)
+    >>> print(obj.time_overlap_adi)
+    """
+
+    # ================= Decode trajectory index =================
+    Id = Cpp2Py(full_id)
+    itraj = Id[-1]
+
+    # ================= Extract coordinates =================
+    coords = q.col(itraj)
+    coordinates = data_conv.MATRIX2nparray(coords, float)
+
+    ndof = coords.num_of_rows
+    nat = ndof // 3
+
+    # ================= Initialize parameter storage =================
+    params.setdefault("data_prev", {})
+    params.setdefault("coordinates_prev", {})
+    params.setdefault("is_first_time", {})
+    params.setdefault("act_state", {})
+
+    is_first_time = params["is_first_time"].get(itraj, True)
+    act_state = params["act_state"].get(itraj, 0)
+
+    # ================= Required parameters =================
+    nstates = params["nstates"]
+    atom_labels = params["atom_labels"]
+    lowest_orbital = params["lowest_orbital"]
+    logfile_name = params["logfile_name"]
+    overlap_file = params["time_overlap_filename"]
+
+    dt = float(params.get("dt", 41.0))
+    tol = params.get("tolerance", 0.01)
+
+    # ================= Previous coordinates =================
+    if is_first_time:
+        coordinates_prev = coordinates.copy()
+    else:
+        coordinates_prev = params["coordinates_prev"].get(itraj, coordinates).copy()
+
+    # ================= Read CP2K TDDFPT data =================
+    read_params = {
+        "number_of_states": nstates,
+        "orbital_space": params["orbital_space"],
+        "logfile_name": logfile_name,
+        "tolerance": tol,
+        "isUKS": False,
+    }
+
+    info, data_curr = read_cp2k_tddfpt_log_file(read_params)
+
+    # ================= Previous electronic data =================
+    if is_first_time:
+        data_prev = copy.deepcopy(data_curr)
+    else:
+        data_prev = params["data_prev"].get(itraj, data_curr)
+
+    # ================= Load MO overlap matrix =================
+    st_mo = sp.load_npz(overlap_file)
+
+    if sp.issparse(st_mo):
+        st_mo = st_mo.toarray()  # FIX: no dtype argument allowed
+    else:
+        st_mo = np.asarray(st_mo)
+
+    st_mo = st_mo.astype(np.float64, copy=False)
+
+    ndim = st_mo.shape[0] // 2
+
+    # ================= Define active orbital space =================
+    active_space = list(range(lowest_orbital, lowest_orbital + ndim))
+
+    # Sanity checks (very important!)
+    if len(active_space) != ndim:
+        raise ValueError("Active space size mismatch with overlap matrix")
+
+    # ================= Build CI overlap =================
+    ovlp_params = {
+        "homo_indx": info["nocc"],
+        "nocc": info["nocc"] - lowest_orbital,
+        "nvirt": (lowest_orbital + ndim) - (info["nocc"] + 1),
+        "nelec": info["nelec"],
+        "nstates": nstates,
+        "active_space": active_space,
+    }
+
+    st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
+
+    # ================= Initialize output object =================
+    obj = tmp()
+    obj.ham_adi = CMATRIX(nstates, nstates)
+    obj.hvib_adi = CMATRIX(nstates, nstates)
+    obj.nac_adi = CMATRIX(nstates, nstates)
+    obj.basis_transform = CMATRIX(nstates, nstates)
+    obj.time_overlap_adi = CMATRIX(nstates, nstates)
+
+    # ================= Populate Hamiltonian =================
+    for i in range(nstates):
+
+        # Average energy between time steps (except GS)
+        if i == 0:
+            energy = 0.0
+        else:
+            energy = 0.5 * (data_prev[0][i - 1] + data_curr[0][i - 1])
+
+        obj.ham_adi.set(i, i, energy)
+        obj.hvib_adi.set(i, i, energy)
+        obj.basis_transform.set(i, i, 1.0)
+
+        for j in range(nstates):
+            obj.time_overlap_adi.set(i, j, float(st_ci[i, j]))
+
+    # ================= Initialize force / derivative containers =================
+    obj.d1ham_adi = CMATRIXList()
+    obj.dc1_adi = CMATRIXList()
+
+    for _ in range(ndof):
+        obj.d1ham_adi.append(CMATRIX(nstates, nstates))
+        obj.dc1_adi.append(CMATRIX(nstates, nstates))
+
+    # ================= Compute derivative couplings =================
+    # Anti-symmetric finite difference estimate
+    inv_2dt = 1.0 / (2.0 * dt)
+
+    for i in range(nstates):
+        for j in range(i + 1, nstates):
+            sij = obj.time_overlap_adi.get(i, j)
+            sji = obj.time_overlap_adi.get(j, i)
+
+            dij = (sij - sji) * inv_2dt
+
+            # Hermitian vibronic Hamiltonian
+            obj.hvib_adi.set(i, j, -1j * dij)
+            obj.hvib_adi.set(j, i, +1j * dij)
+
+    # ================= Store state for next step =================
+    params["data_prev"][itraj] = copy.deepcopy(data_curr)
+    params["coordinates_prev"][itraj] = coordinates.copy()
+    params["is_first_time"][itraj] = False
+
+    return obj
 

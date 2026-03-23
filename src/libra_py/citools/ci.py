@@ -97,7 +97,7 @@ def overlap(st_mo, data1, data2, params):
     nvirt = params["nvirt"]
     nelec = params["nelec"]
     nstates = params["nstates"]
-    active_space = params["active_space"]
+    active_space = params.get("active_space", None)
 
     if nstates <= 1:
         raise ValueError("nstates must include at least one excited state")

@@ -919,9 +919,11 @@ def sd_and_csf_overlaps_singlet(
     # ==================================================================
     st_mo_dense = None # st_mo.todense()
     if sparse.issparse(st_mo):
-        st_mo_dense = st_mo.toarray(dtype=np.float64)
+        st_mo_dense = st_mo.toarray()
     else:
-        st_mo_dense = np.asarray(st_mo, dtype=np.float64)
+        st_mo_dense = np.asarray(st_mo)
+
+
 
     st_sd = sd.slater_overlap_matrix(
         dets, dets, st_mo_dense, complex_valued=False
