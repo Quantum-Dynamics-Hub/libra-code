@@ -2703,35 +2703,21 @@ def compute_mo_overlap(params):
 class tmp:
     pass
 
+
 def cp2k_compute_adi(q, params, full_id):
     """
-    Compute adiabatic electronic properties and time-derivative couplings
-    for a single trajectory using CP2K TDDFPT outputs and precomputed
-    orbital overlap matrices.
+    Compute adiabatic electronic properties and derivative couplings
+    for a single trajectory using CP2K TDDFPT outputs and CI overlap analysis.
 
-    This routine performs a single time-step electronic structure update
-    within trajectory-based nonadiabatic dynamics. It constructs the
-    adiabatic Hamiltonian, vibronic Hamiltonian, and approximate derivative
-    couplings from time-overlap matrices between consecutive electronic states.
+    This function performs a single electronic structure evaluation step in a
+    trajectory-based nonadiabatic dynamics simulation. It constructs adiabatic
+    and vibronic Hamiltonians, evaluates time-overlap matrices between electronic
+    states at consecutive time steps, and estimates derivative couplings using
+    finite-difference time overlaps.
 
-    The implementation is suitable for methods such as:
-        - Fewest Switches Surface Hopping (FSSH)
-        - Ehrenfest dynamics
-        - Mapping-based approaches
-        - Exact factorization / quantum trajectory schemes
-
-    Workflow
-    --------
-    1. Extract nuclear coordinates for the selected trajectory.
-    2. Read CP2K TDDFPT results (excitation energies and CI vectors).
-    3. Load molecular orbital (MO) time-overlap matrix from external file.
-    4. Construct CI-state time-overlap matrix using MO overlaps.
-    5. Build:
-        - Adiabatic Hamiltonian (diagonal energies)
-        - Vibronic Hamiltonian (including nonadiabatic couplings)
-        - Time-overlap matrix S(t, t+dt)
-    6. Approximate derivative couplings from finite differences of overlaps.
-    7. Store current electronic and nuclear data for the next time step.
+    The implementation assumes that CP2K TDDFPT calculations have already been
+    executed externally and that all required output files (log files and MO
+    overlap matrices) are available.
 
     Parameters
     ----------
@@ -2741,101 +2727,131 @@ def cp2k_compute_adi(q, params, full_id):
         Units: Bohr
 
     params : dict
-        Dictionary containing simulation parameters and trajectory-specific state.
+        Dictionary containing simulation parameters and trajectory-specific data.
 
         Required keys
         -------------
-        atom_labels : list of str
-            Atomic symbols (e.g., ["O", "H", "H"]).
-        orbital_space : dict
-            Definition of the active molecular orbital space.
         nstates : int
-            Number of electronic states.
-        logfile_name : str
-            CP2K TDDFPT log file.
-        time_overlap_filename : str
-            File containing MO overlap matrix (NumPy .npz format).
-        lowest_orbital : int
-            Index of the lowest orbital in the active space.
+            Number of adiabatic electronic states.
 
-        Optional / internally managed
-        -----------------------------
+        logfile_name : str
+            Path to CP2K TDDFPT log file.
+
+        time_overlap_filename : str
+            Path to sparse MO overlap matrix file (.npz format).
+
+        atom_labels : list of str
+            Atomic symbols (currently not used directly in this function).
+
+        lowest_orbital : int
+            Lowest orbital index included in the overlap matrix (1-based indexing).
+
+        Optional keys
+        -------------
         dt : float, default=41.0
             Nuclear time step (atomic units).
+
+        ci_threshold : float, default=1e-3
+            Threshold for CI coefficient truncation.
+
+        nelec_act_space : int, optional
+            Number of electrons in the active space. If not provided,
+            the full orbital space is used.
+
         working_directory_prefix : str, default="wd"
             Prefix for trajectory-specific working directories.
-        tolerance : float, default=0.01
-            Threshold for CI truncation.
-        is_first_time : dict
-            Flags indicating first step for each trajectory.
-        act_state : dict
-            Active electronic state index per trajectory.
+
+        Internal state (updated in-place)
+        --------------------------------
         data_prev : dict
-            Previous CI data per trajectory.
+            Previous CI/electronic structure data per trajectory.
+
         coordinates_prev : dict
             Previous nuclear coordinates per trajectory.
 
+        is_first_time : dict
+            Flags indicating first step per trajectory.
+
+        act_state : dict
+            Active electronic state per trajectory (currently only used in commented sections).
+
     full_id : int or object
-        Encoded trajectory identifier (decoded to obtain trajectory index).
+        Encoded trajectory identifier. The last element corresponds to `itraj`.
 
     Returns
     -------
     obj : tmp
-        Container with electronic structure data for the trajectory:
+        Container object with computed electronic properties.
 
+        Attributes
+        ----------
         ham_adi : CMATRIX (nstates, nstates)
             Adiabatic Hamiltonian (diagonal energies).
 
         hvib_adi : CMATRIX (nstates, nstates)
-            Vibronic Hamiltonian:
+            Vibronic Hamiltonian including derivative coupling terms:
                 H_ij = E_i δ_ij - i d_ij
 
         time_overlap_adi : CMATRIX (nstates, nstates)
             Time-overlap matrix:
-                S_ij = ⟨Ψ_i(t) | Ψ_j(t+dt)⟩
+                S_ij = <Ψ_i(t) | Ψ_j(t + dt)>
 
         basis_transform : CMATRIX (nstates, nstates)
-            Basis transformation matrix (currently identity).
+            Basis transformation matrix (identity).
 
-        d1ham_adi : CMATRIXList
-            Derivatives of the Hamiltonian w.r.t nuclear coordinates
-            (currently zero-filled placeholder).
+        nac_adi : CMATRIX (nstates, nstates)
+            Placeholder for nonadiabatic couplings (currently unused).
 
-        dc1_adi : CMATRIXList
+        d1ham_adi : CMATRIXList (length = ndof)
+            Derivatives of Hamiltonian w.r.t. nuclear coordinates
+            (currently zero-filled; forces code is commented out).
+
+        dc1_adi : CMATRIXList (length = ndof)
             Derivative couplings per nuclear degree of freedom
-            (currently not populated).
+            (currently zero-filled unless NACV block is enabled).
 
     Notes
     -----
-    - This implementation assumes that CP2K calculations are performed
-      externally and results are read from disk.
-    - Molecular orbital overlaps are provided as a precomputed matrix
-      corresponding to two consecutive geometries ("doubled" system).
-    - CI-state overlaps are constructed using these MO overlaps.
-    - Derivative couplings are approximated using a finite-difference
-      expression based on the antisymmetric part of the overlap matrix:
+    - Ground state energy is set to zero; excited-state energies are averaged
+      between previous and current time steps.
 
-          d_ij ≈ (S_ij - S_ji) / (2 Δt)
+    - Time-overlaps are computed at the CI level using molecular orbital overlaps
+      and CI coefficients from consecutive steps.
 
-      which leads to the vibronic Hamiltonian:
+    - Derivative couplings are approximated via:
+          d_ij = (S_ij - S_ji) / (2 * dt)
 
-          H_ij = E_i δ_ij - i d_ij
+      and included in the vibronic Hamiltonian as:
+          H_ij = -i * d_ij  (off-diagonal terms)
 
-    - Energies are in Hartree, time in atomic units, coordinates in Bohr.
+    - Active space selection:
+        * If `nelec_act_space` is None → full orbital space is used.
+        * Otherwise, a truncated space around HOMO is constructed.
+
+    - The function assumes:
+        * Closed-shell (restricted) calculations (`isUKS=False`)
+        * Real-valued CI overlaps
+
+    - NACVs (analytic derivative couplings) and forces are currently disabled
+      but can be enabled via the commented sections.
+
+    - All trajectory-specific data is stored in `params` to support
+      multi-trajectory simulations.
 
     Limitations
     -----------
-    - Forces and analytic nonadiabatic couplings (NACVs) are not currently used.
-    - Accuracy of derivative couplings depends on the time step and overlap quality.
-    - Assumes consistent orbital ordering and phase between time steps.
+    - No phase correction is applied to CI states.
+    - Overlap matrix is assumed to be correctly aligned (no orbital reordering).
+    - No error handling for missing files (e.g., overlap matrix).
+    - Vibronic Hamiltonian neglects diagonal derivative terms.
 
     Example
     -------
     >>> obj = cp2k_compute_adi(q, params, full_id)
     >>> print(obj.ham_adi)
     >>> print(obj.time_overlap_adi)
+    >>> print(obj.hvib_adi)
     """
-
     # ================= Decode trajectory index =================
     Id = Cpp2Py(full_id)
     itraj = Id[-1]
@@ -2847,7 +2863,8 @@ def cp2k_compute_adi(q, params, full_id):
     ndof = coords.num_of_rows
     nat = ndof // 3
 
-    # ================= Initialize parameter storage =================
+    # ================= Safe param access =================
+    params.setdefault("MO_prev", {})
     params.setdefault("data_prev", {})
     params.setdefault("coordinates_prev", {})
     params.setdefault("is_first_time", {})
@@ -2856,15 +2873,18 @@ def cp2k_compute_adi(q, params, full_id):
     is_first_time = params["is_first_time"].get(itraj, True)
     act_state = params["act_state"].get(itraj, 0)
 
-    # ================= Required parameters =================
-    nstates = params["nstates"]
-    atom_labels = params["atom_labels"]
+    nelec_act_space = params.get("nelec_act_space", None)
     lowest_orbital = params["lowest_orbital"]
-    logfile_name = params["logfile_name"]
-    overlap_file = params["time_overlap_filename"]
 
+    # ================= Read parameters =================
     dt = float(params.get("dt", 41.0))
-    tol = params.get("tolerance", 0.01)
+    atom_labels = params["atom_labels"]
+
+    wd_prefix = params.get("working_directory_prefix", "wd")
+    wd = f"{wd_prefix}_itraj{itraj}"
+
+    # ================= Run CP2K =================
+    # Currently - we just take the external files
 
     # ================= Previous coordinates =================
     if is_first_time:
@@ -2872,16 +2892,18 @@ def cp2k_compute_adi(q, params, full_id):
     else:
         coordinates_prev = params["coordinates_prev"].get(itraj, coordinates).copy()
 
-    # ================= Read CP2K TDDFPT data =================
+    # ================= Read electronic structure =================
+    nstates = params["nstates"]
+
     read_params = {
         "number_of_states": nstates,
-        "orbital_space": params["orbital_space"],
-        "logfile_name": logfile_name,
-        "tolerance": tol,
+        "logfile_name": params["logfile_name"],
+        "ci_threshold": params.get("ci_threshold", 0.001),
         "isUKS": False,
     }
 
     info, data_curr = read_cp2k_tddfpt_log_file(read_params)
+    # print(f"info = {info}")
 
     # ================= Previous electronic data =================
     if is_first_time:
@@ -2889,53 +2911,65 @@ def cp2k_compute_adi(q, params, full_id):
     else:
         data_prev = params["data_prev"].get(itraj, data_curr)
 
-    # ================= Load MO overlap matrix =================
-    st_mo = sp.load_npz(overlap_file)
+    # ================= Build object =================
+    obj = tmp()
+    obj.ham_adi = CMATRIX(nstates, nstates)
+    obj.nac_adi = CMATRIX(nstates, nstates)
+    obj.hvib_adi = CMATRIX(nstates, nstates)
+    obj.basis_transform = CMATRIX(nstates, nstates)
+    obj.time_overlap_adi = CMATRIX(nstates, nstates)
 
+    # ================= Compute overlaps =================
+    st_mo = sp.load_npz(params["time_overlap_filename"])
+    
     if sp.issparse(st_mo):
         st_mo = st_mo.toarray()  # FIX: no dtype argument allowed
     else:
         st_mo = np.asarray(st_mo)
-
     st_mo = st_mo.astype(np.float64, copy=False)
-
+    
     ndim = st_mo.shape[0] // 2
+    
+    #print(f"ndim = {ndim}")
 
-    # ================= Define active orbital space =================
-    active_space = list(range(lowest_orbital, lowest_orbital + ndim))
+    orbital_space = list(range(lowest_orbital, lowest_orbital + ndim))
 
-    # Sanity checks (very important!)
-    if len(active_space) != ndim:
-        raise ValueError("Active space size mismatch with overlap matrix")
+    # ================= Construct active space =================
+    if nelec_act_space is None:
+        active_space = list(orbital_space)
+    else:
+        min_indx = info["nocc"] - nelec_act_space // 2 + 1
 
-    # ================= Build CI overlap =================
+        if min_indx > info["min_occ"]:
+            min_elec = ((info["nocc"] - info["min_occ"]) + 1) * 2
+            raise ValueError(f"The `nelec_act_space` should be at least {min_elec}")
+
+        active_space = list(range(min_indx, info["max_vir"] + 1))
+
+    # ================= Compute CI time-overlaps =================
+    highest_orbital = lowest_orbital + ndim - 1
+
     ovlp_params = {
         "homo_indx": info["nocc"],
         "nocc": info["nocc"] - lowest_orbital,
-        "nvirt": (lowest_orbital + ndim) - (info["nocc"] + 1),
-        "nelec": info["nelec"],
+        "nvirt": highest_orbital - info["nocc"],
+        "nelec": (info["nocc"] - lowest_orbital + 1) * 2,
         "nstates": nstates,
         "active_space": active_space,
+        "orbital_space": orbital_space,
     }
 
-    st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
+    # print(f"orbital_space: {orbital_space}")
+    # print(f"active_space: {active_space}")
 
-    # ================= Initialize output object =================
-    obj = tmp()
-    obj.ham_adi = CMATRIX(nstates, nstates)
-    obj.hvib_adi = CMATRIX(nstates, nstates)
-    obj.nac_adi = CMATRIX(nstates, nstates)
-    obj.basis_transform = CMATRIX(nstates, nstates)
-    obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
 
     # ================= Populate Hamiltonian =================
     for i in range(nstates):
 
-        # Average energy between time steps (except GS)
-        if i == 0:
-            energy = 0.0
-        else:
-            energy = 0.5 * (data_prev[0][i - 1] + data_curr[0][i - 1])
+        energy = 0.0 if i == 0 else 0.5 * (
+            data_prev[0][i - 1] + data_curr[0][i - 1]
+        )
 
         obj.ham_adi.set(i, i, energy)
         obj.hvib_adi.set(i, i, energy)
@@ -2944,33 +2978,46 @@ def cp2k_compute_adi(q, params, full_id):
         for j in range(nstates):
             obj.time_overlap_adi.set(i, j, float(st_ci[i, j]))
 
-    # ================= Initialize force / derivative containers =================
+    # ================= Forces =================
     obj.d1ham_adi = CMATRIXList()
-    obj.dc1_adi = CMATRIXList()
-
-    for _ in range(ndof):
+    for idof in range(ndof):
         obj.d1ham_adi.append(CMATRIX(nstates, nstates))
+
+    # for iatom in range(nat):
+    #     obj.d1ham_adi[3 * iatom + 0].set(act_state, act_state, -forces[0, iatom] * (1.0 + 0.0j))
+    #     obj.d1ham_adi[3 * iatom + 1].set(act_state, act_state, -forces[1, iatom] * (1.0 + 0.0j))
+    #     obj.d1ham_adi[3 * iatom + 2].set(act_state, act_state, -forces[2, iatom] * (1.0 + 0.0j))
+
+    # ================= Derivative couplings containers =================
+    obj.dc1_adi = CMATRIXList()
+    for idof in range(ndof):
         obj.dc1_adi.append(CMATRIX(nstates, nstates))
 
-    # ================= Compute derivative couplings =================
-    # Anti-symmetric finite difference estimate
-    inv_2dt = 1.0 / (2.0 * dt)
+    # if os.path.exists(f"{wd}/NACV.DAT"):
+    #     nacv = read_nacv(f"{wd}/NACV.DAT")
+    #     for iatom in range(nat):
+    #         for i in range(nstates):
+    #             for j in range(nstates):
+    #                 obj.dc1_adi[3 * iatom + 0].set(i, j, nacv[i, j, 0, iatom] * (1.0 + 0.0j))
+    #                 obj.dc1_adi[3 * iatom + 1].set(i, j, nacv[i, j, 1, iatom] * (1.0 + 0.0j))
+    #                 obj.dc1_adi[3 * iatom + 2].set(i, j, nacv[i, j, 2, iatom] * (1.0 + 0.0j))
 
+    # ================= Compute derivative couplings =================
     for i in range(nstates):
         for j in range(i + 1, nstates):
-            sij = obj.time_overlap_adi.get(i, j)
-            sji = obj.time_overlap_adi.get(j, i)
 
-            dij = (sij - sji) * inv_2dt
+            dij = (
+                obj.time_overlap_adi.get(i, j)
+                - obj.time_overlap_adi.get(j, i)
+            ) / (2.0 * dt)
 
-            # Hermitian vibronic Hamiltonian
             obj.hvib_adi.set(i, j, -1j * dij)
             obj.hvib_adi.set(j, i, +1j * dij)
 
-    # ================= Store state for next step =================
+    # ================= Store state =================
+    # params["MO_prev"][itraj] = MO_curr.copy()
     params["data_prev"][itraj] = copy.deepcopy(data_curr)
     params["coordinates_prev"][itraj] = coordinates.copy()
     params["is_first_time"][itraj] = False
 
     return obj
-

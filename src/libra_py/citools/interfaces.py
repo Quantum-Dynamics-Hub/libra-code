@@ -854,12 +854,13 @@ def sd_and_csf_overlaps_singlet(
     # ------------------------------------------------------------------
     orbital_space = list(range(lowest_orbital, highest_orbital + 1))
 
+    #print(F"In ci.interfaces: orbital_space = {orbital_space}")
     if _active_space is None:
         active_space = orbital_space
     else:
         active_space = list(_active_space)
         if not set(active_space).issubset(orbital_space):
-            raise ValueError("Active space orbitals must be within orbital_space")
+            raise ValueError(F"Active space orbitals {active_space} must be within orbital_space {orbital_space}")
 
     # ==================================================================
     # Build reference determinant

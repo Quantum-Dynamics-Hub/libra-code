@@ -138,6 +138,8 @@ def overlap(st_mo, data1, data2, params):
     # ------------------------------------------------------------------
     # SD and CSF overlap matrices (singlet)
     # ------------------------------------------------------------------
+    #print(F"In ci.overlap: nelec_eff = {nelec_eff}  active_space = {active_space}")
+    #print(F"In ci.overlap: lowest_orbital = {lowest_orbital}  highest_orbital = {highest_orbital}")
     csf_ovlp, sd_ovlp = interfaces.sd_and_csf_overlaps_singlet(
         st_mo,
         lowest_orbital,
