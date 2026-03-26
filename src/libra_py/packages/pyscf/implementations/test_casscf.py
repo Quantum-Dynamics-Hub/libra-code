@@ -16,12 +16,23 @@
 
 """
 
-from pyscf import gto
-from pyscf2.implementations.casscf import CASSCF
-from pyscf2.interfaces import ElectronicStructureStrategy
-import numpy as np
+import sys
+from pathlib import Path
 
-from pyscf2.interfaces import MolecularGeometry
+# Allow running this script directly with proper package root in sys.path
+if __name__ == "__main__" and __package__ is None:
+    file_path = Path(__file__).resolve()
+    for parent in file_path.parents:
+        if parent.name == "src":
+            sys.path.insert(0, str(parent))
+            break
+    else:
+        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
+
+from pyscf import gto
+from libra_py.packages.pyscf.implementations.casscf import CASSCF
+from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+import numpy as np
 
 geom1 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,0.7746]]))
 geom2 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,1.0]]))
