@@ -14,5 +14,6 @@ __all__ = ["cp2k",
            "lammps",
            "mopac",
            "psi4",
+           "pyscf",
            "qe"
            ]
