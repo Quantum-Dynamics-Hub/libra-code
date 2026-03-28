@@ -279,7 +279,7 @@ def generate_single_excitations(active_orbitals: List[int], nelec: int):
             parity = permutation_parity(tuple(det_raw), det_sorted)
             yield det_sorted, parity
 
-def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
+def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=None, phases_B=None):
     """
     Compute the matrix of overlaps between two possibly distinct sets of
     Slater determinants (α/β spins orthogonal).
@@ -299,6 +299,11 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
     complex_valued : bool, optional
         If True, results are complex-valued. Default is False.
 
+    phases_A, phases_B : list[int]
+        Excitation phases of the determinants with respect to 
+        the reference ground states. If None, they are assumed to 
+        be 1.0 for all basis functions
+
     Returns
     -------
     S_AB : np.ndarray
@@ -308,6 +313,24 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
     dtype = complex if complex_valued else float
     nA, nB = len(dets_A), len(dets_B)
     S_AB = np.zeros((nA, nB), dtype=dtype)
+
+    ph_A, ph_B = None, None
+    if phases_A == None:
+        ph_A = np.ones(nA)
+    else:
+        if len(phases_A) != nA:
+            raise ValueError(F"phases_A = {phases_A} should be of length {nA} or None")
+        else:
+            ph_A = phases_A
+
+    if phases_B == None:
+        ph_B = np.ones(nB)
+    else:
+        if len(phases_B) != nB:
+            raise ValueError(F"phases_B = {phases_B} should be of length {nB} or None")
+        else:
+            ph_B = phases_B
+
 
     # Precompute α and β orbital indices (0-based)
     alpha_A = [np.array([abs(o) - 1 for o in d if o > 0], dtype=int) for d in dets_A]
@@ -325,7 +348,7 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False):
             S_b = S_orb[np.ix_(b_i, b_j)]
 
             # Product of determinants
-            S_AB[i, j] = np.linalg.det(S_a) * np.linalg.det(S_b)
+            S_AB[i, j] = np.linalg.det(S_a) * np.linalg.det(S_b) * ph_A[i] * ph_B[j]
 
     return S_AB
 
@@ -419,4 +442,103 @@ def make_excitation(ref_det, occ, vir):
     res[idx] = vir
 
     return res
+
+
+
+
+def excitation_phase_from_mapping(
+    det: List[int],
+    exc: List[int],
+) -> Tuple[int, List[int]]:
+    """
+    Compute the fermionic phase for a single excitation between two
+    Slater determinants given in canonical (sorted) form.
+
+    Unlike position-based mapping, this version detects the excitation
+    via *set differences*, making it robust to canonical reordering.
+
+    Parameters
+    ----------
+    det : list of int
+        Reference determinant (canonical order).
+
+    exc : list of int
+        Excited determinant (canonical order).
+
+    Returns
+    -------
+    phase : int
+        Fermionic phase factor (+1 or -1).
+
+    new_det : list of int
+        The excited determinant (canonical order).
+
+    Raises
+    ------
+    ValueError
+        If the excitation is not a single excitation.
+
+    Notes
+    -----
+    Phase is computed as:
+
+        phase = (-1)^(N_between)
+
+    where N_between is the number of occupied orbitals in `det`
+    between the removed orbital i and added orbital a in canonical order.
+
+    This implementation is robust for determinants that have already
+    been sorted (canonicalized), where position-wise comparison fails.
+
+    Examples
+    --------
+    >>> det0 = [40, -40]
+
+    >>> exc1 = [-40, 41]   # 40α → 41α
+    >>> excitation_phase_from_mapping(det0, exc1)
+    (-1, [-40, 41])
+
+    >>> exc2 = [40, -41]   # 40β → 41β
+    >>> excitation_phase_from_mapping(det0, exc2)
+    (1, [40, -41])
+    """
+
+    det = list(det)
+    exc = list(exc)
+
+    if len(det) != len(exc):
+        raise ValueError("det and exc must have the same length")
+
+    # --- identify excitation via occupation difference ---
+    removed = list(set(det) - set(exc))
+    added   = list(set(exc) - set(det))
+
+    if len(removed) != 1 or len(added) != 1:
+        raise ValueError(
+            f"Expected single excitation, got removed={removed}, added={added}"
+        )
+
+    i = removed[0]
+    a = added[0]
+
+    # --- canonical ordering (assumed already sorted, but safe) ---
+    det_sorted = sorted(det, key=canonical_sort_key)
+
+    # --- build ordering space ---
+    all_orbs = sorted(set(det_sorted + [a]), key=canonical_sort_key)
+
+    idx_i = all_orbs.index(i)
+    idx_a = all_orbs.index(a)
+
+    if idx_i < idx_a:
+        between = all_orbs[idx_i + 1:idx_a]
+    else:
+        between = all_orbs[idx_a + 1:idx_i]
+
+    # count occupied orbitals between i and a
+    n_between = sum(1 for x in between if x in det_sorted)
+
+    phase = -1 if (n_between % 2) else +1
+
+    return phase, sorted(exc, key=canonical_sort_key)
 
