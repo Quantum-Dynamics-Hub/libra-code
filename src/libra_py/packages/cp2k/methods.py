@@ -33,6 +33,7 @@ import util.libutil as comn
 
 from libra_py import data_outs, data_stat, data_conv
 from libra_py import units, molden_methods
+import libra_py.orthogonalizations as ortho
 
 
 def ndigits(integer_number: int):
@@ -2867,6 +2868,7 @@ def cp2k_compute_adi(q, params, full_id):
     params.setdefault("MO_prev", {})
     params.setdefault("data_prev", {})
     params.setdefault("coordinates_prev", {})
+    params.setdefault("s_ci_inv_prev", {})
     params.setdefault("is_first_time", {})
     params.setdefault("act_state", {})
 
@@ -2918,6 +2920,7 @@ def cp2k_compute_adi(q, params, full_id):
     obj.hvib_adi = CMATRIX(nstates, nstates)
     obj.basis_transform = CMATRIX(nstates, nstates)
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    obj.overlap_adi = CMATRIX(nstates, nstates)
 
     # ================= Compute overlaps =================
     st_mo = sp.load_npz(params["time_overlap_filename"])
@@ -2927,6 +2930,9 @@ def cp2k_compute_adi(q, params, full_id):
     else:
         st_mo = np.asarray(st_mo)
     st_mo = st_mo.astype(np.float64, copy=False)
+
+    s_mo = sp.load_npz(params["overlap_filename"]).todense()
+
     
     ndim = st_mo.shape[0] // 2
     
@@ -2964,6 +2970,20 @@ def cp2k_compute_adi(q, params, full_id):
 
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
 
+    s_ci = ci.overlap(s_mo, data_curr, data_curr, ovlp_params)
+    
+    s_ci_inv_curr = ortho.lowdin_inverse_sqrt(s_ci)
+    s_ci_inv_prev = None
+    if is_first_time:
+        s_ci_inv_prev = copy.deepcopy(s_ci_inv_curr)
+    else:
+        s_ci_inv_prev = params["s_ci_inv_prev"].get(itraj, s_ci_inv_curr)
+    
+    s_ci = s_ci_inv_curr @ s_ci @ s_ci_inv_curr
+    st_ci = s_ci_inv_prev @ st_ci @ s_ci_inv_curr
+
+
+
     # ================= Populate Hamiltonian =================
     for i in range(nstates):
 
@@ -2977,6 +2997,7 @@ def cp2k_compute_adi(q, params, full_id):
 
         for j in range(nstates):
             obj.time_overlap_adi.set(i, j, float(st_ci[i, j]))
+            obj.overlap_adi.set(i,  j, float(s_ci[i,j]) )
 
     # ================= Forces =================
     obj.d1ham_adi = CMATRIXList()
@@ -3018,6 +3039,7 @@ def cp2k_compute_adi(q, params, full_id):
     # params["MO_prev"][itraj] = MO_curr.copy()
     params["data_prev"][itraj] = copy.deepcopy(data_curr)
     params["coordinates_prev"][itraj] = coordinates.copy()
+    params["s_ci_inv_prev"][itraj] = copy.deepcopy(s_ci_inv_curr)
     params["is_first_time"][itraj] = False
 
     return obj
