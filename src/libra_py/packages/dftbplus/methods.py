@@ -32,6 +32,7 @@ from libra_py import regexlib as rgl
 import libra_py.citools.ci as ci
 from libra_py import data_conv
 import libra_py.packages.cp2k.methods as CP2K_methods
+import libra_py.orthogonalizations as ortho
 
 # import numpy as np
 
@@ -2711,6 +2712,7 @@ def dftb_compute_adi(q, params, full_id):
     params.setdefault("MO_prev", {})
     params.setdefault("data_prev", {})
     params.setdefault("coordinates_prev", {})
+    params.setdefault("s_ci_inv_prev", {})
     params.setdefault("is_first_time", {})
     params.setdefault("act_state", {})
 
@@ -2721,6 +2723,7 @@ def dftb_compute_adi(q, params, full_id):
     dt = float(params.get("dt", 41.0))
     dftb_run_params = params.get("dftb_run_params", {})
     atom_labels = params["atom_labels"]
+    energy_zero = params.get("energy_zero", 0.0 )
 
     wd_prefix = params.get("working_directory_prefix", "wd")
     wd = f"{wd_prefix}_itraj{itraj}"
@@ -2780,11 +2783,14 @@ def dftb_compute_adi(q, params, full_id):
 
     info, MO_curr, data_curr = read_dftb_orbital_info(read_params)
 
+    #print(info)
+
     # ================= Overlap =================
     ndim = info["nmo"]
     S = read_overlap_matrix(f"{wd}/oversqr.dat", 2 * ndim)
 
     st_ao = S[:ndim, ndim:]
+    s_ao = S[ndim:, ndim:]
 
     # ================= Previous electronic data =================
     if is_first_time:
@@ -2802,8 +2808,12 @@ def dftb_compute_adi(q, params, full_id):
     obj.hvib_adi = CMATRIX(nstates, nstates)
     obj.basis_transform = CMATRIX(nstates, nstates)
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    obj.overlap_adi = CMATRIX(nstates, nstates)
 
     # ================= Compute overlaps =================
+    s_mo_orb = MO_curr.T @ s_ao @ MO_curr
+    s_mo = np.kron(np.eye(2), s_mo_orb)
+
     st_mo_orb = MO_prev.T @ st_ao @ MO_curr
     st_mo = np.kron(np.eye(2), st_mo_orb)
 
@@ -2817,6 +2827,18 @@ def dftb_compute_adi(q, params, full_id):
     }
 
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
+    s_ci = ci.overlap(s_mo, data_curr, data_curr, ovlp_params)
+    
+    s_ci_inv_curr = ortho.lowdin_inverse_sqrt(s_ci)
+    s_ci_inv_prev = None
+    if is_first_time:
+        s_ci_inv_prev = copy.deepcopy(s_ci_inv_curr)
+    else:
+        s_ci_inv_prev = params["s_ci_inv_prev"].get(itraj, s_ci_inv_curr)
+
+    s_ci = s_ci_inv_curr @ s_ci @ s_ci_inv_curr
+    st_ci = s_ci_inv_prev @ st_ci @ s_ci_inv_curr
+
 
     # ================= Populate Hamiltonian =================
     for i in range(nstates):
@@ -2830,6 +2852,7 @@ def dftb_compute_adi(q, params, full_id):
 
         for j in range(nstates):
             obj.time_overlap_adi.set(i, j, float(st_ci[i, j]))
+            obj.overlap_adi.set(i,  j, float(s_ci[i,j]) )
 
     # ================== Forces ===============================
     ## autotest.tag
@@ -2846,7 +2869,7 @@ def dftb_compute_adi(q, params, full_id):
     else:
         forces = results_ex['forces']
 
-    e0 = results_gs['mermin_energy']
+    e0 = results_gs['mermin_energy'] - energy_zero
     print(F"GS energy = {e0}")
     for i in range(nstates):
         obj.ham_adi.add(i, i, e0)
@@ -2886,6 +2909,7 @@ def dftb_compute_adi(q, params, full_id):
     params["MO_prev"][itraj] = MO_curr.copy()
     params["data_prev"][itraj] = copy.deepcopy(data_curr)
     params["coordinates_prev"][itraj] = coordinates.copy()
+    params["s_ci_inv_prev"][itraj] = copy.deepcopy(s_ci_inv_curr)
     params["is_first_time"][itraj] = False
 
     return obj
