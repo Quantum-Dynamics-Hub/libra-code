@@ -115,6 +115,7 @@ dyn_control_params::dyn_control_params(){
   project_out_aux = 0;
   tp_algo = 1;
   use_td_width = 0;
+  gap_correlation_time = 41.0;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = 0;
@@ -233,6 +234,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   project_out_aux = x.project_out_aux;
   tp_algo = x.tp_algo;
   use_td_width = x.use_td_width;
+  gap_correlation_time = x.gap_correlation_time;
 
   ///================= Entanglement of trajectories ================================
   entanglement_opt = x.entanglement_opt;
@@ -301,7 +303,7 @@ void dyn_control_params::sanity_check(){
      state_tracking_algo==0 || state_tracking_algo==1 ||
      state_tracking_algo==2 || state_tracking_algo==21 || 
      state_tracking_algo==3 || state_tracking_algo==32 || state_tracking_algo==33 ||
-     state_tracking_algo==4){ ; ; }
+     state_tracking_algo==4 || state_tracking_algo==5  || state_tracking_algo==6 ){ ; ; }
   else{
     std::cout<<"Error in dyn_control_params::sanity_check: state_tracking_algo = "
         <<state_tracking_algo<<" is not allowed\nExiting...\n";
@@ -481,6 +483,8 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="project_out_aux"){ project_out_aux = bp::extract<int>(params.values()[i]); }
     else if(key=="tp_algo"){ tp_algo = bp::extract<int>(params.values()[i]); }
     else if(key=="use_td_width"){ use_td_width = bp::extract<int>(params.values()[i]); }
+
+    else if(key=="gap_correlation_time"){ gap_correlation_time = bp::extract<double>(params.values()[i]); }
 
     ///================= Entanglement of trajectories ================================
     else if(key=="entanglement_opt"){ entanglement_opt = bp::extract<int>(params.values()[i]); }

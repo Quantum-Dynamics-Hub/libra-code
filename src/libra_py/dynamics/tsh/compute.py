@@ -814,6 +814,7 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     # Create copies of the input dynamical variables, so we could run several such
     # functions with the same input variables without worries that they will be altered
     # inside of each other
+    #sys.exit(0)
 
     #model_params = dict(_model_params)
     model_params = copy.deepcopy(_model_params)
@@ -1164,9 +1165,9 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
     # Initialize nuclear variables
     dyn_var.init_nuclear_dyn_var(init_nucl, rnd)
 
-    # print("Initial coordinates")
+    #print("Initial coordinates")
     # dyn_var.get_coords().show_matrix()
-    # sys.exit(0)
+    #sys.exit(0)
 
     # Initialize electronic variables
     dyn_var.init_amplitudes(init_elec, rnd)
@@ -1191,7 +1192,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
     # the transformation matrices to convert amplitudes between the representations
     dyn_params1 = dict(dyn_params)
 
-    # sys.exit(0)
+    #sys.exit(0)
     if (dyn_params["ham_update_method"] == 2):
         pass
         # update_Hamiltonian_variables( dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 0)
@@ -1206,15 +1207,16 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
         # sys.exit(0)
         update_Hamiltonian_variables(dyn_params1, dyn_var, ham, ham, compute_model, model_params1, 1)
 
-    # sys.exit(0)
+    #sys.exit(0)
 
     # Update internal dynamical variables using the computed properties of the Hamiltonian objects
     # Set up the "rep_tdse" variable here to the representation that coinsides with the initial representation
     # of electronic variables - this will convert the amplitudes to the proper representation
     dyn_var.update_basis_transform(ham)
     dyn_var.update_amplitudes({"rep_tdse": init_elec["rep"]}, ham)
+    #sys.exit(0)
     dyn_var.update_density_matrix(dyn_params, ham, 1)
-
+    #sys.exit(0)
     if dyn_params["rep_sh"] == 1:
         dyn_var.init_active_states(init_elec, rnd)
     elif dyn_params["rep_sh"] == 0:
@@ -1231,7 +1233,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
 
     # print("Initial diabatic DM")
     # dyn_var.get_dm_dia(0).show_matrix()
-
+    #sys.exit(0)
     if dyn_params["rep_sh"] == 1:
         print("Active states (adiabatic)")
         print(Cpp2Py(dyn_var.act_states))
@@ -1249,6 +1251,7 @@ def generic_recipe(_dyn_params, compute_model, _model_params, _init_elec, _init_
         print(Cpp2Py(pops_sh0))
 
     # Finally, start the dynamics calculations
+    #sys.exit(0)
     res = run_dynamics(dyn_var, dyn_params, ham, compute_model, model_params, rnd)
     return res
 

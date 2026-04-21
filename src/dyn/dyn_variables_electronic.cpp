@@ -349,6 +349,7 @@ void dyn_variables::update_density_matrix(bp::dict dyn_params, nHamiltonian& ham
 
   update_density_matrix(_prms, ham, lvl);
 
+  //exit(0);
 }
 
 

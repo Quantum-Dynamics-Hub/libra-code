@@ -325,6 +325,20 @@ void dyn_variables::allocate_simple_decoherence(){
   if(simple_decoherence_vars_status==0){
 
     coherence_factors = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 1.0) ) );
+    coherence_clocks = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+    gaps_prev = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+    gaps_curr = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+
+    is_first_gap = std::vector< std::vector< std::vector<int> >  >(ntraj, std::vector< std::vector<int> >(nadi, std::vector<int>(nadi, 1) ) );
+    mean_gap = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+    mean_gap2 = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+
+    gap_fluctuations = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+    gap_fluctuations_prev = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+    gap_correlations = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+
+    averaging_steps = std::vector< std::vector< std::vector<double> >  >(ntraj, std::vector< std::vector<double> >(nadi, std::vector<double>(nadi, 0.0) ) );
+
     simple_decoherence_vars_status = 1;
   }
 
@@ -495,6 +509,19 @@ dyn_variables::dyn_variables(const dyn_variables& x){
 
   if(x.simple_decoherence_vars_status == 1 ){
     coherence_factors = x.coherence_factors;
+    coherence_clocks = x.coherence_clocks;
+    gaps_prev = x.gaps_prev;
+    gaps_curr = x.gaps_curr;
+
+    is_first_gap = x.is_first_gap;
+    mean_gap = x.mean_gap;
+    mean_gap2 = x.mean_gap2;
+    gap_fluctuations = x.gap_fluctuations;
+    gap_fluctuations_prev = x.gap_fluctuations_prev;
+    gap_correlations = x.gap_correlations;
+
+    averaging_steps = x.averaging_steps;
+
   }
 
 }// dyn_variables cctor
@@ -662,6 +689,19 @@ dyn_variables::~dyn_variables(){
 
   if(simple_decoherence_vars_status==1){
     coherence_factors.clear();
+    coherence_clocks.clear();
+    gaps_prev.clear();
+    gaps_curr.clear();
+
+    is_first_gap.clear();
+    mean_gap.clear();
+    mean_gap2.clear();
+
+    gap_fluctuations.clear();
+    gap_fluctuations_prev.clear();
+    gap_correlations.clear();
+
+    averaging_steps.clear();
 
     simple_decoherence_vars_status = 0;
   }
@@ -696,6 +736,69 @@ vector<double> dyn_variables::get_fssh3_average_errors(){
 
   return res;
 }
+
+
+MATRIX dyn_variables::get_energy_gaps(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, gaps_curr[tr][i][j]);
+    }
+  }
+  return res;
+}
+
+MATRIX dyn_variables::get_mean_energy_gaps(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, mean_gap[tr][i][j]);
+    }
+  }
+  return res;
+}
+
+MATRIX dyn_variables::get_energy_gaps2(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, gaps_curr[tr][i][j]*gaps_curr[tr][i][j] );
+    }
+  }
+  return res;
+}
+
+MATRIX dyn_variables::get_mean_energy_gaps2(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, mean_gap2[tr][i][j]);
+    }
+  }
+  return res;
+}
+ 
+MATRIX dyn_variables::get_energy_gap_fluctuations(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, gap_fluctuations[tr][i][j]);
+    }
+  }
+  return res;
+}
+
+MATRIX dyn_variables::get_energy_gap_correlations(int tr){
+  MATRIX res(nadi,nadi);
+  for(int i = 0; i < nadi; i++){
+    for(int j = 0; j < nadi; j++){
+      res.set(i,j, gap_correlations[tr][i][j]);
+    }
+  }
+  return res;
+}
+
+
 
 void dyn_variables::set_parameters(bp::dict params){
 /**

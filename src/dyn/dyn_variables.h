@@ -578,8 +578,58 @@ class dyn_variables{
   /**
    Integrated exp( -(dt/tau(t))**2 ) over many timesteps 
    Reset to 1 at every accepted hop, separate for each trajectory
+   coherence_factors[itraj][i][j]
   */
   vector< vector< vector<double> > > coherence_factors;
+
+
+  /**
+  Pair-wise coherene clocks for all trajectories
+  coherence_clocks[itraj][i][j]
+  **/
+  vector< vector< vector<double> > > coherence_clocks;
+
+  /**
+  Previous and current gaps
+  gap_prev[itraj][i][j]
+  gap_curr[itraj][i][j]
+  */ 
+  vector< vector< vector<double> > > gaps_prev;
+  vector< vector< vector<double> > > gaps_curr;
+
+
+  /**
+  Is this the first time we evaluate the gaps - for gap running averages
+  is_first_gap[itraj][i][j]
+  */
+  vector< vector< vector<int> > > is_first_gap;
+
+  /**
+  Running averages for gaps and their squares
+  mean_gap[itraj][i][j]
+  mean_gap2[itraj][i][j]
+  */
+  vector< vector< vector<double> > > mean_gap; 
+  vector< vector< vector<double> > > mean_gap2;
+ 
+  /**
+  Averaging steps
+  */
+  vector< vector< vector<double> > > averaging_steps;
+
+  /**
+  Gap correlation functions
+  gap_fluctuations[itraj][i][j]
+  */
+  vector< vector< vector<double> > > gap_fluctuations;
+  vector< vector< vector<double> > > gap_fluctuations_prev;
+
+  /**
+  Gap correlation functions 
+  gap_correlations[itraj][i][j]
+  */
+  vector< vector< vector<double> > > gap_correlations;
+
 
   ///====================== For average decoherence rates
   /*
@@ -640,6 +690,14 @@ class dyn_variables{
   MATRIX get_nab_phase(int i){ return *nab_phase[i]; }
   MATRIX get_qtsh_f_nc(){ return *qtsh_f_nc; }
   MATRIX get_ave_decoherence_rates(){ return *ave_decoherence_rates; }
+
+  MATRIX get_energy_gaps(int i);
+  MATRIX get_mean_energy_gaps(int i);
+  MATRIX get_energy_gaps2(int i);
+  MATRIX get_mean_energy_gaps2(int i);
+  MATRIX get_energy_gap_fluctuations(int i);
+  MATRIX get_energy_gap_correlations(int i);
+
   vector<double> get_m_aux_var(){ return m_aux_var; }
   vector<double> get_y_aux_var(){ return y_aux_var; }
   vector<double> get_p_aux_var(){ return p_aux_var; }

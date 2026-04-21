@@ -266,6 +266,7 @@ class dyn_control_params{
       - 32: experimental stochastic algorithms with all permutations (too expensive)
       - 33: the improved stochastic algorithm with good scaling and performance, on par with the mincost
       - 4: new, experimental force-based tracking
+      - 5: SVD-reformulated LD approach of Granucci and Persico
 
 
   */
@@ -563,7 +564,7 @@ class dyn_control_params{
       - 6: MQCXF
       - 7: DISH, rev2023
       - 8: diabatic IDA, experimental
-      - 9: simple decoherence, experimental
+      - 9: SCOTSH = state coherence transfer TSH (experimental)
 
   */
   double decoherence_algo;
@@ -775,6 +776,17 @@ class dyn_control_params{
 
   */
   int use_td_width;
+
+
+  /**
+    For SCOTSH: 
+    Gap correlation time - to control the calculation of decoherence rates via the running-average of the 
+    the energy gap fluctuations 
+
+    Should be multiples of integration time-step dt.
+    [ units: a.u. of time, default: 41.0 a.u. = 1 fs ]
+  */
+  double gap_correlation_time;
 
 
   ///===============================================================================

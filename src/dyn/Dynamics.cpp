@@ -1325,7 +1325,7 @@ void renormalize_hopping_probabilities(
     double sum = 0.0;
     for (int j = 0; j < nstates; j++) {
       if (j != a) {
-        double val = g[itraj][j] * coherence_factors[itraj][a][j];
+        double val = g[itraj][j] * coherence_factors[itraj][a][j]; // a -> j hopping probability
         sum += val;
         g[itraj][j] = val;
       }
@@ -1339,24 +1339,70 @@ void renormalize_hopping_probabilities(
   } // for itraj
 }
 
-void reset_coherence_factors(vector<vector<vector<double>>> &coherence_factors,
-                             vector<int> &act_states, vector<int> &old_states) {
+void reset_coherence_factors(dyn_variables &dyn_var, vector<int> &act_states, vector<int> &old_states, double gap_correlation_time) {
 
-  int ntraj = coherence_factors.size();
-  int nstates = coherence_factors[0].size();
+  int ntraj = dyn_var.coherence_factors.size();
+  int nstates = dyn_var.coherence_factors[0].size();
 
-  for (int itraj = 0; itraj < ntraj; itraj++) {
+  for (int itraj = 0; itraj < ntraj; itraj++){
+
+
+    // This means the hop i -> j  has happened
     if (act_states[itraj] != old_states[itraj]) {
-      // If the hop has happened for this trajectory, we start
-      // new evolution of the wavepackets on all the surfaces
-      // so we have to reset all the coherence factors to 1.0
-      for (int i = 0; i < nstates; i++) {
-        for (int j = 0; j < nstates; j++) {
-          coherence_factors[itraj][i][j] = 1.0;
-        } // for j
-      } // for i
+      int i = old_states[itraj];
+      int j = act_states[itraj];
 
-    } // if
+      for (int k = 0; k < nstates; k++) {
+        dyn_var.coherence_factors[itraj][k][j] = dyn_var.coherence_factors[itraj][j][k] = 1.0;
+      }
+
+
+      // This means the hop i -> j  has happened
+//      dyn_var.coherence_factors[itraj][i][j] = dyn_var.coherence_factors[itraj][j][i] = 1.0;
+//      dyn_var.coherence_clocks[itraj][i][j] = dyn_var.coherence_clocks[itraj][j][i] = 0.0;
+
+
+      // Reinitialize running averages for all gaps involving j
+      for (int k = 0; k < nstates; k++) {
+//        dyn_var.is_first_gap[itraj][i][k] = dyn_var.is_first_gap[itraj][k][i] = 1;
+//        dyn_var.is_first_gap[itraj][j][k] = dyn_var.is_first_gap[itraj][k][j] = 1;
+      } // for k 
+
+/*
+      // Coherence transfer:
+      for (int k = 0; k < nstates; k++) {
+        if(k==i || k==j){ ;; }
+        else{
+          //if(itraj==0){ 
+          //cout<<"Doing coherence transfer\n";
+          dyn_var.coherence_factors[itraj][j][k] = dyn_var.coherence_factors[itraj][i][k]; 
+          dyn_var.coherence_factors[itraj][k][j] = dyn_var.coherence_factors[itraj][k][j];
+
+          // Also transfer clocks:
+          dyn_var.coherence_clocks[itraj][j][k] = dyn_var.coherence_clocks[itraj][i][k];
+          dyn_var.coherence_clocks[itraj][k][j] = dyn_var.coherence_clocks[itraj][k][j];
+        } 
+      }// for k
+*/
+      // The rest of coherence factors - leave unchanged
+     
+    } // if  - hop happened
+    else{
+
+/*
+      int j = act_states[itraj];
+      for (int k = 0; k < nstates; k++) {
+        if(dyn_var.coherence_clocks[itraj][k][j] > gap_correlation_time){
+
+          dyn_var.coherence_factors[itraj][k][j] = dyn_var.coherence_factors[itraj][j][k] = 1.0;
+          dyn_var.is_first_gap[itraj][j][k] = dyn_var.is_first_gap[itraj][k][j] = 1;
+          dyn_var.coherence_clocks[itraj][k][j] = dyn_var.coherence_clocks[itraj][k][j] = 0.0; 
+
+        }// if coherence is longer thant correlation time 
+      }// k
+*/
+    } // no hop 
+   
   } // for itraj
 }
 
@@ -1735,6 +1781,7 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
   dyn_var.update_density_matrix(prms);
 
   //============== Begin the TSH part ===================
+  //exit(0);
 
   //================= Update decoherence rates & times ================
   /// Effectively turn off decoherence effects
@@ -1857,15 +1904,86 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
     dish_rev2023(dyn_var, ham, decoherence_rates, prms, rnd);
   }
 
+
   // Simple decoherence
   else if (prms.decoherence_algo == 9) {
+
+    double alpha = prms.dt/prms.gap_correlation_time; 
+
     for (traj = 0; traj < ntraj; traj++) {
+      
+
+      // Compute the gaps and running averages of the gaps and their squares
       for (i = 0; i < nadi; i++) {
         for (j = 0; j < nadi; j++) {
-          double argg = decoherence_rates[traj].get(i, j) * prms.dt;
-          dyn_var.coherence_factors[traj][i][j] *= exp(-argg * argg);
+            // dE_ij = E_i - E_j
+            double E_i = ham.children[traj]->hvib_adi->get(i,i).real();
+            double E_j = ham.children[traj]->hvib_adi->get(j,j).real();
+            double dE_ij = E_i - E_j;
+            dyn_var.gaps_curr[traj][i][j] = dE_ij;
+            dyn_var.coherence_clocks[traj][i][j] += prms.dt;
+
+            // Running averages
+            if(dyn_var.is_first_gap[traj][i][j] == 1){
+              dyn_var.mean_gap[traj][i][j] = dE_ij;
+              dyn_var.mean_gap2[traj][i][j] = dE_ij * dE_ij;
+
+              dyn_var.is_first_gap[traj][i][j] = 0;
+              dyn_var.coherence_clocks[traj][i][j] = 0.0;
+
+              dyn_var.gap_fluctuations[traj][i][j]  = dyn_var.gap_fluctuations_prev[traj][i][j] = 0.0;
+              dyn_var.gap_correlations[traj][i][j] = 0.0;
+
+              dyn_var.averaging_steps[traj][i][j] = 1.0;
+            }
+            else{
+              dyn_var.averaging_steps[traj][i][j] += 1.0;
+              alpha = 1.0/dyn_var.averaging_steps[traj][i][j];
+
+              dyn_var.mean_gap[traj][i][j] = (1.0 - alpha) * dyn_var.mean_gap[traj][i][j] + alpha * dE_ij;
+              dyn_var.mean_gap2[traj][i][j] = (1.0 - alpha) * dyn_var.mean_gap2[traj][i][j] + alpha * (dE_ij * dE_ij);
+
+              dyn_var.gap_fluctuations[traj][i][j] = dyn_var.gaps_curr[traj][i][j] - dyn_var.mean_gap[traj][i][j];
+              //dyn_var.mean_gap2[traj][i][j] - dyn_var.mean_gap[traj][i][j] * dyn_var.mean_gap[traj][i][j];
+               
+              //dyn_var.gap_correlations[traj][i][j] = (1.0 - alpha) * dyn_var.gap_correlations[traj][i][j] + alpha * (dE_ij * dyn_var.gaps_prev[traj][i][j]);
+              dyn_var.gap_correlations[traj][i][j] = (1.0 - alpha) * dyn_var.gap_correlations[traj][i][j] + 
+                                                     alpha * dyn_var.gap_fluctuations[traj][i][j] * dyn_var.gap_fluctuations_prev[traj][i][j];
+
+              
+            }
+
+        }// for j
+      }// for i
+  
+      // Compute rates and decoherence correction
+      for (i = 0; i < nadi; i++) {
+        for (j = 0; j < nadi; j++) {
+
+          // Compute decoherence rates 
+          double mean = dyn_var.mean_gap[traj][i][j];
+          double mean2 = dyn_var.mean_gap2[traj][i][j];
+
+          double var = mean2 - mean * mean;
+          if(var < 0.0){ var = 0.0; }
+
+          double sigma = sqrt(var); // estimate of the decoherence rate!
+
+          double argg = sigma * prms.dt;
+          double pw = 2.0; // 1 - exponential;  2 - Gaussian
+          dyn_var.coherence_factors[traj][i][j] *= exp( - pow(argg, pw)/pw);
+
+          // Make current old:
+          dyn_var.gaps_prev[traj][i][j] = dyn_var.gaps_curr[traj][i][j];
+          dyn_var.gap_fluctuations_prev[traj][i][j] = dyn_var.gap_fluctuations[traj][i][j];;
+           
         } // for j
       } // for i
+
+      //cout<<"coherence factors: "<<dyn_var.coherence_factors[traj][0][1]<<"  "<<dyn_var.coherence_factors[traj][1][0]<<endl;
+      double err = dyn_var.coherence_factors[traj][0][1] - dyn_var.coherence_factors[traj][1][0];
+      if(fabs(err)>1e-10){ cout<<"Inconsistent coherence factors "<<err<<endl; }
+
     } // for traj
   } // simple decoherence
 
@@ -1979,9 +2097,8 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
         }
       } // algo == 8
 
-      else if (prms.decoherence_algo == 9) { // simple decoherence method
-        reset_coherence_factors(dyn_var.coherence_factors, act_states,
-                                old_states);
+      else if (prms.decoherence_algo == 9) { // simple decoherence method 
+        reset_coherence_factors(dyn_var, act_states, old_states, prms.gap_correlation_time);
       } // algo == 9
 
     }

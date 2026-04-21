@@ -255,10 +255,11 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "qtsh_f_nc" in saver.keywords:  # and "f_xf" in saver.np_data.keys():
             saver.add_dataset("qtsh_f_nc", (_nsteps, _ntraj, _ndof), "R")
 
-        # Trajectory-resolved decoherence rates
+        # Trajectory-averaged decoherence rates
         if "ave_decoherence_rates" in saver.keywords:  # decoherence time:
-            saver.add_dataset("ave_decoherence_rates", (_nsteps, _nadi, _nadi), "R") 
+            saver.add_dataset("ave_decoherence_rates", (_nsteps, _nadi, _nadi), "R")
 
+        
     if output_level >= 4:
 
         # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
@@ -292,6 +293,33 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         # Trajectory-resolved nabla_phase
         if "nab_phase" in saver.keywords:  # and "hvib_adi" in saver.np_data.keys():
             saver.add_dataset("nab_phase", (_nsteps, _ntraj, _nadi, _ndof), "R")
+
+
+        # Trajectory-resolved energy gaps
+        if "energy_gaps" in saver.keywords: # energy gaps
+            saver.add_dataset("energy_gaps", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+        # Trajectory-resolved running-average (mean) energy gaps
+        if "mean_energy_gaps" in saver.keywords: # running-average (mean) energy gaps
+            saver.add_dataset("mean_energy_gaps", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+        # Trajectory-resolved energy gaps squared
+        if "energy_gaps2" in saver.keywords: # energy gaps squared
+            saver.add_dataset("energy_gaps2", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+        # Trajectory-resolved running-average (mean) energy gaps squared
+        if "mean_energy_gaps2" in saver.keywords: # running-average (mean) energy gaps squared
+            saver.add_dataset("mean_energy_gaps2", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+        # Trajectory-resolved energy gap fluctuations
+        if "energy_gap_fluctuations" in saver.keywords: # energy gap fluctuations
+            saver.add_dataset("energy_gap_fluctuations", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+        # Trajectory-resolved gap correlation functions
+        if "energy_gap_correlations" in saver.keywords: # energy gap correlation functions
+            saver.add_dataset("energy_gap_correlations", (_nsteps, _ntraj, _nadi, _nadi), "R")
+
+
 
     if output_level >= 5:
         # Trajectory-resolved derivative coupling vectors
@@ -805,11 +833,13 @@ def save_hdf5_3D_new(saver, i, dyn_var, txt_type=0):
     # Format: saver.add_dataset("ave_decoherence_rates", (_nsteps, _nadi, _nadi), "R") 
     if "ave_decoherence_rates" in saver.keywords and "ave_decoherence_rates" in saver.np_data.keys():
         ave_decoherence_rates = dyn_var.get_ave_decoherence_rates()
-        saver.save_matrix(t, "ave_decoherence_rates", ave_decoherence_rates.T())
+        saver.save_matrix(t, "ave_decoherence_rates", ave_decoherence_rates)
+
 
 
 def save_hdf5_4D(
         saver,
+        dyn_var,
         i,
         tr,
         hvib_adi,
@@ -871,6 +901,45 @@ def save_hdf5_4D(
     # Format: saver.add_dataset("nab_phase", (_nsteps, _ntraj, _nadi, _ndof), "R")
     if "nab_phase" in saver.keywords and "nab_phase" in saver.np_data.keys():
         saver.save_multi_matrix(t, tr, "nab_phase", nab_phase)
+
+
+
+    # Instantaneous energy gaps
+    # Format: saver.add_dataset("energy_gaps", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "energy_gaps" in saver.keywords and "energy_gaps" in saver.np_data.keys():
+        x = dyn_var.get_energy_gaps(tr)
+        saver.save_multi_matrix(t, tr, "energy_gaps", x)
+
+    # Running-average (mean) energy gaps
+    # Format: saver.add_dataset("mean_energy_gaps", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "mean_energy_gaps" in saver.keywords and "mean_energy_gaps" in saver.np_data.keys():
+        x = dyn_var.get_mean_energy_gaps(tr)
+        saver.save_multi_matrix(t, tr, "mean_energy_gaps", x)
+
+    # Instantaneous energy gaps squared
+    # Format: saver.add_dataset("energy_gaps2", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "energy_gaps2" in saver.keywords and "energy_gaps2" in saver.np_data.keys():
+        x = dyn_var.get_energy_gaps2(tr)
+        saver.save_multi_matrix(t, tr, "energy_gaps2", x)
+
+    # Running-average (mean) energy gaps squared
+    # Format: saver.add_dataset("mean_energy_gaps2", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "mean_energy_gaps2" in saver.keywords and "mean_energy_gaps2" in saver.np_data.keys():
+        x = dyn_var.get_mean_energy_gaps2(tr)
+        saver.save_multi_matrix(t, tr, "mean_energy_gaps2", x)
+
+    # Instantaneous energy gap fluctuations
+    # Format: saver.add_dataset("energy_gap_fluctuations", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "energy_gap_fluctuations" in saver.keywords and "energy_gap_fluctuations" in saver.np_data.keys():
+        x = dyn_var.get_energy_gap_fluctuations(tr)
+        saver.save_multi_matrix(t, tr, "energy_gap_fluctuations", x)
+
+    # Instantaneous energy gap correlation functions
+    # Format: saver.add_dataset("energy_gap_correlations", (_nsteps, _ntraj, _nadi, _nadi), "R")
+    if "energy_gap_correlations" in saver.keywords and "energy_gap_correlations" in saver.np_data.keys():
+        x = dyn_var.get_energy_gap_correlations(tr)
+        saver.save_multi_matrix(t, tr, "energy_gap_correlations", x)
+
 
 
 def save_hdf5_5D(saver, i, tr, idof, dc1_adi, txt_type=0):
@@ -1043,22 +1112,22 @@ def save_tsh_data_1234_new(_savers, params, i, dyn_var, ham):
         if hdf5_output_level >= 4 and _savers["hdf5_saver"] is not None:
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr]))
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr]))
-            save_hdf5_4D(_savers["hdf5_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["hdf5_saver"], dyn_var, i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if mem_output_level >= 4 and _savers["mem_saver"] is not None:
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr]))
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr]))
-            save_hdf5_4D(_savers["mem_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["mem_saver"], dyn_var, i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if txt_output_level >= 4 and _savers["txt_saver"] is not None:
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr]))
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr]))
-            save_hdf5_4D(_savers["txt_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
+            save_hdf5_4D(_savers["txt_saver"], dyn_var, i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase)
 
         if txt2_output_level >= 4 and _savers["txt2_saver"] is not None:
             hvib_adi = ham.get_hvib_adi(Py2Cpp_int([0, tr]))
             hvib_dia = ham.get_hvib_dia(Py2Cpp_int([0, tr]))
-            save_hdf5_4D(_savers["txt2_saver"], i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase, 1)
+            save_hdf5_4D(_savers["txt2_saver"], dyn_var, i, tr, hvib_adi, hvib_dia, St, U, T, q_aux, p_aux, nab_phase, 1)
 
     # ============= Using save_hdf5_5D(saver, i, tr, idof, dc1) =========================
     for tr in tr_range:

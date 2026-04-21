@@ -125,6 +125,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("use_xf_force", &dyn_control_params::use_xf_force)
       .def_readwrite("project_out_aux", &dyn_control_params::project_out_aux)
       .def_readwrite("tp_algo", &dyn_control_params::tp_algo)
+      .def_readwrite("gap_correlation_time", &dyn_control_params::gap_correlation_time)
 
       ///================= Entanglement of trajectories ================================
       .def_readwrite("entanglement_opt", &dyn_control_params::entanglement_opt)
@@ -273,6 +274,12 @@ void export_dyn_variables_objects(){
       .def("get_q_mm", &dyn_variables::get_q_mm)
       .def("get_p_mm", &dyn_variables::get_p_mm)
       .def("get_ave_decoherence_rates", &dyn_variables::get_ave_decoherence_rates)
+      .def("get_energy_gaps", &dyn_variables::get_energy_gaps)
+      .def("get_mean_energy_gaps", &dyn_variables::get_mean_energy_gaps)
+      .def("get_energy_gaps2", &dyn_variables::get_energy_gaps2)
+      .def("get_mean_energy_gaps2", &dyn_variables::get_mean_energy_gaps2)
+      .def("get_energy_gap_fluctuations", &dyn_variables::get_energy_gap_fluctuations)
+      .def("get_energy_gap_correlations", &dyn_variables::get_energy_gap_correlations)
       .def("get_proj_adi", &dyn_variables::get_proj_adi)
       .def("get_dm_adi", expt_get_dm_adi_v1)
       .def("get_dm_adi", expt_get_dm_adi_v2)
