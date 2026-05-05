@@ -125,7 +125,7 @@ class ElectronicStructureStrategy(ABC):
             "use time-overlap-based NACs instead."
         )
 
-    def compute_nac_vectors(self) -> np.ndarray:
+    def compute_nac_vectors(self, **kwargs: Any) -> np.ndarray:
         """Return all NAC vectors ``d_{ij}`` between states.
 
         Returns
