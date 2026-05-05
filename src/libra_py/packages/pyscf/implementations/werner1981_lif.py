@@ -209,14 +209,19 @@ class Werner1981LiF(ElectronicStructureStrategy):
         f_idx = labels.index("F")
 
         # Define the bond vector pointing from F to Li
-        bond_vec_ang = coords[li_idx] - coords[f_idx]
-        bond_len_ang = float(np.linalg.norm(bond_vec_ang))
+        # Hardcode Z-axis only logic: require X and Y coordinates to be near zero
+        for idx in (li_idx, f_idx):
+            if abs(coords[idx, 0]) > 1e-6 or abs(coords[idx, 1]) > 1e-6:
+                raise ValueError("Werner1981LiF hardcoded mode requires atoms to lie exactly on the Z-axis (x=0, y=0).")
+
+        # Evaluate distance based solely on the Z coordinate
+        bond_len_ang = abs(coords[li_idx, 2] - coords[f_idx, 2])
         if bond_len_ang <= 0.0:
             raise ValueError("LiF bond length must be positive.")
 
-        bond_unit = bond_vec_ang / bond_len_ang
-        bond_len_bohr = bond_len_ang / self._BOHR_TO_ANG
-        return bond_len_bohr, bond_unit
+        bond_len_bohr = float(bond_len_ang) / self._BOHR_TO_ANG
+        # We don't bother returning a proper 3D bond_unit anymore, since NAC is hardcoded Z
+        return bond_len_bohr, np.array([0.0, 0.0, 1.0])
 
     @classmethod
     def _interp_energy(cls, root: int, r_bohr: float) -> float:
@@ -284,9 +289,10 @@ class Werner1981LiF(ElectronicStructureStrategy):
         li_idx = labels.index("Li")
         f_idx = labels.index("F")
 
-        nac[0, 1, li_idx, :] = nac12 * bond_unit
-        nac[0, 1, f_idx, :] = -nac12 * bond_unit
-        nac[1, 0, li_idx, :] = -nac12 * bond_unit
-        nac[1, 0, f_idx, :] = nac12 * bond_unit
+        # Hardcode the NAC to be strictly along the Z-axis (index 2)
+        nac[0, 1, li_idx, 2] = nac12
+        nac[0, 1, f_idx, 2] = -nac12
+        nac[1, 0, li_idx, 2] = -nac12
+        nac[1, 0, f_idx, 2] = nac12
         return nac
 
