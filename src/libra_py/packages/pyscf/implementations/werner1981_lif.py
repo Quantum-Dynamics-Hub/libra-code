@@ -216,10 +216,13 @@ class Werner1981LiF(ElectronicStructureStrategy):
 
         # Evaluate distance based solely on the Z coordinate
         bond_len_ang = abs(coords[li_idx, 2] - coords[f_idx, 2])
-        if bond_len_ang <= 0.0:
-            raise ValueError("LiF bond length must be positive.")
-
         bond_len_bohr = float(bond_len_ang) / self._BOHR_TO_ANG
+
+        nac_min = float(self._NAC_R_BOHR[0])
+        nac_max = float(self._NAC_R_BOHR[-1])
+        if bond_len_bohr < nac_min or bond_len_bohr > nac_max:
+            raise ValueError(f"LiF bond length {bond_len_bohr:.3f} bohr is outside the valid NAC range [{nac_min:.3f}, {nac_max:.3f}] bohr.")
+
         # We don't bother returning a proper 3D bond_unit anymore, since NAC is hardcoded Z
         return bond_len_bohr, np.array([0.0, 0.0, 1.0])
 
