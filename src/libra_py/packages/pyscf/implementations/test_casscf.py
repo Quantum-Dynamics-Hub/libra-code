@@ -69,5 +69,3 @@ overlap = casscf.time_overlap_matrix(3)
 print('Time-overlap matrix', overlap)
 
 assert isinstance(casscf, ElectronicStructureStrategy)
-
-
