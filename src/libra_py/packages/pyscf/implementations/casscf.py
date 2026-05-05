@@ -105,6 +105,9 @@ class CASSCF(ElectronicStructureStrategy):
 
         self._mf = scf.RHF(self._mol).run(verbose=0)
 
+    def run_hf(self) -> None:
+        pass
+
     def compute_energy(self, root: int) -> float:
         if self._mf is None:
             raise ValueError("HF must be run before computing CASSCF energies.")
@@ -116,15 +119,17 @@ class CASSCF(ElectronicStructureStrategy):
             if self._nroots > 1:
                 self._mc = self._mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
 
-            if self._cache.prev_mc is not None:
-                mo_coeff = getattr(self._cache.prev_mc, "mo_coeff", None)
-            else:
-                mo_coeff = self._mf.mo_coeff
+            # Correctly use currently converged HF spatial orbitals as initial guess for SA-CASSCF
+            
+            # Prepare CI coefficients from previous step (only if use_prev_ci is True)
+            ci0 = None
+            if getattr(self, '_use_prev_ci', False) and self._cache.prev_mc is not None:
+                ci0 = getattr(self._cache.prev_mc, 'ci', None)
 
-            if mo_coeff is not None:
-                self._mc.kernel(mo_coeff=mo_coeff)
+            if ci0 is not None:
+                self._mc.kernel(self._mf.mo_coeff, ci0=ci0)
             else:
-                self._mc.kernel()
+                self._mc.kernel(self._mf.mo_coeff)
 
         if self._ci_vecs is None:
             self._ci_vecs = self._as_ci_vector_list(getattr(self._mc, "ci", None))
@@ -186,8 +191,8 @@ class CASSCF(ElectronicStructureStrategy):
         prev_roots = [np.asarray(v) for v in prev_roots[:nroots]]
         curr_roots = [np.asarray(v) for v in curr_roots[:nroots]]
 
-        mo_prev_act = np.asarray(prev_casci.mo_coeff)[:, : prev_casci.ncas]
-        mo_curr_act = np.asarray(curr_casci.mo_coeff)[:, : curr_casci.ncas]
+        mo_prev_act = np.asarray(prev_casci.mo_coeff)[:, prev_casci.ncore : prev_casci.ncore + prev_casci.ncas]
+        mo_curr_act = np.asarray(curr_casci.mo_coeff)[:, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas]
         s12_mo = mo_prev_act.T @ self._ao_overlap @ mo_curr_act
 
         overlap = np.zeros((nroots, nroots), dtype=float)
