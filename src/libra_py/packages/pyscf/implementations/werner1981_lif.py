@@ -26,6 +26,8 @@ converted internally before interpolation.
 """
 
 from __future__ import annotations
+from typing import Any
+from typing import Any
 
 import numpy as np
 
@@ -176,8 +178,8 @@ class Werner1981LiF(ElectronicStructureStrategy):
         )
     )
 
-    def __init__(self) -> None:
-        self._geom: MolecularGeometry | None = None
+    def __init__(self, mol: Any = None, nroots: int = 2, basis: str = "sto-3g", unit: str = "Angstrom", charge: int = 0) -> None:
+        super().__init__(mol=mol, nroots=nroots, basis=basis, unit=unit, charge=charge)
         self._distance_bohr: float | None = None
         self._bond_unit: np.ndarray | None = None
         self._prev_distance_bohr: float | None = None
@@ -198,14 +200,16 @@ class Werner1981LiF(ElectronicStructureStrategy):
             )
 
         labels = list(geom.atom_labels)
-        if len(labels) != 2:
-            raise ValueError("Werner1981LiF expects exactly 2 atom labels.")
-        if set(labels) != {"Li", "F"}:
+        if len(labels) != 2 or set(labels) != {"Li", "F"}:
             raise ValueError(
                 "Werner1981LiF is parameterized only for LiF geometries."
             )
 
-        bond_vec_ang = coords[1] - coords[0]
+        li_idx = labels.index("Li")
+        f_idx = labels.index("F")
+
+        # Define the bond vector pointing from F to Li
+        bond_vec_ang = coords[li_idx] - coords[f_idx]
         bond_len_ang = float(np.linalg.norm(bond_vec_ang))
         if bond_len_ang <= 0.0:
             raise ValueError("LiF bond length must be positive.")
@@ -255,10 +259,13 @@ class Werner1981LiF(ElectronicStructureStrategy):
             raise ValueError("Geometry must be set before requesting LiF data.")
         return self._distance_bohr, self._bond_unit
 
-    def set_geom_and_run_hf(self, geom: MolecularGeometry) -> None:
+    def save_cache(self) -> None:
         self._prev_distance_bohr = self._distance_bohr
-        self._distance_bohr, self._bond_unit = self._validate_geometry(geom)
-        self._geom = geom
+
+    def run_hf(self) -> None:
+        if self._geom is None:
+            raise ValueError("Geometry must be set before running.")
+        self._distance_bohr, self._bond_unit = self._validate_geometry(self._geom)
 
     def compute_energy(self, root: int) -> float:
         if root < 0 or root >= self.nstates:
@@ -268,14 +275,18 @@ class Werner1981LiF(ElectronicStructureStrategy):
         r_bohr, _ = self._require_geometry()
         return self._interp_energy(root, r_bohr)
 
-    def compute_nac_vectors(self) -> np.ndarray:
+    def compute_nac_vectors(self, **kwargs: Any) -> np.ndarray:
         r_bohr, bond_unit = self._require_geometry()
         nac12 = self._interp_nac_scalar(r_bohr)
 
         nac = np.zeros((self.nstates, self.nstates, 2, 3), dtype=float)
-        nac[0, 1, 0, :] = -nac12 * bond_unit
-        nac[0, 1, 1, :] = nac12 * bond_unit
-        nac[1, 0, 0, :] = nac12 * bond_unit
-        nac[1, 0, 1, :] = -nac12 * bond_unit
+        labels = list(self._geom.atom_labels)
+        li_idx = labels.index("Li")
+        f_idx = labels.index("F")
+
+        nac[0, 1, li_idx, :] = nac12 * bond_unit
+        nac[0, 1, f_idx, :] = -nac12 * bond_unit
+        nac[1, 0, li_idx, :] = -nac12 * bond_unit
+        nac[1, 0, f_idx, :] = nac12 * bond_unit
         return nac
 

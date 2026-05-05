@@ -101,7 +101,6 @@ class ElectronicStructureStrategy(ABC):
     def compute_energy(self, root: int) -> float:
         """Return the total energy (Hartree) for *root*."""
 
-    @abstractmethod
     def compute_gradient(self, root: int) -> np.ndarray:
         """Return the nuclear gradient for *root*.
 
