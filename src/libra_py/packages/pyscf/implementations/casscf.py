@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple, Union, Sequence
 import numpy as np
 from pyscf import fci, gto, mcscf, scf
-from ..interfaces import ElectronicStructureStrategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
 
 @dataclass

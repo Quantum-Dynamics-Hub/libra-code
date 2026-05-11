@@ -1,5 +1,5 @@
 """PySCF implementation backends."""
 
-from .cisd import CISD
-from .casscf import CASSCF
+from libra_py.packages.pyscf.implementations.cisd import CISD
+from libra_py.packages.pyscf.implementations.casscf import CASSCF
 

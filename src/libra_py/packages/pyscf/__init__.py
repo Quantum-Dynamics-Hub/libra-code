@@ -6,7 +6,7 @@ does not eagerly pull in concrete backends or adapter code.
 
 from __future__ import annotations
 
-from .interfaces import ElectronicStructureStrategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
 __all__ = [
     "interfaces",

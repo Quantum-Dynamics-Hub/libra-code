@@ -24,8 +24,8 @@ from typing import Any, Optional, Sequence
 import numpy as np
 from pyscf import ci
 
-from ..interfaces import ElectronicStructureStrategy, MolecularGeometry
-from ..utils import run_rhf_for_geometry
+from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+#from libra_py.packages.pyscf.utils import run_rhf_for_geometry
 
 @dataclass
 class CISDCache:
