@@ -20,14 +20,14 @@ import sys
 from pathlib import Path
 
 # Allow running this script directly with proper package root in sys.path
-if __name__ == "__main__" and __package__ is None:
-    file_path = Path(__file__).resolve()
-    for parent in file_path.parents:
-        if parent.name == "src":
-            sys.path.insert(0, str(parent))
-            break
-    else:
-        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
+#if __name__ == "__main__" and __package__ is None:
+#    file_path = Path(__file__).resolve()
+#    for parent in file_path.parents:
+#        if parent.name == "src":
+#            sys.path.insert(0, str(parent))
+#            break
+#    else:
+#        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
 
 from pyscf import gto
 from libra_py.packages.pyscf.implementations.casscf import CASSCF

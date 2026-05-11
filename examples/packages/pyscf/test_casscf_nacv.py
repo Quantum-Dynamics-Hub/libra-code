@@ -20,26 +20,27 @@ import sys
 from pathlib import Path
 import numpy as np
 
-def _prepend_repo_root() -> None:
-    file_path = Path(__file__).resolve()
-    for parent in file_path.parents:
-        if (parent / "interface" / "__init__.py").is_file():
-            repo_root = str(parent)
-            if repo_root not in sys.path:
-                sys.path.insert(0, repo_root)
-            return
+#def _prepend_repo_root() -> None:
+#    file_path = Path(__file__).resolve()
+#    for parent in file_path.parents:
+#        if (parent / "interface" / "__init__.py").is_file():
+#            repo_root = str(parent)
+#            if repo_root not in sys.path:
+#                sys.path.insert(0, repo_root)
+#            return
+#
+#if __name__ == "__main__" and __package__ is None:
+#    _prepend_repo_root()
 
-if __name__ == "__main__" and __package__ is None:
-    _prepend_repo_root()
+#try:
+from libra_py.packages.pyscf.implementations.casscf import CASSCF
+from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
-try:
-    from interface.implementations.casscf import CASSCF
-    from interface.interfaces import ElectronicStructureStrategy, MolecularGeometry
-except ModuleNotFoundError as exc:
-    if exc.name not in {"interface", "interface.implementations.casscf", "interface.interfaces"}:
-        raise
-    from libra_py.packages.pyscf.implementations.casscf import CASSCF
-    from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+#except ModuleNotFoundError as exc:
+#    if exc.name not in {"interface", "interface.implementations.casscf", "interface.interfaces"}:
+#        raise
+#    from libra_py.packages.pyscf.implementations.casscf import CASSCF
+#    from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
 NSTATES = 2
 DISTANCE_START_BOHR = 7.0

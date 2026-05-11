@@ -21,14 +21,14 @@ from typing import Any
 import numpy as np
 
 # Allow running this file directly with proper package root in sys.path
-if __name__ == "__main__" and __package__ is None:
-    file_path = Path(__file__).resolve()
-    for parent in file_path.parents:
-        if parent.name == "src":
-            sys.path.insert(0, str(parent))
-            break
-    else:
-        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
+#if __name__ == "__main__" and __package__ is None:
+#    file_path = Path(__file__).resolve()
+#    for parent in file_path.parents:
+#        if parent.name == "src":
+#            sys.path.insert(0, str(parent))
+#            break
+#    else:
+#        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
 
 from liblibra_core import CMATRIX, Cpp2Py, Random, dyn_variables, nHamiltonian, update_Hamiltonian_variables
 
