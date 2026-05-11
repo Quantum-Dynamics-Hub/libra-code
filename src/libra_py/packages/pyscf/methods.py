@@ -52,7 +52,7 @@ def pyscf_compute_adi(q, params, full_id):
     # ================= Safe param access =================
     params.setdefault("is_first_time", {})
     params.setdefault("act_state", {})
-    #params.setdefault("pyscf_obj", {})
+    params.setdefault("pyscf_obj", {})
     params.setdefault("coords_prev", {})
 
     is_first_time = params["is_first_time"].get(itraj, True)
@@ -71,36 +71,45 @@ def pyscf_compute_adi(q, params, full_id):
     _atom_labels = params["atom_labels"]
     
     # ================= Previous coordinates =================
-    
+
+    pyscf_obj = None
     if is_first_time:
         coords_prev = copy.deepcopy(coordinates)
-    else:
-        coords_prev = copy.deepcopy(params["coords_prev"].get(itraj))
+        
+        if method=="casscf":
+            pyscf_obj = CASSCF(norbcas=_norbcas, nelecas=_nelecas, nroots=nstates, basis=_basis, charge=_charge)
+        elif method=="cisd":
+            pyscf_obj = CISD(nroots=nstates, basis=_basis, charge=_charge)     
 
-    geom_prev = MolecularGeometry(atom_labels = _atom_labels, coords_angstrom=np.array(coords_prev) )
+    else:
+        #coords_prev = copy.deepcopy(params["coords_prev"].get(itraj))
+        pyscf_obj = copy.deepcopy(params["pyscf_obj"].get(itraj))
+        #pyscf_obj = params["pyscf_obj"].get(itraj)
+
+    #geom_prev = MolecularGeometry(atom_labels = _atom_labels, coords_angstrom=np.array(coords_prev) )
     geom = MolecularGeometry(atom_labels = _atom_labels, coords_angstrom=np.array(coordinates) )
     
-        
-    pyscf_obj = None
-    if method=="casscf":
-        pyscf_obj = CASSCF(norbcas=_norbcas, nelecas=_nelecas, nroots=nstates, basis=_basis, charge=_charge)
-    elif method=="cisd":
-        pyscf_obj = CISD(nroots=nstates, basis=_basis, charge=_charge)     
     
-    
-    pyscf_obj.set_geom_and_run_hf(geom_prev)
-    _ = [pyscf_obj.compute_energy(root) for root in range(nstates)]
-    _ = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
+    #pyscf_obj.set_geom_and_run_hf(geom_prev)
+    #_ = [pyscf_obj.compute_energy(root) for root in range(nstates)]
+    #_ = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
+
+    if is_first_time:
+        # Run an extra-time
+        pyscf_obj.set_geom_and_run_hf(geom)
+        energies = [pyscf_obj.compute_energy(root) for root in range(nstates)]
+        grad = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
 
     pyscf_obj.set_geom_and_run_hf(geom)
     energies = [pyscf_obj.compute_energy(root) for root in range(nstates)]
     grad = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
 
+        
+    #print(F"coords_prev = {coords_prev}")
+    print(F"coordinates = {coordinates}")
+
     # ================= Compute overlaps =================
     st_ci = pyscf_obj.time_overlap_matrix(nstates)
-
-    print(F"coords_prev = {coords_prev}")
-    print(F"coordinates = {coordinates}")
 
     # ================= Build object =================
     obj = tmp()
@@ -138,10 +147,12 @@ def pyscf_compute_adi(q, params, full_id):
             obj.hvib_adi.set(j, i, +1j * dij)            
             
     # ================= Store state =================
-    #params["pyscf_obj"][itraj] = copy.deepcopy(pyscf_obj)
+    params["pyscf_obj"][itraj] = copy.deepcopy(pyscf_obj)
     #params["pyscf_obj"][itraj] = pyscf_obj
-    params["coords_prev"][itraj] = copy.deepcopy(coordinates)
+    #params["coords_prev"][itraj] = copy.deepcopy(coordinates)
     params["is_first_time"][itraj] = False
 
     return obj
+
+
 
