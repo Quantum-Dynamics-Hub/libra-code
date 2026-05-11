@@ -110,12 +110,6 @@ MESSAGE("Going into subdirectory opt...")
 ADD_SUBDIRECTORY("opt")
 
 
-MESSAGE("Going into subdirectory pot...")
-ADD_SUBDIRECTORY("pot")
-
-
-MESSAGE("Going into subdirectory forcefield...")
-ADD_SUBDIRECTORY("forcefield")
 
 
 
@@ -130,9 +124,6 @@ MESSAGE("Going into subdirectory basis_setups...")
 ADD_SUBDIRECTORY("basis_setups")
 
 
-
-MESSAGE("Going into subdirectory atomistic...")
-ADD_SUBDIRECTORY("atomistic")
 
 
 
@@ -159,12 +150,6 @@ ADD_SUBDIRECTORY("dyn")
 MESSAGE("Going into subdirectory converters...")
 ADD_SUBDIRECTORY("converters")
 
-
-MESSAGE("Going into subdirectory scripts...")
-ADD_SUBDIRECTORY("scripts")
-
-MESSAGE("Going into subdirectory qchem_tools...")
-ADD_SUBDIRECTORY("qchem_tools")
 
 
 MESSAGE("Going into subdirectory solvers...")
@@ -216,9 +201,6 @@ endif()
 TARGET_LINK_LIBRARIES(libra_core_stat
                       integrators_stat
                       solvers_stat
-                      qchem_tools_stat
-                      atomistic_stat
-                      scripts_stat
                       converters_stat
                       montecarlo_stat
                       fgr_stat
@@ -231,9 +213,7 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       control_parameters_stat
                       nhamiltonian_stat
                       util_stat
-                      forcefield_stat
                       opt_stat
-                      pot_stat
                       cell_stat
                       chemobjects_stat
                       rigidbody_stat

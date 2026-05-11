@@ -17,7 +17,7 @@ namespace liblibra{
 
 namespace libconverters{
 
-
+/*
 void system_to_nuclear(System& syst, Nuclear& nucl){
 
   // Simple data converter - no object creation (nor reduction of dimension)
@@ -45,11 +45,6 @@ void system_to_nuclear(System& syst, Nuclear& nucl){
     nucl.f[3*i+1] = syst.Atoms[i].Atom_RB.rb_force.y; 
     nucl.f[3*i+2] = syst.Atoms[i].Atom_RB.rb_force.z; 
 
-/*
-    nucl.f[3*i+0] = 0;
-    nucl.f[3*i+1] = 1;
-    nucl.f[3*i+2] = 2;
-*/
 
   }// for i
 
@@ -84,7 +79,7 @@ void nuclear_to_system(Nuclear& nucl,System& syst){
 
   }// for i
 }
-
+*/
 
 void IndexError() { PyErr_SetString(PyExc_IndexError, "Index out of range"); }
 void KeyError() { PyErr_SetString(PyExc_KeyError, "Key not found"); }

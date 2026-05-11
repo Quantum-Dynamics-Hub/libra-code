@@ -35,6 +35,90 @@ from . import data_conv
 from . import units
 
 
+def project_out_rigid(X_t, R_t, M):
+    """
+    Remove rigid-body translations and rotations from a snapshot vector
+    (coordinates, velocities, or accelerations), assuming the mass vector
+    M has length 3N (one mass per Cartesian DOF).
+
+    The projection removes the six rigid-body modes for a nonlinear molecule:
+        - 3 translational modes
+        - 3 rotational modes
+
+    Equations:
+
+        Translation basis:
+            t_alpha = sqrt(m_i) * e_alpha
+        Rotation basis:
+            r_alpha = sqrt(m_i) * (R_i - R_CM) × e_alpha
+        Projected vector:
+            X_proj = X - P P^T X
+        Mass-weighted covariance matrices:
+            K_ij^δr = 1/2 < sqrt(m_i m_j) δr_i δr_j >
+            K_ij^v  = 1/2 < sqrt(m_i m_j) v_i v_j >
+            K_ij^a  = 1/2 < sqrt(m_i m_j) a_i a_j >
+
+    Args:
+        X_t : np.ndarray of shape (3*N,)
+            Input vector to project (coordinates, velocities, or accelerations)
+        R_t : np.ndarray of shape (3*N,)
+            Instantaneous Cartesian positions of atoms (used to construct rotation basis)
+        M : np.ndarray of shape (3*N,)
+            Mass vector per Cartesian degree of freedom
+
+    Returns:
+        X_proj : np.ndarray of shape (3*N,)
+            Projected vector with rigid translations and rotations removed
+
+    Example:
+        >>> import numpy as np
+        >>> N_atoms = 5
+        >>> M_atom = np.array([12.0, 16.0, 16.0, 1.0, 1.0])
+        >>> M = np.repeat(M_atom, 3)  # length 3*N
+        >>> R = np.random.rand(3*N_atoms*3)  # 3 DOF per atom
+        >>> X = np.random.rand(3*N_atoms*3)
+        >>> R_proj = project_out_rigid(R, R, M)
+        >>> X_proj = project_out_rigid(X, R, M)
+    """
+    if X_t.shape != R_t.shape or X_t.shape != M.shape:
+        raise ValueError(f"Shapes of X_t {X_t.shape}, R_t {R_t.shape}, and M {M.shape} must match (all 3N,)")
+
+    N = X_t.size // 3  # number of atoms
+    X = X_t.reshape(N, 3)
+    R = R_t.reshape(N, 3)
+
+    # ----- 1. Remove translation -----
+    M3 = M.reshape(N,3)
+    X_trans = X - np.sum(M3 * X, axis=0) / np.sum(M) * 3  # remove COM motion
+
+    # Center R for rotation basis
+    R_CM = np.sum(M3 * R, axis=0) / np.sum(M)
+    R_cm = R - R_CM
+
+    # ----- 2. Build rotation basis (3 vectors) -----
+    rot_basis = np.zeros((3*N, 3))
+    unit_vectors = np.eye(3)
+    for alpha in range(3):
+        cross = np.cross(R_cm, unit_vectors[alpha])  # shape (N,3)
+        rot_basis[:, alpha] = np.ravel(cross * np.sqrt(M3))
+
+    # ----- 3. Build translation basis (3 vectors) -----
+    trans_basis = np.zeros((3*N,3))
+    for alpha in range(3):
+        vec = np.zeros((N,3))
+        vec[:, alpha] = 1.0
+        trans_basis[:, alpha] = np.ravel(vec * np.sqrt(M3))
+
+    # ----- 4. Combine bases and orthonormalize -----
+    U = np.hstack([trans_basis, rot_basis])  # shape (3N,6)
+    Q, _ = np.linalg.qr(U)
+
+    # ----- 5. Project X onto null space -----
+    X_proj = np.ravel(X) - Q @ (Q.T @ np.ravel(X))
+    return X_proj
+
+
+
 def compute_com(R, M):
     """
     Args:

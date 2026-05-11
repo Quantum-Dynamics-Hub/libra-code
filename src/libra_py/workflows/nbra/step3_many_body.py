@@ -615,7 +615,7 @@ def run(_params):
         # Re-indexed SD basis functions for bra and ket SDs
         bra = sd_states_reindexed_sorted[step]
         ket = sd_states_reindexed_sorted[step]
-        s_sd = mapping.ovlp_mat_arb(bra, ket, S[0][step], False)
+        s_sd = mapping.ovlp_mat_arb(bra, ket, S[0][step], None, False)
         S_sd.append(s_sd)
         s_sd.real().show_matrix("%s/S_sd_%d_re" % (res_dir, int(start_time + step)))
 
@@ -625,7 +625,7 @@ def run(_params):
         # Re-indexed SD basis functions for bra and ket SDs
         bra = sd_states_reindexed_sorted[step]
         ket = sd_states_reindexed_sorted[step + 1]
-        st_sd = mapping.ovlp_mat_arb(bra, ket, St[0][step], False)
+        st_sd = mapping.ovlp_mat_arb(bra, ket, St[0][step], None, False)
         St_sd.append(st_sd)
         st_sd.real().show_matrix("%s/St_sd_%d_re" % (res_dir, int(start_time + step)))
 
