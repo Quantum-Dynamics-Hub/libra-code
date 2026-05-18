@@ -72,7 +72,7 @@ class ElectronicStructureStrategy(ABC):
         self._charge = charge
         self._mf = None
         self._ao_overlap = None
-        self._geom = None
+        self._geom = None'
 
     @property
     def nstates(self) -> int:
