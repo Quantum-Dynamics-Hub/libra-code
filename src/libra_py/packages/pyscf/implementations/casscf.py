@@ -26,7 +26,6 @@ from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, Mole
 
 @dataclass
 class CASSCFTrajectoryState:
-    geom: Optional[MolecularGeometry] = None
     mol: Optional[Any] = None
     mf: Optional[Any] = None
     mc: Optional[Any] = None
@@ -80,25 +79,6 @@ class CASSCF(ElectronicStructureStrategy):
 
     def set_geom(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
         state = self._get_traj_state(traj_id)
-        state.geom = geom
-
-    def save_cache(self, traj_id: int) -> None:
-        # Cache the current state directly (None is fine for first geometry).
-        state = self._get_traj_state(traj_id)
-        state.prev_mol = state.mol
-        state.prev_mc = state.mc
-        state.prev_mf = state.mf
-
-    def run_hf(self, traj_id: int) -> None:
-        state = self._get_traj_state(traj_id)
-        geom = state.geom
-
-        if geom is None:
-            raise ValueError(f"Geometry for trajectory {traj_id} has not been set.")
-
-        # Clear current CASSCF-level state for this trajectory.
-        state.mc = None
-        state.ao_overlap = None
 
         state.mol = gto.M(
             atom=";".join(
@@ -111,8 +91,24 @@ class CASSCF(ElectronicStructureStrategy):
             spin=0,
         )
 
+        state.mc = None
+        state.ao_overlap = None
+
         if state.prev_mol is not None:
             state.ao_overlap = gto.intor_cross("int1e_ovlp", state.prev_mol, state.mol)
+
+    def save_cache(self, traj_id: int = 0) -> None:
+        # Cache the current state directly (None is fine for first geometry).
+        state = self._get_traj_state(traj_id)
+        state.prev_mol = state.mol
+        state.prev_mc = state.mc
+        state.prev_mf = state.mf
+
+    def run_hf(self, traj_id: int = 0) -> None:
+        state = self._get_traj_state(traj_id)
+
+        if state.mol is None:
+            raise ValueError(f"Geometry for trajectory {traj_id} has not been set.")
 
         dm0 = None
         if state.prev_mf is not None:

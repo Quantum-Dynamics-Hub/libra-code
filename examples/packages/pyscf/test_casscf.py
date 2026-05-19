@@ -35,6 +35,7 @@ import numpy as np
 
 NTRAJ = 2
 NSTATES = 3
+GRAD_ROOT = 2
 
 geom_step0 = [
     MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.7746]])),
@@ -56,8 +57,8 @@ for traj_id, geom in enumerate(geom_step0):
     energies = [casscf.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
     print(f'Trajectory {traj_id} energies at step 0', energies)
 
-    grad = casscf.compute_gradient(2, traj_id=traj_id)
-    print(f'Trajectory {traj_id} gradient root 2 at step 0', grad)
+    grad = casscf.compute_gradient(GRAD_ROOT, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root {GRAD_ROOT} at step 0', grad)
 
 for traj_id, geom in enumerate(geom_step1):
     # Second geometry reuses only this trajectory's previous CASSCF/HF state.
@@ -66,10 +67,13 @@ for traj_id, geom in enumerate(geom_step1):
     energies = [casscf.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
     print(f'Trajectory {traj_id} energies at step 1', energies)
 
-    grad = casscf.compute_gradient(2, traj_id=traj_id)
-    print(f'Trajectory {traj_id} gradient root 2 at step 1', grad)
+    grad = casscf.compute_gradient(GRAD_ROOT, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root {GRAD_ROOT} at step 1', grad)
 
     overlap = casscf.time_overlap_matrix(NSTATES, traj_id=traj_id)
     print(f'Trajectory {traj_id} time-overlap matrix', overlap)
 
+    assert overlap.shape == (NSTATES, NSTATES)
+
 assert isinstance(casscf, ElectronicStructureStrategy)
+assert casscf.ntraj == NTRAJ

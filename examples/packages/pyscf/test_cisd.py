@@ -33,30 +33,47 @@ from libra_py.packages.pyscf.implementations.cisd import CISD
 from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 import numpy as np
 
-geom1 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,0.7746]]))
-geom2 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,1.0]]))
+NTRAJ = 2
+NSTATES = 3
+GRAD_ROOT = 2
 
-cisd = CISD(nroots=3, basis='sto-3g', charge=1)
+geom_step0 = [
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.7746]])),
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.9000]])),
+]
 
-cisd.set_geom_and_run_hf(geom1)
-energies1 = [cisd.compute_energy(root) for root in range(3)]
-print('Energies at geom1', energies1)
+geom_step1 = [
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0000]])),
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.1000]])),
+]
 
-grad1 = cisd.compute_gradient(2)
-print('Gradient root 2 geom1', grad1)
+cisd = CISD(nroots=NSTATES, basis='sto-3g', charge=1, ntraj=NTRAJ)
 
-cisd.set_geom_and_run_hf(geom2)
-energies2 = [cisd.compute_energy(root) for root in range(3)]
-print('Energies at geom2', energies2)
+for traj_id, geom in enumerate(geom_step0):
+    cisd.set_geom_and_run_hf(geom, traj_id=traj_id)
 
-grad2 = cisd.compute_gradient(2)
-print('Gradient root 2 geom2', grad2)
+    energies = [cisd.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
+    print(f'Trajectory {traj_id} energies at step 0', energies)
 
-overlap = cisd.time_overlap_matrix(3)
-print('Time-overlap matrix', overlap)
+    grad = cisd.compute_gradient(GRAD_ROOT, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root {GRAD_ROOT} at step 0', grad)
+
+for traj_id, geom in enumerate(geom_step1):
+    cisd.set_geom_and_run_hf(geom, traj_id=traj_id)
+
+    energies = [cisd.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
+    print(f'Trajectory {traj_id} energies at step 1', energies)
+
+    grad = cisd.compute_gradient(GRAD_ROOT, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root {GRAD_ROOT} at step 1', grad)
+
+    overlap = cisd.time_overlap_matrix(NSTATES, traj_id=traj_id)
+    print(f'Trajectory {traj_id} time-overlap matrix', overlap)
+
+    assert overlap.shape == (NSTATES, NSTATES)
 
 assert isinstance(cisd, ElectronicStructureStrategy)
-assert overlap.shape == (3,3)
+assert cisd.ntraj == NTRAJ
 
 #if __name__ == "__main__":
 #    pass

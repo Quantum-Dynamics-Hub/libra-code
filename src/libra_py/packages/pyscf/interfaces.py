@@ -63,7 +63,7 @@ class ElectronicStructureStrategy(ABC):
         basis: str = "sto-3g",
         unit: str = "Angstrom",
         charge: int = 0,
-        ntraj: int = 0,     #0 indexing
+        ntraj: int = 1,     
     ) -> None:
         self._nroots = nroots
         self._basis = basis
@@ -91,13 +91,13 @@ class ElectronicStructureStrategy(ABC):
         pass
 
     @abstractmethod
-    def run_hf(self, traj_id: int) -> None:
+    def run_hf(self, traj_id: int = 0) -> None:
         pass
 
     def set_geom_and_run_hf(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
-        self.save_cache(traj_id)
-        self.set_geom(geom,traj_id)
-        self.run_hf(traj_id)
+        self.save_cache(traj_id = traj_id)
+        self.set_geom(geom,traj_id = traj_id)
+        self.run_hf(traj_id = traj_id)
 
     @abstractmethod
     def compute_energy(self, root: int, traj_id: int = 0) -> float:
