@@ -140,7 +140,7 @@ class CASSCF(ElectronicStructureStrategy):
             mc.fcisolver.nroots = self._nroots
 
             if self._nroots > 1:
-                mc = mc.state_average_([1.0 / self._nroots] * self._nroots)
+                mc = mc.state_average_([1.0 / self._nroots] * self._nroots) # hardcoded equal weights for now; 
 
             mo_coeff = state.mf.mo_coeff
             if self._cas_list is not None:

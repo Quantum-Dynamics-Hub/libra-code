@@ -43,9 +43,9 @@ from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, Mole
 #    from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
 NSTATES = 2
-DISTANCE_START_BOHR = 7.0
+DISTANCE_START_BOHR = 7.5
 DISTANCE_STOP_BOHR = 15.0
-DISTANCE_STEP_BOHR = 1.0
+DISTANCE_STEP_BOHR = 0.25
 
 basis_dict = {'Li': 'sto-3g', 'F': '6-311+g*'}
 cas_list = [4, 7, 11, 14, 17]# 0-indexed: 3 (F2pz), 6 (Li2s), 10 (F5pz), 13 (F5s), 16 (F4pz)
@@ -60,7 +60,8 @@ casscf = CASSCF(
     basis=basis_dict, 
     unit='Bohr', 
     charge=0,
-    cas_list=cas_list
+    cas_list=cas_list,
+    use_prev_ci=True,  
 )
 
 for step, d in enumerate(distances):

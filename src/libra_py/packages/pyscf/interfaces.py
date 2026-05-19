@@ -100,7 +100,7 @@ class ElectronicStructureStrategy(ABC):
         self.run_hf(traj_id = traj_id)
 
     @abstractmethod
-    def compute_energy(self, root: int, traj_id: int = 0) -> float:
+    def compute_energy(self, root: int, traj_id: int = 0) -> float:#hard coded to single root for now; 
         """Return the total energy (Hartree) for *root*."""
 
     def compute_gradient(self, root: int, traj_id: int = 0) -> np.ndarray:
