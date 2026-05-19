@@ -43,7 +43,6 @@ class CISD(ElectronicStructureStrategy):
 
     def __init__(
         self,
-        mol: Optional[Any] = None,
         nroots: int = 1,
         basis: str = "sto-3g",
         unit: str = "Angstrom",
@@ -218,4 +217,10 @@ class CISD(ElectronicStructureStrategy):
                     s12_mo,
                 )
 
-        return np.asarray(np.real_if_close(overlap))
+        overlap = np.asarray(np.real_if_close(overlap))
+
+        for i in range(nroots):
+            if overlap[i, i] < 0:
+                overlap[i, :] = -overlap[i, :]
+
+        return overlap

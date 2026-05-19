@@ -37,16 +37,11 @@ class CASSCFTrajectoryState:
 class CASSCF(ElectronicStructureStrategy):
     """PySCF-based CASSCF backend for the universal ES interface."""
 
-    # 1) when a geom is set the HF is run; the MF is written to the member attribute
-    #    `_mf`
-    # 2) when the CASSCF energy is requested for a certain root, the CASSCF is run
-    #    (number of roots requested = self._nroots). The resulting MC object is
-    #    stored in the member attribute `mc`, which also contains energies of other
-    #    states.
+    # Each trajectory stores its own PySCF molecule, HF object, CASSCF object,
+    # AO overlap, and previous-step state in CASSCFTrajectoryState.
 
     def __init__(
         self,
-        mol: Optional[Any] = None,
         norbcas: int = 0,
         nelecas: int = 0,
         nroots: int = 1,
@@ -184,32 +179,25 @@ class CASSCF(ElectronicStructureStrategy):
         state = self._get_traj_state(traj_id)
         if state.mc is None:
             raise ValueError("CASSCF must be run before computing time-overlap matrix.")
-        if state.prev_mf is None or state.prev_mol is None:
-            raise ValueError("Previous and current HF/molecule states are required for time-overlap computation.")
+        if state.prev_mc is None or state.prev_mol is None:
+            raise ValueError("Previous and current CASSCF/molecule states are required for time-overlap computation.")
         if state.ao_overlap is None:
             raise ValueError("Cached AO overlap between consecutive geometries is not available.")
         if nroots <= 0:
             raise ValueError(f"nroots must be positive, got {nroots}")
+        if nroots > self._nroots:
+            raise ValueError(f"Requested {nroots} roots, but CASSCF is configured for {self._nroots} roots")
 
         nroots = int(nroots)
-        if state.mf is None or state.mol is None:
-            raise ValueError("Current HF/molecule state is required for time-overlap computation.")
+        if state.mol is None:
+            raise ValueError("Current molecule state is required for time-overlap computation.")
 
-        prev_casci = mcscf.CASCI(state.prev_mf, self._norbcas, self._nelecas)
-        prev_casci.fcisolver = fci.direct_spin0.FCISolver(state.prev_mol)
-        prev_casci.fcisolver.nroots = nroots
-        h1prev, _ = prev_casci.get_h1eff(prev_casci.mo_coeff)
-        h2prev = prev_casci.get_h2cas(prev_casci.mo_coeff)
-        _, prev_roots = prev_casci.fcisolver.kernel(h1prev, h2prev, prev_casci.ncas, prev_casci.nelecas, nroots=nroots)
+        prev_roots = getattr(state.prev_mc, "ci", None)
+        curr_roots = getattr(state.mc, "ci", None)
+        if prev_roots is None or curr_roots is None:
+            raise ValueError("Previous and current CI vectors are required for time-overlap computation.")
 
-        curr_casci = mcscf.CASCI(state.mf, self._norbcas, self._nelecas)
-        curr_casci.fcisolver = fci.direct_spin0.FCISolver(state.mol)
-        curr_casci.fcisolver.nroots = nroots
-        h1curr, _ = curr_casci.get_h1eff(curr_casci.mo_coeff)
-        h2curr = curr_casci.get_h2cas(curr_casci.mo_coeff)
-        _, curr_roots = curr_casci.fcisolver.kernel(h1curr, h2curr, curr_casci.ncas, curr_casci.nelecas, nroots=nroots)
-
-        if not isinstance(prev_roots, (list, tuple)):
+        if not isinstance(prev_roots, (list, tuple)): #treat single root as list of one root for uniformity
             prev_roots = [prev_roots]
         if not isinstance(curr_roots, (list, tuple)):
             curr_roots = [curr_roots]
@@ -221,24 +209,25 @@ class CASSCF(ElectronicStructureStrategy):
         prev_roots = [np.asarray(v) for v in prev_roots[:nroots]]
         curr_roots = [np.asarray(v) for v in curr_roots[:nroots]]
 
-        mo_prev_act = np.asarray(prev_casci.mo_coeff)[:, prev_casci.ncore : prev_casci.ncore + prev_casci.ncas]
-        mo_curr_act = np.asarray(curr_casci.mo_coeff)[:, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas]
+        mo_prev_act = np.asarray(state.prev_mc.mo_coeff)[:, state.prev_mc.ncore : state.prev_mc.ncore + state.prev_mc.ncas]
+        mo_curr_act = np.asarray(state.mc.mo_coeff)[:, state.mc.ncore : state.mc.ncore + state.mc.ncas]
         s12_mo = mo_prev_act.T @ state.ao_overlap @ mo_curr_act
 
         overlap = np.zeros((nroots, nroots), dtype=float)
-        nelecas = prev_casci.nelecas
+        nelecas = state.prev_mc.nelecas
         for i in range(nroots):
             for j in range(nroots):
                 overlap[i, j] = fci.addons.overlap(
                     prev_roots[i],
                     curr_roots[j],
-                    prev_casci.ncas,
+                    state.prev_mc.ncas,
                     nelecas,
                     s=s12_mo,
                 )
 
         overlap = np.asarray(np.real_if_close(overlap))
 
+        # Phase correction. Ensure the diagonal elements of the overlap matrix are positive by flipping signs if necessary.
         for i in range(nroots):
             if overlap[i, i] < 0:
                 overlap[i, :] = -overlap[i, :]
