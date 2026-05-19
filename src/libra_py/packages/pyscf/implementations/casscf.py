@@ -25,10 +25,15 @@ from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, Mole
 
 
 @dataclass
-class Cache:
+class CASSCFTrajectoryState:
+    geom: Optional[MolecularGeometry] = None
+    mol: Optional[Any] = None
+    mf: Optional[Any] = None
+    mc: Optional[Any] = None
+    ao_overlap: Optional[np.ndarray] = None
     prev_mol: Optional[Any] = None
-    prev_mc: Optional[Any] = None
     prev_mf: Optional[Any] = None
+    prev_mc: Optional[Any] = None
 
 class CASSCF(ElectronicStructureStrategy):
     """PySCF-based CASSCF backend for the universal ES interface."""
@@ -44,134 +49,174 @@ class CASSCF(ElectronicStructureStrategy):
         self,
         mol: Optional[Any] = None,
         norbcas: int = 0,
-        nelecas:int = 0, 
+        nelecas: int = 0,
         nroots: int = 1,
         basis: str = "sto-3g",
         unit: str = "Angstrom",
         charge: int = 0,
         cas_list: Optional[List[int]] = None,
+        ntraj: int = 1,
+        use_prev_ci: bool = False,
     ) -> None:
-        #setting up the initial state 
-        super().__init__(mol=mol, nroots=nroots, basis=basis, unit=unit, charge=int(charge))
+        super().__init__(
+            nroots=nroots,
+            basis=basis,
+            unit=unit,
+            charge=int(charge),
+            ntraj=ntraj,
+        )
+
         self._norbcas: int = norbcas
-        self._nelecas: Union[int, Tuple[int, int]] = nelecas  
-        self._nroots: int = nroots
-        self._basis: str = basis
-        self._unit: str = unit  # default to Angstrom 
-        self._charge: int = int(charge)
-        self._mf: Optional[Any] = None
-        self._mc: Optional[Any] = None
-        self._ao_overlap: Optional[np.ndarray] = None  # AO overlap between consecutive geoms for time-overlap computation
-        self._cache: Cache = Cache()
-        self._cas_list: Optional[List[int]] = cas_list  # list of active space orbital indices (0-based); if None, use the first `n
+        self._nelecas: Union[int, Tuple[int, int]] = nelecas
+        self._cas_list: Optional[List[int]] = cas_list
+        self._use_prev_ci: bool = use_prev_ci
 
-    def save_cache(self) -> None:
+    def _get_traj_state(self, traj_id: int) -> CASSCFTrajectoryState:
+        state = self._traj_states[traj_id]
+        if state is None:
+            state = CASSCFTrajectoryState()
+            self._traj_states[traj_id] = state
+        return state
+
+    def set_geom(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
+        state = self._get_traj_state(traj_id)
+        state.geom = geom
+
+    def save_cache(self, traj_id: int) -> None:
         # Cache the current state directly (None is fine for first geometry).
-        self._cache.prev_mol = self._mol
-        self._cache.prev_mc = self._mc
-        self._cache.prev_mf = self._mf
+        state = self._get_traj_state(traj_id)
+        state.prev_mol = state.mol
+        state.prev_mc = state.mc
+        state.prev_mf = state.mf
 
-    def run_hf(self) -> None:
-        # Clear the current state.
-        self._mc = None
-        self._ao_overlap = None
+    def run_hf(self, traj_id: int) -> None:
+        state = self._get_traj_state(traj_id)
+        geom = state.geom
 
-        # Set up the new molecule and run HF.
-        charge: int = self._charge
-        self._mol = gto.M(
+        if geom is None:
+            raise ValueError(f"Geometry for trajectory {traj_id} has not been set.")
+
+        # Clear current CASSCF-level state for this trajectory.
+        state.mc = None
+        state.ao_overlap = None
+
+        state.mol = gto.M(
             atom=";".join(
                 f"{label} {coord[0]} {coord[1]} {coord[2]}"
-                for label, coord in zip(self._geom.atom_labels, self._geom.coords_angstrom)
+                for label, coord in zip(geom.atom_labels, geom.coords_angstrom)
             ),
             basis=self._basis,
             unit=self._unit,
-            charge=charge,
+            charge=self._charge,
             spin=0,
         )
-        #compute the AO overlap between new geom and the previous one 
-        if self._cache.prev_mol is not None:
-            self._ao_overlap = gto.intor_cross("int1e_ovlp", self._cache.prev_mol, self._mol)
 
-        self._mf = scf.RHF(self._mol).run(verbose=0)
+        if state.prev_mol is not None:
+            state.ao_overlap = gto.intor_cross("int1e_ovlp", state.prev_mol, state.mol)
 
-    def compute_energy(self, root: int) -> float:
-        if self._mf is None:
+        dm0 = None
+        if state.prev_mf is not None:
+            try:
+                dm0 = state.prev_mf.make_rdm1()
+            except Exception:
+                dm0 = None
+
+        mf = scf.RHF(state.mol)
+        mf.verbose = 0
+        if dm0 is not None:
+            mf.kernel(dm0=dm0)
+        else:
+            mf.kernel()
+
+        state.mf = mf
+    
+    def compute_energy(self, root: int, traj_id: int = 0) -> float:
+        state = self._get_traj_state(traj_id)
+
+        if state.mf is None:
             raise ValueError("HF must be run before computing CASSCF energies.")
+        if root < 0 or root >= self._nroots:
+            raise IndexError(f"Requested root {root}, but only {self._nroots} roots are available.")
 
-        if self._mc is None:
-            self._mc = mcscf.CASSCF(self._mf, self._norbcas, self._nelecas)
-            self._mc.fcisolver = fci.direct_spin0.FCI(self._mol)
-            self._mc.fcisolver.nroots = self._nroots
+        if state.mc is None:
+            mc = mcscf.CASSCF(state.mf, self._norbcas, self._nelecas)
+            mc.fcisolver = fci.direct_spin0.FCI(state.mol)
+            mc.fcisolver.nroots = self._nroots
+
             if self._nroots > 1:
-                self._mc = self._mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
+                mc = mc.state_average_([1.0 / self._nroots] * self._nroots)
 
-            # Correctly use currently converged HF spatial orbitals as initial guess for SA-CASSCF
-            # Sort orbitals if cas_list is provided
-            mo_coeff = self._mf.mo_coeff
+            mo_coeff = state.mf.mo_coeff
             if self._cas_list is not None:
-                # Notice: In PySCF mcscf.sort_mo, cas_list must be a list of 1-based indices
-                # if your cas_list values passed in __init__ are 1-based, directly use it:
-                mo_coeff = mcscf.sort_mo(self._mc, mo_coeff, self._cas_list)
-             
-            # Prepare CI coefficients from previous step (only if use_prev_ci is True)
+                mo_coeff = mcscf.sort_mo(mc, mo_coeff, self._cas_list)
+
             ci0 = None
-            if getattr(self, '_use_prev_ci', False) and self._cache.prev_mc is not None:
-                ci0 = getattr(self._cache.prev_mc, 'ci', None)
+            if self._use_prev_ci and state.prev_mc is not None:
+                ci0 = getattr(state.prev_mc, "ci", None)
 
             if ci0 is not None:
-                self._mc.kernel(mo_coeff, ci0=ci0)
+                mc.kernel(mo_coeff, ci0=ci0)
             else:
-                self._mc.kernel(mo_coeff)
+                mc.kernel(mo_coeff)
 
-        e_states: Optional[Sequence[float]] = getattr(self._mc, "e_states", None)
+            state.mc = mc
+
+        e_states: Optional[Sequence[float]] = getattr(state.mc, "e_states", None)
         if e_states is not None:
             if root < 0 or root >= len(e_states):
                 raise IndexError(f"Requested root {root}, but only {len(e_states)} roots are available.")
             return float(np.asarray(e_states)[root])
+
         if root != 0:
             raise IndexError("Only root 0 is available for a single-state CASSCF calculation.")
-        return float(self._mc.e_tot)
+        return float(state.mc.e_tot)
 
-    def compute_gradient(self, root: int) -> np.ndarray:
-        if self._mc is None:
+    def compute_gradient(self, root: int, traj_id: int = 0) -> np.ndarray:
+        state = self._get_traj_state(traj_id)
+        if state.mc is None:
             raise ValueError("CASSCF must be run before computing gradients.")
-        e_states: Optional[Sequence[float]] = getattr(self._mc, "e_states", None)
+        e_states: Optional[Sequence[float]] = getattr(state.mc, "e_states", None)
         if e_states is not None:
             if root < 0 or root >= len(e_states):
                 raise IndexError(f"Requested root {root}, but only {len(e_states)} roots are available.")
-            return np.asarray(self._mc.nuc_grad_method(state=root).kernel())
+            return np.asarray(state.mc.nuc_grad_method(state=root).kernel())
         if root != 0:
             raise IndexError("Only root 0 is available for a single-state CASSCF calculation.")
-        return np.asarray(self._mc.nuc_grad_method().kernel())
+        return np.asarray(state.mc.nuc_grad_method().kernel())
 
-    def time_overlap_matrix(self, nroots: int) -> np.ndarray:
-        if self._mc is None:
+    def time_overlap_matrix(self, nroots: int, traj_id: int = 0) -> np.ndarray:
+        state = self._get_traj_state(traj_id)
+        if state.mc is None:
             raise ValueError("CASSCF must be run before computing time-overlap matrix.")
-        if self._cache is None or self._cache.prev_mf is None or self._cache.prev_mol is None:
+        if state.prev_mf is None or state.prev_mol is None:
             raise ValueError("Previous and current HF/molecule states are required for time-overlap computation.")
-        if self._ao_overlap is None:
+        if state.ao_overlap is None:
             raise ValueError("Cached AO overlap between consecutive geometries is not available.")
         if nroots <= 0:
             raise ValueError(f"nroots must be positive, got {nroots}")
 
         nroots = int(nroots)
-        if self._mf is None or self._mol is None:
+        if state.mf is None or state.mol is None:
             raise ValueError("Current HF/molecule state is required for time-overlap computation.")
 
-        prev_casci = mcscf.CASCI(self._cache.prev_mf, self._norbcas, self._nelecas)
-        prev_casci.fcisolver = fci.direct_spin0.FCISolver(self._cache.prev_mol)
+        prev_casci = mcscf.CASCI(state.prev_mf, self._norbcas, self._nelecas)
+        prev_casci.fcisolver = fci.direct_spin0.FCISolver(state.prev_mol)
         prev_casci.fcisolver.nroots = nroots
         h1prev, _ = prev_casci.get_h1eff(prev_casci.mo_coeff)
         h2prev = prev_casci.get_h2cas(prev_casci.mo_coeff)
         _, prev_roots = prev_casci.fcisolver.kernel(h1prev, h2prev, prev_casci.ncas, prev_casci.nelecas, nroots=nroots)
 
-        curr_casci = mcscf.CASCI(self._mf, self._norbcas, self._nelecas)
-        curr_casci.fcisolver = fci.direct_spin0.FCISolver(self._mol)
+        curr_casci = mcscf.CASCI(state.mf, self._norbcas, self._nelecas)
+        curr_casci.fcisolver = fci.direct_spin0.FCISolver(state.mol)
         curr_casci.fcisolver.nroots = nroots
         h1curr, _ = curr_casci.get_h1eff(curr_casci.mo_coeff)
         h2curr = curr_casci.get_h2cas(curr_casci.mo_coeff)
         _, curr_roots = curr_casci.fcisolver.kernel(h1curr, h2curr, curr_casci.ncas, curr_casci.nelecas, nroots=nroots)
 
+        if not isinstance(prev_roots, (list, tuple)):
+            prev_roots = [prev_roots]
+        if not isinstance(curr_roots, (list, tuple)):
+            curr_roots = [curr_roots]
         if len(prev_roots) < nroots or len(curr_roots) < nroots:
             raise ValueError(
                 f"Requested {nroots} roots, but only {len(prev_roots)} previous and {len(curr_roots)} current roots are available."
@@ -182,7 +227,7 @@ class CASSCF(ElectronicStructureStrategy):
 
         mo_prev_act = np.asarray(prev_casci.mo_coeff)[:, prev_casci.ncore : prev_casci.ncore + prev_casci.ncas]
         mo_curr_act = np.asarray(curr_casci.mo_coeff)[:, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas]
-        s12_mo = mo_prev_act.T @ self._ao_overlap @ mo_curr_act
+        s12_mo = mo_prev_act.T @ state.ao_overlap @ mo_curr_act
 
         overlap = np.zeros((nroots, nroots), dtype=float)
         nelecas = prev_casci.nelecas
@@ -204,14 +249,17 @@ class CASSCF(ElectronicStructureStrategy):
 
         return overlap
     
-    def compute_nac_vectors(self, use_etfs: bool = True) -> np.ndarray:
-        if self._mc is None:
+    def compute_nac_vectors(self, use_etfs: bool = True, traj_id: int = 0) -> np.ndarray:
+        state = self._get_traj_state(traj_id)
+        if state.mc is None:
             raise ValueError("CASSCF must be run before computing NAC vectors.")
+        if state.mol is None:
+            raise ValueError("Current molecule is required before computing NAC vectors.")
 
         nstates = self._nroots
-        natm = int(self._mol.natm)
+        natm = int(state.mol.natm)
         
-        mc_nacs = self._mc.nac_method()
+        mc_nacs = state.mc.nac_method()
         nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
 
         for ket in range(nstates):
@@ -224,4 +272,3 @@ class CASSCF(ElectronicStructureStrategy):
                 )
 
         return nacv
-

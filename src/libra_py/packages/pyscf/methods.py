@@ -36,7 +36,7 @@ class tmp:
     pass
 
 
-def pyscf_compute_adi(q, params, full_id):
+def es_compute_adi(q, params, full_id):
 
     # ================= Decode trajectory index =================
     Id = Cpp2Py(full_id)

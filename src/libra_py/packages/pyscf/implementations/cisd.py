@@ -56,27 +56,27 @@ class CISD(ElectronicStructureStrategy):
         self._cache.prev_ci = self._ci
 
     def run_hf(self) -> None:
-        self._ci = None
+        # Clear the current state.
+        self._mc = None
         self._ao_overlap = None
 
-        dm0 = None
-        if self._cache.prev_mf is not None:
-            try:
-                dm0 = self._cache.prev_mf.make_rdm1()
-            except Exception:
-                dm0 = None
-
-        self._mol, self._mf, self._ao_overlap = run_rhf_for_geometry(
-            self._geom,
+        # Set up the new molecule and run HF.
+        charge: int = self._charge
+        self._mol = gto.M(
+            atom=";".join(
+                f"{label} {coord[0]} {coord[1]} {coord[2]}"
+                for label, coord in zip(self._geom.atom_labels, self._geom.coords_angstrom)
+            ),
             basis=self._basis,
             unit=self._unit,
-            charge=self._charge,
-            prev_mol=self._cache.prev_mol,
-            overlap_integral="int1e_ovlp",
+            charge=charge,
             spin=0,
-            verbose=0,
-            dm0=dm0,
         )
+        #compute the AO overlap between new geom and the previous one 
+        if self._cache.prev_mol is not None:
+            self._ao_overlap = gto.intor_cross("int1e_ovlp", self._cache.prev_mol, self._mol)
+
+        self._mf = scf.RHF(self._mol).run(verbose=0)
 
 
     def compute_energy(self, root: int) -> float:

@@ -29,43 +29,47 @@ from pathlib import Path
 #    else:
 #        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
 
-from pyscf import gto
 from libra_py.packages.pyscf.implementations.casscf import CASSCF
 from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 import numpy as np
 
-geom1 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,0.7746]]))
-geom2 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,1.0]]))
+NTRAJ = 2
+NSTATES = 3
 
+geom_step0 = [
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.7746]])),
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 0.9000]])),
+]
 
+geom_step1 = [
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.0000]])),
+    MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 1.1000]])),
+]
 
 # instantiate the CASSCF strategy class with parameters for the test
-casscf = CASSCF(norbcas=2, nelecas=2, nroots=3, basis='sto-3g', charge=1)
+casscf = CASSCF(norbcas=2, nelecas=2, nroots=NSTATES, basis='sto-3g', charge=1, ntraj=NTRAJ)
 
-# wrap geometry set and HF in set_geom_and_run_hf method
-casscf.set_geom_and_run_hf(geom1)
+for traj_id, geom in enumerate(geom_step0):
+    # First geometry for each trajectory initializes that trajectory's state slot.
+    casscf.set_geom_and_run_hf(geom, traj_id=traj_id)
 
-# 2) energy for root 0,1,2
-energies1 = [casscf.compute_energy(root) for root in range(3)]
-print('Energies at geom1', energies1)
+    energies = [casscf.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
+    print(f'Trajectory {traj_id} energies at step 0', energies)
 
-# 3) gradient for root 2
-grad1 = casscf.compute_gradient(2)
-print('Gradient root 2 geom1', grad1)
+    grad = casscf.compute_gradient(2, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root 2 at step 0', grad)
 
-# 4) set mol2 geometry and run HF
-casscf.set_geom_and_run_hf(geom2)
+for traj_id, geom in enumerate(geom_step1):
+    # Second geometry reuses only this trajectory's previous CASSCF/HF state.
+    casscf.set_geom_and_run_hf(geom, traj_id=traj_id)
 
-# 5) energy for root 0,1,2
-energies2 = [casscf.compute_energy(root) for root in range(3)]
-print('Energies at geom2', energies2)
+    energies = [casscf.compute_energy(root, traj_id=traj_id) for root in range(NSTATES)]
+    print(f'Trajectory {traj_id} energies at step 1', energies)
 
-# 6) gradient for root 2
-grad2 = casscf.compute_gradient(2)
-print('Gradient root 2 geom2', grad2)
+    grad = casscf.compute_gradient(2, traj_id=traj_id)
+    print(f'Trajectory {traj_id} gradient root 2 at step 1', grad)
 
-# 7) time-overlap matrix for 3 roots
-overlap = casscf.time_overlap_matrix(3)
-print('Time-overlap matrix', overlap)
+    overlap = casscf.time_overlap_matrix(NSTATES, traj_id=traj_id)
+    print(f'Trajectory {traj_id} time-overlap matrix', overlap)
 
 assert isinstance(casscf, ElectronicStructureStrategy)

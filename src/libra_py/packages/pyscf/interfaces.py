@@ -59,49 +59,51 @@ class ElectronicStructureStrategy(ABC):
 
     def __init__(
         self,
-        mol: Optional[Any] = None,
         nroots: int = 1,
         basis: str = "sto-3g",
         unit: str = "Angstrom",
         charge: int = 0,
+        ntraj: int = 0,     #0 indexing
     ) -> None:
-        self._mol = mol
         self._nroots = nroots
         self._basis = basis
         self._unit = unit
         self._charge = charge
-        self._mf = None
-        self._ao_overlap = None
-        self._geom = None'
+        self._traj_states = [None] * ntraj # electronic states for each trajectory,either pointers to ram or disk paths to cache files
 
     @property
     def nstates(self) -> int:
         return self._nroots
+    
+    @property
+    def ntraj(self) -> int:
+        return len(self._traj_states)
 
     # ------------------------------------------------------------------
     #  Core computation (required)
     # ------------------------------------------------------------------
-
-    def save_cache(self) -> None:
+    @abstractmethod
+    def save_cache(self, traj_id: int = 0) -> None:
+        pass
+    
+    @abstractmethod
+    def set_geom(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
         pass
 
-    def set_geom(self, geom: MolecularGeometry) -> None:
-        self._geom = geom
-
     @abstractmethod
-    def run_hf(self) -> None:
+    def run_hf(self, traj_id: int) -> None:
         pass
 
-    def set_geom_and_run_hf(self, geom: MolecularGeometry) -> None:
-        self.save_cache()
-        self.set_geom(geom)
-        self.run_hf()
+    def set_geom_and_run_hf(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
+        self.save_cache(traj_id)
+        self.set_geom(geom,traj_id)
+        self.run_hf(traj_id)
 
     @abstractmethod
-    def compute_energy(self, root: int) -> float:
+    def compute_energy(self, root: int, traj_id: int = 0) -> float:
         """Return the total energy (Hartree) for *root*."""
 
-    def compute_gradient(self, root: int) -> np.ndarray:
+    def compute_gradient(self, root: int, traj_id: int = 0) -> np.ndarray:
         """Return the nuclear gradient for *root*.
 
         Returns
@@ -109,9 +111,12 @@ class ElectronicStructureStrategy(ABC):
         np.ndarray
             Shape ``(natoms, 3)`` in Hartree/Bohr.
         """
+        raise NotImplementedError(
+            "This backend does not provide nuclear gradients."
+        )
 
 
-    def time_overlap_matrix(self, nroots: int) -> np.ndarray:
+    def time_overlap_matrix(self, nroots: int, traj_id: int = 0) -> np.ndarray:
         """Return the time-overlap matrix ``<psi_i(t)|psi_j(t+dt)>``.
 
         Returns
@@ -124,7 +129,7 @@ class ElectronicStructureStrategy(ABC):
             "use time-overlap-based NACs instead."
         )
 
-    def compute_nac_vectors(self, **kwargs: Any) -> np.ndarray:
+    def compute_nac_vectors(self, *, traj_id: int = 0, **kwargs: Any) -> np.ndarray:
         """Return all NAC vectors ``d_{ij}`` between states.
 
         Returns
@@ -142,3 +147,4 @@ class ElectronicStructureStrategy(ABC):
             "This backend does not provide explicit NAC vectors; "
             "use time-overlap-based NACs instead."
         )
+    
