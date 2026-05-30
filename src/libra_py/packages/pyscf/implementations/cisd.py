@@ -32,7 +32,6 @@ class CISDTrajectoryState:
     mol: Optional[Any] = None
     mf: Optional[Any] = None
     ci: Optional[Any] = None
-    ao_overlap: Optional[np.ndarray] = None
     prev_mol: Optional[Any] = None
     prev_mf: Optional[Any] = None
     prev_ci: Optional[Any] = None
@@ -55,10 +54,13 @@ class CISD(ElectronicStructureStrategy):
             basis=basis,
             unit=unit,
             charge=int(charge),
-            ntraj=ntraj,
         )
 
+        if ntraj <= 0:
+            raise ValueError(f"ntraj must be positive, got {ntraj}")
+        self._nroots: int = nroots
         self._use_prev_ci: bool = use_prev_ci
+        self._traj_states: list[Optional[CISDTrajectoryState]] = [None] * ntraj
 
     def _get_traj_state(self, traj_id: int) -> CISDTrajectoryState:
         state = self._traj_states[traj_id]
@@ -68,9 +70,14 @@ class CISD(ElectronicStructureStrategy):
         return state
 
     def set_geom(self, geom: MolecularGeometry, traj_id: int = 0) -> None:
+        if traj_id == 0:
+            super().set_geom(geom)
+            nroots = self.get_nroots()
+            self._energies = [None] * nroots
+            self._gradients = [None] * nroots
+
         state = self._get_traj_state(traj_id)
         state.ci = None
-        state.ao_overlap = None
 
         state.mol = gto.M(
             atom=";".join(
@@ -82,9 +89,6 @@ class CISD(ElectronicStructureStrategy):
             charge=self._charge,
             spin=0,
         )
-
-        if state.prev_mol is not None:
-            state.ao_overlap = gto.intor_cross("int1e_ovlp", state.prev_mol, state.mol)
 
     def save_cache(self, traj_id: int = 0) -> None:
         state = self._get_traj_state(traj_id)
@@ -114,13 +118,8 @@ class CISD(ElectronicStructureStrategy):
 
         state.mf = mf
 
-    def compute_energy(self, root: int, traj_id: int = 0) -> float:
+    def _run_cisd(self, traj_id: int = 0) -> Any:
         state = self._get_traj_state(traj_id)
-
-        if state.mf is None:
-            raise ValueError("HF must be run before computing CISD energies.")
-        if root < 0 or root >= self._nroots:
-            raise IndexError(f"Requested root {root}, but only {self._nroots} roots are available.")
 
         if state.ci is None:
             cisd = ci.cisd.CISD(state.mf)
@@ -138,53 +137,54 @@ class CISD(ElectronicStructureStrategy):
 
             state.ci = cisd
 
-        e_tot: Optional[Sequence[float]] = getattr(state.ci, "e_tot", None)
+        return state.ci
+
+    def _compute_energy(self, root: int, traj_id: int = 0) -> float:
+        cisd = self._run_cisd(traj_id=traj_id)
+
+        e_tot: Optional[Sequence[float]] = getattr(cisd, "e_tot", None)
         if isinstance(e_tot, (list, tuple, np.ndarray)):
             return float(np.asarray(e_tot)[root])
-
-        if root != 0:
-            raise IndexError("Only root 0 is available for this CISD calculation.")
         return float(e_tot)
 
-    def compute_gradient(self, root: int, traj_id: int = 0) -> np.ndarray:
-        state = self._get_traj_state(traj_id)
-        if state.ci is None:
-            self.compute_energy(root=0, traj_id=traj_id)
+    def compute_energies(self) -> None:
+        cisd = self._run_cisd(traj_id=0)
+        e_tot: Optional[Sequence[float]] = getattr(cisd, "e_tot", None)
+        if isinstance(e_tot, (list, tuple, np.ndarray)):
+            self._energies = [float(e) for e in np.asarray(e_tot)[:self._nroots]]
+            return
 
-        ci_vectors = state.ci.ci
+        self._energies[0] = float(cisd.e_tot)
+
+    def compute_energy(self, root: int, traj_id: int = 0) -> float:
+        if traj_id != 0:
+            return self._compute_energy(root, traj_id=traj_id)
+        return self.get_energy(root)
+
+    def _compute_gradient(self, root: int, traj_id: int = 0) -> np.ndarray:
+        cisd = self._run_cisd(traj_id=traj_id)
+
+        ci_vectors = cisd.ci
         if isinstance(ci_vectors, (list, tuple)):
-            ci_roots = [np.asarray(vec) for vec in ci_vectors]
-        else:
-            ci_roots = [np.asarray(ci_vectors)]
-        if root < 0 or root >= len(ci_roots):
-            raise IndexError(f"Requested root {root}, but only {len(ci_roots)} roots are available.")
+            return np.asarray(cisd.nuc_grad_method().kernel(state=root))
+        return np.asarray(cisd.nuc_grad_method().kernel())
 
-        if len(ci_roots) == 1:
-            if root != 0:
-                raise IndexError("Only root 0 is available for a single-state CISD calculation.")
-            return np.asarray(state.ci.nuc_grad_method().kernel())
-        return np.asarray(state.ci.nuc_grad_method().kernel(state=root))
+    def compute_gradient(self, root: int, traj_id: int = 0) -> None:
+        if traj_id == 0 and self._energies[root] is None:
+            self.compute_energies()
+        gradient = self._compute_gradient(root, traj_id=traj_id)
+        if traj_id == 0:
+            self._gradients[root] = gradient
 
     def time_overlap_matrix(self, nroots: int, traj_id: int = 0) -> np.ndarray:
         state = self._get_traj_state(traj_id)
-
-        if nroots <= 0:
-            raise ValueError(f"nroots must be positive, got {nroots}")
-        if nroots > self._nroots:
-            raise ValueError(f"Requested {nroots} roots, but CISD is configured for {self._nroots} roots")
-        if state.ci is None:
-            raise ValueError("CISD must be run before computing time-overlap matrix.")
-
         nroots = int(nroots)
 
         if state.prev_ci is None or state.prev_mf is None or state.prev_mol is None:
             raise ValueError("Previous CISD state must exist for time-overlap computation.")
-        if state.mf is None or state.mol is None:
-            raise ValueError("Current CISD state must exist for time-overlap computation.")
-        if state.ao_overlap is None:
-            raise ValueError("Cached AO overlap between consecutive geometries is not available.")
 
-        s12_mo = reduce(np.dot, (state.prev_mf.mo_coeff.T, state.ao_overlap, state.mf.mo_coeff))
+        ao_overlap = gto.intor_cross("int1e_ovlp", state.prev_mol, state.mol)
+        s12_mo = reduce(np.dot, (state.prev_mf.mo_coeff.T, ao_overlap, state.mf.mo_coeff))
 
         prev_ci_roots = state.prev_ci.ci
         curr_ci_roots = state.ci.ci
@@ -197,11 +197,6 @@ class CISD(ElectronicStructureStrategy):
             curr_ci_list = [np.asarray(v) for v in curr_ci_roots]
         else:
             curr_ci_list = [np.asarray(curr_ci_roots)]
-
-        if len(prev_ci_list) < nroots or len(curr_ci_list) < nroots:
-            raise ValueError(
-                f"Requested {nroots} roots, but only {len(prev_ci_list)} previous and {len(curr_ci_list)} current roots are available."
-            )
 
         nmo = state.ci.nmo
         nelec = state.mol.nelectron // 2

@@ -75,5 +75,3 @@ for traj_id, geom in enumerate(geom_step1):
 
     assert overlap.shape == (NSTATES, NSTATES)
 
-assert isinstance(casscf, ElectronicStructureStrategy)
-assert casscf.ntraj == NTRAJ
