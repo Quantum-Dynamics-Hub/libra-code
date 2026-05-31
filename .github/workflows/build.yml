@@ -1,137 +1,176 @@
-name: Libra CI
+name: Libra CI (Fast)
 
 on:
-push:
-branches:
-- master
-- devel
-pull_request:
-workflow_dispatch:
+  push:
+    branches: [devel]
+  pull_request:
+  workflow_dispatch:
 
 env:
-BUILD_DIR: build
+  BUILD_DIR: _build
+  CONDA_ENV: libra
 
 jobs:
-build-and-test:
+  build-and-test:
+    runs-on: ubuntu-latest
 
-```
-runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
 
-strategy:
-  fail-fast: false
-  matrix:
-    python-version: ["3.10"]
+    defaults:
+      run:
+        shell: bash -l {0}
 
-defaults:
-  run:
-    shell: bash -l {0}
+    steps:
+      # ----------------------------
+      # Checkout
+      # ----------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-steps:
+      # ----------------------------
+      # Cache Conda packages
+      # ----------------------------
+      - name: Cache conda packages
+        uses: actions/cache@v4
+        with:
+          path: ~/conda_pkgs_dir
+          key: conda-pkgs-${{ runner.os }}-${{ hashFiles('environment.yml') }}
+          restore-keys: |
+            conda-pkgs-${{ runner.os }}-
 
-  - name: Checkout repository
-    uses: actions/checkout@v4
+      # ----------------------------
+      # Setup Conda + Mamba
+      # ----------------------------
+      - name: Setup Miniconda (with mamba)
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          auto-activate-base: false
+          activate-environment: ${{ env.CONDA_ENV }}
+          environment-file: environment.yml
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+          channel-priority: strict
+          use-mamba: true
+          mamba-version: "*"
 
-  - name: Setup Miniconda
-    uses: conda-incubator/setup-miniconda@v3
-    with:
-      activate-environment: libra
-      environment-file: environment.yml
-      auto-activate-base: false
-      channels: conda-forge
-      channel-priority: strict
-      python-version: ${{ matrix.python-version }}
+      # ----------------------------
+      # Cache full Conda environment
+      # ----------------------------
+      - name: Cache conda environment
+        uses: actions/cache@v4
+        with:
+          path: ~/miniconda3/envs/${{ env.CONDA_ENV }}
+          key: conda-env-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('environment.yml') }}
 
-  - name: Verify environment
-    run: |
-      conda info
-      conda list
+      # ----------------------------
+      # Environment sanity check
+      # ----------------------------
+      - name: Verify environment
+        run: |
+          conda info
+          conda list
+          python --version
+          cmake --version
+          g++ --version
 
-      which python
-      python --version
+      # ----------------------------
+      # Cache build directory (CMake)
+      # ----------------------------
+      - name: Cache build directory
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.BUILD_DIR }}
+          key: build-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('CMakeLists.txt', 'environment.yml') }}
 
-      which cmake
-      cmake --version
+      # ----------------------------
+      # Configure
+      # ----------------------------
+      - name: Configure CMake
+        run: |
+          mkdir -p ${BUILD_DIR}
+          cd ${BUILD_DIR}
 
-      which g++
-      g++ --version
+          cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
+            -DBOOST_ROOT=${CONDA_PREFIX} \
+            ..
 
-  - name: Configure build
-    run: |
-      mkdir -p ${BUILD_DIR}
-      cd ${BUILD_DIR}
+      # ----------------------------
+      # Build
+      # ----------------------------
+      - name: Build Libra
+        run: |
+          cd ${BUILD_DIR}
+          make -j$(nproc)
 
-      cmake \
-        -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} \
-        -DBOOST_ROOT=${CONDA_PREFIX} \
-        ..
+      # ----------------------------
+      # Show artifacts
+      # ----------------------------
+      - name: Inspect build outputs
+        run: |
+          find ${BUILD_DIR} -type f | sort
 
-  - name: Build Libra
-    run: |
-      cd ${BUILD_DIR}
-      make -j$(nproc)
+      # ----------------------------
+      # Runtime environment
+      # ----------------------------
+      - name: Setup runtime paths
+        run: |
+          echo "PYTHONPATH=${GITHUB_WORKSPACE}/${BUILD_DIR}/src:${PYTHONPATH}" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/${BUILD_DIR}/src:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
 
-  - name: Show build products
-    run: |
-      find ${BUILD_DIR} -type f | sort
+      # ----------------------------
+      # Smoke test Python
+      # ----------------------------
+      - name: Smoke test Python
+        run: |
+          python - << 'EOF'
+          import sys
+          print(sys.version)
+          print(sys.executable)
+          print("PYTHONPATH:")
+          for p in sys.path:
+              print("  ", p)
+          EOF
 
-  - name: Setup runtime paths
-    run: |
-      echo "PYTHONPATH=${GITHUB_WORKSPACE}/${BUILD_DIR}/src:${PYTHONPATH}" >> $GITHUB_ENV
-      echo "LD_LIBRARY_PATH=${GITHUB_WORKSPACE}/${BUILD_DIR}/src:${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+      # ----------------------------
+      # Libra import test
+      # ----------------------------
+      - name: Smoke test Libra import
+        continue-on-error: true
+        run: |
+          python - << 'EOF'
+          try:
+              import liblibra_core
+              print("OK: liblibra_core imported")
+          except Exception as e:
+              print("Import failed:", e)
+              raise
+          EOF
 
-  - name: Locate Python extension modules
-    run: |
-      find ${BUILD_DIR} \
-        \( -name "*.so" -o -name "*.pyd" \) \
-        | sort
+      # ----------------------------
+      # Tests
+      # ----------------------------
+      - name: Run tests
+        continue-on-error: false
+        run: |
+          if [ -d tests ]; then
+              python -m pytest -v tests
+          elif [ -d unittests ]; then
+              python -m pytest -v unittests
+          else
+              echo "No test suite found."
+          fi
 
-  - name: Smoke test Python
-    run: |
-      python - << 'EOF'
-      import sys
-      print("Python version:", sys.version)
-      print("Executable:", sys.executable)
-      print("PYTHONPATH:")
-      for p in sys.path:
-          print("  ", p)
-      EOF
-
-  #
-  # Replace with actual Libra imports if known
-  #
-  - name: Smoke test Libra import
-    continue-on-error: true
-    run: |
-      python - << 'EOF'
-      try:
-          import liblibra_core
-          print("liblibra_core imported successfully")
-      except Exception as e:
-          print("Import failed:", e)
-          raise
-      EOF
-
-  #
-  # Run tests if available
-  #
-  - name: Run pytest suite
-    continue-on-error: false
-    run: |
-      if [ -d tests ]; then
-          python -m pytest -v tests
-      elif [ -d unittests ]; then
-          python -m pytest -v unittests
-      else
-          echo "No tests directory found."
-      fi
-
-  - name: Upload build artifacts
-    if: success()
-    uses: actions/upload-artifact@v4
-    with:
-      name: libra-build
-      path: |
-        build/
-```
-
+      # ----------------------------
+      # Upload build (optional)
+      # ----------------------------
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: libra-build
+          path: build/
