@@ -1,0 +1,24 @@
+name: libra
+
+channels:
+  - psi4/label/dev
+  - conda-forge
+  - anaconda
+
+dependencies:
+  - python=3.10
+  - boost=1.82
+  - numpy
+  - scipy
+  - matplotlib
+  - imageio
+  - conda-build
+  - make
+  - gcc_linux-64=12.2.0
+  - gxx_linux-64=12.2.0
+  - cmake=3.24.2
+  - eigen
+  - mpfr
+  - libint2=2.7.1
+  - h5py
+  - gmp
