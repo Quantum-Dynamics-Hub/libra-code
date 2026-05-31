@@ -103,7 +103,7 @@ jobs:
             -DBoost_NO_BOOST_CMAKE=ON \
             -DPython3_EXECUTABLE=${CONDA_PREFIX}/bin/python \
             -DPython3_ROOT_DIR=${CONDA_PREFIX} \
-            "-DCMAKE_IGNORE_PATH=/usr;/usr/lib;/usr/include"
+            -DCMAKE_IGNORE_PATH="/usr;/usr/lib;/usr/include"
 
       # ----------------------------
       # Build
