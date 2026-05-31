@@ -101,6 +101,11 @@ if(Libint2_FOUND)
   INCLUDE_DIRECTORIES(Libint2::int2 Libint2::cxx Libint2::int2-cxx Libint2::impure_sh Libint2::gss Libint2::onebody_d0_l6 Libint::g12_d0_l4 Libint2::g12_d1_l4 Libint2::shared Libint2::cxx_ho Libint2::c  Libint2::eri_c4_d0_l5  Libint2::eri_c4_d1_l4)
 endif()
 
+message(STATUS "Eigen3_DIR = ${Eigen3_DIR}")
+message(STATUS "EIGEN3_INCLUDE_DIR = ${EIGEN3_INCLUDE_DIR}")
+message(STATUS "EIGEN3_INCLUDE_DIRS = ${EIGEN3_INCLUDE_DIRS}")
+message(STATUS "Eigen3_VERSION = ${Eigen3_VERSION}")
+
 
 #
 # GNU compiler definitions

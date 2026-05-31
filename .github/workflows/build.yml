@@ -84,6 +84,25 @@ jobs:
           path: ${{ env.BUILD_DIR }}
           key: build-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('CMakeLists.txt', 'environment.yml') }}
 
+
+      - name: Check Eigen installation
+        run: |
+          conda list eigen
+          find ${CONDA_PREFIX}/include/eigen3 -name Macros.h
+
+
+      - name: Check Eigen version header
+        run: |
+          grep EIGEN_WORLD_VERSION \
+            ${CONDA_PREFIX}/include/eigen3/Eigen/src/Core/util/Macros.h
+
+          grep EIGEN_MAJOR_VERSION \
+            ${CONDA_PREFIX}/include/eigen3/Eigen/src/Core/util/Macros.h
+
+          grep EIGEN_MINOR_VERSION \
+            ${CONDA_PREFIX}/include/eigen3/Eigen/src/Core/util/Macros.h
+
+
       # ----------------------------
       # Configure
       # ----------------------------
