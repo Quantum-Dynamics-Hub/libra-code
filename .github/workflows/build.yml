@@ -89,6 +89,7 @@ jobs:
       # ----------------------------
       - name: Configure CMake
         run: |
+          rm -rf ${BUILD_DIR}
           mkdir -p ${BUILD_DIR}
           cd ${BUILD_DIR}
 
@@ -99,9 +100,9 @@ jobs:
             -DBOOST_ROOT=${CONDA_PREFIX} \
             -DBoost_NO_SYSTEM_PATHS=ON \
             -DBoost_NO_BOOST_CMAKE=ON \
-            -DPython3_ROOT_DIR=${CONDA_PREFIX} \
             -DPython3_EXECUTABLE=${CONDA_PREFIX}/bin/python \
-            -DPython3_INCLUDE_DIR=${CONDA_PREFIX}/include/python3.10 \
+            -DPython3_ROOT_DIR=${CONDA_PREFIX} \
+            -DCMAKE_IGNORE_PATH=/usr;/usr/lib;/usr/include \
             ..
 
       # ----------------------------
