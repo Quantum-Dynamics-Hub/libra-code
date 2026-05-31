@@ -1,24 +1,57 @@
 name: libra
 
 channels:
-  - psi4/label/dev
   - conda-forge
-  - anaconda
+  - psi4/label/dev
 
 dependencies:
+  # -------------------------
+  # Python base
+  # -------------------------
   - python=3.10
-  - boost=1.82
+  - pip
+
+  # -------------------------
+  # Core scientific stack
+  # -------------------------
   - numpy
   - scipy
   - matplotlib
-  - imageio
-  - conda-build
+  - h5py
+
+  # -------------------------
+  # Build tools
+  # -------------------------
+  - cmake=3.24.2
   - make
+  - conda-build
+
+  # -------------------------
+  # Compilers / runtime
+  # -------------------------
   - gcc_linux-64=12.2.0
   - gxx_linux-64=12.2.0
-  - cmake=3.24.2
+  - llvm-openmp
+
+  # -------------------------
+  # Linear algebra / math
+  # -------------------------
+  - boost=1.82
   - eigen
   - mpfr
-  - libint2=2.7.1
-  - h5py
   - gmp
+
+  # -------------------------
+  # Libra-specific deps
+  # -------------------------
+  - libint2=2.7.1
+  - python-devtools
+
+  # -------------------------
+  # Pip section (Python-only packages)
+  # -------------------------
+  - pip:
+      - scikit-learn
+      - torch
+      - torchvision
+      - torchaudio
