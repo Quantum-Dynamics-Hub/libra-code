@@ -1,6 +1,8 @@
 # Libra
 
-[![Build Status](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code.svg?branch=master)](https://travis-ci.org/Quantum-Dynamics-Hub/libra-code)
+[![Libra CI](https://github.com/Quantum-Dynamics-Hub/libra-code/actions/workflows/build.yml/badge.svg)](https://github.com/Quantum-Dynamics-Hub/libra-code/actions/workflows/build.yml)
+[![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](...)
+[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](...)
 
 This is the main page of the computational chemistry methodology discovery library, Libra
 
