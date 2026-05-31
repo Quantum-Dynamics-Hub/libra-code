@@ -37,7 +37,7 @@ dependencies:
   # Linear algebra / math
   # -------------------------
   - boost=1.82
-  - eigen
+  - eigen=3.4.*
   - mpfr
   - gmp
 
