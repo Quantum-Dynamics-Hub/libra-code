@@ -40,8 +40,8 @@ endif()
 #  Python library
 #
 MESSAGE(STATUS "Looking for Python libraries...")
-#FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Interpreter Development)
-FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
+FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Interpreter Development)
+#FIND_PACKAGE(Python3 3.6 REQUIRED COMPONENTS Development)
 
 #IF(Python3_FOUND)
 #  MESSAGE("Success!")
@@ -51,6 +51,11 @@ IF(NOT Python3_FOUND)
   MESSAGE(STATUS "Try using -DPython3_ROOT_DIR=\${path_to_the_python_root_dir}")
   MESSAGE(FATAL_ERROR)
 ENDIF()
+
+if(NOT Python3_EXECUTABLE MATCHES "conda")
+  message(FATAL_ERROR "System Python detected. Use Conda Python.")
+endif()
+
 
 MESSAGE(STATUS "Found Python libraries directory: ${Python3_LIBRARIES}")
 MESSAGE(STATUS "Found Python include directory:   ${Python3_INCLUDE_DIRS}")
