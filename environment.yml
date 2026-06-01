@@ -47,6 +47,17 @@ dependencies:
   - libint2=2.7.1
   - python-devtools
 
+
+  #--------------------------
+  # Testing
+  #--------------------------
+  - pytest
+
+  #--------------------------
+  # External electronic structure
+  #--------------------------
+  - pyscf
+
   # -------------------------
   # Pip section (Python-only packages)
   # -------------------------

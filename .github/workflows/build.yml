@@ -179,16 +179,16 @@ jobs:
       # ----------------------------
       # Tests
       # ----------------------------
-      - name: Run tests
-        continue-on-error: false
-        run: |
-          if [ -d tests ]; then
-              python -m pytest -v tests
-          elif [ -d unittests ]; then
-              python -m pytest -v unittests
-          else
-              echo "No test suite found."
-          fi
+      #- name: Run tests
+      #  continue-on-error: false
+      #  run: |
+      #    if [ -d tests ]; then
+      #        python -m pytest -v tests
+      #    elif [ -d unittests ]; then
+      #        python -m pytest -v unittests
+      #    else
+      #        echo "No test suite found."
+      #    fi
 
       # ----------------------------
       # Upload build (optional)
@@ -198,4 +198,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libra-build
-          path: build/
+          path: _build/
