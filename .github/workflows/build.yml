@@ -130,7 +130,8 @@ jobs:
       - name: Build Libra
         run: |
           cd ${BUILD_DIR}
-          make -j$(nproc)
+          make -j2
+      #    make -j$(nproc)
 
       # ----------------------------
       # Show artifacts

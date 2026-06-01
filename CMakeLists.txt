@@ -52,9 +52,18 @@ IF(NOT Python3_FOUND)
   MESSAGE(FATAL_ERROR)
 ENDIF()
 
-if(NOT Python3_EXECUTABLE MATCHES "conda")
-  message(FATAL_ERROR "System Python detected. Use Conda Python.")
+#if(NOT Python3_EXECUTABLE MATCHES "conda")
+#  message(FATAL_ERROR "System Python detected. Use Conda Python.")
+#endif()
+
+message(STATUS "Python executable: ${Python3_EXECUTABLE}")
+
+if(Python3_EXECUTABLE MATCHES "^/usr/")
+    message(FATAL_ERROR
+        "System Python detected (${Python3_EXECUTABLE}). "
+        "Please activate a Conda environment.")
 endif()
+
 
 
 MESSAGE(STATUS "Found Python libraries directory: ${Python3_LIBRARIES}")
