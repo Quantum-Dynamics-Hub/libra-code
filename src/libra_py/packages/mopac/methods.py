@@ -38,8 +38,8 @@ from libra_py import regexlib as rgl
 from libra_py import data_conv
 
 import libra_py.packages.cp2k.methods as CP2K_methods
-import libra_py.workflows.nbra.mapping2 as mapping2
-import libra_py.workflows.nbra.mapping3 as mapping3
+#import libra_py.workflows.nbra.mapping2 as mapping2
+#import libra_py.workflows.nbra.mapping3 as mapping3
 import libra_py.workflows.nbra.step3 as step3
 
 import libra_py.citools.slatdet as sd
