@@ -58,10 +58,23 @@ ENDIF()
 
 message(STATUS "Python executable: ${Python3_EXECUTABLE}")
 
-if(Python3_EXECUTABLE MATCHES "^/usr/")
-    message(FATAL_ERROR
-        "System Python detected (${Python3_EXECUTABLE}). "
-        "Please activate a Conda environment.")
+#if(Python3_EXECUTABLE MATCHES "^/usr/")
+#    message(FATAL_ERROR
+#        "System Python detected (${Python3_EXECUTABLE}). "
+#        "Please activate a Conda environment.")
+#endif()
+
+if(DEFINED ENV{CONDA_PREFIX})
+    file(REAL_PATH "$ENV{CONDA_PREFIX}" CONDA_PREFIX_REAL)
+    file(REAL_PATH "${Python3_EXECUTABLE}" PYTHON_REAL)
+
+    string(FIND "${PYTHON_REAL}" "${CONDA_PREFIX_REAL}" _pos)
+
+    if(_pos EQUAL -1)
+        message(FATAL_ERROR
+            "Python executable (${PYTHON_REAL}) is not inside the active "
+            "Conda environment (${CONDA_PREFIX_REAL}).")
+    endif()
 endif()
 
 
