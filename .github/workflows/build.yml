@@ -3,7 +3,6 @@ name: Libra CI (Fast)
 on:
   push:
     branches: [devel]
-  pull_request:
 
 env:
   BUILD_DIR: _build
@@ -131,7 +130,6 @@ jobs:
         run: |
           cd ${BUILD_DIR}
           make -j2
-      #    make -j$(nproc)
 
       # ----------------------------
       # Show artifacts

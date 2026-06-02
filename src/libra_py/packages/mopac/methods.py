@@ -19,17 +19,10 @@
 """
 
 
-import os
-import sys
-import math
-import copy
-import re
+import os, sys, math, copy, re, subprocess
 import numpy as np
 
-if sys.platform == "cygwin":
-    from cyglibra_core import *
-elif sys.platform == "linux" or sys.platform == "linux2":
-    from liblibra_core import *
+from liblibra_core import *
 import util.libutil as comn
 
 from libra_py import units
@@ -38,13 +31,12 @@ from libra_py import regexlib as rgl
 from libra_py import data_conv
 
 import libra_py.packages.cp2k.methods as CP2K_methods
-#import libra_py.workflows.nbra.mapping2 as mapping2
-#import libra_py.workflows.nbra.mapping3 as mapping3
 import libra_py.workflows.nbra.step3 as step3
 
 import libra_py.citools.slatdet as sd
 import libra_py.citools.interfaces as interfaces
 import libra_py.citools.ci as ci
+import libra_py.orthogonalizations as ortho
 
 def make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords):
     """
@@ -88,69 +80,174 @@ class tmp:
 
 def run_mopac(coords, params_):
     """
+    Execute a MOPAC calculation in a thread-safe manner within a specified
+    working directory.
 
-    This function executes the MOPAC quantum chemistry calculations
+    This function prepares a MOPAC input file, executes the MOPAC quantum
+    chemistry package, and stores all generated files in a dedicated working
+    directory. It is designed for use in parallel workflows (e.g., multiple
+    trajectories in nonadiabatic dynamics simulations), where each calculation
+    runs independently without changing the global working directory.
 
-    Args:
-        coords ( MATRIX(ndof, 1) ): coordinates of the particle [ units: Bohr ]
-        params ( dictionary ): model parameters
+    The function performs the following steps:
 
-            * **params_["labels"]** ( list of strings ): the labels of atomic symbolc - for all atoms,
-                and in a order that is consistent with the coordinates (in triples) stored in `q`.
-                The number of this labels is `natoms`, such that `ndof` = 3 * `natoms`. [ Required ]
-            * **params_["mopac_exe"]** ( string ):  the full path to `the mopac` executable [ defaut: "mopac" ]
-            * **params_["mopac_run_params"]** ( string ): the control string to define the MOPAC job
-                [default: "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2"]
-            * **params_["mopac_working_directory"]** ( string ) [ default: "mopac_wd"]
-            * **params_["mopac_jobid"]** ( string ) [ default: "job_0000" ]
-            * **params_["mopac_input_prefix"]** ( string ) [ default: "input_" ]
-            * **params_["mopac_output_prefix"]** ( string ) [ default: "output_" ]
+        1. Ensures the working directory exists.
+        2. Creates a MOPAC input file containing the molecular geometry and
+           requested calculation settings.
+        3. Executes the MOPAC binary within the working directory.
+        4. Redirects the program output to a designated output file.
+        5. Captures errors and raises an exception if the calculation fails.
 
-    Returns:
-        None
+    Parameters
+    ----------
+    coords : MATRIX(ndof, 1)
+        Cartesian atomic coordinates of all atoms, in atomic units (Bohr).
+        Here, ndof = 3 * natoms, where natoms is the number of atoms.
+        Coordinates are ordered as
+
+            [x1, y1, z1, x2, y2, z2, ..., xN, yN, zN]^T
+
+        and stored as a Libra ``MATRIX`` object.
+
+    params_ : dict
+        Dictionary containing MOPAC execution parameters.
+
+        Required keys
+        -------------
+        labels : list of str
+            Atomic symbols (length N), e.g., ["O", "H", "H"].
+
+        Optional keys
+        -------------
+        mopac_exe : str, optional
+            Name or full path of the MOPAC executable.
+
+            Default: "mopac"
+
+        mopac_run_params : str, optional
+            MOPAC keyword string defining the calculation type and settings.
+
+            Example:
+            "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC
+             WRTCONF=0.00 WRTCI=2"
+
+            Default:
+            "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC
+             WRTCONF=0.00 WRTCI=2"
+
+        mopac_working_directory : str, optional
+            Directory in which the calculation will be executed.
+            All input and output files are created in this directory.
+
+            Default: "mopac_wd"
+
+        mopac_jobid : str, optional
+            Identifier appended to input and output file names.
+
+            Default: "job_0000"
+
+        mopac_input_prefix : str, optional
+            Prefix used when generating the MOPAC input file.
+
+            Default: "input_"
+
+        mopac_output_prefix : str, optional
+            Prefix used when generating the MOPAC output file.
+
+            Default: "output_"
+
+    Returns
+    -------
+    None
+        The function executes MOPAC and produces output files in the
+        working directory. No value is returned.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified MOPAC executable cannot be found.
+
+    subprocess.CalledProcessError
+        If the MOPAC calculation terminates with a non-zero exit code.
+        Standard output and error streams are attached to the exception
+        object and can be inspected for debugging.
+
+    Side Effects
+    ------------
+    - Creates or modifies files in the working directory, including:
+        - MOPAC input file (*.mop)
+        - Output log file
+        - Auxiliary files generated by MOPAC
+          (*.out, *.arc, *.aux, *.den, etc., depending on settings)
+
+    - Executes the MOPAC code.
+
+    Notes
+    -----
+    - The function avoids the use of ``os.chdir`` and instead relies on
+      the ``cwd`` argument of ``subprocess.run``. This makes the function
+      safe for concurrent execution in multithreaded or multiprocess
+      workflows.
+
+    - Each calculation should use a unique working directory to avoid
+      file collisions.
+
+    - Coordinates are assumed to be provided in atomic units (Bohr).
+
+    Examples
+    --------
+    >>> params = {
+    >>>     "labels": ["O", "H", "H"],
+    >>>     "mopac_working_directory": "wd_itraj0",
+    >>>     "mopac_jobid": "traj0",
+    >>>     "mopac_run_params":
+    >>>         "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 "
+    >>>         "ALLVEC WRTCONF=0.00 WRTCI=2"
+    >>> }
+    >>>
+    >>> run_mopac(coords, params)
 
     """
-
+    
     params = dict(params_)
 
-    critical_params = ["labels"]
-    default_params = {"mopac_exe": "mopac",
-                      "mopac_run_params": "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
-                      "mopac_working_directory": "mopac_wd",
-                      "mopac_jobid": "job_0000",
-                      "mopac_input_prefix": "input_", "mopac_output_prefix": "output_"
-                      }
-    comn.check_input(params, default_params, critical_params)
+    labels = params["atom_labels"]
+    exe = params.get("exe", "mopac")
+    mopac_run_params = params.get("mopac_run_params", "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC WRTCONF=0.00 WRTCI=2" )
+    mopac_wd = params.get("working_directory", "mopac_wd")
+    mopac_jobid = params.get("mopac_jobid", "job_0000")
+    mopac_input_prefix = params.get("mopac_input_prefix", "input_")
+    mopac_output_prefix = params.get("mopac_output_prefix", "output_")
 
-    labels = params["labels"]
-    mopac_exe = params["mopac_exe"]
-    mopac_run_params = params["mopac_run_params"]
-    mopac_wd = params["mopac_working_directory"]
-    mopac_jobid = params["mopac_jobid"]
-    mopac_input_prefix = params["mopac_input_prefix"]
-    mopac_output_prefix = params["mopac_output_prefix"]
+    
+    # Create working directory
+    os.makedirs(mopac_wd, exist_ok=True)
 
-    natoms = len(labels)
-    ndof = 3 * natoms
+    # File names
+    mopac_input_filename = f"{mopac_input_prefix}{mopac_jobid}"
+    mopac_output_filename = f"{mopac_output_prefix}{mopac_jobid}"
 
-    # Create working directory, if doesn't exist
-    if not os.path.exists(mopac_wd):
-        os.mkdir(mopac_wd)
-
-    # Go into that directory
-    os.chdir(mopac_wd)
+    # Full paths
+    mopac_input_path = os.path.join(mopac_wd, mopac_input_filename)
+    mopac_output_path = os.path.join(mopac_wd, mopac_output_filename)
 
     # Create input
-    mopac_input_filename = F"{mopac_input_prefix}{mopac_jobid}"
-    make_mopac_input(mopac_input_filename, mopac_run_params, labels, coords)
+    make_mopac_input(
+        mopac_input_path,
+        mopac_run_params,
+        labels,
+        coords
+    )
 
-    # Run the MOPAC job
-    mopac_output_filename = F"{mopac_output_prefix}{mopac_jobid}"
-    os.system(F"{mopac_exe} {mopac_input_filename} > {mopac_output_filename}")
-
-    # Go back to the original directory
-    os.chdir("../")
-
+    # Run MOPAC
+    with open(mopac_output_path, "w") as fout:
+        subprocess.run(
+            [exe, mopac_input_filename],
+            cwd=mopac_wd,
+            check=True,
+            stdout=fout,
+            stderr=subprocess.STDOUT,
+        )
 
 def make_ref(nelec, active_space=None):
     """
@@ -432,148 +529,268 @@ def read_mopac_orbital_info(params_):
     return info, MOs, data
 
 
+
 def mopac_compute_adi(q, params, full_id):
     """
-    Run MOPAC calculations for a given trajectory, extract electronic structure
-    information, compute time-dependent electronic properties (energies,
-    overlaps, NACs), and store the current results for use in the next time step.
+    Compute adiabatic-state energies, overlaps, time-overlaps, and vibronic
+    Hamiltonian matrix elements using MOPAC electronic structure calculations.
 
-    This function is **trajectory-aware**: all parameters and cached data are
-    stored separately for each trajectory and accessed using the trajectory
-    index `itraj = full_id[-1]`.
+    This function serves as a Libra-compatible electronic structure interface
+    for nonadiabatic molecular dynamics simulations. For a given trajectory,
+    it executes a MOPAC calculation, reads molecular orbital and configuration
+    interaction (CI) information, computes adiabatic-state energies and
+    time-overlaps between consecutive time steps, and constructs the vibronic
+    Hamiltonian in the adiabatic representation.
+
+    The function maintains trajectory-specific electronic structure data
+    (molecular orbitals, CI vectors, and overlap matrices) between successive
+    calls through the ``params`` dictionary, enabling the evaluation of
+    nonadiabatic couplings via finite differences of wavefunction overlaps.
 
     Parameters
     ----------
     q : MATRIX(ndof, ntraj)
-        Nuclear coordinates for all trajectories [Bohr].
-        Each column corresponds to a single trajectory.
+        Nuclear coordinates for all trajectories, stored as a Libra
+        ``MATRIX`` object. Here, ``ndof = 3 * natoms`` and ``ntraj`` is
+        the number of trajectories. Coordinates are assumed to be in
+        atomic units (Bohr).
 
-    params : list of dict
-        Per-trajectory parameter dictionaries.
-        `params[i]` contains **both input settings and cached data**
-        for trajectory `i`.
+    params : dict
+        Dictionary containing simulation and MOPAC parameters.
 
-        This function **modifies** `params[i]` in place by storing
-        quantities from the current time step for use at the next step.
+        Required keys
+        -------------
+        atom_labels : list of str
+            Atomic symbols corresponding to the molecular geometry.
 
-        Required keys in `params[i]`:
-            * labels : list[str]
-                Atomic symbols, length = natoms
-            * timestep : int
-                Time step index for this trajectory
+        Optional keys
+        -------------
+        timestep : int
+            Current simulation time step.
 
-        Optional keys in `params[i]` (defaults applied if missing):
-            * mopac_exe : str
-                Path to MOPAC executable [default: "mopac"]
-            * mopac_run_params : str
-                MOPAC control string
-            * mopac_working_directory : str
-                Directory for MOPAC I/O [default: "mopac_wd"]
-            * mopac_input_prefix : str
-            * mopac_output_prefix : str
-            * dt : float
-                Time step [a.u.]
-            * orbital_space : list[int] or None
-            * nstates : int
-                Number of electronic states (including ground)
-            * CAS : list
-                CAS definition for INDO-CI
-            * mult_S, mult_Ms : int
-                Spin multiplicity parameters
-            * is_singlet_excitation : bool or int
-            * is_first_time : bool
-                If True, current data are treated as previous (first step)
+            Default: 0
 
-        Cached quantities created/updated in `params[i]`:
-            * MO_prev : ndarray
-                Active-space molecular orbitals from previous step
-            * data_prev : tuple
-                CI energies, configurations, and amplitudes from previous step
-            * is_first_time : bool
-                Set to False after first invocation
+        energy_zero : float
+            Energy shift applied to the computed electronic energies.
 
-    full_id : list[int]
-        Full trajectory identifier; the trajectory index is taken as
-        `itraj = full_id[-1]`.
+            Default: 0.0
+
+        orbital_space : list of int or None
+            User-defined orbital space to use in the electronic structure
+            calculations.
+
+            Default: None
+
+        nstates : int
+            Number of electronic states to include in the adiabatic basis.
+
+            Default: 2
+
+        dt : float
+            Nuclear time step in atomic units.
+
+            Default: 1.0 * units.fs2au
+
+        working_directory_prefix : str
+            Prefix used when creating trajectory-specific working
+            directories.
+
+            Default: "wd"
+
+        mopac_input_prefix : str
+            Prefix used for generated MOPAC input files.
+
+            Default: "input_"
+
+        mopac_output_prefix : str
+            Prefix used for generated MOPAC output files.
+
+            Default: "output_"
+
+        mopac_run_params : str
+            MOPAC keyword string defining the electronic structure
+            calculation.
+
+            Default:
+            "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001
+             ALLVEC WRTCONF=0.00 WRTCI=2"
+
+        do_Lowdin : bool
+            Whether to apply Löwdin orthogonalization to the CI overlap
+            matrices.
+
+            Default: True
+
+        nelec_act_space : int or None
+            Number of active-space electrons used when constructing the
+            determinant basis for overlap calculations. If ``None``,
+            the active space reported by MOPAC is used.
+
+            Default: None
+
+        MO_prev : dict
+            Trajectory-indexed storage of molecular orbital coefficients
+            from the previous time step.
+
+        data_prev : dict
+            Trajectory-indexed storage of CI expansion data from the
+            previous time step.
+
+        s_ci_inv_prev : dict
+            Trajectory-indexed storage of inverse square roots of CI
+            overlap matrices used for Löwdin orthogonalization.
+
+        is_first_time : dict
+            Trajectory-indexed flags indicating whether the current call
+            corresponds to the first simulation step.
+
+        act_state : dict
+            Trajectory-indexed active electronic state indices.
+
+    full_id : intList
+        Libra trajectory identifier. The last element is interpreted as
+        the trajectory index.
 
     Returns
     -------
-    obj : PyObject
-        Container with computed adiabatic quantities:
-            * obj.ham_adi : CMATRIX(nstates, nstates)
-                Adiabatic electronic Hamiltonian
-            * obj.hvib_adi : CMATRIX(nstates, nstates)
-                Adiabatic vibronic Hamiltonian
-            * obj.time_overlap_adi : CMATRIX(nstates, nstates)
-                CI time-overlap matrix
-            * obj.basis_transform : CMATRIX(nstates, nstates)
-                Basis transformation (currently identity)
+    obj : tmp
+        Object containing electronic structure quantities in the adiabatic
+        representation. The returned object contains the following members:
 
+        ham_adi : CMATRIX(nstates, nstates)
+            Adiabatic Hamiltonian matrix.
+
+        hvib_adi : CMATRIX(nstates, nstates)
+            Vibronic Hamiltonian matrix.
+
+        nac_adi : CMATRIX(nstates, nstates)
+            Nonadiabatic coupling matrix. Currently allocated but not
+            explicitly populated.
+
+        basis_transform : CMATRIX(nstates, nstates)
+            Basis transformation matrix. Currently assumed to be the
+            identity matrix.
+
+        overlap_adi : CMATRIX(nstates, nstates)
+            Adiabatic-state overlap matrix at the current time step.
+
+        time_overlap_adi : CMATRIX(nstates, nstates)
+            Time-overlap matrix between electronic states at consecutive
+            time steps.
+
+    Raises
+    ------
+    ValueError
+        If the requested active space contains fewer electrons than
+        required by the occupied orbitals reported by MOPAC.
+
+    subprocess.CalledProcessError
+        If the underlying MOPAC calculation fails.
+
+    Side Effects
+    ------------
+    - Executes a MOPAC electronic structure calculation.
+    - Creates or updates trajectory-specific working directories.
+    - Modifies the input ``params`` dictionary by updating:
+
+        * ``MO_prev``
+        * ``data_prev``
+        * ``s_ci_inv_prev``
+        * ``is_first_time``
+
+    Notes
+    -----
+    - The electronic energies are taken directly from the current MOPAC
+      calculation and assigned to the diagonal elements of the adiabatic
+      Hamiltonian.
+
+    - Nonadiabatic couplings are computed from antisymmetrized
+      time-overlaps using
+
+        dij = (Sij(t,t+dt) - Sji(t,t+dt)) / (2*dt)
+
+      and incorporated into the off-diagonal elements of the vibronic
+      Hamiltonian.
+
+    - For the first time step of a trajectory, the current electronic
+      structure information is reused as the previous-step data so that
+      overlap calculations remain well defined.
+
+    - Trajectory-specific working directories make the function suitable
+      for concurrent execution in ensemble and surface-hopping
+      simulations.
+
+    Examples
+    --------
+    >>> obj = mopac_compute_adi(q, params, full_id)
+    >>> E0 = obj.ham_adi.get(0, 0).real
+    >>> S01 = obj.time_overlap_adi.get(0, 1)
+    >>> Hvib = obj.hvib_adi
     """
 
+    # ================= Decode trajectory index =================
     Id = Cpp2Py(full_id)
     itraj = Id[-1]
-
-    # Sanity check on params structure
-    if not isinstance(params, (list, tuple)):
-        raise TypeError(
-            "params must be a list (or tuple) of per-trajectory dictionaries; "
-            f"got {type(params)}"
-        )
-
-    if itraj >= len(params):
-        raise IndexError(
-            f"Trajectory index itraj={itraj} out of range for params (len={len(params)})"
-        )
-
-    if not isinstance(params[itraj], dict):
-        raise TypeError(
-            f"params[{itraj}] must be a dictionary; got {type(params[itraj])}"
-        )
-
+    
+    # ================= Extract coordinates =================
     coords = q.col(itraj)
 
-    critical_params = ["labels", "timestep"]
-    default_params = {"mopac_exe": "mopac", "is_first_time": True, "orbital_space": None,
-                      "nstates":2,
-                      "mopac_run_params": "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2",
-                      "mopac_working_directory": "mopac_wd",
-                      "mopac_input_prefix": "input_", "mopac_output_prefix": "output_",
-                      "dt": 1.0 * units.fs2au, "do_Lowdin": 0, 
-                      "CAS":[ [1,2], 2], "mult_S":0, "mult_Ms":0, "is_singlet_excitation":0,
-                      "nelec_act_space":None
-                      }
-    comn.check_input(params[itraj], default_params, critical_params)
+    ndof = coords.num_of_rows
+    nat = ndof // 3
+    
+    # ================= Safe param access =================
+    params.setdefault("MO_prev", {})
+    params.setdefault("data_prev", {})
+    params.setdefault("s_ci_inv_prev", {})
+    params.setdefault("is_first_time", {})
+    params.setdefault("act_state", {})
 
-    timestep = params[itraj]["timestep"]
-    labels = params[itraj]["labels"]
-    is_first_time = params[itraj]["is_first_time"]
-    mopac_exe = params[itraj]["mopac_exe"]
-    mopac_run_params = params[itraj]["mopac_run_params"]
-    mopac_wd = params[itraj]["mopac_working_directory"]
-    mopac_jobid = params[itraj]["mopac_jobid"] = F"timestep_{timestep}_traj_{itraj}"
-    mopac_input_prefix = params[itraj]["mopac_input_prefix"]
-    mopac_output_prefix = params[itraj]["mopac_output_prefix"]
-    orbital_space = params[itraj]["orbital_space"]
-    nstates = params[itraj]["nstates"]
-    dt = params[itraj]["dt"]
-    do_Lowdin = params[itraj]["do_Lowdin"]
-    CAS = params[itraj]["CAS"]
-    mult_S = params[itraj]["mult_S"]
-    mult_Ms = params[itraj]["mult_Ms"]
-    is_singlet_excitation = params[itraj]["is_singlet_excitation"]
-    nelec_act_space = params[itraj]["nelec_act_space"]
-    natoms = len(labels)
-    ndof = 3 * natoms
+    # ================= Read parameters =================
+    # General: trajectory-agnostic
+    atom_labels = params["atom_labels"]
+    timestep = params.get("timestep", 0)
+    energy_zero = params.get("energy_zero", 0.0 )
+    orbital_space = params.get("orbital_space", None)
+    nstates = params.get("nstates", 2)
+    dt = params.get("dt", 1.0 * units.fs2au)
+    wd_prefix = params.get("working_directory_prefix", "wd")
+    mopac_input_prefix = params.get("mopac_input_prefix", "input_")
+    mopac_output_prefix = params.get("mopac_output_prefix", "output_")
+    mopac_run_params = params.get("mopac_run_params",
+                                  "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2")
+    do_Lowdin = params.get("do_Lowdin", True)
+    nelec_act_space = params.get("nelec_act_space", None)
+    
 
-    # Run the calculations
-    # print("================ RUN MOPAC =================\n")
-    run_mopac(coords, params[itraj])
+    # Trajectory-specific
+    is_first_time = params["is_first_time"].get(itraj, True)
+    act_state = params["act_state"].get(itraj, 0)
+    
+    wd = f"{wd_prefix}_itraj{itraj}"
+    
+    # ================= Run MOPAC =================
+    mopac_params = copy.deepcopy(mopac_run_params)
+    #mopac_params["StateOfInterest"] = act_state
 
+    mopac_jobid = F"_timestep_{timestep}_traj_{itraj}"
+    prms1 = {
+        "atom_labels": atom_labels,
+        "exe": params.get("exe", "mopac"),
+        "mopac_run_params": mopac_params,
+        "working_directory": wd,
+        "mopac_jobid" : mopac_jobid,
+        "mopac_input_prefix" : mopac_input_prefix,
+        "mopac_output_prefix" : mopac_output_prefix
+    }
+    
+    run_mopac(coords, prms1)
+        
     # Read the MOPAC output
-    # print("================ READ MOPAC =================\n")
-    filename = F"{mopac_wd}/{mopac_input_prefix}{mopac_jobid}.out"
-    read_params = {"nstates":nstates, "filename":filename, "orbital_space":None}
+    # This is counterintuitive, but the actual output file name is derived from
+    # that of the input
+    read_params = {"nstates":nstates, 
+                   "filename":F"{wd}/{mopac_input_prefix}{mopac_jobid}.out", 
+                   "orbital_space":None}
     info, MO_curr, data_curr = read_mopac_orbital_info(read_params)
 
     #================= Construct active space ==================
@@ -593,11 +810,12 @@ def mopac_compute_adi(q, params, full_id):
         # On the first step, assume the current properties are as the previous
         MO_prev = copy.deepcopy(MO_curr)
         data_prev = copy.deepcopy(data_curr)
+        coordinates_prev = copy.deepcopy(coords)
     else:
         # Otherwise, retrieve the previously-stored data
-        MO_prev = copy.deepcopy(params[itraj]["MO_prev"])
-        data_prev = copy.deepcopy(params[itraj]["data_prev"])
-
+        MO_prev = params["MO_prev"].get(itraj, MO_curr).copy()
+        data_prev = params["data_prev"].get(itraj, data_curr)
+        
     # Do the calculations - time-overlaps, energies, and Hvib
     obj = tmp()
     obj.ham_adi = CMATRIX(nstates, nstates)
@@ -608,11 +826,12 @@ def mopac_compute_adi(q, params, full_id):
     obj.overlap_adi = CMATRIX(nstates, nstates)
 
     #======================= MO ===============================
-    # MO overlaps
-    st_mo_orb = MO_prev.T @ MO_curr
+    s_mo_orb = MO_curr.T @ MO_curr
+    s_mo = np.kron(np.eye(2), s_mo_orb) # Make it doubled - block-matrix
 
-    # Make it doubled - block-matrix
-    st_mo = np.kron(np.eye(2), st_mo_orb)
+    st_mo_orb = MO_prev.T @ MO_curr
+    st_mo = np.kron(np.eye(2), st_mo_orb) # Make it doubled - block-matrix
+
 
     #================= Compute CI time-overlaps ============= 
     ovlp_params = {"homo_indx":info["nocc"], 
@@ -622,12 +841,28 @@ def mopac_compute_adi(q, params, full_id):
                    "active_space":active_space
                    }
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
+    s_ci = ci.overlap(s_mo, data_curr, data_curr, ovlp_params)
+
+    s_ci_inv_curr, s_ci_inv_prev = None, None
+    if do_Lowdin==True:
+        # Lowding orthogonalization to fight the rounding errors
+        s_ci_inv_curr = ortho.lowdin_inverse_sqrt(s_ci)
+        
+        if is_first_time:
+            s_ci_inv_prev = copy.deepcopy(s_ci_inv_curr)
+        else:
+            s_ci_inv_prev = params["s_ci_inv_prev"].get(itraj, s_ci_inv_curr)
+
+        s_ci = s_ci_inv_curr @ s_ci @ s_ci_inv_curr
+        st_ci = s_ci_inv_prev @ st_ci @ s_ci_inv_curr
+
 
     #=============== Now, populate the allocated matrices ======================
     for istate in range(nstates):
         energ = 0.0
         if istate > 0:
-            energ = float(0.5 * (data_prev[0][istate-1] + data_curr[0][istate-1]))
+            #energ = float(0.5 * (data_prev[0][istate-1] + data_curr[0][istate-1]))
+            energ = float(data_curr[0][istate-1])
 
         obj.ham_adi.set(istate, istate, energ * (1.0 + 0.0j))
         obj.hvib_adi.set(istate, istate, energ * (1.0 + 0.0j))
@@ -635,6 +870,7 @@ def mopac_compute_adi(q, params, full_id):
 
         for jstate in range(nstates):
             obj.time_overlap_adi.set(istate, jstate, float(st_ci[istate, jstate]) * (1.0 + 0.0j))
+            obj.overlap_adi.set(istate,  jstate, float(s_ci[istate, jstate]) * (1.0 + 0.0j) )
 
     # Update the Hvib:
     for istate in range(nstates):
@@ -645,8 +881,12 @@ def mopac_compute_adi(q, params, full_id):
 
     # Now, make the current the previous and reset the flag `is_first_time` to False
     # Note - we directly modify the input parameters
-    params[itraj]["MO_prev"] = copy.deepcopy(MO_curr)
-    params[itraj]["data_prev"] = copy.deepcopy(data_curr)
-    params[itraj]["is_first_time"] = False
+    
+    # ================= Store state =================
+    params["MO_prev"][itraj] = MO_curr.copy()
+    params["data_prev"][itraj] = copy.deepcopy(data_curr)
+    params["s_ci_inv_prev"][itraj] = copy.deepcopy(s_ci_inv_curr)
+    params["is_first_time"][itraj] = False
 
     return obj
+
