@@ -2842,9 +2842,10 @@ def dftb_compute_adi(q, params, full_id):
 
     # ================= Populate Hamiltonian =================
     for i in range(nstates):
-        energy = 0.0 if i == 0 else 0.5 * (
-            data_prev[0][i - 1] + data_curr[0][i - 1]
-        )
+        #energy = 0.0 if i == 0 else 0.5 * (
+        #    data_prev[0][i - 1] + data_curr[0][i - 1]
+        #)
+        energy = 0.0 if i == 0 else data_curr[0][i-1]
 
         obj.ham_adi.set(i, i, energy)
         obj.hvib_adi.set(i, i, energy)
