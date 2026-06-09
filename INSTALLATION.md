@@ -34,41 +34,7 @@ Equip your miniconda with the basic tools, needed for the next steps, such as `g
 conda install -y -c conda-forge git
 ```
 
-## 2. Clone the repository and choose the branch to build
-
-```bash
-git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git
-cd libra-code
-git checkout devel
-```
-Most of the time, the `main` version is behind the current development (`devel`)) version
-so we often want to switch to the correct branch.
-
-
-## 3. Create and activate the Libra environment
-
-Create it using the `environment.yml` file located in the rood directory of Libra
-
-```bash
-conda env create -f environment.yml
-```
-
-Activate the environment:
-
-```bash
-conda activate libra
-```
-
-## 4. Configure and build
-
-```bash
-mkdir _build
-cd _build
-cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} ..
-make -j2
-```
-
-## 5. Setup the environment variables
+## 2. Setup the environment variables
 
 Add the following line to you `.bashrc` or `.bash_profile` scripts:
 
@@ -89,6 +55,88 @@ source ~/.bashrc
 When you do this, your command line should show up the (base) in front, indicating that
 the base environment is ready
 
+
+## 3. Clone the repository and choose the branch to build
+
+```bash
+git clone https://github.com/Quantum-Dynamics-Hub/libra-code.git
+cd libra-code
+git checkout devel
+```
+Most of the time, the `main` version is behind the current development (`devel`)) version
+so we often want to switch to the correct branch.
+
+
+## 4. Create and activate the Libra environment
+
+### 4.1. Option 1: via `environment.yml`
+
+Create it using the `environment.yml` file located in the rood directory of Libra
+
+```bash
+conda env create -f environment.yml
+```
+
+Activate the environment:
+
+```bash
+conda activate libra
+```
+
+### 4.2. Option 2: Alexey's current libra environment
+
+The file `libra.yml` contains exactly the setups to create the conda environment
+which also has other dependencies. It may complain about some missing packages like 
+pyseqm at least for now, but this is not a problem. Just ignore this error.
+Make sure to activate the created libra environment before going to the CMake configuring
+and building
+
+```bash
+conda env create -f libra.yml
+conda activate libra
+```
+
+### 4.3. Option 3: Explicit set of instructions
+
+These are slow and may run into environment solving issues, especially on CCR or HPCs 
+due to solving the environment, but let me keep them here, just in case:
+
+First, manually create Conda environment
+```bash
+conda create -n libra python=3.10
+```
+
+Then equip your Conda with all the dependencies
+First, via conda install:
+
+```bash
+conda activate libra
+conda install -y -c conda-forge numpy scipy matplotlib h5py pip
+conda install -y -c conda-forge conda-build make cmake=3.24.2
+conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 llvm-openm
+conda install -y -c conda-forge boost=1.82.* python-devtools pytest
+conda install -y -c conda-forge/label/gcc7 eigen=3.4.* mpfr
+conda install -y -c psi4/label/dev libint2=2.7.1
+```
+
+Then, some pip installs
+```bash
+pip install pyscf
+pip install scikit-learn
+pip install torch torchvision torchaudio
+```
+
+
+## 5. Configure and build
+
+```bash
+mkdir _build
+cd _build
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=${CONDA_PREFIX} -DPython3_EXECUTABLE=$CONDA_PREFIX/bin/python ..
+make -j2
+```
+
+
 ## 6. Verify the installation
 
 ```bash
@@ -96,6 +144,7 @@ python -c "import liblibra_core"
 ```
 
 If no errors are reported, Libra was built successfully.
+
 
 
 # Recommended additional packages for your Conda environment
@@ -122,6 +171,8 @@ Install py3Dmol for viewing molecular structures:
 pip install -U py3Dmol
 ```
 
+
+
 # How to add the environment to Jupyter notebook
 
 Another useful recipe for setting up jupyter notebook specific to a selected Conda environment:
@@ -139,6 +190,7 @@ python -m ipykernel install --user --name=libra --display-name "Python (libra)"
 ```
 
 Now, in Jupyter, you'll see a new kernel called "Python (libra)". Select that in your notebook before you do the calculations that require Libra
+
 
 
 # Installation of WSL
