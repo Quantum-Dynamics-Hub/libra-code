@@ -79,6 +79,7 @@ void export_dyn_control_params_objects(){
       .def_readwrite("state_tracking_algo", &dyn_control_params::state_tracking_algo)
       .def_readwrite("MK_alpha", &dyn_control_params::MK_alpha)
       .def_readwrite("MK_verbosity", &dyn_control_params::MK_verbosity)
+      .def_readwrite("MK_scaling_function", &dyn_control_params::MK_scaling_function)
       .def_readwrite("convergence", &dyn_control_params::convergence)
       .def_readwrite("max_number_attempts", &dyn_control_params::max_number_attempts)
       .def_readwrite("isNBRA", &dyn_control_params::isNBRA)
@@ -758,7 +759,7 @@ void export_dyn_projectors_objects(){
   //============= dyn_projectors.cpp ======================
 
   vector<int> (*expt_hungarian_algorithm_v1)
-  (CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha) = &hungarian_algorithm;
+  (CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int scaling_function) = &hungarian_algorithm;
   def("hungarian_algorithm", expt_hungarian_algorithm_v1);
 
   CMATRIX (*expt_compute_phase_corrections_v1)(CMATRIX& S, double tol) = &compute_phase_corrections;
@@ -770,10 +771,10 @@ void export_dyn_projectors_objects(){
   vector<int> (*expt_get_reordering_v1)(CMATRIX& time_overlap) = &get_reordering;
   def("get_reordering", expt_get_reordering_v1);  
 
-  MATRIX (*expt_make_cost_mat_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha) = &make_cost_mat;
+  MATRIX (*expt_make_cost_mat_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int scaling_function) = &make_cost_mat;
   def("make_cost_mat", expt_make_cost_mat_v1);  
 
-  vector<int> (*expt_Munkres_Kuhn_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity) = &Munkres_Kuhn;
+  vector<int> (*expt_Munkres_Kuhn_v1)(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity, int scaling_function) = &Munkres_Kuhn;
   def("Munkres_Kuhn", expt_Munkres_Kuhn_v1);  
 
   CMATRIX (*expt_permutation2cmatrix_v1)(vector<int>& permutation) = &permutation2cmatrix;

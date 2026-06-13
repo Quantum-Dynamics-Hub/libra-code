@@ -288,6 +288,18 @@ class dyn_control_params{
   int MK_verbosity;
 
   /**
+    Choice of the scaling function for the cost matrix in the Munkres-Kuhn (Hungarian) algorithm
+
+    Options:
+      - 0 : exp(- alpha^2 * |dE_ij|^2 )  [default]
+      - 1 : exp(- alpha * |dE_ij| )
+      - 2 : exp(-alpha * max(dE_ij, 0) )
+      - anything else:  1  - no scaling 
+
+  */
+  int MK_scaling_function;
+
+  /**
     A swtich for stochastic reordering algorithm 3 to choose what happens when an acceptable permutation isn't generated in the set number of attempts:
                 0: returns the identity permutation (does not require convergence)
                 1: exits and prints an error (requires convergence)

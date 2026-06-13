@@ -57,6 +57,7 @@ dyn_control_params::dyn_control_params(){
   state_tracking_algo = -1;
   MK_alpha = 0.0;
   MK_verbosity = 0;
+  MK_scaling_function = 0;
   convergence = 0;
   max_number_attempts = 100;
   min_probability_reordering = 0.0;
@@ -177,6 +178,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   state_tracking_algo = x.state_tracking_algo;
   MK_alpha = x.MK_alpha;
   MK_verbosity = x.MK_verbosity;
+  MK_scaling_function = x.MK_scaling_function;
   convergence = x.convergence;
   max_number_attempts = x.max_number_attempts;
   min_probability_reordering = x.min_probability_reordering;
@@ -389,6 +391,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     else if(key=="state_tracking_algo"){  state_tracking_algo = bp::extract<int>(params.values()[i]);  }
     else if(key=="MK_alpha") { MK_alpha = bp::extract<double>(params.values()[i]);  }
     else if(key=="MK_verbosity") { MK_verbosity = bp::extract<int>(params.values()[i]);  }
+    else if(key=="MK_scaling_function") { MK_scaling_function = bp::extract<int>(params.values()[i]);  }
     else if(key=="convergence") { convergence = bp::extract<int>(params.values()[i]);  }
     else if(key=="max_number_attempts") { max_number_attempts = bp::extract<int>(params.values()[i]);  }
     else if(key=="min_probability_reordering") { min_probability_reordering = bp::extract<double>(params.values()[i]);  }

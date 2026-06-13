@@ -150,10 +150,10 @@ vector<vector<int>> hungarian_algorithm(vector<vector<double>>& cost_matrix) {
 }
 
 
-vector<int> hungarian_algorithm(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){ 
+vector<int> hungarian_algorithm(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int scaling_function){ 
 
   int i,j;
-  MATRIX cost_mat = -make_cost_mat(orb_mat_inp, en_mat_inp, alpha);
+  MATRIX cost_mat = -make_cost_mat(orb_mat_inp, en_mat_inp, alpha, scaling_function);
   int n = cost_mat.n_cols;
 
   vector< vector<double> > cost_matrix(n, vector<double>(n, 0.0) );
@@ -304,7 +304,7 @@ vector<int> get_reordering(CMATRIX& time_overlap){
 
         
          
-MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){
+MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int scaling_function){
     /**
 
     Makes the cost matrix from a given TDM and information on states' energies
@@ -318,6 +318,13 @@ MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){
             the reordering. Setting is to 0 makes all orbitals be considered for reordering
             Setting it to a large number makes the effective number of orbitals participating
             in the reordering smaller - this can be used to turn off the reordering. [units: a.u.^-1]
+
+        scaling_function ( int ): Selector of the type of the energy-aware scaling of the cost matrix
+        
+          - 0 : exp(- alpha^2 * |dE_ij|^2 )  [default]
+          - 1 : exp(- alpha * |dE_ij| )
+          - 2 : exp(-alpha * max(dE_ij, 0) ) 
+          - anything else:  1  - no scaling
 
     Returns: 
         MATRIX(nstates, nstates): the matrix of the cost values for different pairs of states
@@ -335,8 +342,13 @@ MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){
             double s2 = (s*std::conj(s)).real();
             double dE = (en_mat_inp.get(a,a) - en_mat_inp.get(b,b)).real();
 
-            double val = s2 * exp(-(alpha*dE)*(alpha*dE));
-            cost_mat.set(a,b,val);
+            
+            double val = 1.0; 
+            if(scaling_function==1){ val = exp(-(alpha*dE)*(alpha*dE)); }
+            else if(scaling_function==2){  val = exp(-alpha * fabs(dE)); }  // symmetric scaling
+            else if(scaling_function==3){  val = exp(-alpha * MAX(0.0, dE) ); }
+
+            cost_mat.set(a,b,s2 * val);
 
         }
     }
@@ -344,9 +356,9 @@ MATRIX make_cost_mat(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha){
     return cost_mat;
 }
 
-vector<int> Munkres_Kuhn(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity){
+vector<int> Munkres_Kuhn(CMATRIX& orb_mat_inp, CMATRIX& en_mat_inp, double alpha, int verbosity, int MK_scaling_function){
 
-    MATRIX cost_mat = make_cost_mat(orb_mat_inp, en_mat_inp, alpha);
+    MATRIX cost_mat = make_cost_mat(orb_mat_inp, en_mat_inp, alpha, MK_scaling_function);
 
     // Solve the optimal assignment problem for diagonal blocks
     return Munkres_Kuhn_maximize(cost_mat, verbosity);
@@ -747,10 +759,10 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
         perm_t = get_reordering(st);
     }
     else if(prms.state_tracking_algo==2){
-        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
+        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity, prms.MK_scaling_function);
     }
     else if(prms.state_tracking_algo==21){
-        perm_t = hungarian_algorithm(st, Eadi[traj], prms.MK_alpha);
+        perm_t = hungarian_algorithm(st, Eadi[traj], prms.MK_alpha, prms.MK_scaling_function);
     }
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(st, rnd);
@@ -763,7 +775,7 @@ void update_projectors(dyn_control_params& prms, vector<CMATRIX>& projectors,
         perm_t = get_stochastic_reordering3(st, rnd, prms.convergence, prms.max_number_attempts, prms.min_probability_reordering, 0);
     }
     if(prms.state_tracking_algo==4){ // same as option 2, but the input  for St argument will be different 
-        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
+        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity, prms.MK_scaling_function);
     }
     
     // P -> P * perm
@@ -817,7 +829,7 @@ vector< vector<int> > compute_permutations(dyn_control_params& prms, vector<CMAT
         perm_t = get_reordering(st);
     }
     else if(prms.state_tracking_algo==2){
-        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity);
+        perm_t = Munkres_Kuhn(st, Eadi[traj], prms.MK_alpha, prms.MK_verbosity, prms.MK_scaling_function);
     }
     if(prms.state_tracking_algo==3){
         perm_t = get_stochastic_reordering(st, rnd);
@@ -919,8 +931,8 @@ CMATRIX compute_projector(dyn_control_params& prms, CMATRIX& Eadi, CMATRIX& St){
 
 
   if(prms.state_tracking_algo==1){ perm_t = get_reordering(st);  }
-  else if(prms.state_tracking_algo==2 || prms.state_tracking_algo==4){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity); }
-  else if(prms.state_tracking_algo==21){ perm_t = hungarian_algorithm(st, Eadi, prms.MK_alpha);     }
+  else if(prms.state_tracking_algo==2 || prms.state_tracking_algo==4){ perm_t = Munkres_Kuhn(st, Eadi, prms.MK_alpha, prms.MK_verbosity, prms.MK_scaling_function); }
+  else if(prms.state_tracking_algo==21){ perm_t = hungarian_algorithm(st, Eadi, prms.MK_alpha, prms.MK_scaling_function);     }
 
 /*
   else if(prms.state_tracking_algo==3){ perm_t = get_stochastic_reordering(st, rnd);   }
