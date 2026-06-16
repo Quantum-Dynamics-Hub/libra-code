@@ -103,6 +103,8 @@ due to solving the environment, but let me keep them here, just in case:
 
 First, manually create Conda environment
 ```bash
+conda activate base
+conda install -n base -c conda-forge mamba
 conda create -n libra python=3.10
 ```
 
@@ -111,12 +113,15 @@ First, via conda install:
 
 ```bash
 conda activate libra
-conda install -y -c conda-forge numpy scipy matplotlib h5py pip
-conda install -y -c conda-forge conda-build make cmake=3.24.2
-conda install -y -c conda-forge gcc_linux-64=12.2.0 gxx_linux-64=12.2.0 llvm-openm
-conda install -y -c conda-forge boost=1.82.* python-devtools pytest
+
+mamba install -c conda-forge gcc_linux-64=13 gxx_linux-64=13 gfortran_linux-64=13
+mamba install -y -c conda-forge numpy scipy matplotlib h5py pip
+mamba install -y -c conda-forge conda-build make cmake=3.24.2
+mamba install -y -c conda-forge llvm-openmp
+mamba install -y -c conda-forge boost=1.82.* python-devtools pytest
 conda install -y -c conda-forge/label/gcc7 eigen=3.4.* mpfr
-conda install -y -c psi4/label/dev libint2=2.7.1
+mamba install -y -c psi4/label/dev libint2=2.7.1
+mamba install ipykernel
 ```
 
 Then, some pip installs
