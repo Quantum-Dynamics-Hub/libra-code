@@ -1045,12 +1045,26 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
         dyn_var.allocate_kcrpmd()
 
     ham_aux = nHamiltonian(ham)
+    ham_aux.copy_content(ham);
+
+    prms = dyn_control_params();
+    prms.set_parameters(dyn_params);
+
+    # Copy diabatic-to-adiabatic basis transformation to the dynamical variable
+    dyn_var.update_basis_transform(ham)
+
+    # Recompute the orthogonalized reprojection matrices, stored in
+    # dyn_var.proj_adi this calculaitons used ham.children[i].time_overlap
+    # matrix, updated in the previous step
+    update_proj_adi(prms, dyn_var, ham, ham_aux)
+    update_forces(prms, dyn_var, ham)
 
     # Do the propagation
     for i in range(nsteps):
         # Energies
         Ekin, Epot, Etot, dEkin, dEpot, dEtot = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
         Etherm, E_NHC = 0.0, 0.0
+        #print("Saving data for step ", i)
         save.save_tsh_data_1234_new(_savers, dyn_params, i, dyn_var, ham)
 
         # ============ Propagate ===========

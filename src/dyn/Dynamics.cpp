@@ -1448,7 +1448,7 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
 
   */
 
-  //  cout<<"In compute_dynamics\n";
+  //cout<<"In compute_dynamics\n";
   //======== General variables =======================
   int i, j, traj, dof, idof, ntraj1;
 
@@ -1683,7 +1683,17 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
     apply_thermal_correction(dyn_var, ham, ham_aux, old_states, prms, rnd);
   }
 
+  //cout<<"act_states: "; for(int a=0; a<ntraj; a++){ cout<<dyn_var.act_states[a]<<" "; }
+  //cout<<"\n";
+  //cout<<"forces before: \n";
+  //dyn_var.f->show_matrix();
+  //cout<<"\n";
+
   update_forces(prms, dyn_var, ham);
+
+  //cout<<"forces after: \n";
+  //dyn_var.f->show_matrix();
+  //cout<<"\n";
 
   if (prms.decoherence_algo == 6 and prms.use_xf_force == 1) {
     update_forces_xf(dyn_var, ham, ham_aux);
@@ -2162,6 +2172,8 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
     *dyn_var.ave_decoherence_rates += decoherence_rates[traj];
   }
   *dyn_var.ave_decoherence_rates /= ntraj;
+
+
 }
 
 } // namespace libdyn
