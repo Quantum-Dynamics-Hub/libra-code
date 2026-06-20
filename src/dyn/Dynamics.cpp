@@ -1677,6 +1677,18 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
     dyn_var.update_active_states(1, 0); // 1 - forward; 0 - only active state
   }
 
+
+  //====================== Momenta adjustment after successful/frustrated hops
+  //===================
+  // Velocity rescaling: however here we may be changing velocities
+  act_states = dyn_var.act_states;
+  if (prms.rep_sh == 1) {
+      handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+      dyn_var.act_states = act_states;
+  }
+
+
+
   // For now, this function also accounts for the kinetic energy adjustments to
   // reflect the adiabatic evolution
   if (prms.thermally_corrected_nbra == 1) {
@@ -2001,6 +2013,8 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
   // corrections
   dyn_var.update_amplitudes(prms);
   dyn_var.update_density_matrix(prms);
+
+
 
   //************************************ TSH options
   //****************************************

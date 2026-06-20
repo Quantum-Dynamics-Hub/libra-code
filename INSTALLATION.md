@@ -128,7 +128,7 @@ Then, some pip installs
 ```bash
 pip install pyscf
 pip install scikit-learn
-pip install torch torchvision torchaudio
+python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 ```
 
 

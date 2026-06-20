@@ -108,7 +108,9 @@ def compute_trpes(_params):
             E.append(np.array(np.diag(energy_mat)))
         elif input_file_type == 1:
             logfile_read_params.update({"logfile_name":F"{eprefix}{step}{esuffix}"})
-            e, _, _, _ = cp2k.read_cp2k_tddfpt_log_file(logfile_read_params)
+            #e, _, _, _ = cp2k.read_cp2k_tddfpt_log_file_old(logfile_read_params) # reads in eV
+            info, data = cp2k.read_cp2k_tddfpt_log_file(logfile_read_params) # reads in Ha
+            e = np.multiply(data[0], 1.0/units.ev2Ha) # convert to eV
             x = [0.0]
             for e_val in e:
                 x.append(e_val)

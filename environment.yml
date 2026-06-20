@@ -29,8 +29,9 @@ dependencies:
   # -------------------------
   # Compilers / runtime
   # -------------------------
-  - gcc_linux-64=12.2.0
-  - gxx_linux-64=12.2.0
+  - gcc_linux-64=13
+  - gxx_linux-64=13
+  - gfortran_linux-64=13
   - llvm-openmp
 
   # -------------------------
