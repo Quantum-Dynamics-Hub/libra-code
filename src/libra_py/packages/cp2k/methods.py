@@ -2238,9 +2238,11 @@ def exc_analysis(params):
     ci_coeffs = []
     for logfile in logfiles:
         params.update({"logfile_name": logfile})
-        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = read_cp2k_tddfpt_log_file(
-            params)
+        info, data = read_cp2k_tddfpt_log_file(params)
+        excitation_energies, ci_basis_raw, ci_coefficients_raw_unnorm, spin_components = data[0], data[1], data[2], data[3]
+
         ci_coefficients_raw_norm = step2_many_body.normalize_ci_coefficients(ci_coefficients_raw_unnorm)
+
         for j in range(len(ci_coefficients_raw_norm)):
             for k in range(len(ci_coefficients_raw_norm[j])):
                 ci_coefficients_raw_norm[j][k] = ci_coefficients_raw_norm[j][k]**2
