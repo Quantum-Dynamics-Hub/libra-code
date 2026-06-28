@@ -1683,8 +1683,18 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
   // Velocity rescaling: however here we may be changing velocities
   act_states = dyn_var.act_states;
   if (prms.rep_sh == 1) {
+      //cout<<"Rescaling (adiabatic): \n";
+      //cout<<"initial -> final: "<<old_states[0]<<" -> "<<act_states[0]<<" ";
+      //double av_Epot = average_potential_energy(prms, dyn_var, ham);
+      //cout<<"Epot (before) = "<<av_Epot<<endl;
+
       handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+      //cout<<"final state = "<<act_states[0]<<endl;
       dyn_var.act_states = act_states;
+      //cout<<"energies: \n"; ham.children[0]->ham_adi->show_matrix();
+
+      //av_Epot = average_potential_energy(prms, dyn_var, ham);
+      //cout<<"Epot (after) = "<<av_Epot<<endl;
   }
 
 
@@ -2143,8 +2153,18 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
     //===================
     // Velocity rescaling: however here we may be changing velocities
     if (prms.rep_sh == 1) {
+      //cout<<"In TSH rescaling:\n";
+      //cout<<"initial -> final state: "<<old_states[0]<<" ->"<<act_states[0];
+      //double av_Epot = average_potential_energy(prms, dyn_var, ham);
+      //cout<<"Epot (before) = "<<av_Epot<<endl;
+
       handle_hops_nuclear(dyn_var, ham, act_states, old_states, prms);
+      //cout<<" active state after: "<<act_states[0]<<endl;
       dyn_var.act_states = act_states;
+
+      //av_Epot = average_potential_energy(prms, dyn_var, ham);
+      //cout<<"Epot (after) = "<<av_Epot<<endl;
+
     } else {
       handle_hops_nuclear(dyn_var, ham, act_states_dia, old_states_dia, prms);
       dyn_var.act_states_dia = act_states_dia;
@@ -2177,6 +2197,8 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
   // changes in the TSH part so that we have them consistent in the output
   dyn_var.update_amplitudes(prms);
   dyn_var.update_density_matrix(prms);
+
+  update_forces(prms, dyn_var, ham);
 
   // Saves the current density matrix into the previous - needed for FSSH2 and
   // GFSH (original)
