@@ -1678,10 +1678,14 @@ void compute_dynamics(dyn_variables &dyn_var, bp::dict dyn_params,
   }
 
 
+  // Check if rescaling is needed:
+  act_states = dyn_var.act_states; // these are proposed states
+  act_states = accept_hops(dyn_var, ham, act_states, old_states, prms, rnd);
+
   //====================== Momenta adjustment after successful/frustrated hops
   //===================
   // Velocity rescaling: however here we may be changing velocities
-  act_states = dyn_var.act_states;
+  //act_states = dyn_var.act_states;
   if (prms.rep_sh == 1) {
       //cout<<"Rescaling (adiabatic): \n";
       //cout<<"initial -> final: "<<old_states[0]<<" -> "<<act_states[0]<<" ";
