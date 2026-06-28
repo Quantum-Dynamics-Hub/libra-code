@@ -122,7 +122,7 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "states" in saver.keywords:  # and "states" in saver.np_data.keys():
             saver.add_dataset("states", (_nsteps, _ntraj), "I")
 
-        # Trajectory-resolved instantaneous adiabatic states
+        # Trajectory-resolved instantaneous diabatic states
         if "states_dia" in saver.keywords:  # and "states_dia" in saver.np_data.keys():
             saver.add_dataset("states_dia", (_nsteps, _ntraj), "I")
 
@@ -235,7 +235,7 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "p_mm" in saver.keywords:  # and "p_mm" in saver.np_data.keys():
             saver.add_dataset("p_mm", (_nsteps, _ntraj, _nadi), "R")
 
-        # Trajectory-resolved quantum momenta
+        # Trajectory-resolved width parameters for quantum momenta
         if "wp_width" in saver.keywords:  # and "p_quant" in saver.np_data.keys():
             saver.add_dataset("wp_width", (_nsteps, _ntraj, _ndof), "R")
 
@@ -262,11 +262,11 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         
     if output_level >= 4:
 
-        # Trajectory-resolved vibronic Hamiltoninans in the adiabatic representation
+        # Trajectory-resolved vibronic Hamiltonians in the adiabatic representation
         if "hvib_adi" in saver.keywords:  # and "hvib_adi" in saver.np_data.keys():
             saver.add_dataset("hvib_adi", (_nsteps, _ntraj, _nadi, _nadi), "C")
 
-        # Trajectory-resolved vibronic Hamiltoninans in the diabatic representation
+        # Trajectory-resolved vibronic Hamiltonians in the diabatic representation
         if "hvib_dia" in saver.keywords:  # and "hvib_dia" in saver.np_data.keys():
             saver.add_dataset("hvib_dia", (_nsteps, _ntraj, _ndia, _ndia), "C")
 
@@ -282,15 +282,15 @@ def init_tsh_data(saver, output_level, _nsteps, _ntraj, _ndof, _nadi, _ndia):
         if "projector" in saver.keywords:  # and "projector" in saver.np_data.keys():
             saver.add_dataset("projector", (_nsteps, _ntraj, _nadi, _nadi), "C")
 
-        # Trajectory-resolved auxiliary coordinates
+        # Trajectory-resolved auxiliary coordinates for XF methods
         if "q_aux" in saver.keywords:  # and "hvib_adi" in saver.np_data.keys():
             saver.add_dataset("q_aux", (_nsteps, _ntraj, _nadi, _ndof), "R")
 
-        # Trajectory-resolved auxiliary momenta
+        # Trajectory-resolved auxiliary momenta for XF methods
         if "p_aux" in saver.keywords:  # and "hvib_adi" in saver.np_data.keys():
             saver.add_dataset("p_aux", (_nsteps, _ntraj, _nadi, _ndof), "R")
 
-        # Trajectory-resolved nabla_phase
+        # Trajectory-resolved nabla_phase for XF methods
         if "nab_phase" in saver.keywords:  # and "hvib_adi" in saver.np_data.keys():
             saver.add_dataset("nab_phase", (_nsteps, _ntraj, _nadi, _ndof), "R")
 
