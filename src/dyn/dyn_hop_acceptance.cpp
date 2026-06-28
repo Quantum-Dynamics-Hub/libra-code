@@ -110,7 +110,7 @@ void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, M
 
   if(det<0.0){  // Frustrated hops!
 
-    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+    if(fabs(a_ij)>1e-12){  // only consider reversals, if the couplings are sizable
       if(do_reverse){     gamma_ij = b_ij / a_ij;}
       else{ gamma_ij = 0.0;  }
     }
@@ -119,7 +119,7 @@ void rescale_along_vector(double E_old, double E_new, MATRIX& p, MATRIX& invM, M
   }
   else{    // Accepted hops!
 
-    if(fabs(a_ij)>1e-100){  // only consider reversals, if the couplings are sizable
+    if(fabs(a_ij)>1e-12){  // only consider reversals, if the couplings are sizable
       if(b_ij<0){ gamma_ij = 0.5*(b_ij + sqrt(det))/a_ij; }
       else{       gamma_ij = 0.5*(b_ij - sqrt(det))/a_ij; }
     }
@@ -969,11 +969,15 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 
         double scl_fac = 1.0;
 
-        if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-        else{
-          if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
-          else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
-        }      
+        if(T_i>0.0){ 
+
+          if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
+          else{
+            if(prms.momenta_rescaling_algo==100){  scl_fac = 1.0; }
+            else if(prms.momenta_rescaling_algo==101){  scl_fac = -1.0; }
+          } 
+        }
+        else{ scl_fac = 1.0; }
 
         //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
         for(idof = 0; idof < n_active_dof; idof++){   
@@ -1001,11 +1005,14 @@ vector<int>& new_states, vector<int>& old_states, dyn_control_params& prms){
 
         double scl_fac = 1.0;
 
+        if(T_i > 0.0){ 
         if(T_f>=0.0){  scl_fac = std::sqrt(T_f/T_i);   }
-        else{
-          if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
-          else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
-        }      
+          else{
+            if(prms.momenta_rescaling_algo==110){  scl_fac = 1.0; }
+            else if(prms.momenta_rescaling_algo==111){  scl_fac = -1.0; }
+          }      
+        }
+        else{ scl_fac = 1.0; } 
 
         //for(dof = 0; dof < ndof; dof++){   p.scale(dof, traj, scl_fac);  }
         for(idof = 0; idof < n_active_dof; idof++){   
