@@ -37,11 +37,7 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
 /**
     """
     Args:
-        q ( list of doubles ): the mean values of coordinates for all DOFs [ units: a.u.]
-        p ( list of doubles ): the mean values of momenta for all DOFs [ units: a.u. ]
-        mass ( list of doubles ): masses of all nuclear DOFs [ units: a.u. ]
-
-        params ( dictionary ): control parameters
+        _params ( dictionary ): control parameters
  
             * **params["init_type"]** ( int ): the type of sampling of nuclear DOFs
      
@@ -58,6 +54,9 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
                 
                 - 4 : sample both coordinates and momenta from the normal
                     distributions with directly defined standard deviations
+
+                - 5 : set the coordinates and momenta exactly from the list of lists objects "q_init" and "p_init" in _params
+
 
             * **params["force_constant"]** ( list of double ): force constants involved in the Harmonic
                 oscillator model: U = (1/2) * k * x^2, and omega = sqrt( k / m )
@@ -122,8 +121,11 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
   vector<double> force_constant;
   vector<double> q_width;
   vector<double> p_width;
+  vector< vector<double> > q_init;
+  vector< vector<double> > p_init;
+  
 
-  int idof;
+  int idof, itraj;
 
   std::string key;
   for(int i=0;i<len(params.values());i++){
@@ -137,15 +139,36 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     else if(key=="force_constant") {  force_constant = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i]) ); }
     else if(key=="q_width") { q_width = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i])  ); }
     else if(key=="p_width") { p_width = liblibra::libconverters::Py2Cpp<double>( bp::extract< bp::list >(params.values()[i])  ); }
-  }
+
+    else if(key=="q_init"){
+
+      bp::list outer = bp::extract<bp::list>(params.values()[i]);
+      int n = bp::len(outer); // ntraj
+      for(int j = 0; j < n; j++) {
+        bp::list inner = bp::extract<bp::list>(outer[j]);
+        q_init.push_back(  liblibra::libconverters::Py2Cpp<double>(inner)  );
+      }
+    }// q_init
+
+    else if(key=="p_init"){
+
+      bp::list outer = bp::extract<bp::list>(params.values()[i]);
+      int n = bp::len(outer); // ntraj
+      for(int j = 0; j < n; j++) {
+        bp::list inner = bp::extract<bp::list>(outer[j]);
+        p_init.push_back(  liblibra::libconverters::Py2Cpp<double>(inner)  );
+      }
+    }// p_init
+
+  }// for i
 
 
 
 
-  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4) ){
+  if( !(init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4 || init_type==5)  ){
     cout<<"WARNINIG in init_nuclear_dyn_var: \
            the init_type = "<<init_type<<" is not known\
-           Allowed values are: [0, 1, 2, 3, 4]\n";
+           Allowed values are: [0, 1, 2, 3, 4, 5]\n";
   }
 
   if(_Q.size() != _P.size()){
@@ -190,6 +213,34 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
       exit(0);
     }
   }
+  if(init_type==5){
+
+    //============== Checking q_init ================
+    if(q_init.size() != ntraj){ 
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the q_init should be a list of ntraj = "<<ntraj <<" lists, but the current size is "<<q_init.size()<<"\n";
+      exit(0);
+    }
+    for(int k=0; k<ntraj; k++){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the q_init["<<k<<"] should be a list of ndof = "<<ndof <<" floats, but the current size is "<<q_init[k].size()<<"\n";
+      exit(0);
+    }
+
+    //============== Checking p_init ================
+    if(p_init.size() != ntraj){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the p_init should be a list of ntraj = "<<ntraj <<" lists, but the current size is "<<p_init.size()<<"\n";
+      exit(0);
+    }
+    for(int k=0; k<ntraj; k++){
+      cout<<"ERROR in init_nuclear_dyn_var: \
+             the p_init["<<k<<"] should be a list of ndof = "<<ndof <<" floats, but the current size is "<<p_init[k].size()<<"\n";
+      exit(0);
+    }
+
+  }
+
 
   /// At this point, it is safe to define ndof:
   for(idof=0; idof<ndof; idof++){
@@ -241,10 +292,21 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     }
   }
 
+  if (init_type==0 || init_type==1 || init_type==2 || init_type==3 || init_type==4){
+    // Now sample the values
+    liblibra::libspecialfunctions::sample(q, mean_q, sigma_q, rnd);
+    liblibra::libspecialfunctions::sample(p, mean_p, sigma_p, rnd);
+  }
+  else if(init_type==5){
+ 
+    for(itraj=0; itraj<ntraj; itraj++){
+      for(idof=0;idof<ndof; idof++){
+        q->set(idof, itraj, q_init[itraj][idof]);
+        p->set(idof, itraj, p_init[itraj][idof]);
+      } // for idof
+    }// for itraj
 
-  // Now sample the values
-  liblibra::libspecialfunctions::sample(q, mean_q, sigma_q, rnd);
-  liblibra::libspecialfunctions::sample(p, mean_p, sigma_p, rnd);
+  }// init_type == 5
 
 }
 
