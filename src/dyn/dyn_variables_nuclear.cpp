@@ -143,7 +143,7 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     else if(key=="q_init"){
 
       bp::list outer = bp::extract<bp::list>(params.values()[i]);
-      int n = bp::len(outer); // ntraj
+      int n = bp::len(outer); // ndof
       for(int j = 0; j < n; j++) {
         bp::list inner = bp::extract<bp::list>(outer[j]);
         q_init.push_back(  liblibra::libconverters::Py2Cpp<double>(inner)  );
@@ -153,7 +153,7 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
     else if(key=="p_init"){
 
       bp::list outer = bp::extract<bp::list>(params.values()[i]);
-      int n = bp::len(outer); // ntraj
+      int n = bp::len(outer); // ndof
       for(int j = 0; j < n; j++) {
         bp::list inner = bp::extract<bp::list>(outer[j]);
         p_init.push_back(  liblibra::libconverters::Py2Cpp<double>(inner)  );
@@ -216,30 +216,34 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
   if(init_type==5){
 
     //============== Checking q_init ================
-    if(q_init.size() != ntraj){ 
+    if(q_init.size() != ndof){ 
       cout<<"ERROR in init_nuclear_dyn_var: \
-             the q_init should be a list of ntraj = "<<ntraj <<" lists, but the current size is "<<q_init.size()<<"\n";
+             the q_init should be a list of ntraj = "<<ndof <<" lists, but the current size is "<<q_init.size()<<"\n";
       exit(0);
     }
-    for(int k=0; k<ntraj; k++){
-      cout<<"ERROR in init_nuclear_dyn_var: \
-             the q_init["<<k<<"] should be a list of ndof = "<<ndof <<" floats, but the current size is "<<q_init[k].size()<<"\n";
-      exit(0);
+    for(int k=0; k<ndof; k++){
+      if(q_init[k].size() != ntraj){
+        cout<<"ERROR in init_nuclear_dyn_var: \
+               the q_init["<<k<<"] should be a list of ntraj = "<<ntraj <<" floats, but the current size is "<<q_init[k].size()<<"\n";
+        exit(0);
+      }
     }
 
     //============== Checking p_init ================
-    if(p_init.size() != ntraj){
+    if(p_init.size() != ndof){
       cout<<"ERROR in init_nuclear_dyn_var: \
-             the p_init should be a list of ntraj = "<<ntraj <<" lists, but the current size is "<<p_init.size()<<"\n";
+             the p_init should be a list of ndof = "<<ndof <<" lists, but the current size is "<<p_init.size()<<"\n";
       exit(0);
     }
-    for(int k=0; k<ntraj; k++){
+    for(int k=0; k<ndof; k++){
+      if(p_init[k].size() != ntraj){
       cout<<"ERROR in init_nuclear_dyn_var: \
-             the p_init["<<k<<"] should be a list of ndof = "<<ndof <<" floats, but the current size is "<<p_init[k].size()<<"\n";
+             the p_init["<<k<<"] should be a list of ntraj = "<<ntraj <<" floats, but the current size is "<<p_init[k].size()<<"\n";
       exit(0);
-    }
+      }
+    }// for k
 
-  }
+  }// init_type == 5
 
 
   /// At this point, it is safe to define ndof:
@@ -301,8 +305,8 @@ void dyn_variables::init_nuclear_dyn_var(bp::dict _params, Random& rnd){
  
     for(itraj=0; itraj<ntraj; itraj++){
       for(idof=0;idof<ndof; idof++){
-        q->set(idof, itraj, q_init[itraj][idof]);
-        p->set(idof, itraj, p_init[itraj][idof]);
+        q->set(idof, itraj, q_init[idof][itraj]);
+        p->set(idof, itraj, p_init[idof][itraj]);
       } // for idof
     }// for itraj
 
