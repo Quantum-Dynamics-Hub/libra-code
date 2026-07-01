@@ -7,15 +7,8 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["backends",
-           "control_params",
-           "core",
-           "decoherence",
-           "experiments",
-           "hamiltonians",
-           "observables",
-           "propagation",
-           "spawning",
-           "transformations",
-           "utils",
+__all__ = ["basis_rotation",
+           "gauge", 
+           "local_diabatization",
+           "orthogonalization",
           ]

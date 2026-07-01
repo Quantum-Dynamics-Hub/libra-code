@@ -197,3 +197,16 @@ def orthogonalized_T(T, tol=1e-10, drop=False):
 
 
 
+def apply_local_diabatization(H, C, T, backend):
+    """
+    General LD transform:
+    H' = T^{-1} H T
+    C' = T^{-1} C
+    """
+
+    Tinv = backend.inverse(T)
+
+    H_rot = backend.einsum("nij,njk,nkl->nil", Tinv, H, T)
+    C_rot = backend.einsum("nij,nj->ni", Tinv, C)
+
+    return C_rot, H_rot

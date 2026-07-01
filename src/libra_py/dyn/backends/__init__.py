@@ -7,15 +7,8 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["backends",
-           "control_params",
-           "core",
-           "decoherence",
-           "experiments",
-           "hamiltonians",
-           "observables",
-           "propagation",
-           "spawning",
-           "transformations",
-           "utils",
-          ]
+from .numpy_backend import NumpyBackend
+
+backend = NumpyBackend()
+
+__all__ = ["NumpyBackend", "backend"]
