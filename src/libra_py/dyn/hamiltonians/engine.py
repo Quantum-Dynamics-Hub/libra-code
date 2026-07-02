@@ -1,35 +1,55 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Iterable, Optional
 
-from .state import HamiltonianState
+from .aux import as_result_mapping
 
 
 class HamiltonianEngine:
     """
     Stateless Hamiltonian construction and transformation engine.
 
-    Responsibilities:
-    ----------------------------------------
-    1. Build electronic Hamiltonians (dia / adi)
-    2. Build vibronic Hamiltonians
-    3. Apply local diabatization (LD)
-    4. Apply corrections (SSY hooks)
-    5. Provide unified pipeline for TDSE propagation setup
-
-    This replaces:
-        - nHamiltonian::compute_adiabatic
-        - nHamiltonian::compute_diabatic
-        - transform_all()
-        - hvib reconstruction logic
+    The engine writes Hamiltonian quantities directly into TensorStorage. This
+    keeps TensorStorage as the single owner of dynamical tensors and avoids a
+    parallel HamiltonianState container drifting out of sync.
     """
+
+    _RESULT_TO_STORAGE = {
+        "H_adi": "ham_adi",
+        "H_dia": "ham_dia",
+        "Hvib_adi": "hvib_adi",
+        "Hvib_dia": "hvib_dia",
+        "NAC_adi": "nac_adi",
+        "NAC_dia": "nac_dia",
+        "DC1_adi": "dc1_adi",
+        "DC1_dia": "dc1_dia",
+        "dH_adi": "d1ham_adi",
+        "dH_dia": "d1ham_dia",
+        "d2H_adi": "d2ham_adi",
+        "d2H_dia": "d2ham_dia",
+        "S_dia": "ovlp_dia",
+        "time_overlap_adi": "time_overlap_adi",
+        "time_overlap_dia": "time_overlap_dia",
+        "basis_transform": "basis_transform",
+        "phase_correction": "cum_phase_corr",
+        "ordering": "ordering_adi",
+    }
+
+    _REP_FIELDS = {
+        "adiabatic": {
+            "hamiltonian": "ham_adi",
+            "vibronic": "hvib_adi",
+            "nac": "nac_adi",
+        },
+        "diabatic": {
+            "hamiltonian": "ham_dia",
+            "vibronic": "hvib_dia",
+            "nac": "nac_dia",
+        },
+    }
 
     def __init__(self, backend: Any):
         self.backend = backend
-
-    # ============================================================
-    # 1. MAIN ENTRY: BUILD FULL HAMILTONIAN STATE
-    # ============================================================
 
     def evaluate(
         self,
@@ -37,206 +57,37 @@ class HamiltonianEngine:
         storage: Any,
         model_fn: Callable,
         rep: str = "adiabatic",
-    ) -> HamiltonianState:
+    ) -> Any:
         """
-        Build HamiltonianState from a physical model.
+        Evaluate a model and write available Hamiltonian tensors to storage.
 
-        Parameters
-        ----------
-        traj : Trajectory
-        storage : TensorStorage
-        model_fn : callable
-            User-defined electronic structure model
-        rep : str
-            "adiabatic" or "diabatic"
+        model_fn receives R, P, storage, and traj and should return a mapping
+        with keys such as H_adi, H_dia, NAC_adi, dH_adi, or their diabatic
+        counterparts. Only keys present in the result are written.
         """
 
+        self._validate_rep(rep)
         idx = traj.tbf_ids
-
-        # --------------------------------------------------------
-        # Load nuclear DOFs
-        # --------------------------------------------------------
-        R = storage.q[traj.id, idx]
-        P = storage.p[traj.id, idx]
-
-        # --------------------------------------------------------
-        # Call electronic structure model
-        # --------------------------------------------------------
-        result = model_fn(R=R, P=P, storage=storage, traj=traj)
-
-        # --------------------------------------------------------
-        # Extract Hamiltonian components
-        # --------------------------------------------------------
-        H_adi = result.get("H_adi")
-        H_dia = result.get("H_dia")
-
-        S_adi = result.get("S_adi")
-        S_dia = result.get("S_dia")
-
-        NAC_adi = result.get("NAC_adi")
-        NAC_dia = result.get("NAC_dia")
-
-        DC1_adi = result.get("DC1_adi")
-        DC1_dia = result.get("DC1_dia")
-
-        dH_adi = result.get("dH_adi")
-        dH_dia = result.get("dH_dia")
-
-        d2H_adi = result.get("d2H_adi")
-        d2H_dia = result.get("d2H_dia")
-
-        Hvib_adi = result.get("Hvib_adi")
-        Hvib_dia = result.get("Hvib_dia")
-
-        basis_transform = result.get("basis_transform")
-
-        # --------------------------------------------------------
-        # Build immutable state
-        # --------------------------------------------------------
-        return HamiltonianState(
-            rep=rep,
-
-            H_adi=H_adi,
-            H_dia=H_dia,
-
-            Hvib_adi=Hvib_adi,
-            Hvib_dia=Hvib_dia,
-
-            S_adi=S_adi,
-            S_dia=S_dia,
-
-            NAC_adi=NAC_adi,
-            NAC_dia=NAC_dia,
-
-            DC1_adi=DC1_adi,
-            DC1_dia=DC1_dia,
-
-            dH_adi=dH_adi,
-            dH_dia=dH_dia,
-
-            d2H_adi=d2H_adi,
-            d2H_dia=d2H_dia,
-
-            basis_transform=basis_transform,
+        result = as_result_mapping(
+            model_fn(
+                R=storage.q[traj.id, idx],
+                P=storage.p[traj.id, idx],
+                storage=storage,
+                traj=traj,
+            )
         )
 
-    # ============================================================
-    # 2. LOCAL DIABATIZATION TRANSFORMATION
-    # ============================================================
+        self._ensure_derivative_storage(storage, result)
 
-    def apply_ld(self, state: HamiltonianState, T: Any) -> HamiltonianState:
-        """
-        Apply local diabatization transform:
+        for result_name, storage_name in self._RESULT_TO_STORAGE.items():
+            value = result.get(result_name)
+            if value is None:
+                continue
+            self._write(storage, traj, storage_name, value)
 
-            H' = T† H T
-            C' = T† C   (handled in propagation layer)
-        """
-
-        bd = self.backend
-        Tdag = bd.conjugate_transpose(T)
-
-        H_adi_new = state.H_adi
-        H_dia_new = state.H_dia
-        NAC_adi_new = state.NAC_adi
-        NAC_dia_new = state.NAC_dia
-
-        # --------------------------------------------------------
-        # Transform adiabatic Hamiltonian
-        # --------------------------------------------------------
-        if H_adi_new is not None:
-            H_adi_new = bd.einsum(
-                "nij,njk,nkl->nil",
-                Tdag, H_adi_new, T
-            )
-
-        # --------------------------------------------------------
-        # Transform diabatic Hamiltonian
-        # --------------------------------------------------------
-        if H_dia_new is not None:
-            H_dia_new = bd.einsum(
-                "nij,njk,nkl->nil",
-                Tdag, H_dia_new, T
-            )
-
-        # --------------------------------------------------------
-        # Transform NACs if present
-        # --------------------------------------------------------
-        if NAC_adi_new is not None:
-            NAC_adi_new = bd.einsum(
-                "nij,njk,nkl->nil",
-                Tdag, NAC_adi_new, T
-            )
-
-        if NAC_dia_new is not None:
-            NAC_dia_new = bd.einsum(
-                "nij,njk,nkl->nil",
-                Tdag, NAC_dia_new, T
-            )
-
-        return state.replace(
-            H_adi=H_adi_new,
-            H_dia=H_dia_new,
-            NAC_adi=NAC_adi_new,
-            NAC_dia=NAC_dia_new,
-            basis_transform=T
-        )
-
-    # ============================================================
-    # 3. SSY / EMPIRICAL CORRECTIONS (HOOK)
-    # ============================================================
-
-    def apply_ssy(self, state: HamiltonianState, traj: Any) -> HamiltonianState:
-        """
-        Placeholder for SSY correction logic.
-
-        In C++ this was:
-            SSY_correction(H, dyn_var, ham, itraj)
-
-        Here we isolate it as a hook.
-        """
-
-        # Example (user-defined later):
-        # modify H based on population, decoherence, etc.
-        return state
-
-    # ============================================================
-    # 4. VIBRONIC HAMILTONIAN CONSTRUCTION
-    # ============================================================
-
-    def build_hvib(self, state: HamiltonianState) -> HamiltonianState:
-        """
-        Construct vibronic Hamiltonian:
-
-            Hvib = H - i * NAC
-        """
-
-        Hvib_adi = state.Hvib_adi
-        Hvib_dia = state.Hvib_dia
-
-        # --------------------------------------------------------
-        # Adiabatic vibronic Hamiltonian
-        # --------------------------------------------------------
-        if Hvib_adi is None and state.H_adi is not None:
-            Hvib_adi = state.H_adi
-            if state.NAC_adi is not None:
-                Hvib_adi = state.H_adi - 1j * state.NAC_adi
-
-        # --------------------------------------------------------
-        # Diabatic vibronic Hamiltonian
-        # --------------------------------------------------------
-        if Hvib_dia is None and state.H_dia is not None:
-            Hvib_dia = state.H_dia
-            if state.NAC_dia is not None:
-                Hvib_dia = state.H_dia - 1j * state.NAC_dia
-
-        return state.replace(
-            Hvib_adi=Hvib_adi,
-            Hvib_dia=Hvib_dia
-        )
-
-    # ============================================================
-    # 5. FULL PIPELINE (MOST USEFUL FUNCTION)
-    # ============================================================
+        if result.get(f"Hvib_{self._rep_suffix(rep)}") is None:
+            self.build_hvib(storage, traj, reps=(rep,))
+        return storage
 
     def build_state(
         self,
@@ -246,26 +97,144 @@ class HamiltonianEngine:
         rep: str = "adiabatic",
         T: Optional[Any] = None,
         apply_ssy: bool = False,
-    ) -> HamiltonianState:
+    ) -> Any:
         """
         Full Hamiltonian construction pipeline.
 
-        This replaces:
-            - compute_adiabatic()
-            - compute_diabatic()
-            - hvib construction
-            - LD transforms
-            - SSY hooks
+        The name is retained as a compatibility alias, but the returned object
+        is TensorStorage, not a separate HamiltonianState snapshot.
         """
 
-        state = self.evaluate(traj, storage, model_fn, rep)
-
-        state = self.build_hvib(state)
+        self.evaluate(traj, storage, model_fn, rep)
 
         if apply_ssy:
-            state = self.apply_ssy(state, traj)
+            self.apply_ssy(storage, traj)
+            self.build_hvib(storage, traj, reps=(rep,))
 
         if T is not None:
-            state = self.apply_ld(state, T)
+            self.apply_ld(storage, traj, T, reps=(rep,))
+            self.build_hvib(storage, traj, reps=(rep,))
 
-        return state
+        return storage
+
+    def active_matrix(
+        self,
+        storage: Any,
+        traj: Any,
+        rep: str = "adiabatic",
+        kind: str = "vibronic",
+    ) -> Any:
+        """Return the active Hamiltonian matrix slice for a trajectory."""
+
+        field = self._field_for(rep, kind)
+        return getattr(storage, field)[traj.id, traj.tbf_ids]
+
+    def apply_ld(
+        self,
+        storage: Any,
+        traj: Any,
+        T: Any,
+        reps: Iterable[str] = ("adiabatic", "diabatic"),
+    ) -> Any:
+        """
+        Apply a local-diabatization rotation to stored Hamiltonian tensors.
+
+        H' = T† H T and NAC' = T† NAC T are written back to TensorStorage.
+        Vibronic Hamiltonians are rebuilt by build_state() after this rotation.
+        """
+
+        bd = self.backend
+        Tdag = bd.conjugate_transpose(T)
+
+        for rep in reps:
+            self._validate_rep(rep)
+            for kind in ("hamiltonian", "nac"):
+                field = self._field_for(rep, kind)
+                matrix = getattr(storage, field)
+                if matrix is None:
+                    continue
+                current = matrix[traj.id, traj.tbf_ids]
+                matrix[traj.id, traj.tbf_ids] = bd.einsum(
+                    "...ij,...jk,...kl->...il",
+                    Tdag,
+                    current,
+                    T,
+                )
+
+        self._write(storage, traj, "basis_transform", T)
+        return storage
+
+    def apply_ssy(self, storage: Any, traj: Any) -> Any:
+        """
+        Placeholder for SSY correction logic.
+
+        Future implementations should modify TensorStorage slices in place.
+        """
+
+        return storage
+
+    def build_hvib(
+        self,
+        storage: Any,
+        traj: Any,
+        reps: Iterable[str] = ("adiabatic", "diabatic"),
+    ) -> Any:
+        """Construct stored vibronic Hamiltonians as Hvib = H - i * NAC."""
+
+        for rep in reps:
+            self._validate_rep(rep)
+            ham = getattr(storage, self._field_for(rep, "hamiltonian"))
+            hvib = getattr(storage, self._field_for(rep, "vibronic"))
+            nac = getattr(storage, self._field_for(rep, "nac"))
+            if ham is None or hvib is None:
+                continue
+
+            idx = traj.tbf_ids
+            value = ham[traj.id, idx]
+            if nac is not None:
+                value = value - 1j * nac[traj.id, idx]
+            hvib[traj.id, idx] = value
+
+        return storage
+
+    def _write(self, storage: Any, traj: Any, storage_name: str, value: Any) -> None:
+        target = getattr(storage, storage_name)
+        if target is None:
+            raise AttributeError(
+                f"TensorStorage field '{storage_name}' has not been allocated"
+            )
+        target[traj.id, traj.tbf_ids] = value
+
+    def _ensure_derivative_storage(self, storage: Any, result: dict) -> None:
+        needs_d1 = any(
+            result.get(name) is not None
+            for name in ("DC1_adi", "DC1_dia", "dH_adi", "dH_dia")
+        )
+        needs_d2 = any(
+            result.get(name) is not None
+            for name in ("d2H_adi", "d2H_dia")
+        )
+        if (needs_d1 or needs_d2) and (
+            storage.dc1_adi is None
+            or storage.dc1_dia is None
+            or storage.d1ham_adi is None
+            or storage.d1ham_dia is None
+            or (needs_d2 and (storage.d2ham_adi is None or storage.d2ham_dia is None))
+        ):
+            storage.allocate_hamiltonian_derivatives(der_lvl=2 if needs_d2 else 1)
+
+    def _field_for(self, rep: str, kind: str) -> str:
+        self._validate_rep(rep)
+        try:
+            return self._REP_FIELDS[rep][kind]
+        except KeyError as exc:
+            raise ValueError(f"Unknown Hamiltonian kind: {kind}") from exc
+
+    @staticmethod
+    def _rep_suffix(rep: str) -> str:
+        return "adi" if rep == "adiabatic" else "dia"
+
+    @staticmethod
+    def _validate_rep(rep: str) -> None:
+        if rep not in ("adiabatic", "diabatic"):
+            raise ValueError("rep must be 'adiabatic' or 'diabatic'")

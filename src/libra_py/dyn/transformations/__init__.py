@@ -7,8 +7,26 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["basis_rotation",
-           "gauge", 
-           "local_diabatization",
-           "orthogonalization",
-          ]
+from .basis_rotation import (
+    amplitudes_adi_to_dia,
+    amplitudes_dia_to_adi,
+    matrix_adi_to_dia,
+    matrix_dia_to_adi,
+    rotate_operator,
+    storage_amplitudes_adi_to_dia,
+    storage_amplitudes_dia_to_adi,
+)
+
+__all__ = [
+    "amplitudes_adi_to_dia",
+    "amplitudes_dia_to_adi",
+    "basis_rotation",
+    "gauge",
+    "local_diabatization",
+    "matrix_adi_to_dia",
+    "matrix_dia_to_adi",
+    "orthogonalization",
+    "rotate_operator",
+    "storage_amplitudes_adi_to_dia",
+    "storage_amplitudes_dia_to_adi",
+]

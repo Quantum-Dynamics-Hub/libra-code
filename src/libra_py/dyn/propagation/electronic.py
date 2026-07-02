@@ -5,7 +5,7 @@ Responsibilities:
 ------------------
 - TDSE integrators (pure kernels)
 - Basis transformations (local diabatization)
-- TDSE orchestration (given HamiltonianState)
+- TDSE orchestration (given TensorStorage)
 - Backend-agnostic linear algebra
 
 NOT responsible for:
@@ -102,8 +102,8 @@ def apply_local_diabatization(C, H, T, backend=backend_default):
 def tdse_step(
     traj,
     storage,
-    state,
-    dt,
+    state_or_dt=None,
+    dt=None,
     backend=backend_default,
     propagator: Propagator = exp_propagator,
     rep: Representation = "adiabatic",
@@ -121,11 +121,12 @@ def tdse_step(
     storage :
         TensorStorage (C, R, etc.)
 
-    state :
-        HamiltonianState from HamiltonianEngine.evaluate()
+    state_or_dt :
+        Either the timestep dt, or a deprecated Hamiltonian snapshot when dt is
+        supplied separately.
 
     dt :
-        time step
+        Time step. If omitted, state_or_dt is treated as dt.
 
     backend :
         linear algebra backend (NumPy / PyTorch / JAX)
@@ -143,6 +144,12 @@ def tdse_step(
         optional local diabatization transform
     """
 
+    state = None
+    if dt is None:
+        dt = state_or_dt
+    else:
+        state = state_or_dt
+
     idx = traj.tbf_ids
 
     # --------------------------------------------------------
@@ -156,21 +163,14 @@ def tdse_step(
     # --------------------------------------------------------
     # 2. Select Hamiltonian representation
     # --------------------------------------------------------
-    if rep == "adiabatic":
-        H = state.H_adi
-        H_prev = getattr(state, "H_adi_prev", None)
-    else:
-        H = state.H_dia
-        H_prev = getattr(state, "H_dia_prev", None)
-
-    # --------------------------------------------------------
-    # 3. Optional vibronic Hamiltonian
-    # --------------------------------------------------------
-    if hamiltonian_type == "vibronic":
-        if rep == "adiabatic":
-            H = state.Hvib_adi
-        else:
-            H = state.Hvib_dia
+    H = _hamiltonian_slice(
+        storage,
+        traj,
+        rep,
+        hamiltonian_type,
+        state=state,
+    )
+    H_prev = _previous_hamiltonian_slice(state, rep)
 
     # --------------------------------------------------------
     # 4. Local diabatization (basis transform)
@@ -206,3 +206,48 @@ def propagate_electronic(*args, **kwargs):
     Alias for tdse_step for backward compatibility.
     """
     return tdse_step(*args, **kwargs)
+
+
+def _hamiltonian_slice(
+    storage,
+    traj,
+    rep: Representation,
+    hamiltonian_type: HamiltonianType,
+    state=None,
+):
+    """Return the Hamiltonian matrix batch for one trajectory."""
+
+    if state is not None and state is not storage:
+        return _legacy_state_matrix(state, rep, hamiltonian_type)
+
+    if rep == "adiabatic":
+        field = "hvib_adi" if hamiltonian_type == "vibronic" else "ham_adi"
+    else:
+        field = "hvib_dia" if hamiltonian_type == "vibronic" else "ham_dia"
+
+    matrix = getattr(storage, field)
+    if matrix is None:
+        raise AttributeError(
+            f"TensorStorage field '{field}' has not been allocated"
+        )
+    return matrix[traj.id, traj.tbf_ids]
+
+
+def _legacy_state_matrix(
+    state,
+    rep: Representation,
+    hamiltonian_type: HamiltonianType,
+):
+    """Read from the former HamiltonianState shape when callers still pass it."""
+
+    if rep == "adiabatic":
+        return state.Hvib_adi if hamiltonian_type == "vibronic" else state.H_adi
+    return state.Hvib_dia if hamiltonian_type == "vibronic" else state.H_dia
+
+
+def _previous_hamiltonian_slice(state, rep: Representation):
+    if state is None:
+        return None
+    if rep == "adiabatic":
+        return getattr(state, "H_adi_prev", None)
+    return getattr(state, "H_dia_prev", None)

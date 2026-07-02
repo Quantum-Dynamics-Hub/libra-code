@@ -23,6 +23,11 @@ adiabatic ↔ diabatic
 symmetry transforms
 representation changes
 
+This is also where TensorStorage wrappers for amplitude representation changes
+belong. Hamiltonian construction can depend on amplitudes only for genuinely
+amplitude-dependent models; routine amplitude basis changes stay here or in
+propagation orchestration.
+
 
 
 🟥 orthogonalization.py
