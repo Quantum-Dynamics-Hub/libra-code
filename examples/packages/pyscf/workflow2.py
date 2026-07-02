@@ -13,18 +13,18 @@ from libra_py.packages.pyscf.methods import es_compute_adi
 
 labels = ["Li", "H"]
 
-coords_angstrom = [
+coords_bohr = [
     0.000, 0.000, 0.0000,
     0.000, 0.000, 1.0000,
 ]
 
-ndof = len(coords_angstrom)
+ndof = len(coords_bohr) * 3
 nat = len(labels)
 
 nstates = 4
 ntraj = 2
 
-q = [x * units.Angst for x in coords_angstrom]
+q = [x * units.Bohr for x in coords_bohr]
 p = [0.0 for _ in range(ndof)]
 
 mass_dict = {"Li": 7.0, "H": 1.0}
@@ -51,26 +51,22 @@ istates = [0.0 for _ in range(nstates)]
 istates[istate] = 1.0
 
 elec_params = {
-    "verbosity": 2,
-    "init_dm_type": 0,
-    "ndia": nstates,
-    "nadi": nstates,
-    "rep": 1,
-    "init_type": 1,
-    "istates": istates,
-    "istate": istate,
+#...
 }
 
-# Electronic-structure engine instanciation
+# Electronic-structure engine instantiation
+# Each trajectory needs its own stateful engine for cached ES history.
 
-es_engine = CASSCF(
-    norbcas=4,
-    nelecas=2,
-    nroots=nstates,
-    basis="sto-3g",
-    charge=0,
-    ntraj=ntraj,
-)
+es_engines = [
+    CASSCF(
+        norbcas=4,
+        nelecas=2,
+        nroots=nstates,
+        basis="sto-3g",
+        charge=0,
+    )
+    for _ in range(ntraj)
+]
 
 # Dynamics parameters
 
@@ -78,24 +74,7 @@ dyn_params = {
     "nsteps": 5,
     "ntraj": ntraj,
     "nstates": nstates,
-    "dt": 41.0,
-    "num_electronic_substeps": 1,
-    "isNBRA": 0,
-    "is_nbra": 0,
-    "progress_frequency": 0.5,
-    "which_adi_states": list(range(nstates)),
-    "which_dia_states": list(range(nstates)),
-    "mem_output_level": 3,
-    "properties_to_save": [
-        "timestep", "time", "q", "p", "f",
-        "Cadi", "Cdia",
-        "Epot_ave", "Ekin_ave", "Etot_ave",
-        "states",
-        "se_pop_adi", "se_pop_dia",
-        "sh_pop_adi", "sh_pop_dia",
-    ],
-    "prefix": "FSSH2_",
-    "prefix2": "FSSH2_",
+#...
 }
 
 fssh2.load(dyn_params)
@@ -108,10 +87,10 @@ model_params = {
     "atom_labels": labels,
     "nstates": nstates,
     "dt": dyn_params["dt"],
-    "es_strategy": es_engine,
+    "es_strategy": es_engines,
 }
 
-# Optional equilibration stage would go here
+# Optional equilibration stage 
 
 # Run NAMD
 

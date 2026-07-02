@@ -55,7 +55,7 @@ class ElectronicStructureStrategy(ABC):
         self,
         nroots: int = 1,
         basis: str = "sto-3g",
-        unit: str = "Angstrom",
+        unit: str = "Bohr",
         charge: int = 0,
     ) -> None:
         if nroots <= 0:
@@ -70,6 +70,13 @@ class ElectronicStructureStrategy(ABC):
         self._cache = None  # for derived class specific in ram or disk caching  
 
     #Public API
+
+    def _set_geom(self, geom: MolecularGeometry) -> None:
+        self._geom = geom
+        self._energies = [None]*len(self._energies)
+        self._gradients = [None]*len(self._gradients)
+        pass
+    
     def get_geometry(self) -> MolecularGeometry:
         if self._geom is None:
             raise ValueError("Geometry has not been set.")
@@ -135,11 +142,6 @@ class ElectronicStructureStrategy(ABC):
     # ------------------------------------------------------------------
     #  Core computation
     # ------------------------------------------------------------------
-    def _set_geom(self, geom: MolecularGeometry) -> None:
-        self._geom = geom
-        self._energies = [None]*len(self._energies)
-        self._gradients = [None]*len(self._gradients)
-        pass
 
     @abstractmethod
     def _compute_energies(self) -> None: 
