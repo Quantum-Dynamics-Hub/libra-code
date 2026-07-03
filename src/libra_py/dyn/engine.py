@@ -1,180 +1,240 @@
-# electronic.py
+from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any, Callable, Literal
+
 import numpy as np
 
+from .control_params import DynControlParams
+from .hamiltonians import HamiltonianEngine
+from .propagation.coupled import (
+    ehrenfest_forces,
+    state_specific_forces,
+    update_density,
+)
+from .propagation.electronic import exp_propagator, tdse_step
+from .propagation.integrators import normalize_dt, run_steps
+from .propagation.nuclear import drift, kick
 
+DynamicsMethod = Literal["adiabatic", "ehrenfest", "tsh"]
+Representation = Literal["adiabatic", "diabatic"]
+ForceMode = Literal["state-specific", "ehrenfest", "none"]
 
-# ============================================================
-# Electronic state container
-# ============================================================
 
 @dataclass
-class ElectronicState:
-    coeff: np.ndarray          # C matrix
-    rho: np.ndarray           # density matrix
-    active_states: np.ndarray
-    energies: np.ndarray
-    nac: np.ndarray
+class StepResult:
+    """Summary of one storage-backed dynamics step."""
+
+    method: str
+    rep: str
+    time: float
+    timestep: int
+    active_states: Any = None
+    forces: Any = None
+    amplitudes: Any = None
 
 
-# ============================================================
-# TSHEngine
-# ============================================================
-
-class TSHEngine:
+@dataclass
+class DynamicsEngine:
     """
-    Full trajectory surface hopping engine.
+    Storage-backed nonadiabatic dynamics driver.
+
+    Supported first-pass methods:
+    - ``adiabatic``: nuclei follow the active adiabatic state; no TDSE update.
+    - ``ehrenfest``: TDSE plus Ehrenfest mean-field nuclear forces.
+    - ``tsh``: TDSE on the active representation plus state-specific forces,
+      but no hopping/decoherence/momentum rescaling yet.
     """
 
-    def __init__(self, ham_engine, params, rng=None):
+    traj: Any
+    storage: Any
+    model_fn: Callable
+    ham_engine: HamiltonianEngine | None = None
+    params: DynControlParams | dict[str, Any] | None = None
+    method: DynamicsMethod | None = None
+    rep: Representation | None = None
+    force_mode: ForceMode | None = None
+    hamiltonian_type: str = "vibronic"
+    propagator: Callable = exp_propagator
+    rng: Any = None
+    time: float = 0.0
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-        self.ham = ham_engine
-        self.params = params
-        self.rng = rng or np.random.default_rng()
+    def __post_init__(self):
+        self.params = self.params or DynControlParams()
+        self.ham = self.ham_engine or HamiltonianEngine(self.storage.backend)
+        self.rng = self.rng or np.random.default_rng()
+        self.method = self.method or self._method_from_params()
+        self.rep = self.rep or self._rep_from_params("tdse")
+        self.force_mode = self.force_mode or self._force_mode_from_params()
+        self._validate()
 
-        # internal state
-        self.state = None
+    def initialize(self, evaluate_hamiltonian: bool = True):
+        """Build the initial Hamiltonian, forces, and density matrices."""
 
-    # --------------------------------------------------------
-    # Initialization
-    # --------------------------------------------------------
+        if evaluate_hamiltonian:
+            self.evaluate_hamiltonian()
+        if self._uses_tdse:
+            update_density(self.storage, self.traj, self.rep)
+        self.compute_forces()
+        return self
 
-    def initialize(self, q, p, electronic_state: ElectronicState):
-        self.q = q
-        self.p = p
-        self.state = electronic_state
+    def step(self, dt) -> StepResult:
+        """Advance one mixed quantum-classical dynamics step."""
 
-        # initial Hamiltonian evaluation
-        self.ham.evaluate(self.q, None, mode=0)
-        self.state = self._sync_from_hamiltonian()
+        dt = normalize_dt(dt)
+        self.evaluate_hamiltonian()
+        self.compute_forces()
 
-    # --------------------------------------------------------
-    # Main propagation step
-    # --------------------------------------------------------
+        kick(self.storage, self.traj, 0.5 * dt)
+        drift(self.storage, self.traj, dt)
 
-    def step(self, dt):
+        self.evaluate_hamiltonian()
+        if self._uses_tdse:
+            self.propagate_electronic(dt)
+        forces = self.compute_forces()
+        kick(self.storage, self.traj, 0.5 * dt, forces)
 
-        # ====================================================
-        # 1. Nuclear propagation (half step)
-        # ====================================================
-        self._propagate_nuclei_half(dt)
+        self.evaluate_hamiltonian()
+        if self._uses_tdse:
+            update_density(self.storage, self.traj, self.rep)
 
-        # ====================================================
-        # 2. Hamiltonian update (q changed)
-        # ====================================================
-        ham_state = self.ham.evaluate(self.q, None, mode=0)
-        self._update_from_ham(ham_state)
+        self.time += dt
+        self.storage.timestep += 1
+        return self._result(forces)
 
-        # ====================================================
-        # 3. Electronic propagation (coefficients)
-        # ====================================================
-        self._propagate_electronic(dt)
+    def run(self, nsteps: int, dt):
+        """Run several steps and return their summaries."""
 
-        # ====================================================
-        # 4. Momentum update (forces depend on electrons)
-        # ====================================================
-        self._compute_forces()
-        self._propagate_momenta_half(dt)
+        return run_steps(self.step, nsteps, dt)
 
-        # ====================================================
-        # 5. Hamiltonian update (vibronic correction)
-        # ====================================================
-        ham_state = self.ham.evaluate(self.q, self.p, mode=1)
-        self._update_from_ham(ham_state)
+    def evaluate_hamiltonian(self):
+        """Evaluate the Hamiltonian model into TensorStorage."""
 
-        # ====================================================
-        # 6. Hopping decision
-        # ====================================================
-        self._surface_hopping(dt)
+        return self.ham.build_state(
+            self.traj,
+            self.storage,
+            self.model_fn,
+            rep=self.rep,
+            apply_ssy=bool(_param(self.params, "do_ssy", 0)),
+        )
 
-        # ====================================================
-        # 7. Final consistency update
-        # ====================================================
-        ham_state = self.ham.evaluate(self.q, self.p, mode=1)
-        self._update_from_ham(ham_state)
+    def propagate_electronic(self, dt):
+        """Propagate active amplitudes with the TD-SE solver."""
 
-    # --------------------------------------------------------
-    # Nuclear propagation
-    # --------------------------------------------------------
+        return tdse_step(
+            self.traj,
+            self.storage,
+            dt,
+            backend=self.storage.backend,
+            propagator=self.propagator,
+            rep=self.rep,
+            hamiltonian_type=self.hamiltonian_type,
+        )
 
-    def _propagate_nuclei_half(self, dt):
-        self.q += 0.5 * dt * self.p
+    def compute_forces(self):
+        """Compute and store active nuclear forces."""
 
-    def _propagate_momenta_half(self, dt):
-        self.p += 0.5 * dt * self.state_forces()
+        idx = self.traj.tbf_ids
+        if self.force_mode == "none":
+            forces = np.zeros_like(self.storage.f[self.traj.id, idx])
+        elif self.force_mode == "ehrenfest":
+            forces = ehrenfest_forces(
+                self.storage,
+                self.traj,
+                rep=self.rep,
+                option=int(_param(self.params, "ehrenfest_force_option", 0)),
+                gamma=_param(self.params, "sqc_gamma", 0.0),
+            )
+        else:
+            forces = state_specific_forces(self.storage, self.traj, rep="adiabatic")
 
-    # --------------------------------------------------------
-    # Electronic propagation
-    # --------------------------------------------------------
+        self.storage.f[self.traj.id, idx] = forces
+        return self.storage.f[self.traj.id, idx]
 
-    def _propagate_electronic(self, dt):
-        C = self.state.coeff
+    @property
+    def _uses_tdse(self) -> bool:
+        return self.method in ("ehrenfest", "tsh")
 
-        H = self.state.energies
-        NAC = self.state.nac
+    def _result(self, forces):
+        idx = self.traj.tbf_ids
+        amplitudes = (
+            self.storage.ampl_adi[self.traj.id, idx]
+            if self.rep == "adiabatic"
+            else self.storage.ampl_dia[self.traj.id, idx]
+        )
+        active = (
+            self.storage.act_states[self.traj.id, idx]
+            if self.rep == "adiabatic"
+            else self.storage.act_states_dia[self.traj.id, idx]
+        )
+        return StepResult(
+            method=self.method,
+            rep=self.rep,
+            time=self.time,
+            timestep=self.storage.timestep,
+            active_states=np.array(active, copy=True),
+            forces=np.array(forces, copy=True),
+            amplitudes=np.array(amplitudes, copy=True),
+        )
 
-        # placeholder TDSE propagation
-        dC = -1j * H @ C * dt + NAC @ C * dt
-        self.state.coeff += dC
+    def _method_from_params(self) -> DynamicsMethod:
+        force_method = int(_param(self.params, "force_method", 1))
+        tsh_method = int(_param(self.params, "tsh_method", -1))
+        if tsh_method >= 0:
+            return "tsh"
+        if force_method == 2:
+            return "ehrenfest"
+        return "adiabatic"
 
-    # --------------------------------------------------------
-    # Forces
-    # --------------------------------------------------------
+    def _force_mode_from_params(self) -> ForceMode:
+        if self.method == "ehrenfest":
+            return "ehrenfest"
+        force_method = int(_param(self.params, "force_method", 1))
+        if force_method == 0:
+            return "none"
+        if force_method == 2:
+            return "ehrenfest"
+        return "state-specific"
 
-    def _compute_forces(self):
-        # placeholder
-        self.forces = -np.real(self.state.nac)
+    def _rep_from_params(self, use: str) -> Representation:
+        name = "rep_tdse" if use == "tdse" else "rep_force"
+        return "adiabatic" if int(_param(self.params, name, 1)) in (1, 3, 4) else "diabatic"
 
-    def state_forces(self):
-        return self.forces
+    def _validate(self):
+        if self.method not in ("adiabatic", "ehrenfest", "tsh"):
+            raise ValueError("method must be 'adiabatic', 'ehrenfest', or 'tsh'")
+        if self.rep not in ("adiabatic", "diabatic"):
+            raise ValueError("rep must be 'adiabatic' or 'diabatic'")
+        if self.force_mode not in ("state-specific", "ehrenfest", "none"):
+            raise ValueError("force_mode must be 'state-specific', 'ehrenfest', or 'none'")
+        if self.method == "adiabatic" and self.force_mode == "ehrenfest":
+            raise ValueError("adiabatic dynamics cannot use Ehrenfest forces")
+        if self.force_mode == "state-specific" and self.rep != "adiabatic":
+            raise NotImplementedError("state-specific forces currently require adiabatic rep")
 
-    # --------------------------------------------------------
-    # Hopping
-    # --------------------------------------------------------
 
-    def _surface_hopping(self, dt):
-        """
-        Minimal FSSH-like logic placeholder.
-        """
+class TSHEngine(DynamicsEngine):
+    """
+    Compatibility alias for TD-SE surface-hopping preparation.
 
-        pops = np.abs(self.state.coeff) ** 2
-        active = self.state.active_states
+    Hopping probabilities and momentum rescaling are intentionally not active
+    yet; this class propagates amplitudes and state-specific nuclear motion.
+    """
 
-        g = self._compute_hopping_probabilities()
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("method", "tsh")
+        kwargs.setdefault("force_mode", "state-specific")
+        super().__init__(*args, **kwargs)
 
-        new_states = active.copy()
 
-        for traj in range(len(active)):
-            r = self.rng.random()
-            cum = 0.0
+def run_dynamics(*args, **kwargs):
+    """Convenience constructor for a storage-backed dynamics engine."""
 
-            for j in range(len(pops)):
-                if j == active[traj]:
-                    continue
-                cum += g[traj, j]
+    return DynamicsEngine(*args, **kwargs)
 
-                if r < cum:
-                    new_states[traj] = j
-                    break
 
-        self.state.active_states = new_states
-
-    # --------------------------------------------------------
-    # hopping probabilities (placeholder)
-    # --------------------------------------------------------
-
-    def _compute_hopping_probabilities(self):
-        nst = len(self.state.coeff)
-        return np.abs(np.random.randn(nst, nst))
-
-    # --------------------------------------------------------
-    # sync helpers
-    # --------------------------------------------------------
-
-    def _sync_from_hamiltonian(self):
-        return self.ham.backend.get_state()
-
-    def _update_from_ham(self, ham_state):
-        self.state.energies = ham_state.energies
-        self.state.nac = ham_state.nac
+def _param(params, name: str, default=None):
+    if isinstance(params, dict):
+        return params.get(name, default)
+    return getattr(params, name, default)
