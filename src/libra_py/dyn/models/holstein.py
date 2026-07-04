@@ -10,6 +10,16 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class Holstein2Model(AnalyticalHamiltonianModel):
+    """
+    Generic Holstein model with nearest-neighbor constant electronic coupling.
+
+    ``Q[0]=x``. Each diabatic state is a displaced harmonic surface
+    ``E_n + 1/2 k_n (x-x_n)^2``. Neighboring states are coupled by the constant
+    ``V``. State count and surfaces come from ``E_n``, ``x_n``, and ``k_n``.
+
+    Legacy source: ``libra_py.models.Holstein.Holstein2``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -19,6 +29,15 @@ class Holstein2Model(AnalyticalHamiltonianModel):
 
 @dataclass
 class Holstein3Model(AnalyticalHamiltonianModel):
+    """
+    Generic Holstein model with distance-indexed constant couplings.
+
+    Diagonal surfaces are displaced harmonic potentials. Off-diagonal coupling
+    between states ``i`` and ``j`` is selected from ``V_n[abs(i-j)-1]``.
+
+    Legacy source: ``libra_py.models.Holstein.Holstein3``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -28,6 +47,16 @@ class Holstein3Model(AnalyticalHamiltonianModel):
 
 @dataclass
 class Holstein4Model(AnalyticalHamiltonianModel):
+    """
+    Generic Holstein model with a full coupling matrix.
+
+    Diagonal surfaces are displaced harmonic potentials. Off-diagonal elements
+    are read directly from ``V[i][j]``. This is useful when couplings do not
+    depend only on state-index distance.
+
+    Legacy source: ``libra_py.models.Holstein.Holstein4``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -37,6 +66,16 @@ class Holstein4Model(AnalyticalHamiltonianModel):
 
 @dataclass
 class Holstein5Model(AnalyticalHamiltonianModel):
+    """
+    Holstein model with Gaussian off-diagonal couplings.
+
+    Diagonal surfaces are displaced harmonic potentials
+    ``E_n + 1/2 k_n (x-x_n)^2``. Off-diagonal terms are
+    ``V_ij exp[-alpha_ij (x-x_nm,ij)^2]`` with analytical derivatives.
+
+    Legacy source: ``libra_py.models.Holstein.Holstein5``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):

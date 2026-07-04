@@ -8,7 +8,17 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class LibraModel1(AnalyticalHamiltonianModel):
-    """Spin-boson/Marcus two-state model from ``libra_py.models.Libra.model1``."""
+    """
+    Libra internal spin-boson/Marcus two-state model.
+
+    ``Q[0]=x``. The diabatic matrix is
+    ``[[k x^2, V], [V, k(x-x0)^2 + D]]`` with analytical derivatives.
+    ``x0`` is the displacement between diabatic minima, ``k`` is the force
+    constant, ``D`` is the energy bias, and ``V`` is the electronic coupling.
+
+    Legacy source: ``libra_py.models.Libra.model1``. The same form is related
+    in the legacy module to the Landry-Subotnik spin-boson parameterization.
+    """
 
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp

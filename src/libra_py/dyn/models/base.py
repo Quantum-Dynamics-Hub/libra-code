@@ -11,13 +11,39 @@ class AnalyticalHamiltonianModel:
     """
     Base class for backend-aware analytical Hamiltonian models.
 
-    Subclasses implement ``diabatic(Q)`` with the exact-dynamics convention
-    ``Q.shape == (ndof, *grid_shape)`` and return matrices with trailing
-    electronic dimensions ``(*grid_shape, nstates, nstates)``. The same object
-    is callable by ``HamiltonianEngine`` for trajectory slices. Analytical
-    models define their native representation only; representation changes,
-    derivative couplings, velocity projection, and vibronic Hamiltonians belong
-    to the Hamiltonian/transform layers.
+    Conventions
+    -----------
+    Subclasses implement ``diabatic_with_derivatives(Q, params)`` with the
+    exact-dynamics coordinate convention ``Q.shape == (ndof, *grid_shape)``.
+    The returned tensors use trailing electronic dimensions:
+
+    ``H_dia.shape == (*grid_shape, nstates, nstates)``
+        Diabatic potential/Hamiltonian matrix.
+
+    ``dH_dia.shape == (*grid_shape, ndof, nstates, nstates)``
+        First spatial derivatives ``dH_dia[..., a, i, j] = dH_ij/dQ_a``.
+
+    The same object is callable by ``HamiltonianEngine`` for trajectory slices.
+    In that mode ``R.shape == (ntbf, ndof)`` is converted internally to the
+    exact-style ``Q.shape == (ndof, ntbf)``.
+
+    Analytical models define only their native diabatic representation.
+    Adiabatic energies, derivative couplings, velocity-projected NACs,
+    vibronic Hamiltonians, gauge fixes, and basis rotations belong to the
+    Hamiltonian and transformation layers.
+
+    Model result dictionary
+    -----------------------
+    ``evaluate`` returns ``H_dia``, ``dH_dia``, zero ``DC1_dia``, and identity
+    ``S_dia``. This mirrors the legacy ``libra_py.models`` objects
+    ``ham_dia``, ``d1ham_dia``, ``dc1_dia``, and ``ovlp_dia`` but uses
+    backend-friendly arrays rather than Libra C++ matrix wrappers.
+
+    Units
+    -----
+    Parameters and coordinates are in atomic units unless a model docstring
+    explicitly states otherwise. Constants translated from older model files
+    are converted during parameter construction.
     """
 
     params: dict[str, Any] = field(default_factory=dict)
@@ -62,7 +88,17 @@ class AnalyticalHamiltonianModel:
         return self.evaluate(Q, params=effective_params)
 
     def evaluate(self, Q, params=None) -> dict[str, Any]:
-        """Return native diabatic model data for exact-style ``Q``."""
+        """
+        Return native diabatic model data for exact-style ``Q``.
+
+        Parameters
+        ----------
+        Q
+            Coordinate tensor with first axis enumerating nuclear degrees of
+            freedom. Remaining axes are arbitrary grid or batch dimensions.
+        params
+            Optional parameter overrides merged with ``self.params``.
+        """
 
         effective_params = self._merged_params(params)
         H_dia, dH_dia = self.diabatic_with_derivatives(Q, effective_params)
@@ -74,7 +110,7 @@ class AnalyticalHamiltonianModel:
         }
 
     def diabatic(self, Q, params=None):
-        """Return the diabatic potential matrix for exact-dynamics grids."""
+        """Return only ``H_dia`` for exact-dynamics coordinate grids."""
 
         return self.diabatic_with_derivatives(Q, self._merged_params(params))[0]
 

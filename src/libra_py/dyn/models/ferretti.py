@@ -8,6 +8,21 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class FerrettiModel(AnalyticalHamiltonianModel):
+    """
+    Ferretti-Granucci-Lami-Persico-Villani two-state conical-intersection model.
+
+    Coordinates are ``Q[0]=X`` and ``Q[1]=Y``. The diagonal elements are
+    displaced harmonic wells in ``X`` with a common harmonic ``Y`` term:
+    ``H00 = 1/2 Kx (X-X1)^2 + 1/2 Ky Y^2`` and
+    ``H11 = 1/2 Kx (X-X2)^2 + 1/2 Ky Y^2 + Delta``. The coupling is
+    ``H01 = gamma Y exp[-alpha (X-X3)^2] exp[-beta Y^2]``, odd in ``Y`` and
+    localized in ``X``.
+
+    Reference: A. Ferretti, G. Granucci, A. Lami, M. Persico, and G. Villani,
+    J. Chem. Phys. 1996, 104, 5517-5527, https://doi.org/10.1063/1.471791.
+    Legacy source: ``libra_py.models.Ferretti``.
+    """
+
     ndof: int = 2
     nstates: int = 2
 

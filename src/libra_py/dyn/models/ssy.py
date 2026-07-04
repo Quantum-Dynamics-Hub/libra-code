@@ -8,6 +8,24 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class SSYModel(AnalyticalHamiltonianModel):
+    """
+    Shenvi-Subotnik-Yang two-state, two-dimensional model.
+
+    Coordinates are ``Q[0]=x`` and ``Q[1]=y``. The first diabatic state has
+    constant energy ``H00=-E0``. The second has a tilted Gaussian well in the
+    rotated coordinates ``x+y`` and ``x-y``. The off-diagonal coupling is
+    another anisotropic Gaussian:
+
+    ``H11 = -A exp[-B(0.75(x+y)^2 + 0.25(x-y)^2)]``
+    ``H01 = C exp[-D(0.25(x+y)^2 + 0.75(x-y)^2)]``.
+
+    Analytical derivatives with respect to both coordinates are returned.
+
+    Reference: N. Shenvi, J. E. Subotnik, and W. Yang,
+    J. Chem. Phys. 2011, 135, 024101. Legacy source:
+    ``libra_py.models.SSY.SSY``.
+    """
+
     ndof: int = 2
     nstates: int = 2
 

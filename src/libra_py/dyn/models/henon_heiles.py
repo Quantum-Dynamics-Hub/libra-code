@@ -8,6 +8,21 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class HenonHeilesModel(AnalyticalHamiltonianModel):
+    """
+    Two-dimensional Henon-Heiles potential.
+
+    ``Q[0]=x`` and ``Q[1]=y``. The single-state potential is
+
+    ``V = 1/2(x^2+y^2) + lam(x y^2 - x^3/3) + lam^2 (x^2+y^2)^2/16``.
+
+    The returned derivative tensor contains the analytical gradients with
+    respect to ``x`` and ``y``. The diabatic overlap is the scalar identity and
+    derivative couplings are zero.
+
+    Reference: E. Sim and N. Makri, J. Chem. Phys. 1995, 102, 5616-5625.
+    Legacy source: ``libra_py.models.Henon_Heiles.Henon_Heiles``.
+    """
+
     ndof: int = 2
     nstates: int = 1
 

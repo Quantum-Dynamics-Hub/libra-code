@@ -10,7 +10,22 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class FaistLevineModel(AnalyticalHamiltonianModel):
-    """Faist-Levine two-state alkali-halogen collision model."""
+    """
+    Faist-Levine two-state alkali-halogen collision model.
+
+    ``Q[0]=R`` is the internuclear separation. The covalent state includes an
+    exponential repulsion with inverse-power attraction. The ionic state adds
+    exponential repulsion, dispersion, Coulomb attraction ``-1/R``,
+    polarizability corrections, and threshold shift ``E_th``. The coupling is
+    ``H01 = A exp(-R/rho)``. Analytical derivatives with respect to ``R`` are
+    returned.
+
+    Use ``faist_levine_nai_params`` or ``faist_levine_lii_params`` for the
+    translated NaI/LiI parameter sets.
+
+    Reference: M. B. Faist and R. D. Levine, J. Chem. Phys. 1976, 64, 2953.
+    Legacy source: ``libra_py.models.Faist_Levine``.
+    """
 
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp

@@ -8,7 +8,18 @@ from ._helpers import two_state_with_derivatives
 
 @dataclass
 class TullyModel1(AnalyticalHamiltonianModel):
-    """Tully simple avoided crossing model."""
+    """
+    Tully model 1: simple avoided crossing (SAC).
+
+    ``Q[0] = x``. The diabatic Hamiltonian is
+    ``H00 = A(1-exp(-Bx))`` for ``x>0`` and ``H00 = -A(1-exp(Bx))`` for
+    ``x<=0``, ``H11 = -H00``, and ``H01 = C exp(-D x^2)``. Derivatives are the
+    analytical ``dH/dx``. Defaults are the canonical Tully parameters in
+    atomic units.
+
+    Reference: J. C. Tully, J. Chem. Phys. 1990, 93, 1061.
+    Legacy source: ``libra_py.models.Tully.Tully1_py``.
+    """
 
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
@@ -32,7 +43,16 @@ class TullyModel1(AnalyticalHamiltonianModel):
 
 @dataclass
 class TullyModel2(AnalyticalHamiltonianModel):
-    """Tully dual avoided crossing model."""
+    """
+    Tully model 2: dual avoided crossing (DAC).
+
+    ``Q[0] = x``. The diabatic Hamiltonian is ``H00 = 0``,
+    ``H11 = E - A exp(-B x^2)``, and ``H01 = C exp(-D x^2)``. The parameter
+    name ``E0`` is accepted as an alias for ``E``. Derivatives are analytical.
+
+    Reference: J. C. Tully, J. Chem. Phys. 1990, 93, 1061.
+    Legacy source: ``libra_py.models.Tully.Tully2``.
+    """
 
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
@@ -57,7 +77,17 @@ class TullyModel2(AnalyticalHamiltonianModel):
 
 @dataclass
 class TullyModel3(AnalyticalHamiltonianModel):
-    """Tully extended coupling with reflection model."""
+    """
+    Tully model 3: extended coupling with reflection (ECWR).
+
+    ``Q[0] = x``. The diagonal elements are constant, ``H00=A`` and
+    ``H11=-A``. The off-diagonal coupling is exponential on the left,
+    ``B exp(Cx)``, and approaches ``2B`` on the right as
+    ``B(2-exp(-Cx))``. The derivative tensor stores ``dH01/dx``.
+
+    Reference: J. C. Tully, J. Chem. Phys. 1990, 93, 1061.
+    Legacy source: ``libra_py.models.Tully.Tully3``.
+    """
 
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp

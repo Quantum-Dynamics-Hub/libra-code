@@ -10,6 +10,23 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class MorseModel(AnalyticalHamiltonianModel):
+    """
+    Multi-state displaced Morse potential model.
+
+    ``Q[0]=x``. Each diabatic diagonal is
+    ``E_i + D_i [1 - exp(-alpha_i (x-x_i))]^2``. Off-diagonal elements use
+    Gaussian couplings
+    ``V_ij exp[-beta_ij (x-x_nm,ij)^2]``. Analytical derivatives are returned
+    for all diagonal and off-diagonal elements.
+
+    The default is a minimal three-state placeholder; use
+    ``coronado_xing_miller_params(1)`` for the translated literature set.
+
+    Reference: E. A. Coronado, J. Xing, and W. H. Miller,
+    Chem. Phys. Lett. 2001, 349, 521-529.
+    Legacy source: ``libra_py.models.Morse``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -48,6 +65,11 @@ class MorseModel(AnalyticalHamiltonianModel):
 
 
 def coronado_xing_miller_params(model_index):
+    """
+    Return the Coronado-Xing-Miller three-state Morse parameter set.
+
+    Currently only ``model_index=1`` is provided in the dyn model layer.
+    """
     params = {}
     if model_index == 1:
         params.update(

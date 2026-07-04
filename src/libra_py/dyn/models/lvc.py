@@ -8,6 +8,21 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class LVCModel(AnalyticalHamiltonianModel):
+    """
+    Two-state linear vibronic coupling model.
+
+    Coordinates ``Q[n]`` are mass-weighted or physical normal-mode coordinates
+    depending on the supplied ``mass`` values. Each mode contributes a common
+    harmonic bath term ``1/2 m_n omega_n^2 q_n^2`` to both diabats, linear
+    diagonal shifts ``sqrt(m_n) d1[n] q_n`` and ``sqrt(m_n) d2[n] q_n``, and
+    off-diagonal linear coupling ``sqrt(m_n) coup[n] q_n``. ``Delta1`` and
+    ``Delta2`` are the electronic offsets.
+
+    This is the array-backed translation of ``libra_py.models.LVC.LVC``.
+    Legacy references include Tully and Frisch, J. Chem. Phys. 2011,
+    135, 234106, and Sun and Geva, J. Chem. Phys. 2016, 144, 244105.
+    """
+
     nstates: int = 2
 
     def diabatic_with_derivatives(self, Q, params):

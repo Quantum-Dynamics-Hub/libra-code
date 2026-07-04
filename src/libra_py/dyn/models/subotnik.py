@@ -8,6 +8,21 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class SubotnikDumbbellModel(AnalyticalHamiltonianModel):
+    """
+    Subotnik-Shenvi dumbbell geometry.
+
+    ``Q[0] = x``. This two-state Hamiltonian is a symmetrized version of
+    Tully's extended-coupling-with-reflection model. The diagonal elements are
+    ``H00=A`` and ``H11=-A``. The coupling is piecewise exponential with two
+    centers at ``+-Z`` and scale ``C``; its value and derivative are continuous
+    across the central region.
+
+    Parameters ``A``, ``B``, ``C``, and ``Z`` follow the legacy defaults.
+    Reference: J. E. Subotnik and N. Shenvi, J. Chem. Phys. 2011,
+    134, 024105. Also see J. Xu and L. Wang, J. Chem. Phys. 2019,
+    150, 164101.
+    """
+
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
         p = merged_params(params, {"A": 0.0006, "B": 0.1, "C": 0.9, "Z": 10.0})
@@ -27,6 +42,19 @@ class SubotnikDumbbellModel(AnalyticalHamiltonianModel):
 
 @dataclass
 class SubotnikDoubleArchModel(AnalyticalHamiltonianModel):
+    """
+    Subotnik-Shenvi double-arch geometry.
+
+    ``Q[0] = x``. The diagonal terms are ``H00=A`` and ``H11=-A``. The
+    off-diagonal element is a piecewise combination of exponentials arranged to
+    produce two coupling arches between ``-Z`` and ``Z``. The derivative tensor
+    stores the analytical derivative of the coupling with respect to ``x``.
+
+    Reference: J. E. Subotnik and N. Shenvi, J. Chem. Phys. 2011,
+    134, 024105. Also see J. Xu and L. Wang, J. Chem. Phys. 2019,
+    150, 164101.
+    """
+
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
         p = merged_params(params, {"A": 0.0006, "B": 0.1, "C": 0.9, "Z": 4.0})

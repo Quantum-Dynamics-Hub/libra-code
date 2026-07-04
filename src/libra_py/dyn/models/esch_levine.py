@@ -10,6 +10,17 @@ from .base import AnalyticalHamiltonianModel
 
 @dataclass
 class EschLevineLinearModel(AnalyticalHamiltonianModel):
+    """
+    General M-state linear diabatic crossing model.
+
+    ``Q[0]=x``. Each matrix element is linear in the coordinate:
+    ``H_ij(x) = V_ij + w_ij x`` and ``dH_ij/dx = w_ij``. The number of states
+    is taken from ``params["nstates"]`` and the matrices ``V`` and ``w``.
+
+    This is the flexible linear-crossing form in the legacy Esch-Levine module.
+    Legacy source: ``libra_py.models.Esch_Levine.general``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -30,6 +41,24 @@ class EschLevineLinearModel(AnalyticalHamiltonianModel):
 
 @dataclass
 class EschLevineJCP2020Model(AnalyticalHamiltonianModel):
+    """
+    Esch-Levine JCP 2020 multi-state crossing model.
+
+    ``Q[0]=x``. State 0 has slope ``-w0``. States ``i>=1`` have slope ``w1``
+    and offsets ``-i*delta`` with an optional extra shift ``eps`` for
+    ``i >= i_crit``. State 0 is coupled uniformly to every other state by
+    ``V``; other off-diagonal elements are zero.
+
+    Parameters
+    ----------
+    ``w0``, ``w1``, ``V``, ``eps``, ``i_crit``, ``nstates``, and ``delta``.
+    ``esch_levine_jcp2020_params`` returns the legacy parameter sets.
+
+    Reference: M. P. Esch and B. G. Levine, J. Chem. Phys. 2020,
+    153, 114104, https://doi.org/10.1063/5.0022529.
+    Legacy source: ``libra_py.models.Esch_Levine``.
+    """
+
     ndof: int = 1
 
     def diabatic_with_derivatives(self, Q, params):
@@ -51,6 +80,12 @@ class EschLevineJCP2020Model(AnalyticalHamiltonianModel):
 
 
 def esch_levine_jcp2020_params(set_index):
+    """
+    Return parameter sets from the legacy Esch-Levine JCP 2020 examples.
+
+    ``set_index`` in ``1..6`` selects the number of states, state spacing, and
+    shifted manifold described in the original helper.
+    """
     if set_index == 1:
         return {"w0": 0.25, "w1": 0.025, "V": 0.005, "eps": 0.0, "i_crit": 0, "nstates": 9, "delta": 0.01}
     if set_index == 2:
