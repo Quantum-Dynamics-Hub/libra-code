@@ -1,0 +1,4 @@
+__pycache__/
+*_outputs/
+tully_outputs/
+model_gallery_outputs/

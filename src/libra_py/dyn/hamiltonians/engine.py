@@ -85,6 +85,8 @@ class HamiltonianEngine:
                 continue
             self._write(storage, traj, storage_name, value)
 
+        self._derive_missing_representation_data(storage, traj, result, rep)
+
         if result.get(f"Hvib_{self._rep_suffix(rep)}") is None:
             self.build_hvib(storage, traj, reps=(rep,))
         return storage
@@ -223,6 +225,42 @@ class HamiltonianEngine:
         ):
             storage.allocate_hamiltonian_derivatives(der_lvl=2 if needs_d2 else 1)
 
+    def _derive_missing_representation_data(
+        self,
+        storage: Any,
+        traj: Any,
+        result: dict,
+        rep: str,
+    ) -> None:
+        suffix = self._rep_suffix(rep)
+
+        if rep == "adiabatic" and result.get("H_adi") is None and result.get("H_dia") is not None:
+            from .adiabatic import compute_adiabatic_from_diabatic
+
+            der_lvl = 1 if _has_derivative_data(result, "dia") else 0
+            compute_adiabatic_from_diabatic(storage, traj, der_lvl=der_lvl)
+
+        if result.get(f"NAC_{suffix}") is None:
+            self._build_velocity_projected_nac(storage, traj, rep)
+
+    def _build_velocity_projected_nac(self, storage: Any, traj: Any, rep: str) -> None:
+        dc1_name = f"dc1_{self._rep_suffix(rep)}"
+        nac_name = self._field_for(rep, "nac")
+        dc1 = getattr(storage, dc1_name, None)
+        nac = getattr(storage, nac_name, None)
+        if dc1 is None or nac is None or storage.p is None:
+            return
+
+        idx = traj.tbf_ids
+        velocity = storage.p[traj.id, idx]
+        if getattr(storage, "iM", None) is not None:
+            velocity = velocity * storage.iM[traj.id, idx]
+        nac[traj.id, idx] = self.backend.einsum(
+            "...d,...dij->...ij",
+            velocity,
+            dc1[traj.id, idx],
+        )
+
     def _field_for(self, rep: str, kind: str) -> str:
         self._validate_rep(rep)
         try:
@@ -238,3 +276,11 @@ class HamiltonianEngine:
     def _validate_rep(rep: str) -> None:
         if rep not in ("adiabatic", "diabatic"):
             raise ValueError("rep must be 'adiabatic' or 'diabatic'")
+
+
+def _has_derivative_data(result: dict, suffix: str) -> bool:
+    return (
+        result.get(f"DC1_{suffix}") is not None
+        or result.get(f"dH_{suffix}") is not None
+        or result.get(f"d2H_{suffix}") is not None
+    )
