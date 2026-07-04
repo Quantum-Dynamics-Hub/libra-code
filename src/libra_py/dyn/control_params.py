@@ -105,6 +105,12 @@ class DynControlParams:
     #: gamma = 0 → Ehrenfest [default]
     sqc_gamma: float = 0.0
 
+    #: Ehrenfest force expression option
+    #: 0 uses the standard mean-field adiabatic force currently implemented
+    #: by the dyn Hamiltonian helpers. 1 includes the off-diagonal/gamma term
+    #: used by MMST/SQC-style force expressions.
+    ehrenfest_force_option: int = 0
+
     #: Enforce nuclear motion on a fixed electronic state
     #: 0 no [default]
     #: 1 yes
@@ -699,5 +705,4 @@ class DynControlParams:
                 #raise AttributeError(f"Unknown parameter '{k}'")
             setattr(self, k, v)
         self.sanity_check()
-
 

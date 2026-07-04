@@ -17,8 +17,13 @@ from libra_py.dyn.observables import ObservableConfig
 from libra_py.dyn.savers import (
     FaultTolerantSaver,
     HDF5Saver,
+    HDF5TimeSeriesSaver,
+    JSONLinesSaver,
     load_hdf5_steps,
+    load_hdf5_timeseries,
+    load_json_steps,
     load_saved_steps,
+    stack_saved_observables,
 )
 
 
@@ -140,10 +145,65 @@ def test_hdf5_saver_accepts_directory_path_without_filename():
     assert len(load_hdf5_steps(output_dir)) == 1
 
 
+def test_hdf5_saver_accepts_less_frequent_flush_options():
+    output_dir = _prepare_output_dir("hdf_less_frequent_flush")
+
+    with HDF5Saver(
+        output_dir=output_dir,
+        filename="less_flush.hdf",
+        durable=False,
+        flush_stride=10,
+    ) as saver:
+        saver.save_step(0, {"time": 0.0})
+        saver.save_step(1, {"time": 0.5})
+
+    records = load_hdf5_steps(output_dir=output_dir, filename="less_flush.hdf")
+    assert len(records) == 2
+    np.testing.assert_allclose([record["data"]["time"] for record in records], [0.0, 0.5])
+
+
+def test_hdf5_timeseries_saver_appends_chunked_datasets():
+    output_dir = _prepare_output_dir("hdf_timeseries")
+
+    with HDF5TimeSeriesSaver(output_dir=output_dir, filename="timeseries.hdf") as saver:
+        saver.save_step(0, {"time": 0.0, "populations": np.array([1.0, 0.0])})
+        saver.save_step(1, {"time": 0.5, "populations": np.array([0.8, 0.2])})
+
+    data = load_hdf5_timeseries(output_dir=output_dir, filename="timeseries.hdf")
+    np.testing.assert_allclose(data["time"], [0.0, 0.5])
+    np.testing.assert_allclose(data["populations"], [[1.0, 0.0], [0.8, 0.2]])
+
+
+def test_json_lines_saver_writes_human_readable_records():
+    output_dir = _prepare_output_dir("json_lines")
+
+    with JSONLinesSaver(output_dir=output_dir, filename="observables.jsonl") as saver:
+        saver.save_step(0, {"time": 0.0, "populations": np.array([1.0, 0.0])})
+        saver.save_step(1, {"time": 0.5, "populations": np.array([0.8, 0.2])})
+
+    records = load_json_steps(output_dir=output_dir, filename="observables.jsonl")
+    assert len(records) == 2
+    assert records[1]["data"]["time"] == 0.5
+    assert records[1]["data"]["populations"] == [0.8, 0.2]
+
+
+def test_stack_saved_observables_handles_loaded_records():
+    records = [
+        {"data": {"time": 0.0, "populations": np.array([1.0, 0.0]), "q": np.array([[0.0]])}},
+        {"data": {"time": 0.5, "populations": np.array([0.8, 0.2]), "q": np.array([[1.0]])}},
+    ]
+
+    stacked = stack_saved_observables(records, keys=("time", "populations", "q"))
+
+    np.testing.assert_allclose(stacked["time"], [0.0, 0.5])
+    np.testing.assert_allclose(stacked["populations"], [[1.0, 0.0], [0.8, 0.2]])
+    assert stacked["q"].shape == (2, 1, 1)
+
+
 def _prepare_output_dir(name):
     output_dir = OUTPUT_ROOT / name
     output_dir.mkdir(parents=True, exist_ok=True)
-    for pattern in ("manifest.jsonl", "step_*.npz", "*.hdf", ".step_*.tmp"):
+    for pattern in ("manifest.jsonl", "step_*.npz", "*.hdf", "*.jsonl", ".step_*.tmp"):
         for path in output_dir.glob(pattern):
             path.unlink()
     return output_dir

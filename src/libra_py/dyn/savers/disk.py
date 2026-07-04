@@ -137,6 +137,8 @@ class HDF5Saver:
         mode: str = "a",
         compression: str | None = None,
         compression_opts: int | None = None,
+        durable: bool = True,
+        flush_stride: int = 1,
     ):
         if h5py is None:
             raise ImportError("HDF5Saver requires the optional 'h5py' package")
@@ -148,6 +150,11 @@ class HDF5Saver:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.compression = compression
         self.compression_opts = compression_opts
+        self.durable = bool(durable)
+        self.flush_stride = int(flush_stride)
+        if self.flush_stride < 1:
+            raise ValueError("flush_stride must be positive")
+        self._save_count = 0
         self.file = h5py.File(self.path, mode)
         self.steps = self.file.require_group("steps")
         self.file.attrs.setdefault("format", "libra_py.dyn.savers.hdf5")
@@ -178,8 +185,11 @@ class HDF5Saver:
         group.attrs["scalars_json"] = json.dumps(scalars, sort_keys=True)
         group.attrs["complete"] = True
 
-        self.file.flush()
-        _fsync_file(self.file)
+        self._save_count += 1
+        if self._save_count % self.flush_stride == 0:
+            self.file.flush()
+            if self.durable:
+                _fsync_file(self.file)
         return self.path
 
     def save_observables(
@@ -205,7 +215,8 @@ class HDF5Saver:
 
         if self.file:
             self.file.flush()
-            _fsync_file(self.file)
+            if self.durable:
+                _fsync_file(self.file)
             self.file.close()
 
     def __enter__(self):
@@ -221,6 +232,215 @@ class HDF5Saver:
             if self.compression_opts is not None:
                 kwargs["compression_opts"] = self.compression_opts
         group.create_dataset(key, data=value, **kwargs)
+
+
+class HDF5TimeSeriesSaver:
+    """
+    Save observables into chunked, extendable HDF5 datasets.
+
+    Unlike ``HDF5Saver``, this class creates one dataset per observable and
+    appends along the first axis. It is much faster for long regular time
+    series because it avoids creating one HDF5 group per step.
+    """
+
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        output_dir: str | Path | None = None,
+        filename: str = "timeseries.hdf",
+        mode: str = "a",
+        compression: str | None = None,
+        compression_opts: int | None = None,
+        durable: bool = False,
+        flush_stride: int = 100,
+    ):
+        if h5py is None:
+            raise ImportError("HDF5TimeSeriesSaver requires the optional 'h5py' package")
+        if path is None and output_dir is None:
+            raise ValueError("Either path or output_dir must be supplied")
+        self.path = _resolve_hdf5_path(path, output_dir, filename)
+        self.output_dir = self.path.parent
+        self.filename = self.path.name
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.compression = compression
+        self.compression_opts = compression_opts
+        self.durable = bool(durable)
+        self.flush_stride = int(flush_stride)
+        if self.flush_stride < 1:
+            raise ValueError("flush_stride must be positive")
+        self.file = h5py.File(self.path, mode)
+        self.data = self.file.require_group("data")
+        self.file.attrs.setdefault("format", "libra_py.dyn.savers.hdf5_timeseries")
+        self._count = int(self.file.attrs.get("nrecords", 0))
+
+    def save_step(
+        self,
+        step: int,
+        data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
+    ) -> Path:
+        """Append one record to all saveable observable datasets."""
+
+        del step
+        if metadata:
+            self.file.attrs["metadata_json"] = json.dumps(metadata, sort_keys=True)
+
+        for key, value in data.items():
+            arr = _as_saveable_array(value)
+            if not _is_hdf5_dataset_value(arr):
+                continue
+            if key not in self.data:
+                self._create_timeseries_dataset(key, arr)
+            dataset = self.data[key]
+            dataset.resize((self._count + 1, *dataset.shape[1:]))
+            dataset[self._count] = arr
+
+        self._count += 1
+        self.file.attrs["nrecords"] = self._count
+        if self._count % self.flush_stride == 0:
+            self.file.flush()
+            if self.durable:
+                _fsync_file(self.file)
+        return self.path
+
+    def save_observables(
+        self,
+        storage: Any,
+        traj: Any,
+        config: Any = None,
+        step: int | None = None,
+        time: float | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Path:
+        """Compute observables and append them to the time-series file."""
+
+        from ..observables import ObservableConfig, compute_observables
+
+        config = config or ObservableConfig()
+        step_value = storage.timestep if step is None else step
+        data = compute_observables(storage, traj, config, step=step_value, time=time)
+        return self.save_step(step_value, data, metadata=metadata)
+
+    def close(self) -> None:
+        """Flush and close the HDF5 file."""
+
+        if self.file:
+            self.file.flush()
+            if self.durable:
+                _fsync_file(self.file)
+            self.file.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.close()
+
+    def _create_timeseries_dataset(self, key: str, value: Any) -> None:
+        kwargs = {}
+        if self.compression is not None and np.asarray(value).shape != ():
+            kwargs["compression"] = self.compression
+            if self.compression_opts is not None:
+                kwargs["compression_opts"] = self.compression_opts
+        shape = np.asarray(value).shape
+        self.data.create_dataset(
+            key,
+            shape=(0, *shape),
+            maxshape=(None, *shape),
+            chunks=(1, *shape),
+            dtype=np.asarray(value).dtype,
+            **kwargs,
+        )
+
+
+class JSONLinesSaver:
+    """
+    Save dynamics snapshots as newline-delimited JSON records.
+
+    JSON is human-readable and convenient for small summaries. It is not a good
+    format for large trajectory-resolved arrays, because arrays are converted
+    to nested lists.
+    """
+
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        output_dir: str | Path | None = None,
+        filename: str = "observables.jsonl",
+        durable: bool = False,
+        flush_stride: int = 1,
+    ):
+        if path is None and output_dir is None:
+            raise ValueError("Either path or output_dir must be supplied")
+        if output_dir is not None:
+            self.path = Path(output_dir) / filename
+        else:
+            resolved = Path(path)
+            self.path = resolved if resolved.suffix else resolved / filename
+        self.output_dir = self.path.parent
+        self.filename = self.path.name
+        self.output_dir.mkdir(parents=True, exist_ok=True)
+        self.durable = bool(durable)
+        self.flush_stride = int(flush_stride)
+        if self.flush_stride < 1:
+            raise ValueError("flush_stride must be positive")
+        self._count = 0
+        self._handle = open(self.path, "a", encoding="utf-8")
+
+    def save_step(
+        self,
+        step: int,
+        data: dict[str, Any],
+        metadata: dict[str, Any] | None = None,
+    ) -> Path:
+        """Append one JSON line."""
+
+        record = {
+            "step": int(step),
+            "metadata": metadata or {},
+            "data": _as_json_value(data),
+        }
+        self._handle.write(json.dumps(record, sort_keys=True) + "\n")
+        self._count += 1
+        if self._count % self.flush_stride == 0:
+            self._handle.flush()
+            if self.durable:
+                os.fsync(self._handle.fileno())
+        return self.path
+
+    def save_observables(
+        self,
+        storage: Any,
+        traj: Any,
+        config: Any = None,
+        step: int | None = None,
+        time: float | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> Path:
+        """Compute observables and append one JSON line."""
+
+        from ..observables import ObservableConfig, compute_observables
+
+        config = config or ObservableConfig()
+        step_value = storage.timestep if step is None else step
+        data = compute_observables(storage, traj, config, step=step_value, time=time)
+        return self.save_step(step_value, data, metadata=metadata)
+
+    def close(self) -> None:
+        """Flush and close the JSONL file."""
+
+        if self._handle:
+            self._handle.flush()
+            if self.durable:
+                os.fsync(self._handle.fileno())
+            self._handle.close()
+            self._handle = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.close()
 
 
 def load_saved_steps(path: str | Path, manifest_name: str = "manifest.jsonl") -> list[dict[str, Any]]:
@@ -279,6 +499,80 @@ def load_hdf5_steps(
     return records
 
 
+def load_hdf5_timeseries(
+    path: str | Path | None = None,
+    output_dir: str | Path | None = None,
+    filename: str = "timeseries.hdf",
+) -> dict[str, Any]:
+    """Load all datasets from an HDF5 time-series file."""
+
+    if h5py is None:
+        raise ImportError("load_hdf5_timeseries requires the optional 'h5py' package")
+
+    path = _resolve_hdf5_path(path, output_dir, filename)
+    with h5py.File(path, "r") as handle:
+        group = handle.get("data")
+        if group is None:
+            return {}
+        return {key: group[key][()] for key in group}
+
+
+def load_json_steps(
+    path: str | Path | None = None,
+    output_dir: str | Path | None = None,
+    filename: str = "observables.jsonl",
+) -> list[dict[str, Any]]:
+    """Load records written by ``JSONLinesSaver``."""
+
+    if output_dir is not None:
+        resolved = Path(output_dir) / filename
+    elif path is not None:
+        candidate = Path(path)
+        resolved = candidate if candidate.suffix else candidate / filename
+    else:
+        raise ValueError("Either path or output_dir must be supplied")
+
+    records = []
+    if not resolved.exists():
+        return records
+    with open(resolved, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    return records
+
+
+def stack_saved_observables(
+    records: Iterable[dict[str, Any]],
+    keys: Iterable[str] | None = None,
+) -> dict[str, Any]:
+    """
+    Stack loaded saver records into analysis-ready arrays.
+
+    ``records`` should be the output of ``load_saved_steps`` or
+    ``load_hdf5_steps``. If ``keys`` is omitted, fields common to all records
+    are stacked. Non-array scalars such as ``time`` and ``step`` become
+    one-dimensional arrays.
+    """
+
+    records = list(records)
+    if not records:
+        return {}
+
+    data_records = [record["data"] for record in records]
+    if keys is None:
+        common = set(data_records[0])
+        for data in data_records[1:]:
+            common &= set(data)
+        keys = sorted(common)
+
+    return {
+        key: np.stack([np.asarray(data[key]) for data in data_records])
+        for key in keys
+    }
+
+
 def _manifest_records(path: Path) -> Iterable[dict[str, Any]]:
     with open(path, encoding="utf-8") as handle:
         for line in handle:
@@ -308,6 +602,11 @@ def _is_array_payload(value: Any) -> bool:
 
 def _as_saveable_array(value: Any) -> Any:
     return np.asarray(value)
+
+
+def _is_hdf5_dataset_value(value: Any) -> bool:
+    arr = np.asarray(value)
+    return arr.dtype.kind not in ("O", "U", "S")
 
 
 def _as_json_value(value: Any) -> Any:
