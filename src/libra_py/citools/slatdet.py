@@ -138,6 +138,24 @@ def canonical_sort_key(x: int) -> tuple[int, int]:
     return (abs(x), 0 if x > 0 else 1)
 
 
+def alpha_beta_ordering_phase(det: Sequence[int]) -> int:
+    """
+    Compute the phase that maps canonical spin-orbital ordering to
+    alpha-then-beta ordering.
+
+    The determinant utilities use canonical ordering by spatial orbital,
+    with alpha before beta for each spatial orbital, e.g. ``(1, -1, 2, -2)``.
+    The factorized Slater-overlap formula evaluates alpha and beta blocks
+    separately, which corresponds to the ordering ``(alpha..., beta...)``.
+
+    This phase converts between those two equivalent determinant orderings.
+    """
+    det_tuple = tuple(det)
+    alpha_beta_order = tuple([o for o in det_tuple if o > 0] +
+                             [o for o in det_tuple if o < 0])
+    return permutation_parity(det_tuple, alpha_beta_order)
+
+
 
 # ---------- determinant generator (returns sorted det + parity) ----------
 def generate_determinants_with_parity(
@@ -279,7 +297,15 @@ def generate_single_excitations(active_orbitals: List[int], nelec: int):
             parity = permutation_parity(tuple(det_raw), det_sorted)
             yield det_sorted, parity
 
-def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=None, phases_B=None):
+def slater_overlap_matrix(
+    dets_A,
+    dets_B,
+    S_orb,
+    complex_valued=False,
+    phases_A=None,
+    phases_B=None,
+    spin_orbital_matrix=False
+):
     """
     Compute the matrix of overlaps between two possibly distinct sets of
     Slater determinants (α/β spins orthogonal).
@@ -294,7 +320,10 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=
         Ket determinants, tuples of signed orbital indices.
 
     S_orb : np.ndarray
-        Spatial orbital overlap matrix (n_orb, n_orb).
+        Spatial orbital overlap matrix (n_orb, n_orb), unless
+        ``spin_orbital_matrix`` is True. In that case, this is a doubled
+        spin-orbital overlap matrix with alpha and beta blocks ordered as
+        ``[[S_alpha, 0], [0, S_beta]]``.
 
     complex_valued : bool, optional
         If True, results are complex-valued. Default is False.
@@ -303,6 +332,11 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=
         Excitation phases of the determinants with respect to 
         the reference ground states. If None, they are assumed to 
         be 1.0 for all basis functions
+
+    spin_orbital_matrix : bool
+        If True, use the alpha and beta diagonal blocks of a doubled
+        spin-orbital matrix. If False, use ``S_orb`` as a spatial overlap
+        matrix for both spin components.
 
     Returns
     -------
@@ -332,6 +366,18 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=
             ph_B = phases_B
 
 
+    S_orb = np.asarray(S_orb)
+
+    if spin_orbital_matrix:
+        if S_orb.shape[0] != S_orb.shape[1] or S_orb.shape[0] % 2 != 0:
+            raise ValueError("Doubled spin-orbital overlap matrix must be even and square")
+        nspatial = S_orb.shape[0] // 2
+        S_alpha = S_orb[:nspatial, :nspatial]
+        S_beta = S_orb[nspatial:, nspatial:]
+    else:
+        S_alpha = S_orb
+        S_beta = S_orb
+
     # Precompute α and β orbital indices (0-based)
     alpha_A = [np.array([abs(o) - 1 for o in d if o > 0], dtype=int) for d in dets_A]
     beta_A  = [np.array([abs(o) - 1 for o in d if o < 0], dtype=int) for d in dets_A]
@@ -344,8 +390,8 @@ def slater_overlap_matrix(dets_A, dets_B, S_orb, complex_valued=False, phases_A=
             a_j, b_j = alpha_B[j], beta_B[j]
 
             # Build α and β submatrices
-            S_a = S_orb[np.ix_(a_i, a_j)]
-            S_b = S_orb[np.ix_(b_i, b_j)]
+            S_a = S_alpha[np.ix_(a_i, a_j)]
+            S_b = S_beta[np.ix_(b_i, b_j)]
 
             # Product of determinants
             S_AB[i, j] = np.linalg.det(S_a) * np.linalg.det(S_b) * ph_A[i] * ph_B[j]
@@ -541,4 +587,3 @@ def excitation_phase_from_mapping(
     phase = -1 if (n_between % 2) else +1
 
     return phase, sorted(exc, key=canonical_sort_key)
-

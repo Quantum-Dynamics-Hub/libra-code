@@ -917,16 +917,12 @@ def sd_and_csf_overlaps_singlet(
 
 
     # ==================================================================
-    # Excitations parity phases
+    # Determinant ordering phases
     # ==================================================================
 
     nbas = len(mapped_basis)
 
-    Phases = [1.0] # ground state reference
-    for i in range(1, nbas):
-        phase, new_det = sd.excitation_phase_from_mapping(mapped_basis[0], mapped_basis[i])
-        Phases.append(phase)
-        #print(phase)
+    Phases = [sd.alpha_beta_ordering_phase(det) for det in mapped_basis]
 
 
     # ==================================================================
@@ -942,7 +938,8 @@ def sd_and_csf_overlaps_singlet(
 
     st_sd = sd.slater_overlap_matrix(
         dets, dets, st_mo_dense, complex_valued=False, 
-        phases_A=Phases, phases_B=Phases
+        phases_A=Phases, phases_B=Phases,
+        spin_orbital_matrix=True
     )
 
     if st_sd.shape[0] != st_sd.shape[1]:
@@ -951,5 +948,3 @@ def sd_and_csf_overlaps_singlet(
     st_csf = T.T @ st_sd @ T
 
     return st_csf, st_sd
-
-
