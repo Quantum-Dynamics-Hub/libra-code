@@ -10,62 +10,76 @@
 """
 .. module:: pyscf.implementations.test_casscf
    :platform: Unix, Windows
-   :synopsis: Smoke test for PySCF CASSCF backend.
+   :synopsis: Smoke test for PySCF CASSCF backend via the sequencing interface.
 .. moduleauthor::
        Jieyang Gu <jieyanggu792@gmail.com>
 
 """
 
-import sys
-from pathlib import Path
+from __future__ import annotations
 
-# Allow running this script directly with proper package root in sys.path
-#if __name__ == "__main__" and __package__ is None:
-#    file_path = Path(__file__).resolve()
-#    for parent in file_path.parents:
-#        if parent.name == "src":
-#            sys.path.insert(0, str(parent))
-#            break
-#    else:
-#        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
-
-from pyscf import gto
 from libra_py.packages.pyscf.implementations.casscf import CASSCF
-from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ES_Request, ES_Result, ES_Strategy, MolecularGeometry
+
 import numpy as np
 
-geom1 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,0.7746]]))
-geom2 = MolecularGeometry(atom_labels=['He', 'H'], coords_angstrom=np.array([[0.0,0.0,0.0],[0.0,0.0,1.0]]))
 
+# Geometry coordinates are given explicitly in Bohr.
+geom1 = MolecularGeometry(
+    atom_labels=['He', 'H'],
+    coords_bohr=np.array([
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.46379],
+    ], dtype=np.float64)
+)
 
+geom2 = MolecularGeometry(
+    atom_labels=['He', 'H'],
+    coords_bohr=np.array([
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.88973],
+    ], dtype=np.float64)
+)
 
-# instantiate the CASSCF strategy class with parameters for the test
-casscf = CASSCF(norbcas=2, nelecas=2, nroots=3, basis='sto-3g', charge=1)
+# The backend and the geometry container both use Bohr internally.
+casscf = CASSCF(
+    norbcas=2,
+    nelecas=2,
+    nroots=3,
+    basis="sto-3g",
+    charge=1,
+    unit="Bohr",
+)
 
-# wrap geometry set and HF in set_geom_and_run_hf method
-casscf.set_geom_and_run_hf(geom1)
+request = ES_Request(
+    n_singlets=3,
+    n_triplet=0,
+    H_soc=False,
+    gradient_state="all",
+    hessian_state=None,
+    time_overlap=True,
+    nacv=False,
+)
 
-# 2) energy for root 0,1,2
-energies1 = [casscf.compute_energy(root) for root in range(3)]
-print('Energies at geom1', energies1)
+result1 = ES_Result()
+result2 = ES_Result()
 
-# 3) gradient for root 2
-grad1 = casscf.compute_gradient(2)
-print('Gradient root 2 geom1', grad1)
+casscf.compute_result(geom1, request, result1)
+print("Result 1 H_el:", result1.H_el)
+print("Result 1 gradients:", result1.gradients)
+print("Result 1 time_overlap:", result1.time_overlap)
 
-# 4) set mol2 geometry and run HF
-casscf.set_geom_and_run_hf(geom2)
+prev_state = casscf.copy()
+casscf.compute_result(geom2, request, result2, previous=prev_state)
+print("Result 2 H_el:", result2.H_el)
+print("Result 2 gradients:", result2.gradients)
+print("Result 2 time_overlap:", result2.time_overlap)
 
-# 5) energy for root 0,1,2
-energies2 = [casscf.compute_energy(root) for root in range(3)]
-print('Energies at geom2', energies2)
+expected_overlap = np.array([
+    [0.99692767, -0.01881889, 0.00438941],
+    [-0.00177315, 0.96330492, -0.02404977],
+    [-0.00817692, 0.02435447, 0.92265228],
+], dtype=np.float64)
+np.testing.assert_allclose(result2.time_overlap, expected_overlap, atol=1e-6, rtol=1e-6)
 
-# 6) gradient for root 2
-grad2 = casscf.compute_gradient(2)
-print('Gradient root 2 geom2', grad2)
-
-# 7) time-overlap matrix for 3 roots
-overlap = casscf.time_overlap_matrix(3)
-print('Time-overlap matrix', overlap)
-
-assert isinstance(casscf, ElectronicStructureStrategy)
+assert isinstance(casscf, ES_Strategy)
