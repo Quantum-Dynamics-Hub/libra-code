@@ -7,199 +7,302 @@
 # * or <http://www.gnu.org/licenses/>.
 # *
 # *********************************************************************************/
+
 """
 .. module:: pyscf.interfaces
    :platform: Unix, Windows
    :synopsis: Core interface definitions for electronic structure strategies.
 
    The interface is backend-agnostic: implementations may wrap PySCF, DFTB+,
-   CP2K, or any other quantum-chemistry code.  All Libra-specific types
-   (CMATRIX, MATRIX, etc.) live exclusively in the adapter layer so that
-   strategy implementations never depend on liblibra_core.
+   CP2K, or other quantum-chemistry codes.
+
+   One ES_Strategy instance represents one electronic-structure calculation
+   at one nuclear geometry. Consecutive calculations are represented by
+   separate ES_Strategy instances.
 
 .. moduleauthor::
        Jieyang Gu <jieyanggu792@gmail.com>
-
 """
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from turtle import left, right
+from typing import Literal
 
 import numpy as np
 
 
+# ---------------------------------------------------------------------------
+# Data containers
+# ---------------------------------------------------------------------------
+
 @dataclass
 class MolecularGeometry:
-    """Nuclear geometry in Angstrom."""
-    atom_labels: list[str]
-    coords_angstrom: np.ndarray  # shape (natoms, 3)
+    """Molecular geometry in atomic units."""
+
+    atom_labels: tuple[str, ...]
+    coords_bohr: np.ndarray  # shape: (natoms, 3)
 
 
-class ElectronicStructureStrategy(ABC):
-    """Base interface for electronic structure backends.
+@dataclass
+class ES_Request:
+    """Quantities requested at one geometry snapshot."""
 
-    Implementations are allowed to store backend-specific state for one
-    computed electronic-structure snapshot internally.
+    n_singlets: int = 1
+    n_triplet: int = 0
 
-    **Required** abstract methods must be implemented by every
-    concrete strategy.  
+    H_soc: bool = False
+
+    # None  -> no gradient
+    # int   -> gradient for one state
+    # "all" -> gradients for all states
+    gradient_state: int | Literal["all"] | None = None
+
+    # None -> no Hessian
+    # int  -> Hessian for one state
+    hessian_state: int | None = None
+
+    nacv: bool = False
+    time_overlap: bool = False
+
+    @property
+    def n_total(self) -> int:
+        """Total number of electronic states.
+
+        Currently each triplet manifold is counted as one state.
+        """
+        return self.n_singlets + self.n_triplet
+
+
+@dataclass
+class ES_Result:
+    """Computed quantities at one geometry snapshot.
+
+    Units:
+        energies: Hartree
+        gradients: Hartree / Bohr
+        Hessians: Hartree / Bohr^2
+        NAC vectors: Bohr^-1
+    """
+    H_el: np.ndarray | None = None  # shape: (n_total,)
+
+    H_soc: np.ndarray | None = None  # shape: (n_total, n_total)
+
+    gradients: list[np.ndarray | None] | None = None  # one entry per electronic state, each non-None entry has shape (natoms, 3)
+
+    hessians: list[np.ndarray | None] | None = None  # one entry per electronic state, each non-None entry has shape (3*natoms, 3*natoms)
+
+    nac_vectors: np.ndarray | None = None  # shape: (n_total, n_total, natoms, 3)
+
+    time_overlap: np.ndarray | None = None  # shape: (n_total, n_total)
+
+
+# ---------------------------------------------------------------------------
+# Backend ABC
+# ---------------------------------------------------------------------------
+
+class ES_Strategy(ABC):
+    """Abstract electronic-structure strategy.
+
+    One ES_Strategy instance represents one geometry and its associated
+    electronic-structure calculation.
     """
 
-    # ------------------------------------------------------------------
-    #  Metadata (required)
-    # ------------------------------------------------------------------
-    def __init__(
+    # -----------------------------------------------------------------------
+    # Geometry
+    # -----------------------------------------------------------------------
+
+    @abstractmethod
+    def set_geom(self, geom: MolecularGeometry) -> None:
+        """Set the nuclear geometry for this calculation."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_geom(self) -> MolecularGeometry:
+        """Return the geometry represented by this strategy."""
+        raise NotImplementedError
+
+    # -----------------------------------------------------------------------
+    # Required electronic-structure calculation
+    # -----------------------------------------------------------------------
+
+    @abstractmethod
+    def compute_H_el(
         self,
-        nroots: int = 1,
-        basis: str = "sto-3g",
-        unit: str = "Bohr",
-        charge: int = 0,
-    ) -> None:
-        if nroots <= 0:
-            raise ValueError(f"nroots must be positive, got {nroots}")
+        previous: ES_Strategy | None = None,
+    ) -> np.ndarray:
+        """Compute adiabatic electronic energies."""
+        raise NotImplementedError
 
-        self._energies = [None]*nroots
-        self._gradients = [None]*nroots
-        self._basis = basis
-        self._unit = unit
-        self._charge = int(charge)
-        self._geom: MolecularGeometry | None = None
-        self._cache = None  # for derived class specific in ram or disk caching  
+    # -----------------------------------------------------------------------
+    # Optional electronic-structure quantities
+    # -----------------------------------------------------------------------
 
-    #Public API
+    def compute_H_soc(self) -> np.ndarray:
+        """Compute the spin-orbit Hamiltonian.
 
-    def _set_geom(self, geom: MolecularGeometry) -> None:
-        self._geom = geom
-        self._energies = [None]*len(self._energies)
-        self._gradients = [None]*len(self._gradients)
-        pass
-    
-    def get_geometry(self) -> MolecularGeometry:
-        if self._geom is None:
-            raise ValueError("Geometry has not been set.")
-        return self._geom
-
-    def get_nroots(self) -> int:
-        """Return the number of roots (electronic states) computed by this strategy."""
-        return len(self._energies)
-
-    def get_energy(self, root: int) -> float: # if energy is None, call the compute_energies method 
-        """Return the energy of one state in Hartree.
-
-        If the energies have not been cached yet, compute and cache them first.
+        Returns
+        -------
+        np.ndarray
+            Shape ``(n_total, n_total)`` in Hartree.
         """
-        if self._energies[root] is None:
-            self._compute_energies()
-        return float(self._energies[root])
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_H_soc or do not request H_soc."
+        )
 
-    def get_gradient(self, root: int) -> np.ndarray:
-        """Return the nuclear gradient for *root*.
-
-        If the gradient has not been cached yet, compute and cache it first.
+    def compute_gradient(self, root: int = 0) -> np.ndarray:
+        """Compute the nuclear gradient for one electronic state.
 
         Returns
         -------
         np.ndarray
             Shape ``(natoms, 3)`` in Hartree/Bohr.
         """
-        if self._energies[root] is None:
-            self._compute_energies()
-        if self._gradients[root] is None:
-            self._compute_gradient(root)
-        return self._gradients[root]
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_gradient or do not request gradients."
+        )
 
-    def time_overlap(self, right: ElectronicStructureStrategy) -> np.ndarray: #error handling wrapper for _compute_time_overlap
-        """Return the state-overlap matrix ``<psi_i(left)|psi_j(right)>``.
+    def compute_hessian(self, root: int = 0) -> np.ndarray:
+        """Compute the nuclear Hessian for one electronic state.
 
         Returns
         -------
         np.ndarray
-            Shape ``(nroots, nroots)``.
+            Shape ``(3N, 3N)`` in Hartree/Bohr^2.
         """
-        if type(self) is not type(right):
-                raise TypeError(
-                    f"time overlap requires same strategy type, got "
-                    f"{type(self).__name__} and {type(right).__name__}"
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_hessian or do not request Hessians."
+        )
+
+    def compute_nac_vectors(self) -> np.ndarray:
+        """Compute nonadiabatic coupling vectors.
+
+        Returns
+        -------
+        np.ndarray
+            Shape ``(n_total, n_total, natoms, 3)`` in Bohr^-1.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_nac_vectors or do not request NAC vectors."
+        )
+
+    def compute_time_overlap(
+        self,
+        right: ES_Strategy,
+    ) -> np.ndarray:
+        """Compute the time-overlap matrix between the current strategy and another strategy.
+        np.ndarray
+            Shape ``(n_total, n_total)``.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_time_overlap or do not request time overlaps."
+        )
+
+    # -----------------------------------------------------------------------
+    # Sequencing contract
+    # -----------------------------------------------------------------------
+
+    def compute_result(
+        self,
+        geom: MolecularGeometry,
+        request: ES_Request,
+        result: ES_Result,
+        previous: ES_Strategy | None = None,
+    ) -> None:
+        """Compute all requested quantities at one geometry and enforce a sequence of calculations."""
+        if request.n_triplet:
+            raise NotImplementedError(
+                "Triplet states are not supported yet."
+            )
+
+        n_total = request.n_total
+        natoms = len(geom.coords_bohr)
+        # ------------------------------------------------------------------
+        # Reset output container.
+        # ------------------------------------------------------------------
+        result.H_el = None
+        result.H_soc = None
+        result.gradients = None
+        result.hessians = None
+        result.nac_vectors = None
+        result.time_overlap = None
+
+        previous_snapshot = previous
+
+        self.set_geom(geom)
+
+        result.H_el = np.asarray(
+            self.compute_H_el(previous_snapshot),
+            dtype=np.float64,
+        )
+
+        if request.H_soc:
+            result.H_soc = np.asarray(
+                self.compute_H_soc()
+            )
+
+        if request.gradient_state is not None:
+
+            result.gradients = [None] * n_total
+
+            if request.gradient_state == "all":
+                roots = range(n_total)
+            else:
+                root = request.gradient_state
+
+                if not 0 <= root < n_total:
+                    raise ValueError(
+                        f"gradient_state={root} is outside "
+                        f"the valid range [0, {n_total})."
+                    )
+
+                roots = [root]
+
+            for root in roots:
+
+                gradient = np.asarray(
+                    self.compute_gradient(root),
+                    dtype=np.float64,
                 )
-        return self._compute_time_overlap(right)
-    
-    def get_nac_vectors(self) -> np.ndarray:
-        """Return all NAC vectors ``d_{ij}`` between states.
+                result.gradients[root] = gradient
 
-        Returns
-        -------
-        np.ndarray
-            Shape ``(nroots, nroots, natoms, 3)`` in 1/Bohr.
-            Only off-diagonal elements are meaningful.
-        """
-        if self._energies[0] is None:
-            self._compute_energies()
-        return self._compute_nac_vectors()
+        if request.hessian_state is not None:
 
-    # ------------------------------------------------------------------
-    #  Core computation
-    # ------------------------------------------------------------------
+            root = request.hessian_state
 
-    @abstractmethod
-    def _compute_energies(self) -> None: 
-        """Compute and cache the total energies (Hartree) for all roots."""
-        
+            result.hessians = [None] * n_total
 
-    def _compute_gradient(self, root: int) -> None:
-        """Compute and cache the nuclear gradient for *root*.
+            hessian = np.asarray(
+                self.compute_hessian(root),
+                dtype=np.float64,
+            )
+            result.hessians[root] = hessian
 
-        The computed gradient must be stored in ``self._gradients[root]`` with
-        shape ``(natoms, 3)`` in Hartree/Bohr.
-        """
-        if self._energies[root] is None:
-            raise ValueError(f"Energy for root {root} has not been computed yet.")
+        if request.nacv is True:
 
-        raise NotImplementedError(
-            "This backend does not provide nuclear gradients."
-        )
+            result.nac_vectors = np.asarray(
+                self.compute_nac_vectors(),
+                dtype=np.float64,
+            )
 
-    def _compute_time_overlap(self, other: "ElectronicStructureStrategy") -> np.ndarray:
-        """Compute state time-overlap matrix with another snapshot.
-
-        Returns
-        -------
-        np.ndarray
-            Shape ``(nroots, nroots)``. Element ``S[i, j]`` is
-            ``<psi_i(self) | psi_j(other)>``, where ``self`` is the left/previous
-            electronic-structure snapshot and ``other`` is the right/current
-            snapshot. Dimensionless.
-
-        Notes
-        -----
-        Implementations should return the matrix and should not mutate base-class
-        caches directly. Phase/state tracking, if required, should be handled by
-        the backend or adapter before returning.
-        """
-        raise NotImplementedError(
-            "This backend does not implement time-overlap-based NACs."
-        )
+        if request.time_overlap is True:
+            if previous_snapshot is None:
+                result.time_overlap = np.eye(
+                    n_total,
+                    dtype=np.float64,
+                )
+            else:
+                result.time_overlap = np.asarray(
+                    previous_snapshot.compute_time_overlap(self),
+                    dtype=np.float64,
+                )
 
 
-    def _compute_nac_vectors(self) -> np.ndarray:
-        """Return all NAC vectors ``d_{ij}`` between states.
-
-        Returns
-        -------
-        np.ndarray
-            Shape ``(nroots, nroots, natoms, 3)`` in 1/Bohr.
-            Only off-diagonal elements are meaningful.
-
-        Raises
-        ------
-        NotImplementedError
-            If the backend does not support explicit NAC vectors.
-        """
-        if self._energies[0] is None:
-            raise ValueError("Energies must be computed before NAC vectors.")   
-        raise NotImplementedError(
-            "This backend does not provide explicit NAC vectors; "
-            "use time-overlap-based NACs instead."
-        )
+# Backward-compatible alias used by older PySCF package imports.
+ElectronicStructureStrategy = ES_Strategy

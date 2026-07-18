@@ -11,148 +11,330 @@
 """
 .. module:: methods
    :platform: Unix, Windows
-   :synopsis: This module implements the Libra/PySCF interface function
+   :synopsis: This module implements an adapter between the ABC interface and the compute_adi 
 
 .. moduleauthor::
        Alexey V. Akimov, Jieyang Gu
 
 """
 
-
-import os, sys, math, re, struct, copy, subprocess
 import numpy as np
-from liblibra_core import MATRIX, CMATRIX, CMATRIXList, Py2Cpp_int, Cpp2Py, Random
 
-# Fisrt, we add the location of the library to test to the PYTHON path
-from libra_py.packages.pyscf.implementations.cisd import CISD
-from libra_py.packages.pyscf.implementations.casscf import CASSCF
-from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+from liblibra_core import CMATRIX, CMATRIXList, Cpp2Py
 
-from libra_py.packages.cp2k import methods as cp2k
-from libra_py import data_conv
 from libra_py import units
+
+
+def _matrix2nparray(matrix, dtype=float):
+    return np.array(
+        [
+            [matrix.get(i, j) for j in range(matrix.num_of_cols)]
+            for i in range(matrix.num_of_rows)
+        ],
+        dtype=dtype,
+    )
+
+
+def _q_to_geometry(q, itraj, atom_labels):
+    coords = q.col(itraj)
+
+    coordinates = (
+        _matrix2nparray(coords, float).reshape(-1, 3) / units.Angst
+    )
+
+    return MolecularGeometry(
+        atom_labels=tuple(atom_labels),
+        coords_bohr=coordinates,
+    )
+from libra_py.packages.pyscf.interfaces import (
+    ES_Request,
+    ES_Result,
+    ES_Strategy,
+    MolecularGeometry,
+)
 
 class tmp:
     pass
 
+# =============================================================================
+# Input conversion helpers
+# =============================================================================
 
-def pyscf_compute_adi(q, params, full_id):
-
-    # ================= Decode trajectory index =================
+def _get_trajectory_index(full_id):
+    if isinstance(full_id, (list, tuple)):
+        return int(full_id[-1])
     Id = Cpp2Py(full_id)
-    itraj = Id[-1]
+    return int(Id[-1])
 
-    # ================= Extract coordinates =================
-    coords = q.col(itraj)
-    coordinates = data_conv.MATRIX2nparray(coords, float).reshape(-1,3)/units.Angst # in Angstrom
 
-    ndof = coords.num_of_rows
-    nat = ndof // 3
-
-    # ================= Safe param access =================
-    params.setdefault("is_first_time", {})
-    params.setdefault("act_state", {})
-    params.setdefault("pyscf_obj", {})
-    params.setdefault("coords_prev", {})
-
-    is_first_time = params["is_first_time"].get(itraj, True)
-    act_state = params["act_state"].get(itraj, 0)
-    
-    _basis = params.get("basis", "sto-3g")
-    _charge = params.get("charge", 0)
+def _params_to_request(params):
     nstates = params.get("nstates", 2)
-    method = params.get("method", "casscf")
-    # The default is CAS(2,2) 
-    _norbcas = params.get("norbcas", 2)
-    _nelecas = params.get("nelecas", 2)
 
-    # ================= Read parameters =================
-    dt = float(params.get("dt", 41.0))
-    _atom_labels = params["atom_labels"]
-    
-    # ================= Previous coordinates =================
+    return ES_Request(
+        n_singlets=nstates,
+        n_triplet=0,
+        H_soc=params.get("H_soc", False),
+        gradient_state=params.get("gradient_state", "all"),
+        hessian_state=params.get("hessian_state"),
+        nacv=params.get("nacv", False),
+        time_overlap=params.get("time_overlap", True),
+    )
 
-    pyscf_obj = None
-    if is_first_time:
-        coords_prev = copy.deepcopy(coordinates)
-        
-        if method=="casscf":
-            pyscf_obj = CASSCF(norbcas=_norbcas, nelecas=_nelecas, nroots=nstates, basis=_basis, charge=_charge)
-        elif method=="cisd":
-            pyscf_obj = CISD(nroots=nstates, basis=_basis, charge=_charge)     
+
+# =============================================================================
+# ES calculation helper
+# =============================================================================
+
+def _compute_es_result(
+    strategy: ES_Strategy,
+    geometry: MolecularGeometry,
+    request: ES_Request,
+    previous: ES_Strategy | None,
+):
+    result = ES_Result()
+
+    strategy.compute_result(
+        geometry,
+        request,
+        result,
+        previous=previous,
+    )
+
+    return result
+
+
+# =============================================================================
+# ES_Result -> Libra type conversion helpers
+# =============================================================================
+
+def _numpy_to_cmatrix(array):
+    array = np.asarray(array)
+
+    nrows, ncols = array.shape
+    matrix = CMATRIX(nrows, ncols)
+
+    for i in range(nrows):
+        for j in range(ncols):
+            matrix.set(
+                i,
+                j,
+                complex(array[i, j]),
+            )
+
+    return matrix
+
+
+def _energies_to_ham_adi(energies):
+    return _numpy_to_cmatrix(
+        np.diag(energies)
+    )
+
+
+def _gradients_to_d1ham_adi(
+    gradients,
+    nstates,
+    natoms,
+):
+    d1ham_adi = CMATRIXList()
+
+    for dof in range(3 * natoms):
+        d1ham_adi.append(
+            CMATRIX(nstates, nstates)
+        )
+
+    for state, gradient in enumerate(gradients):
+
+        if gradient is None:
+            continue
+
+        for atom in range(natoms):
+
+            for xyz in range(3):
+
+                dof = 3 * atom + xyz
+
+                d1ham_adi[dof].set(
+                    state,
+                    state,
+                    complex(
+                        gradient[atom, xyz]
+                    ),
+                )
+
+    return d1ham_adi
+
+
+def _time_overlap_to_cmatrix(time_overlap):
+    return _numpy_to_cmatrix(
+        time_overlap
+    )
+
+
+def _time_overlap_to_hvib(
+    energies,
+    time_overlap,
+    dt,
+):
+    nstates = len(energies)
+
+    hvib = _energies_to_ham_adi(
+        energies
+    )
+
+    for i in range(nstates):
+
+        for j in range(i + 1, nstates):
+
+            dij = (
+                time_overlap[i, j]
+                - time_overlap[j, i]
+            ) / (2.0 * dt)
+
+            hvib.set(
+                i,
+                j,
+                -1j * dij,
+            )
+
+            hvib.set(
+                j,
+                i,
+                +1j * dij,
+            )
+
+    return hvib
+
+
+# =============================================================================
+# Build Libra callback result
+# =============================================================================
+
+def _es_result_to_libra(
+    result: ES_Result,
+    request: ES_Request,
+    natoms: int,
+    dt: float,
+) -> tmp:
+    nstates = request.n_total
+
+    obj = tmp()
+
+    # Energies
+    obj.ham_adi = _energies_to_ham_adi(
+        result.H_el
+    )
+
+    # Identity adiabatic transformation
+    obj.basis_transform = CMATRIX(
+        nstates,
+        nstates,
+    )
+
+    for i in range(nstates):
+        obj.basis_transform.set(
+            i,
+            i,
+            1.0 + 0.0j,
+        )
+
+    # Gradients
+    if result.gradients is not None:
+
+        obj.d1ham_adi = _gradients_to_d1ham_adi(
+            result.gradients,
+            nstates,
+            natoms,
+        )
+
+    # Time overlaps
+    if result.time_overlap is not None:
+
+        obj.time_overlap_adi = (
+            _time_overlap_to_cmatrix(
+                result.time_overlap
+            )
+        )
+
+        obj.hvib_adi = (
+            _time_overlap_to_hvib(
+                result.H_el,
+                result.time_overlap,
+                dt,
+            )
+        )
 
     else:
-        #coords_prev = copy.deepcopy(params["coords_prev"].get(itraj))
-        pyscf_obj = copy.deepcopy(params["pyscf_obj"].get(itraj))
-        #pyscf_obj = params["pyscf_obj"].get(itraj)
 
-    #geom_prev = MolecularGeometry(atom_labels = _atom_labels, coords_angstrom=np.array(coords_prev) )
-    geom = MolecularGeometry(atom_labels = _atom_labels, coords_angstrom=np.array(coordinates) )
-    
-    
-    #pyscf_obj.set_geom_and_run_hf(geom_prev)
-    #_ = [pyscf_obj.compute_energy(root) for root in range(nstates)]
-    #_ = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
+        obj.time_overlap_adi = CMATRIX(
+            nstates,
+            nstates,
+        )
 
-    if is_first_time:
-        # Run an extra-time
-        pyscf_obj.set_geom_and_run_hf(geom)
-        energies = [pyscf_obj.compute_energy(root) for root in range(nstates)]
-        grad = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
-
-    pyscf_obj.set_geom_and_run_hf(geom)
-    energies = [pyscf_obj.compute_energy(root) for root in range(nstates)]
-    grad = [pyscf_obj.compute_gradient(root) for root in range(nstates)]
-
-        
-    #print(F"coords_prev = {coords_prev}")
-    print(F"coordinates = {coordinates}")
-
-    # ================= Compute overlaps =================
-    st_ci = pyscf_obj.time_overlap_matrix(nstates)
-
-    # ================= Build object =================
-    obj = tmp()
-    obj.ham_adi = CMATRIX(nstates, nstates)
-    obj.nac_adi = CMATRIX(nstates, nstates)
-    obj.hvib_adi = CMATRIX(nstates, nstates)
-    obj.basis_transform = CMATRIX(nstates, nstates)
-    obj.time_overlap_adi = CMATRIX(nstates, nstates)
-
-    # ================= Populate Hamiltonian =================
-    for i in range(nstates):
-        obj.ham_adi.set(i, i, energies[i] * (1.0+0.0j) )
-        obj.hvib_adi.set(i, i, energies[i] * (1.0+0.0j) )
-        obj.basis_transform.set(i, i, 1.0+0.0j)
-
-        for j in range(nstates):
-            obj.time_overlap_adi.set(i, j, float(st_ci[i, j]) * (1.0+0.0j) )
-
-    # ================== Forces ===============================
-    obj.d1ham_adi = CMATRIXList()
-    for idof in range(ndof):
-        obj.d1ham_adi.append(CMATRIX(nstates, nstates))
-
-    for iatom in range(nat):
-        for i in range(nstates):
-            obj.d1ham_adi[3 * iatom + 0].set(i, i, grad[i][iatom, 0] * (1.0 + 0.0j))
-            obj.d1ham_adi[3 * iatom + 1].set(i, i, grad[i][iatom, 1] * (1.0 + 0.0j))
-            obj.d1ham_adi[3 * iatom + 2].set(i, i, grad[i][iatom, 2] * (1.0 + 0.0j))
-
-    # ================= Compute derivative couplings =================
-    for i in range(nstates):
-        for j in range(i + 1, nstates):
-            dij = ( obj.time_overlap_adi.get(i, j) - obj.time_overlap_adi.get(j, i) ) / (2.0 * dt)
-            obj.hvib_adi.set(i, j, -1j * dij)
-            obj.hvib_adi.set(j, i, +1j * dij)            
-            
-    # ================= Store state =================
-    params["pyscf_obj"][itraj] = copy.deepcopy(pyscf_obj)
-    #params["pyscf_obj"][itraj] = pyscf_obj
-    #params["coords_prev"][itraj] = copy.deepcopy(coordinates)
-    params["is_first_time"][itraj] = False
+        obj.hvib_adi = _energies_to_ham_adi(
+            result.H_el
+        )
 
     return obj
 
 
+# =============================================================================
+# Main Libra callback
+# =============================================================================
 
+def strategy_compute_adi(
+    q,
+    params,
+    full_id,
+):
+    # 1. Libra input -> generic ES input
+    itraj = _get_trajectory_index(full_id)
+    geometry = _q_to_geometry(
+        q,
+        itraj,
+        params["atom_labels"],
+    )
+    request = _params_to_request(params)
+
+    # 2. Get current and previous ES snapshots
+    previous = params.setdefault(
+        "es_previous",
+        {},
+    ).get(itraj)
+
+    strategy_spec = params.get(
+        "strategy_factory",
+        params.get("es_strategy"),
+    )
+
+    if strategy_spec is None:
+        raise KeyError("Missing strategy specification: expected 'strategy_factory' or 'es_strategy'.")
+
+    if callable(strategy_spec):
+        current = strategy_spec()
+    elif hasattr(strategy_spec, "copy"):
+        current = strategy_spec.copy()
+    elif hasattr(strategy_spec, "clone"):
+        current = strategy_spec.clone()
+    else:
+        current = strategy_spec
+
+    # 3. Run ES calculation
+    result = _compute_es_result(
+        current,
+        geometry,
+        request,
+        previous,
+    )
+
+    # 4. Generic ES result -> Libra result
+    obj = _es_result_to_libra(
+        result,
+        request,
+        natoms=len(params["atom_labels"]),
+        dt=float(params.get("dt", 41.0)),
+    )
+
+    # 5. Current becomes previous
+    params["es_previous"][itraj] = current
+
+    return obj

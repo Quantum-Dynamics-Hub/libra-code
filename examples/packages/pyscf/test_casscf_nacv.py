@@ -8,86 +8,68 @@
 # *
 # *********************************************************************************/
 """
-.. module:: pyscf.implementations.test_lif_scan
+.. module:: pyscf.implementations.test_casscf_nacv
    :platform: Unix, Windows
-   :synopsis: Test for LiF PES scan using universal ES interface.
+   :synopsis: NACV smoke test for the PySCF CASSCF backend via the ES interface.
 .. moduleauthor::
        Jieyang Gu <jieyanggu792@gmail.com>
-
 """
 
-import sys
-from pathlib import Path
+from __future__ import annotations
+
 import numpy as np
 
-#def _prepend_repo_root() -> None:
-#    file_path = Path(__file__).resolve()
-#    for parent in file_path.parents:
-#        if (parent / "interface" / "__init__.py").is_file():
-#            repo_root = str(parent)
-#            if repo_root not in sys.path:
-#                sys.path.insert(0, repo_root)
-#            return
-#
-#if __name__ == "__main__" and __package__ is None:
-#    _prepend_repo_root()
-
-#try:
 from libra_py.packages.pyscf.implementations.casscf import CASSCF
-from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ES_Request, ES_Result, MolecularGeometry
 
-#except ModuleNotFoundError as exc:
-#    if exc.name not in {"interface", "interface.implementations.casscf", "interface.interfaces"}:
-#        raise
-#    from libra_py.packages.pyscf.implementations.casscf import CASSCF
-#    from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
 
 NSTATES = 2
-DISTANCE_START_BOHR = 7.5
-DISTANCE_STOP_BOHR = 15.0
-DISTANCE_STEP_BOHR = 0.25
+DISTANCES_BOHR = [6.0, 10.0]
 
-basis_dict = {'Li': 'sto-3g', 'F': '6-311+g*'}
-cas_list = [4, 7, 11, 14, 17]# 0-indexed: 3 (F2pz), 6 (Li2s), 10 (F5pz), 13 (F5s), 16 (F4pz)
+basis_dict = {"Li": "sto-3g", "F": "6-311+g*"}
+cas_list = [4, 7, 11, 14, 17]
 
-distances = np.arange(DISTANCE_START_BOHR, DISTANCE_STOP_BOHR, DISTANCE_STEP_BOHR, dtype=np.float64)
-
-# Initialize the CASSCF strategy
 casscf = CASSCF(
-    norbcas=5, 
-    nelecas=2, 
-    nroots=NSTATES, 
-    basis=basis_dict, 
-    unit='Bohr', 
+    norbcas=5,
+    nelecas=2,
+    nroots=NSTATES,
+    basis=basis_dict,
+    unit="Bohr",
     charge=0,
     cas_list=cas_list,
-    use_prev_ci=True,  
 )
 
-for step, d in enumerate(distances):
-    print(f"\n========== Distance: {d:.2f} Bohr ==========")
-    # Though the parameter is named 'coords_angstrom', passing raw units matching
-    # the target unit (Bohr) works properly because we set unit='Bohr' in CASSCF.
+request = ES_Request(
+    n_singlets=NSTATES,
+    n_triplet=0,
+    H_soc=False,
+    gradient_state=None,
+    hessian_state=None,
+    nacv=True,
+    time_overlap=True,
+)
+
+previous_strategy = None
+for step, distance in enumerate(DISTANCES_BOHR):
+    print(f"\n========== distance {step}: {distance:.2f} Bohr ==========")
     geom = MolecularGeometry(
-        atom_labels=['Li', 'F'], 
-        coords_angstrom=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, d]])
+        atom_labels=("Li", "F"),
+        coords_bohr=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, distance]], dtype=np.float64),
     )
-    
-    casscf.set_geom_and_run_hf(geom)
-    
-    energies = [casscf.compute_energy(root) for root in range(NSTATES)]
-    print(f"Energies: {energies}")
-    
-    # Calculate pairwise NACVs (requires use_etfs=False to match your previous scan logic)
-    nacv = casscf.compute_nac_vectors(use_etfs=False)
-    
-    # Print F z-direction NACV matrix
-    F_ATOM_INDEX = 1
-    Z_AXIS_INDEX = 2
-    f_z_nacv = nacv[:, :, F_ATOM_INDEX, Z_AXIS_INDEX]
-    print(f"F z-direction NACV matrix:\n{f_z_nacv}\n")
-    
-    if step > 0:
-        overlap = casscf.time_overlap_matrix(NSTATES)
-        print("Time-overlap matrix with previous geometry:")
-        print(overlap)
+
+    result = ES_Result()
+    casscf.compute_result(geom, request, result, previous=previous_strategy)
+
+    assert result.H_el is not None
+    assert result.H_el.shape == (NSTATES,)
+    print("energies:", result.H_el)
+
+    assert result.nac_vectors is not None
+    assert result.nac_vectors.shape == (NSTATES, NSTATES, 2, 3)
+    print("nac_vectors shape:", result.nac_vectors.shape)
+
+    assert result.time_overlap is not None
+    assert result.time_overlap.shape == (NSTATES, NSTATES)
+    print("time_overlap:\n", result.time_overlap)
+
+    previous_strategy = casscf.copy()
