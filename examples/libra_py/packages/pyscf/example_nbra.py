@@ -21,18 +21,15 @@ from __future__ import annotations
 import csv
 import sys
 from pathlib import Path
-
 import numpy as np
-
 from liblibra_core import MATRIX
-
 from libra_py import units
 
 
 # ============================================================================
 # LOCAL REPOSITORY IMPORT
 # ============================================================================
-
+"""
 def _prepend_repo_root() -> None:
     file_path = Path(__file__).resolve()
 
@@ -52,7 +49,7 @@ def _prepend_repo_root() -> None:
 
 if __name__ == "__main__" and __package__ is None:
     _prepend_repo_root()
-
+"""
 
 # ============================================================================
 # IMPORTS
@@ -159,7 +156,6 @@ es_obj = CASSCF(
 # ============================================================================
 
 model_params = {
-
     "atom_labels": ATOM_LABELS,
 
     "nstates": NSTATES,
@@ -195,18 +191,10 @@ def make_q(r_lif_bohr: float) -> MATRIX:
         0.0, 0.0, r_lif_bohr,
     ]
 
-    q = MATRIX(
-        len(coords_bohr),
-        1,
-    )
+    q = MATRIX(len(coords_bohr), 1 )
 
     for i, value_bohr in enumerate(coords_bohr):
-
-        q.set(
-            i,
-            0,
-            value_bohr * units.Angst,
-        )
+        q.set(i, 0, value_bohr * units.Angst)
 
     return q
 
@@ -396,7 +384,7 @@ for istep, r_lif in enumerate(bond_grid):
 # WRITE HUMAN-READABLE PHASE-1 TABLE
 # ============================================================================
 
-output_dir = Path(__file__).resolve().parents[3]
+output_dir = Path(__file__).resolve().parent / "results"
 output_dir.mkdir(parents=True, exist_ok=True)
 
 csv_file = output_dir / "lif_nbra_phase1_table.csv"

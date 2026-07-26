@@ -80,6 +80,9 @@ expected_overlap = np.array([
     [-0.00177315, 0.96330492, -0.02404977],
     [-0.00817692, 0.02435447, 0.92265228],
 ], dtype=np.float64)
-np.testing.assert_allclose(result2.time_overlap, expected_overlap, atol=1e-6, rtol=1e-6)
+
+## Because every time you run calculations, the phases may be different, we 
+## compare only the absolute values
+np.testing.assert_allclose(np.abs(result2.time_overlap), np.abs(expected_overlap), atol=1e-6, rtol=1e-6)
 
 assert isinstance(casscf, ES_Strategy)
