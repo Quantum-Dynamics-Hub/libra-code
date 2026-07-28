@@ -52,6 +52,10 @@ void update_Hamiltonian_variables(dyn_control_params &prms,
        - 1: recompute only diabatic Hamiltonian [ default ]
        - 2: recompute only adiabatic Hamiltonian
 
+    ham_update_use_numpy:
+       - 0: the Python model returns Libra CMATRIX objects [ default ]
+       - 1: the Python model returns NumPy arrays
+
     ham_transform_method:
        - 0: don't do any transforms
        - 1: diabatic->adiabatic according to internal diagonalization [ default
@@ -95,10 +99,18 @@ void update_Hamiltonian_variables(dyn_control_params &prms,
       //      cout<<" "<<iM.n_cols<<"  "<<iM.n_rows<<endl;
       //      cout<<" "<<p.n_cols<<"  "<<p.n_rows<<endl;
       // exit(0);
-      ham.compute_diabatic(py_funct, q, model_params, 1);
+      if (prms.ham_update_use_numpy == 0) {
+        ham.compute_diabatic(py_funct, q, model_params, 1);
+      } else {
+        ham.compute_diabatic_numpy(py_funct, q, model_params, 1);
+      }
       //      exit(0);
     } else if (prms.ham_update_method == 2) {
-      ham.compute_adiabatic(py_funct, q, model_params, 1);
+      if (prms.ham_update_use_numpy == 0) {
+        ham.compute_adiabatic(py_funct, q, model_params, 1);
+      } else {
+        ham.compute_adiabatic_numpy(py_funct, q, model_params, 1);
+      }
     }
     //    exit(0);
     // Do the additional transformation between any reps, if needed

@@ -14,7 +14,6 @@
     
 */
 
-
 #if defined(USING_PCH)
 #include "../pch.h"
 #else
@@ -37,7 +36,6 @@ using namespace libio;
 
 
 namespace bp = boost::python;
-
 
 bp::object import_py_funct(const std::string& module, const std::string& path, bp::object& globals)
 {
@@ -253,6 +251,76 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
 
 
 
+}
+
+void nHamiltonian::compute_diabatic_numpy(bp::object py_funct, MATRIX &q,
+                                          bp::object params) {
+  compute_diabatic_numpy(py_funct, q, params, 0);
+}
+
+void nHamiltonian::compute_diabatic_numpy(bp::object py_funct, MATRIX &q,
+                                          bp::object params, int lvl) {
+  /**
+    NumPy/buffer-protocol counterpart of compute_diabatic(py_funct, ...).
+
+    Matrix-valued properties must be 2-D arrays. dc1_dia, d1ham_dia, and
+    d2ham_dia must be 3-D arrays whose leading dimension indexes the
+    derivative. Real and complex 32/64-bit contiguous or strided arrays are
+    accepted.
+  */
+  if (level == lvl) {
+    bp::object obj = py_funct(q, params, get_full_id());
+
+    struct MatrixProperty {
+      const char *name;
+      CMATRIX *target;
+    };
+    MatrixProperty properties[] = {
+      {"ham_dia", ham_dia},
+      {"ovlp_dia", ovlp_dia},
+      {"nac_dia", nac_dia},
+      {"hvib_dia", hvib_dia},
+      {"time_overlap_dia", time_overlap_dia}
+    };
+
+    for (unsigned int i = 0;
+         i < sizeof(properties) / sizeof(properties[0]); ++i) {
+      if (hasattr(obj, properties[i].name)) {
+        if (properties[i].target == NULL) {
+          numpy_error("compute_diabatic_numpy", properties[i].name,
+                      "storage is not allocated");
+        }
+        bp::object array = obj.attr(properties[i].name);
+        copy_numpy_matrix(array.ptr(), *properties[i].target, ndia, ndia,
+                          "compute_diabatic_numpy", properties[i].name);
+      }
+    }
+
+    if (hasattr(obj, "dc1_dia")) {
+      bp::object array = obj.attr("dc1_dia");
+      copy_numpy_matrix_stack(array.ptr(), dc1_dia, nnucl, ndia, ndia,
+                              "compute_diabatic_numpy", "dc1_dia");
+    }
+    if (hasattr(obj, "d1ham_dia")) {
+      bp::object array = obj.attr("d1ham_dia");
+      copy_numpy_matrix_stack(array.ptr(), d1ham_dia, nnucl, ndia, ndia,
+                              "compute_diabatic_numpy", "d1ham_dia");
+    }
+    if (hasattr(obj, "d2ham_dia")) {
+      bp::object array = obj.attr("d2ham_dia");
+      copy_numpy_matrix_stack(array.ptr(), d2ham_dia, nnucl * nnucl,
+                              ndia, ndia, "compute_diabatic_numpy",
+                              "d2ham_dia");
+    }
+  }
+  else if (lvl > level) {
+    compute_numpy_children(py_funct, q, params, lvl, false);
+  }
+  else {
+    cout << "WARNING in nHamiltonian::compute_diabatic_numpy\n";
+    cout << "Can not run evaluation of function in the parent Hamiltonian from "
+            "the child node\n";
+  }
 }
 
 

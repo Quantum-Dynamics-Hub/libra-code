@@ -38,6 +38,7 @@ dyn_control_params::dyn_control_params(){
   rep_tdse = 1;
 //  rep_ham = 0;
   ham_update_method = 1;
+  ham_update_use_numpy = 0;
   ham_transform_method = 1;
   rep_sh = 1;
   rep_lz = 0;
@@ -159,6 +160,7 @@ dyn_control_params::dyn_control_params(const dyn_control_params& x){
   rep_tdse = x.rep_tdse;
 //  rep_ham = x.rep_ham;
   ham_update_method = x.ham_update_method;
+  ham_update_use_numpy = x.ham_update_use_numpy;
   ham_transform_method = x.ham_transform_method;
   rep_sh = x.rep_sh;
   rep_lz = x.rep_lz;
@@ -372,6 +374,7 @@ void dyn_control_params::set_parameters(bp::dict params){
     if(key=="rep_tdse") { rep_tdse = bp::extract<int>(params.values()[i]); }
 //    else if(key=="rep_ham") { rep_ham = bp::extract<int>(params.values()[i]);   }
     else if(key=="ham_update_method") { ham_update_method = bp::extract<int>(params.values()[i]);   }
+    else if(key=="ham_update_use_numpy") { ham_update_use_numpy = bp::extract<int>(params.values()[i]);   }
     else if(key=="ham_transform_method") { ham_transform_method = bp::extract<int>(params.values()[i]);   }
     else if(key=="rep_sh") { rep_sh = bp::extract<int>(params.values()[i]);  }
     else if(key=="rep_lz") { rep_lz = bp::extract<int>(params.values()[i]);  }

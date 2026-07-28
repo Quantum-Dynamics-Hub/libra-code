@@ -73,8 +73,18 @@ class dyn_control_params{
   */
   int ham_update_method;
 
+  /**
+   Selects how matrix-valued properties returned by the Python Hamiltonian
+   model are transferred to nHamiltonian storage.
 
-  /** 
+   Options:
+     - 0: Libra CMATRIX objects and lists of CMATRIX objects [ default ]
+     - 1: NumPy arrays and packed three-dimensional derivative arrays
+  */
+  int ham_update_use_numpy;
+
+
+  /**
    How to transform the Hamiltonians between representations
 
    Options:

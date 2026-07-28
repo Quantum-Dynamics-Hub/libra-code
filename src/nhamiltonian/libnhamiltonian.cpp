@@ -132,6 +132,10 @@ void export_nhamiltonian_objects(){
 
   void (nHamiltonian::*expt_compute_diabatic_v4)(bp::object py_funct, MATRIX& q, bp::object params)
   = &nHamiltonian::compute_diabatic;
+  void (nHamiltonian::*expt_compute_diabatic_numpy_v1)(bp::object py_funct, MATRIX& q, bp::object params, int lvl)
+  = &nHamiltonian::compute_diabatic_numpy;
+  void (nHamiltonian::*expt_compute_diabatic_numpy_v2)(bp::object py_funct, MATRIX& q, bp::object params)
+  = &nHamiltonian::compute_diabatic_numpy;
 
 
 
@@ -156,6 +160,10 @@ void export_nhamiltonian_objects(){
   = &nHamiltonian::compute_adiabatic;
   void (nHamiltonian::*expt_compute_adiabatic_v4)(bp::object py_funct, MATRIX& q, bp::object params)
   = &nHamiltonian::compute_adiabatic;
+  void (nHamiltonian::*expt_compute_adiabatic_numpy_v1)(bp::object py_funct, MATRIX& q, bp::object params, int lvl)
+  = &nHamiltonian::compute_adiabatic_numpy;
+  void (nHamiltonian::*expt_compute_adiabatic_numpy_v2)(bp::object py_funct, MATRIX& q, bp::object params)
+  = &nHamiltonian::compute_adiabatic_numpy;
 
 /*
   void (nHamiltonian::*expt_compute_adiabatic_v3)(bp::object py_funct, bp::object q, bp::object params, int lvl)
@@ -498,6 +506,8 @@ void export_nhamiltonian_objects(){
       .def("compute_diabatic", expt_compute_diabatic_v2)
       .def("compute_diabatic", expt_compute_diabatic_v3)
       .def("compute_diabatic", expt_compute_diabatic_v4)
+      .def("compute_diabatic_numpy", expt_compute_diabatic_numpy_v1)
+      .def("compute_diabatic_numpy", expt_compute_diabatic_numpy_v2)
 
 
       .def("update_ordering", expt_update_ordering_v1)
@@ -512,6 +522,8 @@ void export_nhamiltonian_objects(){
       .def("compute_adiabatic", expt_compute_adiabatic_v2)
       .def("compute_adiabatic", expt_compute_adiabatic_v3)
       .def("compute_adiabatic", expt_compute_adiabatic_v4)
+      .def("compute_adiabatic_numpy", expt_compute_adiabatic_numpy_v1)
+      .def("compute_adiabatic_numpy", expt_compute_adiabatic_numpy_v2)
 
 
       .def("ampl_adi2dia", expt_ampl_adi2dia_v1)

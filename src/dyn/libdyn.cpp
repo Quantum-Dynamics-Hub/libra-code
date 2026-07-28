@@ -63,8 +63,9 @@ void export_dyn_control_params_objects(){
       ///================= Computing Hamiltonian-related properties ====================
       .def_readwrite("rep_tdse", &dyn_control_params::rep_tdse)
 //      .def_readwrite("rep_ham", &dyn_control_params::rep_ham)
-      .def_readwrite("ham_update_method", &dyn_control_params::ham_update_method)    
-      .def_readwrite("ham_transform_method", &dyn_control_params::ham_transform_method)    
+      .def_readwrite("ham_update_method", &dyn_control_params::ham_update_method)
+      .def_readwrite("ham_update_use_numpy", &dyn_control_params::ham_update_use_numpy)
+      .def_readwrite("ham_transform_method", &dyn_control_params::ham_transform_method)
       .def_readwrite("rep_sh", &dyn_control_params::rep_sh)
       .def_readwrite("rep_lz", &dyn_control_params::rep_lz)
       .def_readwrite("rep_force", &dyn_control_params::rep_force)

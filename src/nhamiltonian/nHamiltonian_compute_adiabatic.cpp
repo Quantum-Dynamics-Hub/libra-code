@@ -709,5 +709,78 @@ void nHamiltonian::compute_adiabatic(bp::object py_funct, MATRIX &q,
   }
 }
 
+void nHamiltonian::compute_adiabatic_numpy(bp::object py_funct, MATRIX &q,
+                                           bp::object params) {
+  compute_adiabatic_numpy(py_funct, q, params, 0);
+}
+
+void nHamiltonian::compute_adiabatic_numpy(bp::object py_funct, MATRIX &q,
+                                           bp::object params, int lvl) {
+  /**
+    NumPy/buffer-protocol counterpart of compute_adiabatic(py_funct, ...).
+
+    Matrix-valued attributes returned by py_funct must be 2-D arrays. The
+    derivative attributes dc1_adi, d1ham_adi, and d2ham_adi must be single 3-D
+    arrays whose leading dimension indexes the derivative. Both contiguous and
+    strided arrays are accepted, with real or complex 32/64-bit floating dtype.
+  */
+  if (level == lvl) {
+    bp::object obj = py_funct(q, params, get_full_id());
+
+    struct MatrixProperty {
+      const char *name;
+      CMATRIX *target;
+    };
+    MatrixProperty properties[] = {
+      {"ham_adi", ham_adi},
+      {"nac_adi", nac_adi},
+      {"hvib_adi", hvib_adi},
+      {"basis_transform", basis_transform},
+      {"time_overlap_adi", time_overlap_adi}
+    };
+
+    for (unsigned int i = 0; i < sizeof(properties) / sizeof(properties[0]); ++i) {
+      if (hasattr(obj, properties[i].name)) {
+        if (properties[i].target == NULL) {
+          numpy_error("compute_adiabatic_numpy", properties[i].name,
+                      "storage is not allocated");
+        }
+        bp::object array = obj.attr(properties[i].name);
+        copy_numpy_matrix(array.ptr(), *properties[i].target, nadi, nadi,
+                          "compute_adiabatic_numpy", properties[i].name);
+      }
+    }
+
+    if (hasattr(obj, "dc1_adi")) {
+      bp::object array = obj.attr("dc1_adi");
+      copy_numpy_matrix_stack(array.ptr(), dc1_adi, nnucl,
+                              nadi, nadi, "compute_adiabatic_numpy", "dc1_adi");
+    }
+    if (hasattr(obj, "d1ham_adi")) {
+      bp::object array = obj.attr("d1ham_adi");
+      copy_numpy_matrix_stack(array.ptr(), d1ham_adi, nnucl,
+                              nadi, nadi, "compute_adiabatic_numpy",
+                              "d1ham_adi");
+    }
+    if (hasattr(obj, "d2ham_adi")) {
+      bp::object array = obj.attr("d2ham_adi");
+      copy_numpy_matrix_stack(array.ptr(), d2ham_adi,
+                              nnucl * nnucl, nadi, nadi,
+                              "compute_adiabatic_numpy", "d2ham_adi");
+    }
+    if (hasattr(obj, "gs_kinetic_energy")) {
+      gs_kinetic_energy = extract<double>(obj.attr("gs_kinetic_energy"));
+    }
+  }
+  else if (lvl > level) {
+    compute_numpy_children(py_funct, q, params, lvl, true);
+  }
+  else {
+    cout << "WARNING in nHamiltonian::compute_adiabatic_numpy\n";
+    cout << "Can not run evaluation of function in the parent Hamiltonian from the"
+            " child node\n";
+  }
+}
+
 } // namespace libnhamiltonian
 } // namespace liblibra

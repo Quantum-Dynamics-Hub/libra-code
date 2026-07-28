@@ -84,6 +84,12 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                 - 1: recompute only diabatic Hamiltonian [ default ]
                 - 2: recompute only adiabatic Hamiltonian
 
+            * **dyn_params["ham_update_use_numpy"]** ( int ): Format of the matrix-valued properties
+                returned by the Python Hamiltonian model
+
+                - 0: Libra CMATRIX objects and lists of CMATRIX objects [ default ]
+                - 1: NumPy arrays and packed three-dimensional derivative arrays
+
             * **dyn_params["ham_transform_method"]** ( int ): How to transform the Hamiltonians between
                 representations
 
@@ -826,7 +832,8 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
     critical_params = []
     default_params = {}
     # ================= Computing Hamiltonian-related properties ====================
-    default_params.update({"rep_tdse": 1, "ham_update_method": 1, "ham_transform_method": 1,
+    default_params.update({"rep_tdse": 1, "ham_update_method": 1, "ham_update_use_numpy": 0,
+                           "ham_transform_method": 1,
                            "rep_sh": 1, "rep_lz": 0, "rep_force": 1,
                            "force_method": 1, "enforce_state_following": 0, "enforced_state_index": 0,
                            "time_overlap_method": 0, "nac_update_method": 1, "nac_algo": 0,

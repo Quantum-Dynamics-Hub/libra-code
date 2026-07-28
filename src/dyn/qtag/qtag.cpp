@@ -742,7 +742,11 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
 
   // Compute Hamiltonians for all the trajectories
   //ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
-  ham.compute_diabatic(compute_ham_funct, q, compute_ham_params, 1);
+  if (prms.ham_update_use_numpy == 0) {
+    ham.compute_diabatic(compute_ham_funct, q, compute_ham_params, 1);
+  } else {
+    ham.compute_diabatic_numpy(compute_ham_funct, q, compute_ham_params, 1);
+  }
 
   // State blocks
   for(n1=0; n1<nstates; n1++){

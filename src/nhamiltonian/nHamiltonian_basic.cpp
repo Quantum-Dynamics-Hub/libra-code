@@ -15,6 +15,8 @@
 
 */
 
+#include <cstring>
+
 #if defined(USING_PCH)
 #include "../pch.h"
 #else
@@ -31,6 +33,258 @@ using namespace libmeigen;
 
 /// libnhamiltonian namespace
 namespace libnhamiltonian {
+
+namespace {
+
+class NumpyBufferGuard {
+public:
+  Py_buffer view;
+
+  explicit NumpyBufferGuard(PyObject *obj) {
+    std::memset(&view, 0, sizeof(view));
+    if (PyObject_GetBuffer(obj, &view,
+                           PyBUF_FORMAT | PyBUF_ND | PyBUF_STRIDES) != 0) {
+      bp::throw_error_already_set();
+    }
+  }
+
+  ~NumpyBufferGuard() { PyBuffer_Release(&view); }
+};
+
+enum NumpyBufferType {
+  NUMPY_COMPLEX128,
+  NUMPY_COMPLEX64,
+  NUMPY_FLOAT64,
+  NUMPY_FLOAT32
+};
+
+NumpyBufferType numpy_buffer_type(const Py_buffer &view,
+                                  const std::string &function_name,
+                                  const std::string &property_name) {
+  std::string format = view.format ? view.format : "";
+  if (!format.empty() && (format[0] == '@' || format[0] == '='))
+    format.erase(0, 1);
+
+  if (format == "Zd" &&
+      view.itemsize == (Py_ssize_t)sizeof(complex<double>))
+    return NUMPY_COMPLEX128;
+  if (format == "Zf" &&
+      view.itemsize == (Py_ssize_t)(2 * sizeof(float)))
+    return NUMPY_COMPLEX64;
+  if (format == "d" && view.itemsize == (Py_ssize_t)sizeof(double))
+    return NUMPY_FLOAT64;
+  if (format == "f" && view.itemsize == (Py_ssize_t)sizeof(float))
+    return NUMPY_FLOAT32;
+
+  PyErr_SetString(
+      PyExc_ValueError,
+      (function_name + ": '" + property_name +
+       "' must have dtype float32, float64, complex64, or complex128").c_str());
+  bp::throw_error_already_set();
+  return NUMPY_COMPLEX128;
+}
+
+complex<double> numpy_complex_at(NumpyBufferType type, char *ptr) {
+  if (type == NUMPY_COMPLEX128) {
+    complex<double> value;
+    std::memcpy(&value, ptr, sizeof(value));
+    return value;
+  }
+  if (type == NUMPY_COMPLEX64) {
+    float value[2];
+    std::memcpy(value, ptr, sizeof(value));
+    return complex<double>(value[0], value[1]);
+  }
+  if (type == NUMPY_FLOAT64) {
+    double value;
+    std::memcpy(&value, ptr, sizeof(value));
+    return complex<double>(value, 0.0);
+  }
+  float value;
+  std::memcpy(&value, ptr, sizeof(value));
+  return complex<double>(value, 0.0);
+}
+
+} // namespace
+
+void nHamiltonian::numpy_error(const std::string &function_name,
+                               const std::string &property_name,
+                               const std::string &message) {
+  /** Raise a consistently formatted Python ValueError for a NumPy property. */
+  PyErr_SetString(
+      PyExc_ValueError,
+      (function_name + ": '" + property_name + "' " + message).c_str());
+  bp::throw_error_already_set();
+}
+
+void nHamiltonian::copy_numpy_matrix(PyObject *array, CMATRIX &target,
+                                     int nrows, int ncols,
+                                     const std::string &function_name,
+                                     const std::string &property_name) {
+  /**
+    Copy a two-dimensional Python buffer into a CMATRIX.
+
+    The buffer may be contiguous or strided and may contain float32, float64,
+    complex64, or complex128 values. Shape and dtype errors are reported using
+    the calling public API name and property name.
+  */
+  NumpyBufferGuard buffer(array);
+  Py_buffer &view = buffer.view;
+  if (view.ndim != 2 || view.shape[0] != nrows || view.shape[1] != ncols) {
+    numpy_error(function_name, property_name,
+                "must be a 2-D array with shape (" + std::to_string(nrows) +
+                ", " + std::to_string(ncols) + ")");
+  }
+
+  NumpyBufferType type =
+      numpy_buffer_type(view, function_name, property_name);
+  for (int i = 0; i < nrows; ++i) {
+    for (int j = 0; j < ncols; ++j) {
+      char *ptr = static_cast<char *>(view.buf) +
+                  i * view.strides[0] + j * view.strides[1];
+      target.set(i, j, numpy_complex_at(type, ptr));
+    }
+  }
+}
+
+void nHamiltonian::copy_numpy_matrix_stack(
+    PyObject *array, vector<CMATRIX *> &targets, int count, int nrows,
+    int ncols, const std::string &function_name,
+    const std::string &property_name) {
+  /**
+    Copy a three-dimensional Python buffer into a vector of CMATRIX objects.
+
+    The first array dimension selects the destination matrix. The remaining
+    dimensions select its row and column.
+  */
+  if ((int)targets.size() < count)
+    numpy_error(function_name, property_name, "storage is not allocated");
+  for (int k = 0; k < count; ++k) {
+    if (targets[k] == NULL)
+      numpy_error(function_name, property_name, "storage is not allocated");
+  }
+
+  NumpyBufferGuard buffer(array);
+  Py_buffer &view = buffer.view;
+  if (view.ndim != 3 || view.shape[0] != count ||
+      view.shape[1] != nrows || view.shape[2] != ncols) {
+    numpy_error(function_name, property_name,
+                "must be a 3-D array with shape (" + std::to_string(count) +
+                ", " + std::to_string(nrows) + ", " +
+                std::to_string(ncols) + ")");
+  }
+
+  NumpyBufferType type =
+      numpy_buffer_type(view, function_name, property_name);
+  for (int k = 0; k < count; ++k) {
+    for (int i = 0; i < nrows; ++i) {
+      for (int j = 0; j < ncols; ++j) {
+        char *ptr = static_cast<char *>(view.buf) +
+                    k * view.strides[0] + i * view.strides[1] +
+                    j * view.strides[2];
+        targets[k]->set(i, j, numpy_complex_at(type, ptr));
+      }
+    }
+  }
+}
+
+void nHamiltonian::compute_numpy_children(bp::object py_funct, MATRIX &q,
+                                          bp::object params, int lvl,
+                                          bool adiabatic) {
+  /**
+    Evaluate a NumPy-returning Python model for child Hamiltonians in parallel.
+
+    The calling thread releases the GIL around the OpenMP region. Each worker
+    acquires it before invoking Python. The first worker exception is captured
+    and restored on the calling Python thread after all workers have stopped.
+    NumPy or compiled model code that releases the GIL can run concurrently.
+  */
+  const std::string function_name =
+      adiabatic ? "compute_adiabatic_numpy" : "compute_diabatic_numpy";
+#ifdef _OPENMP
+  PyObject *error_type = NULL;
+  PyObject *error_value = NULL;
+  PyObject *error_traceback = NULL;
+  std::string cpp_error;
+  bool failed = false;
+  const int child_count = static_cast<int>(children.size());
+
+  PyThreadState *calling_state = PyEval_SaveThread();
+
+#pragma omp parallel for shared(error_type, error_value, error_traceback, cpp_error, failed)
+  for (int i = 0; i < child_count; ++i) {
+    bool skip = false;
+#pragma omp critical(nhamiltonian_numpy_error)
+    { skip = failed; }
+    if (skip) continue;
+
+    PyGILState_STATE gil_state = PyGILState_Ensure();
+    try {
+      if (adiabatic)
+        children[i]->compute_adiabatic_numpy(py_funct, q, params, lvl);
+      else
+        children[i]->compute_diabatic_numpy(py_funct, q, params, lvl);
+    }
+    catch (bp::error_already_set const &) {
+      PyObject *type = NULL;
+      PyObject *value = NULL;
+      PyObject *traceback = NULL;
+      PyErr_Fetch(&type, &value, &traceback);
+
+#pragma omp critical(nhamiltonian_numpy_error)
+      {
+        if (!failed) {
+          failed = true;
+          error_type = type;
+          error_value = value;
+          error_traceback = traceback;
+          type = value = traceback = NULL;
+        }
+      }
+      Py_XDECREF(type);
+      Py_XDECREF(value);
+      Py_XDECREF(traceback);
+    }
+    catch (std::exception const &error) {
+#pragma omp critical(nhamiltonian_numpy_error)
+      {
+        if (!failed) {
+          failed = true;
+          cpp_error = error.what();
+        }
+      }
+    }
+    catch (...) {
+#pragma omp critical(nhamiltonian_numpy_error)
+      {
+        if (!failed) {
+          failed = true;
+          cpp_error = "unknown C++ exception";
+        }
+      }
+    }
+    PyGILState_Release(gil_state);
+  }
+
+  PyEval_RestoreThread(calling_state);
+
+  if (failed) {
+    if (error_type != NULL)
+      PyErr_Restore(error_type, error_value, error_traceback);
+    else
+      PyErr_SetString(PyExc_RuntimeError,
+                      (function_name + ": " + cpp_error).c_str());
+    bp::throw_error_already_set();
+  }
+#else
+  for (auto i = 0u; i < children.size(); ++i) {
+    if (adiabatic)
+      children[i]->compute_adiabatic_numpy(py_funct, q, params, lvl);
+    else
+      children[i]->compute_diabatic_numpy(py_funct, q, params, lvl);
+  }
+#endif
+}
 
 /*
 nHamiltonian::nHamiltonian(){

@@ -72,6 +72,22 @@ class nHamiltonian{
 
   void add_branches(int target_level, vector<nHamiltonian*>& res);
 
+  static void numpy_error(const std::string& function_name,
+                          const std::string& property_name,
+                          const std::string& message);
+  static void copy_numpy_matrix(PyObject* array, CMATRIX& target,
+                                int nrows, int ncols,
+                                const std::string& function_name,
+                                const std::string& property_name);
+  static void copy_numpy_matrix_stack(PyObject* array,
+                                      vector<CMATRIX*>& targets,
+                                      int count, int nrows, int ncols,
+                                      const std::string& function_name,
+                                      const std::string& property_name);
+  void compute_numpy_children(bp::object py_funct, MATRIX& q,
+                              bp::object params, int lvl,
+                              bool adiabatic);
+
 public:
 
   int level;                        ///< level in the tree hierarchy
@@ -434,6 +450,17 @@ public:
 //  void compute_diabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
   void compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params, int lvl); // for models defined in Python
   void compute_diabatic(bp::object py_funct, MATRIX& q, bp::object params); // for models defined in Python
+  /**
+    Populate diabatic properties directly from NumPy arrays returned by a
+    Python model. Matrix properties have shape (ndia, ndia); derivative
+    properties have shape (nnucl, ndia, ndia), except d2ham_dia, whose leading
+    dimension is nnucl*nnucl. Floating and complex 32/64-bit strided arrays are
+    accepted.
+  */
+  void compute_diabatic_numpy(bp::object py_funct, MATRIX& q,
+                              bp::object params, int lvl);
+  void compute_diabatic_numpy(bp::object py_funct, MATRIX& q,
+                              bp::object params);
 
 
   ///< In nHamiltonian_compute_ETHD.cpp
@@ -468,6 +495,17 @@ public:
 //  void compute_adiabatic(bp::object py_funct, bp::object q, bp::object params); // for models defined in Python
   void compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object params, int lvl); // for models defined in Python
   void compute_adiabatic(bp::object py_funct, MATRIX& q, bp::object params); // for models defined in Python
+  /**
+    Populate adiabatic properties directly from NumPy arrays returned by a
+    Python model. Matrix properties have shape (nadi, nadi); derivative
+    properties have shape (nnucl, nadi, nadi), except d2ham_adi, whose leading
+    dimension is nnucl*nnucl. Floating and complex 32/64-bit strided arrays are
+    accepted.
+  */
+  void compute_adiabatic_numpy(bp::object py_funct, MATRIX& q,
+                               bp::object params, int lvl);
+  void compute_adiabatic_numpy(bp::object py_funct, MATRIX& q,
+                               bp::object params);
 
 
 
