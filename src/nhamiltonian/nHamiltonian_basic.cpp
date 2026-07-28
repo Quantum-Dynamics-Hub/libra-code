@@ -105,6 +105,25 @@ complex<double> numpy_complex_at(NumpyBufferType type, char *ptr) {
   return complex<double>(value, 0.0);
 }
 
+bool numpy_rows_are_contiguous(const Py_buffer &view, int row_dimension,
+                               int column_dimension) {
+  return view.strides[column_dimension] == view.itemsize &&
+         view.strides[row_dimension] ==
+             view.shape[column_dimension] * view.itemsize;
+}
+
+void copy_contiguous_numpy_values(char *source, complex<double> *target,
+                                  int count, NumpyBufferType type,
+                                  Py_ssize_t itemsize) {
+  if (type == NUMPY_COMPLEX128) {
+    std::memcpy(target, source, count * sizeof(complex<double>));
+    return;
+  }
+
+  for (int i = 0; i < count; ++i)
+    target[i] = numpy_complex_at(type, source + i * itemsize);
+}
+
 } // namespace
 
 void nHamiltonian::numpy_error(const std::string &function_name,
@@ -124,9 +143,9 @@ void nHamiltonian::copy_numpy_matrix(PyObject *array, CMATRIX &target,
   /**
     Copy a two-dimensional Python buffer into a CMATRIX.
 
-    The buffer may be contiguous or strided and may contain float32, float64,
-    complex64, or complex128 values. Shape and dtype errors are reported using
-    the calling public API name and property name.
+    C-order arrays use a bulk-copy/conversion path. Other strided layouts use
+    the general element-wise path. The buffer may contain float32, float64,
+    complex64, or complex128 values.
   */
   NumpyBufferGuard buffer(array);
   Py_buffer &view = buffer.view;
@@ -138,11 +157,18 @@ void nHamiltonian::copy_numpy_matrix(PyObject *array, CMATRIX &target,
 
   NumpyBufferType type =
       numpy_buffer_type(view, function_name, property_name);
+
+  if (numpy_rows_are_contiguous(view, 0, 1)) {
+    copy_contiguous_numpy_values(static_cast<char *>(view.buf), target.M,
+                                 nrows * ncols, type, view.itemsize);
+    return;
+  }
+
   for (int i = 0; i < nrows; ++i) {
     for (int j = 0; j < ncols; ++j) {
       char *ptr = static_cast<char *>(view.buf) +
                   i * view.strides[0] + j * view.strides[1];
-      target.set(i, j, numpy_complex_at(type, ptr));
+      target.M[i * ncols + j] = numpy_complex_at(type, ptr);
     }
   }
 }
@@ -176,13 +202,24 @@ void nHamiltonian::copy_numpy_matrix_stack(
 
   NumpyBufferType type =
       numpy_buffer_type(view, function_name, property_name);
+
+  if (numpy_rows_are_contiguous(view, 1, 2)) {
+    for (int k = 0; k < count; ++k) {
+      char *source =
+          static_cast<char *>(view.buf) + k * view.strides[0];
+      copy_contiguous_numpy_values(source, targets[k]->M, nrows * ncols,
+                                   type, view.itemsize);
+    }
+    return;
+  }
+
   for (int k = 0; k < count; ++k) {
     for (int i = 0; i < nrows; ++i) {
       for (int j = 0; j < ncols; ++j) {
         char *ptr = static_cast<char *>(view.buf) +
                     k * view.strides[0] + i * view.strides[1] +
                     j * view.strides[2];
-        targets[k]->set(i, j, numpy_complex_at(type, ptr));
+        targets[k]->M[i * ncols + j] = numpy_complex_at(type, ptr);
       }
     }
   }
@@ -192,98 +229,21 @@ void nHamiltonian::compute_numpy_children(bp::object py_funct, MATRIX &q,
                                           bp::object params, int lvl,
                                           bool adiabatic) {
   /**
-    Evaluate a NumPy-returning Python model for child Hamiltonians in parallel.
+    Evaluate a NumPy-returning Python model for child Hamiltonians.
 
-    The calling thread releases the GIL around the OpenMP region. Each worker
-    acquires it before invoking Python. The first worker exception is captured
-    and restored on the calling Python thread after all workers have stopped.
-    NumPy or compiled model code that releases the GIL can run concurrently.
+    Python callbacks are intentionally evaluated serially. Starting an OpenMP
+    team here would create nested parallelism in multiprocessing-based
+    workflows and can deadlock after fork when worker threads enter Python's
+    GIL machinery. It is also slower for the small, frequent Hamiltonian model
+    callbacks typical of NAMD. Independent initial conditions can still be
+    parallelized safely at the process level.
   */
-  const std::string function_name =
-      adiabatic ? "compute_adiabatic_numpy" : "compute_diabatic_numpy";
-#ifdef _OPENMP
-  PyObject *error_type = NULL;
-  PyObject *error_value = NULL;
-  PyObject *error_traceback = NULL;
-  std::string cpp_error;
-  bool failed = false;
-  const int child_count = static_cast<int>(children.size());
-
-  PyThreadState *calling_state = PyEval_SaveThread();
-
-#pragma omp parallel for shared(error_type, error_value, error_traceback, cpp_error, failed)
-  for (int i = 0; i < child_count; ++i) {
-    bool skip = false;
-#pragma omp critical(nhamiltonian_numpy_error)
-    { skip = failed; }
-    if (skip) continue;
-
-    PyGILState_STATE gil_state = PyGILState_Ensure();
-    try {
-      if (adiabatic)
-        children[i]->compute_adiabatic_numpy(py_funct, q, params, lvl);
-      else
-        children[i]->compute_diabatic_numpy(py_funct, q, params, lvl);
-    }
-    catch (bp::error_already_set const &) {
-      PyObject *type = NULL;
-      PyObject *value = NULL;
-      PyObject *traceback = NULL;
-      PyErr_Fetch(&type, &value, &traceback);
-
-#pragma omp critical(nhamiltonian_numpy_error)
-      {
-        if (!failed) {
-          failed = true;
-          error_type = type;
-          error_value = value;
-          error_traceback = traceback;
-          type = value = traceback = NULL;
-        }
-      }
-      Py_XDECREF(type);
-      Py_XDECREF(value);
-      Py_XDECREF(traceback);
-    }
-    catch (std::exception const &error) {
-#pragma omp critical(nhamiltonian_numpy_error)
-      {
-        if (!failed) {
-          failed = true;
-          cpp_error = error.what();
-        }
-      }
-    }
-    catch (...) {
-#pragma omp critical(nhamiltonian_numpy_error)
-      {
-        if (!failed) {
-          failed = true;
-          cpp_error = "unknown C++ exception";
-        }
-      }
-    }
-    PyGILState_Release(gil_state);
-  }
-
-  PyEval_RestoreThread(calling_state);
-
-  if (failed) {
-    if (error_type != NULL)
-      PyErr_Restore(error_type, error_value, error_traceback);
-    else
-      PyErr_SetString(PyExc_RuntimeError,
-                      (function_name + ": " + cpp_error).c_str());
-    bp::throw_error_already_set();
-  }
-#else
   for (auto i = 0u; i < children.size(); ++i) {
     if (adiabatic)
       children[i]->compute_adiabatic_numpy(py_funct, q, params, lvl);
     else
       children[i]->compute_diabatic_numpy(py_funct, q, params, lvl);
   }
-#endif
 }
 
 /*
