@@ -32,6 +32,9 @@ from pyscf import dft, gto, scf, tdscf
 
 from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
 
+# Electron masses per amu; Libra nuclear dynamics use atomic units throughout.
+AMU = 1822.888486209
+
 
 def _compute_ao_overlap(prev_mol: Any, curr_mol: Any) -> np.ndarray:
     return gto.intor_cross("int1e_ovlp", prev_mol, curr_mol)
@@ -173,6 +176,40 @@ class TDDFT(ES_Strategy):
     def clone_empty(self) -> "TDDFT":
         """Return a fresh TDDFT with the same settings and no cached ES state."""
         return TDDFT(**self.init_kwargs())
+
+    def reset(self) -> None:
+        """Clear cached electronic-structure state (keep constructor settings)."""
+        self._geom = None
+        self._state = None
+        self._previous_state = None
+        self._mol = None
+        self._mf = None
+        self._td = None
+        self._ao_overlap = None
+        self._request = None
+        self._occ = None
+        self._vir = None
+
+    def build_mol(self, coords_bohr: np.ndarray):
+        """Build a PySCF ``Mole`` at ``coords_bohr`` without running SCF."""
+        coords = np.asarray(coords_bohr, dtype=float)
+        mol = gto.Mole()
+        mol.atom = [
+            [label, tuple(float(x) for x in xyz)]
+            for label, xyz in zip(self._atom_labels, coords)
+        ]
+        mol.basis = self._basis
+        mol.unit = self._unit
+        mol.charge = self._charge
+        mol.spin = self._spin
+        mol.verbose = 0
+        mol.build()
+        return mol
+
+    def masses_au(self, coords_bohr: np.ndarray) -> list[float]:
+        """Length-3N nuclear masses in a.u., Libra flat dof ordering."""
+        masses = self.build_mol(coords_bohr).atom_mass_list()
+        return [float(mass) * AMU for mass in masses for _ in range(3)]
 
     # ------------------------------------------------------------------ geometry
 
