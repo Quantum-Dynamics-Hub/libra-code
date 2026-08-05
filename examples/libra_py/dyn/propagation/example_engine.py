@@ -1,5 +1,5 @@
 """
-Educational example: DynamicsEngine and TSHEngine.
+Educational example: DynamicsEngine for several dynamics methods.
 
 The TSH path currently runs TD-SE amplitudes and state-specific forces without
 hopping decisions or momentum rescaling.
@@ -15,7 +15,7 @@ from libra_py.dyn.backends import backend
 from libra_py.dyn.control_params import DynControlParams
 from libra_py.dyn.core.storage import TensorStorage
 from libra_py.dyn.core.trajectory import Trajectory
-from libra_py.dyn.engine import DynamicsEngine, TSHEngine
+from libra_py.dyn.engine import DynamicsEngine
 
 
 def section(title):
@@ -81,7 +81,13 @@ def main():
 
     section("TSH preparation")
     storage, traj = make_system(active_state=0)
-    engine = TSHEngine(traj, storage, adiabatic_model, rep="adiabatic")
+    engine = DynamicsEngine(
+        traj,
+        storage,
+        adiabatic_model,
+        method="tsh",
+        rep="adiabatic",
+    )
     result = engine.step(0.1)
     print("active state:", result.active_states)
     print("amplitudes:", result.amplitudes)

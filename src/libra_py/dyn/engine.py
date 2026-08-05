@@ -214,20 +214,6 @@ class DynamicsEngine:
             raise NotImplementedError("state-specific forces currently require adiabatic rep")
 
 
-class TSHEngine(DynamicsEngine):
-    """
-    Compatibility alias for TD-SE surface-hopping preparation.
-
-    Hopping probabilities and momentum rescaling are intentionally not active
-    yet; this class propagates amplitudes and state-specific nuclear motion.
-    """
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault("method", "tsh")
-        kwargs.setdefault("force_mode", "state-specific")
-        super().__init__(*args, **kwargs)
-
-
 def run_dynamics(*args, **kwargs):
     """Convenience constructor for a storage-backed dynamics engine."""
 
