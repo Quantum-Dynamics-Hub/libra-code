@@ -22,8 +22,6 @@ import numpy as np
 
 from liblibra_core import CMATRIX, CMATRIXList, Cpp2Py
 
-from libra_py import units
-
 
 def _matrix2nparray(matrix, dtype=float):
     return np.array(
@@ -35,23 +33,22 @@ def _matrix2nparray(matrix, dtype=float):
     )
 
 
-def _q_to_geometry(q, itraj, atom_labels):
-    coords = q.col(itraj)
-
-    coordinates = (
-        _matrix2nparray(coords, float).reshape(-1, 3) / units.Angst
-    )
-
-    return MolecularGeometry(
-        atom_labels=tuple(atom_labels),
-        coords_bohr=coordinates,
-    )
 from libra_py.packages.pyscf.interfaces import (
     ES_Request,
     ES_Result,
     ES_Strategy,
     MolecularGeometry,
 )
+
+
+def _q_to_geometry(q, itraj, atom_labels):
+    """Libra stores nuclear coordinates in Bohr; keep them as ``coords_bohr``."""
+    coords = q.col(itraj)
+    coordinates = _matrix2nparray(coords, float).reshape(-1, 3)
+    return MolecularGeometry(
+        atom_labels=tuple(atom_labels),
+        coords_bohr=coordinates,
+    )
 
 class tmp:
     pass
