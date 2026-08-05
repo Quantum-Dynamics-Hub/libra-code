@@ -14,7 +14,7 @@ from libra_py.dyn.backends import backend
 from libra_py.dyn.control_params import DynControlParams
 from libra_py.dyn.core.storage import TensorStorage
 from libra_py.dyn.core.trajectory import Trajectory
-from libra_py.dyn.engine import DynamicsEngine, TSHEngine
+from libra_py.dyn.engine import DynamicsEngine
 
 
 def _storage():
@@ -90,13 +90,19 @@ def test_ehrenfest_engine_propagates_tdse_and_mean_field_force():
     np.testing.assert_allclose(storage.dm_adi[0, 0, 0, 0], 1.0 + 0.0j)
 
 
-def test_tsh_engine_runs_tdse_but_does_not_hop():
+def test_dynamics_engine_tsh_runs_tdse_but_does_not_hop():
     storage = _storage()
     traj = _trajectory()
     storage.act_states[0, 0] = 1
     storage.ampl_adi[0, 0] = [0.0 + 0.0j, 1.0 + 0.0j]
 
-    engine = TSHEngine(traj, storage, _adiabatic_model, rep="adiabatic")
+    engine = DynamicsEngine(
+        traj,
+        storage,
+        _adiabatic_model,
+        method="tsh",
+        rep="adiabatic",
+    )
     result = engine.step(0.1)
 
     assert result.method == "tsh"
