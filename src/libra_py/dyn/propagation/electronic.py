@@ -20,6 +20,8 @@ from __future__ import annotations
 
 from typing import Callable, Optional, Literal
 
+import numpy as np
+
 from ..backends import backend as backend_default
 
 
@@ -76,6 +78,174 @@ def split_step_propagator(C, H_prev, H, dt, backend=backend_default):
     )
 
 
+def propagate_electronic_method(
+    coefficients,
+    *,
+    ham_current,
+    ham_previous,
+    hvib_current,
+    hvib_previous,
+    dt,
+    method=0,
+    projector=None,
+    rep: Representation = "adiabatic",
+    overlap_current=None,
+    backend=backend_default,
+    propagator: Propagator = exp_propagator,
+):
+    """Propagate amplitudes using the ``Dynamics.cpp`` method selectors.
+
+    Parameters
+    ----------
+    coefficients
+        Batch of electronic coefficient vectors in the old/raw basis.
+    ham_current, ham_previous
+        Electronic Hamiltonians at ``t+dt`` and ``t``.
+    hvib_current, hvib_previous
+        Vibronic Hamiltonians at ``t+dt`` and ``t``.
+    projector
+        ``T_new`` from the C++ code. Its columns express dynamically
+        consistent old-state labels in the new raw basis. Consequently
+        ``T_new @ C`` maps old coefficients to new raw coefficients, while
+        ``T_new† @ H_new @ T_new`` expresses a new Hamiltonian in the old,
+        dynamically consistent labels.
+    method
+        C++ ``electronic_integrator`` selector. Adiabatic methods 0--8 and
+        10--15 are implemented, as are aliases 100--115. Method 9 is absent in
+        the C++ dispatcher. Diabatic methods 0--3 and aliases 100--103 are
+        implemented using their midpoint/split/non-Hermitian forms.
+
+    Notes
+    -----
+    Rotation-based options 10--15 are mathematically equivalent to 0--5 for
+    exact matrix exponentials and therefore share those kernels here. The C++
+    option 8 reads an uninitialized matrix in its first propagation statement;
+    Python implements the documented/intended old-then-new half-step form.
+    Option 6 intentionally preserves the implemented C++ behavior: a half-step
+    with the old vibronic Hamiltonian and no projector application.
+
+    Known C++ bugs and Python choices
+    ---------------------------------
+    ``method == 8``
+        The first C++ propagation uses local variable ``Hvib`` before it has
+        been assigned in that branch. Python cannot reproduce undefined
+        memory and instead implements the branch's documented intent: an old
+        Hvib half-step followed by a transformed-new-Hvib half-step.
+    ``method == 12 or method == 112``
+        The C++ condition is written ``method == 12 || method == 12``, so alias
+        112 is accidentally unreachable. Python accepts 112 consistently with
+        the other 100-series aliases.
+    ``method == 6``
+        C++ forms ``Hvib_old + Hvib_new`` but does not use that sum; it applies
+        only ``exp(-i Hvib_old dt/2)`` and no projector. Python preserves this
+        implemented behavior, even though it differs from the nearby comment
+        describing a two-point scheme.
+    """
+
+    method = int(method)
+    if method == -1:
+        return coefficients
+    base_method = method - 100 if 100 <= method < 200 else method
+    if rep == "diabatic":
+        return _propagate_diabatic_method(
+            coefficients,
+            ham_current,
+            ham_previous,
+            hvib_current,
+            hvib_previous,
+            dt,
+            base_method,
+            overlap_current,
+            backend,
+            propagator,
+        )
+    if rep != "adiabatic":
+        raise ValueError("rep must be 'adiabatic' or 'diabatic'")
+    if base_method in (10, 11, 12, 13, 14, 15):
+        base_method -= 10
+    if base_method == 9 or base_method < 0 or base_method > 8:
+        raise ValueError(f"unsupported adiabatic electronic integrator {method}")
+
+    current_h = _as_matrix_batch(ham_current, "ham_current")
+    previous_h = _as_matrix_batch(ham_previous, "ham_previous")
+    current_v = _as_matrix_batch(hvib_current, "hvib_current")
+    previous_v = _as_matrix_batch(hvib_previous, "hvib_previous")
+    transform = _projector_batch(projector, current_h)
+    transform_h = backend.conjugate_transpose(transform)
+
+    evolve = lambda state, matrix, interval: propagator(
+        state, matrix, interval, backend
+    )
+    apply_t = lambda state: _apply_matrix_to_state(transform, state, backend)
+    apply_th = lambda state: _apply_matrix_to_state(transform_h, state, backend)
+    rotate_new = lambda matrix: backend.matmul(
+        transform_h, backend.matmul(matrix, transform)
+    )
+
+    if base_method == 0:
+        state = evolve(coefficients, previous_h, 0.5 * dt)
+        return evolve(apply_t(state), current_h, 0.5 * dt)
+    if base_method == 1:
+        state = evolve(coefficients, previous_h, 0.25 * dt)
+        state = apply_t(state)
+        state = evolve(state, current_h, 0.5 * dt)
+        state = apply_th(state)
+        state = evolve(state, previous_h, 0.25 * dt)
+        return apply_t(state)
+    if base_method == 2:
+        effective = previous_h + rotate_new(current_h)
+        return apply_t(evolve(coefficients, effective, 0.5 * dt))
+    if base_method == 3:
+        return apply_t(evolve(coefficients, previous_v, dt))
+    if base_method == 4:
+        return apply_t(evolve(coefficients, previous_v + current_v, 0.5 * dt))
+    if base_method == 5:
+        effective = previous_v + rotate_new(current_v)
+        return apply_t(evolve(coefficients, effective, 0.5 * dt))
+    if base_method == 6:
+        return evolve(coefficients, previous_v, 0.5 * dt)
+    if base_method == 7:
+        state = evolve(coefficients, previous_v, 0.5 * dt)
+        state = apply_th(state)
+        return evolve(state, rotate_new(current_v), 0.5 * dt)
+    # Intended form of the C++ "new LD" option 8.
+    state = evolve(coefficients, previous_v, 0.5 * dt)
+    return evolve(state, rotate_new(current_v), 0.5 * dt)
+
+
+def _propagate_diabatic_method(
+    coefficients,
+    ham_current,
+    ham_previous,
+    hvib_current,
+    hvib_previous,
+    dt,
+    method,
+    overlap_current,
+    backend,
+    propagator,
+):
+    """Diabatic amplitude branches corresponding to C++ options 0--3."""
+
+    del ham_current, ham_previous
+    current = _as_matrix_batch(hvib_current, "hvib_current")
+    previous = _as_matrix_batch(hvib_previous, "hvib_previous")
+    midpoint = 0.5 * (current + previous)
+    if method in (0, 1):
+        return propagator(coefficients, midpoint, dt, backend)
+    if method == 2:
+        return split_step_propagator(
+            coefficients, previous, current, dt, backend
+        )
+    if method == 3:
+        if overlap_current is None:
+            raise ValueError("diabatic method 3 requires overlap_current")
+        overlap = _as_matrix_batch(overlap_current, "overlap_current")
+        effective = backend.solve(overlap, midpoint)
+        return propagator(coefficients, effective, dt, backend)
+    raise ValueError(f"unsupported diabatic electronic integrator {method}")
+
+
 # ============================================================
 # Basis transformations
 # ============================================================
@@ -110,6 +280,7 @@ def tdse_step(
     hamiltonian_type: HamiltonianType = "vibronic",
     T: Optional[object] = None,
     previous_state: Optional[object] = None,
+    method: Optional[int] = None,
 ):
     """
     Full electronic propagation step.
@@ -146,6 +317,12 @@ def tdse_step(
 
     previous_state :
         optional previous Hamiltonian snapshot used by two-point propagators.
+
+    method :
+        Optional C++ ``electronic_integrator`` selector. When supplied, the
+        old/current Hamiltonians and ``T`` are dispatched through
+        :func:`propagate_electronic_method`. When omitted, the original
+        one-matrix propagation behavior is retained.
     """
 
     state = None
@@ -179,19 +356,34 @@ def tdse_step(
         rep,
     )
 
-    # --------------------------------------------------------
-    # 4. Local diabatization (basis transform)
-    # --------------------------------------------------------
-    if T is not None:
-        C, H = apply_local_diabatization(C, H, T, backend)
-
-    # --------------------------------------------------------
-    # 5. Propagation
-    # --------------------------------------------------------
-    if propagator is split_step_propagator and H_prev is not None:
-        C_new = propagator(C, H_prev, H, dt, backend)
+    if method is not None:
+        if previous_state is None:
+            raise ValueError("method-based propagation requires previous_state")
+        C_new = propagate_electronic_method(
+            C,
+            ham_current=_storage_matrix(storage, traj, rep, "hamiltonian"),
+            ham_previous=_snapshot_matrix(previous_state, rep, "hamiltonian"),
+            hvib_current=_storage_matrix(storage, traj, rep, "vibronic"),
+            hvib_previous=_snapshot_matrix(previous_state, rep, "vibronic"),
+            dt=dt,
+            method=method,
+            projector=T,
+            rep=rep,
+            overlap_current=(
+                storage.ovlp_dia[traj.id, idx] if rep == "diabatic" else None
+            ),
+            backend=backend,
+            propagator=propagator,
+        )
     else:
-        C_new = propagator(C, H, dt, backend)
+        # This is a generic basis rotation, not the C++ T_new propagation
+        # convention. Method-based dynamics should use the branch above.
+        if T is not None:
+            C, H = apply_local_diabatization(C, H, T, backend)
+        if propagator is split_step_propagator and H_prev is not None:
+            C_new = propagator(C, H_prev, H, dt, backend)
+        else:
+            C_new = propagator(C, H, dt, backend)
 
     # --------------------------------------------------------
     # 6. Write back
@@ -265,3 +457,46 @@ def _previous_hamiltonian_slice(state, rep: Representation):
     if rep == "adiabatic":
         return getattr(state, "H_adi_prev", None)
     return getattr(state, "H_dia_prev", None)
+
+
+def _storage_matrix(storage, traj, rep, kind):
+    suffix = "adi" if rep == "adiabatic" else "dia"
+    prefix = "ham" if kind == "hamiltonian" else "hvib"
+    return getattr(storage, f"{prefix}_{suffix}")[traj.id, traj.tbf_ids]
+
+
+def _snapshot_matrix(state, rep, kind):
+    suffix = "adi" if rep == "adiabatic" else "dia"
+    prefix = "ham" if kind == "hamiltonian" else "hvib"
+    name = f"{prefix}_{suffix}"
+    if isinstance(state, dict):
+        value = state.get(name)
+    else:
+        value = getattr(state, name, None)
+    if value is None:
+        raise ValueError(f"previous_state does not contain {name}")
+    return value
+
+
+def _as_matrix_batch(value, name):
+    matrix = value
+    if getattr(matrix, "ndim", 0) == 2:
+        matrix = matrix[None, ...]
+    if getattr(matrix, "ndim", 0) != 3 or matrix.shape[-2] != matrix.shape[-1]:
+        raise ValueError(f"{name} must be a square matrix or matrix batch")
+    return matrix
+
+
+def _projector_batch(projector, reference):
+    if projector is None:
+        nstates = reference.shape[-1]
+        identity = backend_default.eye(nstates, dtype=complex)
+        return identity[None, ...] if reference.shape[0] == 1 else np.broadcast_to(
+            identity, reference.shape
+        ).copy()
+    transform = _as_matrix_batch(projector, "projector")
+    if transform.shape[0] == 1 and reference.shape[0] != 1:
+        transform = np.broadcast_to(transform, reference.shape).copy()
+    if transform.shape != reference.shape:
+        raise ValueError("projector and Hamiltonian batches must have equal shapes")
+    return transform

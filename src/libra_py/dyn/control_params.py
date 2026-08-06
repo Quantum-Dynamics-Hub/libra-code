@@ -195,6 +195,11 @@ class DynControlParams:
     #: 1 prints extra details on what the algorithm is doing, for debugging
     MK_verbosity: int = 0
 
+    #: Energy-aware overlap-cost scaling: 0 none, 1 Gaussian, 2 symmetric
+    #: exponential, 3 uphill-only exponential. These values reproduce the
+    #: implemented branches in ``dyn_projectors.cpp``.
+    MK_scaling_function: int = 0
+
     #: Convergence behavior for stochastic reordering
     #: A swtich for stochastic reordering algorithm 3 to choose what happens when an 
     #: acceptable permutation isn't generated in the set number of attempts:

@@ -19,14 +19,14 @@ from .propagation.coupled import (
     state_specific_forces,
     update_density,
 )
-from .propagation.electronic import exp_propagator, split_step_propagator, tdse_step
+from .propagation.electronic import exp_propagator, tdse_step
 from .propagation.integrators import normalize_dt, run_steps
 from .propagation.nuclear import drift, kick
 from .transformations.basis_rotation import (
     storage_amplitudes_adi_to_dia,
     storage_amplitudes_dia_to_adi,
 )
-from .transformations.local_diabatization import orthogonalized_T
+from .transformations.projectors import update_proj_adi
 
 DynamicsMethod = Literal["adiabatic", "ehrenfest", "tsh"]
 Representation = Literal["adiabatic", "diabatic"]
@@ -169,32 +169,22 @@ class DynamicsEngine:
         nsubsteps = int(_param(self.params, "num_electronic_substeps", 1))
         if nsubsteps < 1:
             raise ValueError("num_electronic_substeps must be positive")
+        if self._previous_hamiltonian is None:
+            raise RuntimeError("electronic propagation requires the previous Hamiltonian")
         result = None
-        # Options 3 and 4 follow the C++ one- and two-point adiabatic-Hvib
-        # schemes.  Option 4 uses a symmetric old/new split, avoiding the
-        # systematic right-endpoint bias of propagating every option with the
-        # newly evaluated Hamiltonian only.  The LD families (0--2, 10--12)
-        # retain the projection-matrix path below.
-        propagator = self.propagator
-        previous = None
-        if self.rep == "adiabatic" and integrator in (3, 4):
-            previous = self._previous_hamiltonian
-            if integrator == 4:
-                propagator = split_step_propagator
         for substep in range(nsubsteps):
             substep_dt = dt / nsubsteps
-            state_or_dt = previous if integrator == 3 else substep_dt
             result = tdse_step(
                 self.traj,
                 self.storage,
-                state_or_dt,
-                substep_dt if integrator == 3 else None,
+                substep_dt,
                 backend=self.storage.backend,
-                propagator=propagator,
+                propagator=self.propagator,
                 rep=self.rep,
                 hamiltonian_type=self.hamiltonian_type,
-                T=T if substep == 0 else None,
-                previous_state=previous,
+                T=T,
+                previous_state=self._previous_hamiltonian,
+                method=integrator,
             )
         return result
 
@@ -348,6 +338,14 @@ class DynamicsEngine:
         return None if value is None else np.asarray(value[self.traj.id, self.traj.tbf_ids])
 
     def _state_tracking_transform(self):
+        """Build ``T_new`` with columns ordered by old tracked state labels.
+
+        ``time_overlap_adi`` uses ``S[old, new_raw]``. The returned projector
+        is passed to electronic propagation, where ``T_new @ C_old`` produces
+        new raw-basis coefficients and ``T_new† @ H_new @ T_new`` produces a
+        Hamiltonian in the old dynamically consistent labels.
+        """
+
         if self.rep != "adiabatic" or int(_param(self.params, "electronic_integrator", 0)) not in (0, 1, 2, 10, 11, 12):
             return None
         if int(_param(self.params, "assume_always_consistent", 0)):
@@ -355,17 +353,13 @@ class DynamicsEngine:
         overlap = np.asarray(self.storage.time_overlap_adi[self.traj.id, self.traj.tbf_ids])
         if not np.any(overlap):
             return None
-        transforms = []
-        for matrix in overlap:
-            transforms.append(
-                orthogonalized_T(
-                    np.linalg.pinv(matrix),
-                    tol=float(_param(self.params, "phase_correction_tol", 1e-3)),
-                )
-            )
-        transform = np.asarray(transforms)
-        self.storage.proj_adi[self.traj.id, self.traj.tbf_ids] = transform
-        return transform
+        return update_proj_adi(
+            self.params,
+            self.storage,
+            self.traj,
+            previous=self._previous_hamiltonian,
+            rng=self.rng,
+        )
 
     def _proposal_params(self):
         if isinstance(self.params, dict):
@@ -380,6 +374,14 @@ class DynamicsEngine:
         return getattr(self.storage, field)[self.traj.id, self.traj.tbf_ids]
 
     def _apply_state_tracking_to_active_states(self, transform):
+        """Map active old labels through projector columns.
+
+        Column ``i`` of ``transform`` represents tracked old state ``i`` in
+        the raw new basis. Its largest-magnitude row is therefore the new raw
+        active-state label. Unit-modulus phase corrections do not change this
+        mapping.
+        """
+
         if transform is None or int(_param(self.params, "tsh_method", -1)) in (3, 4):
             return
         idx = self.traj.tbf_ids

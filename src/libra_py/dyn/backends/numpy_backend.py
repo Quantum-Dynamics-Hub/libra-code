@@ -20,6 +20,7 @@ class NumpyBackend:
     einsum = staticmethod(np.einsum)
     matmul = staticmethod(np.matmul)
     inverse = staticmethod(np.linalg.inv)
+    solve = staticmethod(np.linalg.solve)
 
     @staticmethod
     def conjugate_transpose(x):

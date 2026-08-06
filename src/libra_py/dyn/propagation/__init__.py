@@ -9,6 +9,7 @@ from .electronic import (
     euler_propagator,
     exp_propagator,
     propagate_electronic,
+    propagate_electronic_method,
     split_step_propagator,
     tdse_step,
 )
@@ -25,6 +26,7 @@ __all__ = [
     "kick",
     "normalize_dt",
     "propagate_electronic",
+    "propagate_electronic_method",
     "run_steps",
     "split_step_propagator",
     "state_specific_forces",

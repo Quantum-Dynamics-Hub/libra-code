@@ -46,3 +46,26 @@ Phase and continuity fixes:
 phase matching
 NAC smoothing
 sign continuity of eigenvectors
+
+
+🟩 state_tracking.py
+
+Python translations of `dyn_projectors.cpp` state-identity algorithms:
+
+- diagonal-overlap phase corrections;
+- greedy, Hungarian/Munkres-Kuhn, and stochastic reorderings;
+- energy-aware overlap cost matrices;
+- force-based crossing cost matrices;
+- permutation matrices and active-state remapping.
+
+The functions retain the C++ permutation convention: `perm[i]` is the new
+label of old state `i`.
+
+
+🟧 projectors.py
+
+Instantaneous and cumulative projection updates from `dyn_ham.cpp`, including
+the original `state_tracking_algo` option numbers. Option `-1` imports
+`orthogonalized_T` from `local_diabatization.py`; options `5` and `6` implement
+the SVD-based LD variants. The module also provides storage-backed
+`update_proj_adi` for the dynamics engine.
