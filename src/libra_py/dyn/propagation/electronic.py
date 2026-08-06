@@ -109,6 +109,7 @@ def tdse_step(
     rep: Representation = "adiabatic",
     hamiltonian_type: HamiltonianType = "vibronic",
     T: Optional[object] = None,
+    previous_state: Optional[object] = None,
 ):
     """
     Full electronic propagation step.
@@ -142,6 +143,9 @@ def tdse_step(
 
     T :
         optional local diabatization transform
+
+    previous_state :
+        optional previous Hamiltonian snapshot used by two-point propagators.
     """
 
     state = None
@@ -170,7 +174,10 @@ def tdse_step(
         hamiltonian_type,
         state=state,
     )
-    H_prev = _previous_hamiltonian_slice(state, rep)
+    H_prev = _previous_hamiltonian_slice(
+        previous_state if previous_state is not None else state,
+        rep,
+    )
 
     # --------------------------------------------------------
     # 4. Local diabatization (basis transform)
@@ -240,6 +247,11 @@ def _legacy_state_matrix(
 ):
     """Read from the former HamiltonianState shape when callers still pass it."""
 
+    if isinstance(state, dict):
+        suffix = "adi" if rep == "adiabatic" else "dia"
+        prefix = "hvib" if hamiltonian_type == "vibronic" else "ham"
+        return state[f"{prefix}_{suffix}"]
+
     if rep == "adiabatic":
         return state.Hvib_adi if hamiltonian_type == "vibronic" else state.H_adi
     return state.Hvib_dia if hamiltonian_type == "vibronic" else state.H_dia
@@ -248,6 +260,8 @@ def _legacy_state_matrix(
 def _previous_hamiltonian_slice(state, rep: Representation):
     if state is None:
         return None
+    if isinstance(state, dict):
+        return state[f"hvib_{'adi' if rep == 'adiabatic' else 'dia'}"]
     if rep == "adiabatic":
         return getattr(state, "H_adi_prev", None)
     return getattr(state, "H_dia_prev", None)

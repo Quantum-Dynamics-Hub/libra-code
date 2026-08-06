@@ -35,6 +35,9 @@ class FaultTolerantSaver:
         Use ``np.savez_compressed``. Leave False for faster writes.
     manifest_name
         JSON-lines manifest filename inside ``path``.
+    mode
+        ``"a"`` preserves existing snapshots for restart/append workflows;
+        ``"w"`` starts a fresh snapshot series in the selected directory.
     """
 
     def __init__(
@@ -43,6 +46,7 @@ class FaultTolerantSaver:
         output_dir: str | Path | None = None,
         compressed: bool = False,
         manifest_name: str = "manifest.jsonl",
+        mode: str = "a",
     ):
         if path is None and output_dir is None:
             raise ValueError("Either path or output_dir must be supplied")
@@ -51,6 +55,13 @@ class FaultTolerantSaver:
         self.compressed = compressed
         self.manifest_path = self.path / manifest_name
         self.path.mkdir(parents=True, exist_ok=True)
+        if mode not in ("a", "w"):
+            raise ValueError("mode must be 'a' or 'w'")
+        self.mode = mode
+        if mode == "w":
+            for snapshot in self.path.glob("step_*.npz"):
+                snapshot.unlink()
+            self.manifest_path.unlink(missing_ok=True)
 
     def save_step(
         self,

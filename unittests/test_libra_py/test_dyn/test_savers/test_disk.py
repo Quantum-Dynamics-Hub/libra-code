@@ -47,6 +47,18 @@ def test_fault_tolerant_saver_writes_manifest_after_npz():
     np.testing.assert_allclose(records[1]["data"]["populations"], [0.8, 0.2])
 
 
+def test_fault_tolerant_saver_write_mode_starts_fresh_series():
+    output_dir = _prepare_output_dir("npz_write_mode")
+    FaultTolerantSaver(output_dir=output_dir).save_step(7, {"time": 7.0})
+
+    saver = FaultTolerantSaver(output_dir=output_dir, mode="w")
+    saver.save_step(0, {"time": 0.0})
+
+    assert not (output_dir / "step_00000007.npz").exists()
+    records = load_saved_steps(output_dir)
+    assert [record["record"]["step"] for record in records] == [0]
+
+
 def test_save_observables_computes_and_saves_selected_fields():
     output_dir = _prepare_output_dir("npz_observables")
     storage = TensorStorage(

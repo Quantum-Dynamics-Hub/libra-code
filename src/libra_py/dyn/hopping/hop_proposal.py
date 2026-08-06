@@ -61,6 +61,7 @@ def hop_proposal_probabilities(
     ham_prev=None,
     momentum=None,
     inverse_mass=None,
+    fssh3_errors=None,
 ):
     """Compute proposal vectors for one trajectory or a batch.
 
@@ -157,8 +158,12 @@ def hop_proposal_probabilities(
                     params, denmat, old_batch[index], state
                 )
             elif method == 8:
+                errors = None
+                if fssh3_errors is not None:
+                    error_batch = np.asarray(fssh3_errors)
+                    errors = error_batch if error_batch.ndim == 1 else error_batch[index]
                 probabilities = hopping_probabilities_fssh3(
-                    params, denmat, old_batch[index], state
+                    params, denmat, old_batch[index], state, errors
                 )
             else:
                 probabilities = hopping_probabilities_gfsh_orig(

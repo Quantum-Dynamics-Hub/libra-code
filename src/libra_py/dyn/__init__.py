@@ -7,7 +7,11 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-__all__ = ["backends",
+from .engine import DynamicsEngine, StepResult, dynamics_defaults, run_dynamics
+
+__all__ = ["DynamicsEngine",
+           "StepResult",
+           "backends",
            "control_params",
            "core",
            "decoherence",
@@ -21,4 +25,6 @@ __all__ = ["backends",
            "spawning",
            "transformations",
            "utils",
+           "dynamics_defaults",
+           "run_dynamics",
           ]

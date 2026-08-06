@@ -685,6 +685,31 @@ class DynControlParams:
     #: Properties to save (Python list of strings)
     properties_to_save: List[str] = field(default_factory=list)
 
+    #: Number of nuclear steps used by DynamicsEngine.run when not passed explicitly.
+    nsteps: int = 1
+
+    #: Save/print stride in nuclear steps.
+    nprint: int = 1
+
+    #: Primary output directory, retained from libra_py.dynamics.tsh.
+    prefix: str = "out"
+
+    #: Secondary output directory retained for input compatibility.
+    prefix2: str = "out2"
+
+    #: Legacy saver activation levels. Negative values disable that saver.
+    hdf5_output_level: int = -1
+    mem_output_level: int = -1
+    txt_output_level: int = -1
+    txt2_output_level: int = -1
+
+    #: Compression controls retained from the older Python workflow.
+    use_compression: int = 0
+    compression_level: List[int] = field(default_factory=lambda: [0, 0, 0])
+
+    #: Fractional progress-reporting interval; currently metadata only.
+    progress_frequency: float = 0.1
+
     #: Bath reorganization energy (Ha) [default: 0.0 Ha]
     reorg_energy: float = 0.0
 
@@ -705,4 +730,3 @@ class DynControlParams:
                 #raise AttributeError(f"Unknown parameter '{k}'")
             setattr(self, k, v)
         self.sanity_check()
-
