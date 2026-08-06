@@ -1,5 +1,20 @@
 """Surface-hop proposal probabilities and stochastic state selection."""
 
+from .hop_acceptance import (
+    HOP_ACCEPTANCE_ALGOS,
+    MOMENTA_RESCALING_ALGOS,
+    Boltz_cl_prob,
+    Boltz_cl_prob_up,
+    Boltz_quant_prob,
+    HO_prob,
+    HO_prob_up,
+    accept_hops,
+    boltz_factor,
+    can_rescale_along_vector,
+    handle_hops_nuclear,
+    rescale_along_vector,
+    where_can_we_hop,
+)
 from .hop_proposal_fssh3 import (
     adjust_signs,
     find_best_matrix,
@@ -21,9 +36,20 @@ from .hop_proposal import (
 )
 
 __all__ = [
+    "HOP_ACCEPTANCE_ALGOS",
+    "MOMENTA_RESCALING_ALGOS",
+    "Boltz_cl_prob",
+    "Boltz_cl_prob_up",
+    "Boltz_quant_prob",
+    "HO_prob",
+    "HO_prob_up",
+    "accept_hops",
     "TSH_METHODS",
     "adjust_signs",
+    "boltz_factor",
+    "can_rescale_along_vector",
     "find_best_matrix",
+    "handle_hops_nuclear",
     "hop",
     "hop_proposal_probabilities",
     "hopping_probabilities_fssh",
@@ -36,4 +62,6 @@ __all__ = [
     "hopping_probabilities_mssh",
     "hopping_probabilities_zn",
     "propose_hops",
+    "rescale_along_vector",
+    "where_can_we_hop",
 ]

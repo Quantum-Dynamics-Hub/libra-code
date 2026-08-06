@@ -1,10 +1,4 @@
-import sys
-from pathlib import Path
-
 import numpy as np
-
-
-sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "src"))
 
 from libra_py.dyn.control_params import DynControlParams
 from libra_py.dyn.hopping.hop_proposal_fssh3 import (

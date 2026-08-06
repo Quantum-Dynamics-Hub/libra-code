@@ -1,9 +1,5 @@
 """Landau–Zener and Zhu–Nakamura crossing examples."""
 
-from _example_setup import use_repo_sources
-
-use_repo_sources()
-
 import numpy as np
 
 from libra_py.dyn.hopping import hopping_probabilities_lz, hopping_probabilities_zn

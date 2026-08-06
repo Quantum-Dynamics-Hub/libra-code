@@ -1,9 +1,5 @@
 """Concrete FSSH, GFSH, FSSH2/3, MSSH, and MASH probabilities."""
 
-from _example_setup import use_repo_sources
-
-use_repo_sources()
-
 import numpy as np
 
 from libra_py.dyn.control_params import DynControlParams

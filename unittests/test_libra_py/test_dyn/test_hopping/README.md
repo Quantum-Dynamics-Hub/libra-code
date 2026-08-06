@@ -1,10 +1,11 @@
 # Hopping tests
 
-Run the hopping tests from the parent ``test_dyn`` directory:
+Run the hopping tests directly from this directory:
 
 ```bash
-cd unittests/test_libra_py/test_dyn
-pytest test_hopping/
+cd unittests/test_libra_py/test_dyn/test_hopping
+pytest
 ```
 
-They can also be run directly from this directory with ``pytest``.
+The active Libra environment must already provide ``libra_py``. The tests do
+not modify ``sys.path``.
