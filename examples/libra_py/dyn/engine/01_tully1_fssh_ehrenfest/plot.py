@@ -1,4 +1,4 @@
-"""Plot saved DynamicsEngine observables to PNG files."""
+"""Example 01: plot saved FSSH and Ehrenfest observables."""
 
 import json
 import os
@@ -22,7 +22,7 @@ def load_snapshots(method):
     files = sorted((OUTPUT_DIR / method).glob("step_*.npz"))
     if not files:
         raise FileNotFoundError(
-            f"No {method} snapshots found. Run example_dynamics_engine.py first."
+            f"No {method} snapshots found. Run compute.py first."
         )
     snapshots = []
     for path in files:

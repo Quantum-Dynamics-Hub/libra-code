@@ -386,7 +386,7 @@ class DynControlParams:
     #:  7 DISH, rev2023
     #:  8 diabatic IDA, experimental
     #:  9 simple decoherence, experimental
-    decoherence_algo: float = -1
+    decoherence_algo: int = -1
 
     #: SDM norm tolerance
     #: Corresponds to the `tol` parameter in the sdm function. It controls 

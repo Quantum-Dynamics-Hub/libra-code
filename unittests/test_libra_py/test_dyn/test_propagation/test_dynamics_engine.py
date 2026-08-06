@@ -15,6 +15,7 @@ from libra_py.dyn.control_params import DynControlParams
 from libra_py.dyn.core.storage import TensorStorage
 from libra_py.dyn.core.trajectory import Trajectory
 from libra_py.dyn.engine import DynamicsEngine, dynamics_defaults
+from libra_py.dyn.models import TullyModel1
 
 
 def _storage():
@@ -166,6 +167,116 @@ def test_tsh_energy_acceptance_can_reject_proposed_hop():
     np.testing.assert_array_equal(result.proposed_states, [1])
     np.testing.assert_array_equal(result.accepted_states, [0])
     np.testing.assert_array_equal(storage.act_states[0, 0:1], [0])
+
+
+def test_engine_reports_edc_rates_from_pre_hop_phase():
+    storage = _storage()
+    traj = _trajectory()
+    storage.act_states[0, 0] = 0
+    storage.ampl_adi[0, 0] = [1.0, 0.0]
+    params = DynControlParams(
+        tsh_method=0,
+        decoherence_times_type=1,
+        decoherence_C_param=1.0,
+        decoherence_eps_param=0.1,
+    )
+    result = DynamicsEngine(
+        traj, storage, _adiabatic_model, params=params,
+        propagator=_identity_propagator,
+    ).step(0.1)
+
+    # Ekin is close to 1/2 here; the important contract is that the rate phase
+    # ran and exposed a symmetric, positive two-state rate matrix.
+    assert result.decoherence_rates.shape == (1, 2, 2)
+    assert result.decoherence_rates[0, 0, 1] > 0.0
+    np.testing.assert_allclose(result.decoherence_rates,
+                               result.decoherence_rates.swapaxes(1, 2))
+
+
+def test_sdm_pre_hop_hook_can_be_used_with_ehrenfest_evolution():
+    storage = _storage()
+    traj = _trajectory()
+    storage.act_states[0, 0] = 0
+    storage.ampl_adi[0, 0] = [np.sqrt(0.6), 1j*np.sqrt(0.4)]
+    params = DynControlParams(
+        force_method=2,
+        decoherence_algo=0,
+        decoherence_times_type=0,
+        decoherence_rates=np.array([[0.0, 1.0], [1.0, 0.0]]),
+    )
+    result = DynamicsEngine(
+        traj, storage, _adiabatic_model, params=params, method="ehrenfest",
+        propagator=_identity_propagator,
+    ).step(0.5)
+
+    np.testing.assert_allclose(abs(result.amplitudes[0, 1]),
+                               np.sqrt(0.4)*np.exp(-0.5))
+    np.testing.assert_allclose(np.vdot(result.amplitudes[0],
+                                       result.amplitudes[0]).real, 1.0)
+
+
+def test_instantaneous_decoherence_uses_rejected_hop_outcome():
+    storage = _storage()
+    traj = _trajectory()
+    storage.p[0, 0] = [0.1]
+    storage.act_states[0, 0] = 0
+    storage.ampl_adi[0, 0] = [2**-0.5, 2**-0.5]
+    params = DynControlParams(
+        tsh_method=0, dt=0.1, hop_acceptance_algo=10,
+        decoherence_algo=1, instantaneous_decoherence_variant=1,
+    )
+    result = DynamicsEngine(
+        traj, storage, _hopping_model, params=params,
+        propagator=_identity_propagator,
+    ).step(0.1)
+
+    np.testing.assert_array_equal(result.proposed_states, [1])
+    np.testing.assert_array_equal(result.accepted_states, [0])
+    np.testing.assert_allclose(result.amplitudes, [[1.0, 0.0]])
+
+
+def test_post_hop_energy_defect_correction_is_exact():
+    storage = _storage()
+    traj = _trajectory()
+    storage.act_states[0, 0] = 1
+    storage.p[0, 0] = [0.9]
+    storage.ham_adi[0, 0] = np.diag([0.0, 0.2])
+    storage.dc1_adi[0, 0, 0, 0, 1] = 1.0
+    params = DynControlParams(tsh_method=0, momenta_rescaling_algo=200)
+    engine = DynamicsEngine(traj, storage, _adiabatic_model, params=params)
+    engine._step_energy_before_hops = np.array([0.5])
+
+    engine._correct_hop_energy_defect(np.array([1]), np.array([0]))
+
+    np.testing.assert_allclose(engine._trajectory_total_energies(), [0.5],
+                               atol=1.0e-14)
+
+
+def test_engine_builds_time_overlap_for_local_diabatization_integrator():
+    storage = _storage()
+    traj = _trajectory()
+    storage.q[0, 0] = [-0.2]
+    storage.p[0, 0] = [0.4]
+    storage.act_states[0, 0] = 0
+    storage.ampl_adi[0, 0] = [1.0, 0.0]
+    params = DynControlParams(
+        force_method=0,
+        electronic_integrator=0,
+        time_overlap_method=1,
+        state_tracking_algo=-1,
+    )
+    engine = DynamicsEngine(
+        traj, storage, TullyModel1(), params=params, method="ehrenfest",
+        force_mode="none",
+    )
+    engine.step(0.5)
+
+    old_u = engine._previous_hamiltonian["basis_transform"]
+    new_u = storage.basis_transform[0, traj.tbf_ids]
+    expected = np.matmul(np.swapaxes(old_u.conj(), -1, -2), new_u)
+    np.testing.assert_allclose(storage.time_overlap_adi[0, traj.tbf_ids], expected)
+    assert not np.allclose(storage.proj_adi[0, traj.tbf_ids], np.eye(2))
+    assert abs(storage.ampl_adi[0, 0, 1]) > 0.0
 
 
 def test_engine_uses_electronic_substeps_and_legacy_defaults():

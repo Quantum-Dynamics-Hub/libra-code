@@ -1,4 +1,4 @@
-"""Run Tully-1 TSH and Ehrenfest ensembles and save NPZ snapshots."""
+"""Example 01: run Tully-1 FSSH and Ehrenfest ensembles."""
 
 from pathlib import Path
 
@@ -126,4 +126,4 @@ if __name__ == "__main__":
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     run_tsh()
     run_ehrenfest()
-    print("Run `python plot_dynamics.py` to create PNG figures.")
+    print("Run `python plot.py` to create PNG figures.")
