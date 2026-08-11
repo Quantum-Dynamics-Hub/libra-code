@@ -32,7 +32,6 @@ from typing import Literal
 
 import numpy as np
 
-
 # ---------------------------------------------------------------------------
 # Data containers
 # ---------------------------------------------------------------------------
@@ -50,7 +49,7 @@ class ES_Request:
     """Quantities requested at one geometry snapshot."""
 
     n_singlets: int = 1
-    n_triplet: int = 0
+    n_triplets: int = 0
 
     H_soc: bool = False
 
@@ -72,7 +71,7 @@ class ES_Request:
 
         Currently each triplet manifold is counted as one state.
         """
-        return self.n_singlets + self.n_triplet
+        return self.n_singlets + self.n_triplets
 
 
 @dataclass
@@ -85,7 +84,7 @@ class ES_Result:
         Hessians: Hartree / Bohr^2
         NAC vectors: Bohr^-1
     """
-    H_el: np.ndarray | None = None  # shape: (n_total,)
+    H_el: np.ndarray | None = None  # shape: (n_total, n_total)
 
     H_soc: np.ndarray | None = None  # shape: (n_total, n_total)
 
@@ -109,6 +108,21 @@ class ES_Strategy(ABC):
     electronic-structure calculation.
     """
 
+    @abstractmethod
+    def snapshot_state(self) -> None: # save the state of the current calculation to previous, overwriting whatever was there before. 
+        """Save the current state of the calculation to a previous-state snapshot."""
+        raise NotImplementedError   
+
+    @abstractmethod
+    def get_state(self) -> object: #object is a dataclass or dict containing the state, or a name or a path to a folder for disk based cache.
+        """Return the current state of the calculation."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_previous_state(self) -> object | None: #object is a dataclass or dict containing the state, or a name or a path to a folder for disk based cache.
+        """Return the cached previous-state snapshot, path, or handle if present."""
+        raise NotImplementedError
+
     # -----------------------------------------------------------------------
     # Geometry
     # -----------------------------------------------------------------------
@@ -130,7 +144,6 @@ class ES_Strategy(ABC):
     @abstractmethod
     def compute_H_el(
         self,
-        previous: ES_Strategy | None = None,
     ) -> np.ndarray:
         """Compute adiabatic electronic energies."""
         raise NotImplementedError
@@ -165,6 +178,19 @@ class ES_Strategy(ABC):
             "override compute_gradient or do not request gradients."
         )
 
+    def compute_all_gradients(self) -> list[np.ndarray]:
+        """Compute the nuclear gradients for all electronic states together to reuse intermediate quantities. 
+
+        Returns
+        -------
+        list[np.ndarray]
+            Each entry has shape ``(natoms, 3)`` in Hartree/Bohr.
+        """
+        raise NotImplementedError(
+            f"{type(self).__name__}: "
+            "override compute_all_gradients or do not request gradients."
+        )
+
     def compute_hessian(self, root: int = 0) -> np.ndarray:
         """Compute the nuclear Hessian for one electronic state.
 
@@ -191,11 +217,13 @@ class ES_Strategy(ABC):
             "override compute_nac_vectors or do not request NAC vectors."
         )
 
+    
     def compute_time_overlap(
         self,
-        right: ES_Strategy,
+        state1: object,
+        state2: object,
     ) -> np.ndarray:
-        """Compute the time-overlap matrix between the current strategy and another strategy.
+        """Compute the time-overlap matrix between two states.
         np.ndarray
             Shape ``(n_total, n_total)``.
         """
@@ -212,33 +240,24 @@ class ES_Strategy(ABC):
         self,
         geom: MolecularGeometry,
         request: ES_Request,
-        result: ES_Result,
-        previous: ES_Strategy | None = None,
-    ) -> None:
+    ) -> ES_Result:
+
+        result = ES_Result()
+
+
         """Compute all requested quantities at one geometry and enforce a sequence of calculations."""
-        if request.n_triplet:
+        if request.n_triplets != 0:
             raise NotImplementedError(
                 "Triplet states are not supported yet."
             )
 
         n_total = request.n_total
         natoms = len(geom.coords_bohr)
-        # ------------------------------------------------------------------
-        # Reset output container.
-        # ------------------------------------------------------------------
-        result.H_el = None
-        result.H_soc = None
-        result.gradients = None
-        result.hessians = None
-        result.nac_vectors = None
-        result.time_overlap = None
-
-        previous_snapshot = previous
-
+            
         self.set_geom(geom)
 
         result.H_el = np.asarray(
-            self.compute_H_el(previous_snapshot),
+            self.compute_H_el(),
             dtype=np.float64,
         )
 
@@ -248,29 +267,17 @@ class ES_Strategy(ABC):
             )
 
         if request.gradient_state is not None:
-
             result.gradients = [None] * n_total
 
             if request.gradient_state == "all":
-                roots = range(n_total)
+                result.gradients = self.compute_all_gradients()
             else:
-                root = request.gradient_state
-
+                root = int(request.gradient_state)
                 if not 0 <= root < n_total:
                     raise ValueError(
-                        f"gradient_state={root} is outside "
-                        f"the valid range [0, {n_total})."
+                        f"gradient_state={root} is outside the valid range [0, {n_total})."
                     )
-
-                roots = [root]
-
-            for root in roots:
-
-                gradient = np.asarray(
-                    self.compute_gradient(root),
-                    dtype=np.float64,
-                )
-                result.gradients[root] = gradient
+                result.gradients[root] = self.compute_gradient(root)
 
         if request.hessian_state is not None:
 
@@ -292,16 +299,21 @@ class ES_Strategy(ABC):
             )
 
         if request.time_overlap is True:
-            if previous_snapshot is None:
-                result.time_overlap = np.eye(
-                    n_total,
-                    dtype=np.float64,
-                )
-            else:
+            if self.get_previous_state() is  not None: # if none, then this is the first geometry, and there is no previous state to compute time-overlap with.
+                state1 = self.get_state()
+                state2 = self.get_previous_state()
                 result.time_overlap = np.asarray(
-                    previous_snapshot.compute_time_overlap(self),
+                    self.compute_time_overlap(state1, state2),
                     dtype=np.float64,
-                )
+                )   
+            else:
+                result.time_overlap = None 
+
+
+        self.snapshot_state() #copy state to previous after the calculation is done, so that the next geometry can use it for time-overlap and NACV calculations.
+
+        return result
+
 
 
 # Backward-compatible alias used by older PySCF package imports.
