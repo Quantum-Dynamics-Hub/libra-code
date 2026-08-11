@@ -19,18 +19,7 @@ Run:
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Any
-
-#if __name__ == "__main__" and __package__ is None:
-#    file_path = Path(__file__).resolve()
-#    for parent in file_path.parents:
-#        if parent.name == "src":
-#            sys.path.insert(0, str(parent))
-#            break
-#    else:
-#        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
 
 from liblibra_core import MATRIX
 

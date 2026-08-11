@@ -1063,6 +1063,19 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
         compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm)
 
+    #model_params.update({"timestep": index})
+
+    # --- NEW: inject per-traj active state into model_params before compute_model is called ---
+    #force_method = dyn_params.get("force_method", 1)
+    #if force_method == 2:  # Ehrenfest: all roots needed
+    #    model_params["active_states"] = "all"
+    #else:
+    #    model_params["active_states"] = list(dyn_var.act_states)
+    # --- END NEW ---
+
+    #compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm)
+
+
         if _savers["txt_saver"] is not None:
             _savers["txt_saver"].save_data_txt(F"{prefix}", properties_to_save, "a", i)
 

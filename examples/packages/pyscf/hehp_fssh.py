@@ -6,151 +6,61 @@ This example follows the same CASSCF instantiation pattern as
 
     CASSCF(norbcas=2, nelecas=2, nroots=NSTATES, basis="sto-3g", charge=1)
 
-The important design point for a trajectory swarm is that each trajectory gets
-its own stateful ``CASSCF`` object and its own adapter. The backend caches the
-previous SCF/CASSCF state to build time overlaps, so sharing one instance
-across trajectories would mix their electronic histories.
+The important design point for a trajectory swarm is that ``pyscf_compute_adi``
+creates and keeps one stateful ``CASSCF`` object per trajectory. The backend
+caches the previous SCF/CASSCF state to build time overlaps, so sharing one
+instance across trajectories would mix their electronic histories.
 """
 
 from __future__ import annotations
 
-import sys
-from pathlib import Path
 from typing import Any
 
-import numpy as np
-
-# Allow running this file directly with proper package root in sys.path
-#if __name__ == "__main__" and __package__ is None:
-#    file_path = Path(__file__).resolve()
-#    for parent in file_path.parents:
-#        if parent.name == "src":
-#            sys.path.insert(0, str(parent))
-#            break
-#    else:
-#        raise RuntimeError("Could not locate src/ directory on path for libra_py import")
-
-from liblibra_core import CMATRIX, Cpp2Py, Random, dyn_variables, nHamiltonian, update_Hamiltonian_variables
+from liblibra_core import (
+    Random,
+    dyn_variables,
+    nHamiltonian,
+    update_Hamiltonian_variables,
+)
 
 import libra_py.units as units
 from libra_py.dynamics.tsh.compute import run_dynamics
 from libra_py.dynamics.tsh.recipes.fssh_h_plus import load as load_fssh_recipe
-from libra_py.packages.pyscf.adapter import LibraESAdapter
 from libra_py.packages.pyscf.implementations.casscf import CASSCF
+from libra_py.packages.pyscf.methods import pyscf_compute_adi
 
 
-NTRAJ = 4
-NSTATES = 2
-NSTEPS = 25
+NTRAJ = 2
+NSTATES = 3
+NSTEPS = 2
 DT_FS = 0.5
 INITIAL_BOND_ANG = 0.7746
-OUTPUT_PREFIX = "hehp_casscf_fssh"
+OUTPUT_PREFIX = "hehp_sa3_casscf_sto3g_fssh"
 
 HE_MASS_AU = 4.002602 * units.amu
 H_MASS_AU = 1.007825 * units.amu
 
 
-class _Result:
-    """Small attribute container matching what Libra inspects."""
-
-
-def _identity_cmatrix(size: int) -> CMATRIX:
-    mat = CMATRIX(size, size)
-    for i in range(size):
-        mat.set(i, i, 1.0 + 0.0j)
-    return mat
-
-
-def _traj_index(full_id: Any) -> int:
-    try:
-        return int(Cpp2Py(full_id)[-1])
-    except Exception:
-        if hasattr(full_id, "__getitem__"):
-            return int(full_id[-1])
-        return 0
-
-
-class FirstStepSafeAdapter(LibraESAdapter):
-    """Adapter variant that returns an identity time overlap on the first call.
-
-    The current ``LibraESAdapter.compute_model`` unconditionally asks the
-    strategy for a time overlap matrix. For step 0 there is no previous frame
-    yet, so the example handles that warmup call locally and then delegates all
-    later calls back to the base adapter.
-    """
-
-    def __init__(self, strategy: CASSCF, atom_labels: list[str], nstates: int) -> None:
-        super().__init__(strategy, atom_labels, nstates)
-        self._has_previous_frame = False
-
-    def compute_model(self, q: Any, params: dict[str, Any], full_id: Any) -> Any:
-        if self._has_previous_frame:
-            return super().compute_model(q, params, full_id)
-
-        nstates = self._nstates
-        natoms = self._natoms
-        ndof = 3 * natoms
-
-        geom = self._libra_q_to_geometry(q, _traj_index(full_id), self._atom_labels)
-        self._strategy.set_geom_and_run_hf(geom)
-
-        energies = np.array(
-            [self._strategy.compute_energy(root) for root in range(nstates)]
-        )
-        grads = np.stack(
-            [self._strategy.compute_gradient(root) for root in range(nstates)]
-        )
-
-        result = _Result()
-
-        ham_adi = CMATRIX(nstates, nstates)
-        for state in range(nstates):
-            ham_adi.set(state, state, complex(energies[state], 0.0))
-        result.ham_adi = ham_adi
-
-        d1ham_adi = []
-        for dof in range(ndof):
-            atom_idx, xyz_idx = divmod(dof, 3)
-            grad_block = CMATRIX(nstates, nstates)
-            for state in range(nstates):
-                grad_block.set(
-                    state,
-                    state,
-                    complex(grads[state, atom_idx, xyz_idx], 0.0),
-                )
-            d1ham_adi.append(grad_block)
-        result.d1ham_adi = d1ham_adi
-
-        result.dc1_adi = [CMATRIX(nstates, nstates) for _ in range(ndof)]
-        result.time_overlap_adi = _identity_cmatrix(nstates)
-        result.ovlp_adi = _identity_cmatrix(nstates)
-
-        self._has_previous_frame = True
-        return result
-
-
-def build_adapters(ntraj: int, atom_labels: list[str], nstates: int) -> list[FirstStepSafeAdapter]:
-    adapters: list[FirstStepSafeAdapter] = []
-    for _ in range(ntraj):
-        strategy = CASSCF(
+def build_strategy_factory(nstates: int):
+    def factory() -> CASSCF:
+        return CASSCF(
             norbcas=2,
             nelecas=2,
             nroots=nstates,
             basis="sto-3g",
             charge=1,
+            unit="Bohr",
         )
-        adapters.append(FirstStepSafeAdapter(strategy, atom_labels, nstates))
-    return adapters
+
+    return factory
 
 
-def build_compute_model(adapters: list[FirstStepSafeAdapter]):
-    def compute_model(q: Any, params: dict[str, Any], full_id: Any) -> Any:
-        return adapters[_traj_index(full_id)].compute_model(q, params, full_id)
-
-    return compute_model
-
-
-def make_dyn_params(ntraj: int, nsteps: int, dt_au: float, prefix: str) -> dict[str, Any]:
+def make_dyn_params(
+    ntraj: int,
+    nsteps: int,
+    dt_au: float,
+    prefix: str,
+) -> dict[str, Any]:
     dyn_params: dict[str, Any] = {}
     load_fssh_recipe(dyn_params)
     dyn_params.update(
@@ -161,14 +71,14 @@ def make_dyn_params(ntraj: int, nsteps: int, dt_au: float, prefix: str) -> dict[
             "force_method": 1,
             "ham_update_method": 2,
             "ham_transform_method": 0,
-            "time_overlap_method": 1,
+            # The callback writes time_overlap_adi, so do not overwrite it
+            # from basis_transform in the C++ dynamics layer.
+            "time_overlap_method": 0,
             "nac_update_method": 2,
             "nac_algo": 0,
             "hvib_update_method": 1,
-            # The adapter currently provides energies, gradients, and
-            # time-overlap NAC information, but not derivative-coupling vectors.
-            "hop_acceptance_algo": 21,
-            "momenta_rescaling_algo": 210,
+            "hop_acceptance_algo": 10,
+            "momenta_rescaling_algo": 100,
             "tsh_method": 0,
             "ntraj": ntraj,
             "isNBRA": 0,
@@ -245,22 +155,39 @@ def run_hehp_fssh(
     dt_fs: float = DT_FS,
     initial_bond_ang: float = INITIAL_BOND_ANG,
     prefix: str = OUTPUT_PREFIX,
+    gradient: str = "active",
+    initial_state: int = 1,
 ) -> Any:
+    if gradient not in {"active", "all", "none"}:
+        raise ValueError("gradient must be one of 'active', 'all', or 'none'.")
+    if not 0 <= initial_state < nstates:
+        raise ValueError(f"initial_state must be in [0, {nstates}).")
+
     atom_labels = ["He", "H"]
     ndof = 3 * len(atom_labels)
+    dt_au = dt_fs * units.fs2au
 
-    adapters = build_adapters(ntraj, atom_labels, nstates)
-    compute_model = build_compute_model(adapters)
-    model_params = {"model": 0, "model0": 0, "nstates": nstates}
+    compute_model = pyscf_compute_adi
+    model_params = {
+        "model": 0,
+        "model0": 0,
+        "nstates": nstates,
+        "atom_labels": atom_labels,
+        "strategy_factory": build_strategy_factory(nstates),
+        "gradient": gradient,
+        "time_overlap": True,
+        "dt": dt_au,
+        "act_state": {itraj: initial_state for itraj in range(ntraj)},
+    }
 
     dyn_params = make_dyn_params(
         ntraj=ntraj,
         nsteps=nsteps,
-        dt_au=dt_fs * units.fs2au,
+        dt_au=dt_au,
         prefix=prefix,
     )
     init_nucl = make_init_nucl(initial_bond_ang)
-    init_elec = make_init_elec(nstates, ntraj)
+    init_elec = make_init_elec(nstates, ntraj, initial_state=initial_state)
 
     rnd = Random()
     dyn_var = dyn_variables(nstates, nstates, ndof, ntraj)
@@ -273,9 +200,26 @@ def run_hehp_fssh(
     ham.add_new_children(nstates, nstates, ndof, ntraj)
     ham.init_all(2, 1)
 
-    model_params["timestep"] = 0
-    update_Hamiltonian_variables(dyn_params, dyn_var, ham, ham, compute_model, model_params, 0)
-    update_Hamiltonian_variables(dyn_params, dyn_var, ham, ham, compute_model, model_params, 1)
+    warmup_params = dict(model_params)
+    warmup_params["timestep"] = 0
+    update_Hamiltonian_variables(
+        dyn_params,
+        dyn_var,
+        ham,
+        ham,
+        compute_model,
+        warmup_params,
+        0,
+    )
+    update_Hamiltonian_variables(
+        dyn_params,
+        dyn_var,
+        ham,
+        ham,
+        compute_model,
+        warmup_params,
+        1,
+    )
 
     dyn_var.update_basis_transform(ham)
     dyn_var.update_amplitudes({"rep_tdse": init_elec["rep"]}, ham)

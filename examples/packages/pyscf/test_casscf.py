@@ -53,7 +53,7 @@ casscf = CASSCF(
 
 request = ES_Request(
     n_singlets=3,
-    n_triplet=0,
+    n_triplets=0,
     H_soc=False,
     gradient_state="all",
     hessian_state=None,

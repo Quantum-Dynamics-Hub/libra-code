@@ -6,13 +6,15 @@ does not eagerly pull in concrete backends or adapter code.
 
 from __future__ import annotations
 
-from libra_py.packages.pyscf.interfaces import ElectronicStructureStrategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ES_Strategy, MolecularGeometry
+
+ElectronicStructureStrategy = ES_Strategy
 
 __all__ = [
     "interfaces",
     "implementations",
     "methods",
-    "ElectronicStructureStrategy",
+    "ES_Strategy",
     "MolecularGeometry",
     "CISD",
     "CASSCF",

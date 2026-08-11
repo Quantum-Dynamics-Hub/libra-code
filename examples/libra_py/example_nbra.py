@@ -19,52 +19,15 @@ previous/current ES strategy snapshots.
 from __future__ import annotations
 
 import csv
-import sys
 from pathlib import Path
 
 import numpy as np
 
 from liblibra_core import MATRIX
-
 from libra_py import units
-
-
-# ============================================================================
-# LOCAL REPOSITORY IMPORT
-# ============================================================================
-
-def _prepend_repo_root() -> None:
-    file_path = Path(__file__).resolve()
-
-    for parent in file_path.parents:
-        if (parent / "src" / "libra_py" / "__init__.py").is_file():
-            repo_root = str(parent / "src")
-
-            if repo_root not in sys.path:
-                sys.path.insert(0, repo_root)
-
-            build_root = str(parent / "_build_venv" / "src")
-            if (parent / "_build_venv" / "src").exists() and build_root not in sys.path:
-                sys.path.insert(0, build_root)
-
-            return
-
-
-if __name__ == "__main__" and __package__ is None:
-    _prepend_repo_root()
-
-
-# ============================================================================
-# IMPORTS
-# ============================================================================
-
 from libra_py.packages.pyscf.implementations.casscf import CASSCF
 from libra_py.packages.pyscf.methods import strategy_compute_adi
 
-
-# ============================================================================
-# CHEMICAL SYSTEM
-# ============================================================================
 
 NSTATES = 2
 
@@ -114,7 +77,7 @@ bond_grid = np.arange(
 )
 
 # ============================================================================
-# CONFIGURED ES STRATEGY PROTOTYPE
+# IMPORTS
 # ============================================================================
 #
 # The input file chooses the ES method and configures it.
@@ -132,6 +95,7 @@ bond_grid = np.arange(
 #
 # for computing neighboring-frame time overlaps.
 # ============================================================================
+#
 
 es_obj = CASSCF(
     norbcas=NORBCAS,
@@ -157,6 +121,7 @@ es_obj = CASSCF(
 # Runtime state such as "_es_previous" is created and managed internally
 # by strategy_compute_adi().
 # ============================================================================
+#
 
 model_params = {
 
@@ -187,6 +152,7 @@ model_params = {
 # ============================================================================
 # BUILD ONE LIBRA q FRAME
 # ============================================================================
+#
 
 def make_q(r_lif_bohr: float) -> MATRIX:
 
@@ -214,6 +180,7 @@ def make_q(r_lif_bohr: float) -> MATRIX:
 # ============================================================================
 # LIBRA CMATRIX -> NUMPY
 # ============================================================================
+#
 
 def cmatrix_to_numpy(
     matrix,
@@ -235,6 +202,7 @@ def cmatrix_to_numpy(
 # ============================================================================
 # STORAGE
 # ============================================================================
+#
 
 frames_fs = []
 energies = []
@@ -265,7 +233,7 @@ hvibs = []
 #     current strategy
 #
 # ============================================================================
-
+#
 
 def complex_parts(z):
  
@@ -395,6 +363,7 @@ for istep, r_lif in enumerate(bond_grid):
 # ============================================================================
 # WRITE HUMAN-READABLE PHASE-1 TABLE
 # ============================================================================
+#
 
 output_dir = Path(__file__).resolve().parents[3]
 output_dir.mkdir(parents=True, exist_ok=True)
@@ -534,6 +503,7 @@ with open(
 # ============================================================================
 # WRITE Hvib-ONLY DATASET FOR NBRA PHASE 2
 # ============================================================================
+#
 
 Hvib_table = np.array(
     hvibs[1:],
@@ -566,6 +536,7 @@ np.savez(
 # ============================================================================
 # SUMMARY
 # ============================================================================
+#
 
 print(
     "Wrote lif_nbra_phase1_table.csv"

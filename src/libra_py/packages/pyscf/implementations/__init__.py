@@ -1,5 +1,12 @@
 """PySCF implementation backends."""
 
-from libra_py.packages.pyscf.implementations.cisd import CISD
-from libra_py.packages.pyscf.implementations.casscf import CASSCF
+from __future__ import annotations
 
+from .casscf import CASSCF
+
+__all__ = ["CASSCF", "CISD"]
+
+try:
+    from .cisd import CISD
+except ModuleNotFoundError:  # pragma: no cover - optional backend
+    CISD = None
