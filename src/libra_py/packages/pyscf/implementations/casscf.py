@@ -21,14 +21,11 @@ import copy as pycopy
 from dataclasses import dataclass
 from typing import Any, List, Optional, Tuple, Union
 import numpy as np
-from pyscf import fci, gto, mcscf, scf
-
-def _compute_ao_overlap(prev_mol: Any, curr_mol: Any) -> np.ndarray:
-    return gto.intor_cross("int1e_ovlp", prev_mol, curr_mol)
-
+from pyscf import fci, gto, lib, mcscf, scf
 from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
 
 BOHR_TO_ANG = 0.529177210903
+
 
 @dataclass
 class CASSCF_States:
@@ -46,6 +43,8 @@ class CASSCF(ES_Strategy):
     #    stored in the member attribute `mc`, which also contains energies of other
     #    states.
 
+    _request: Optional[ES_Request] = None
+
     def __init__(
         self,
         mol: Optional[Any] = None,
@@ -56,6 +55,7 @@ class CASSCF(ES_Strategy):
         unit: str = "Bohr",
         charge: int = 0,
         cas_list: Optional[List[int]] = None,
+        num_threads: int = 1,
     ) -> None:
         #setting up the initial state 
         self._mol: Optional[Any] = mol
@@ -66,21 +66,10 @@ class CASSCF(ES_Strategy):
         self._unit: str = unit  #default to Bohr, but can be set to Angstrom
         self._charge: int = int(charge)
         self._cas_list: Optional[List[int]] = cas_list
-        self._mf: Optional[Any] = None
-        self._mc: Optional[Any] = None
         self._geom: Optional[MolecularGeometry] = None
-        self._request: Optional[ES_Request] = None
-        self._ao_overlap: Optional[np.ndarray] = None  # AO overlap between consecutive geoms for time-overlap computation
         self._state: CASSCF_States | None = None
         self._previous_state: CASSCF_States | None = None
-
-    @staticmethod
-    def _as_ci_vector_seq(ci_data: Any) -> Optional[tuple[np.ndarray, ...]]:
-        if ci_data is None:
-            return None
-        if isinstance(ci_data, (list, tuple)):
-            return tuple(np.asarray(vec) for vec in ci_data)
-        return (np.asarray(ci_data),)
+        self._num_threads: int = int(num_threads)
 
     @staticmethod
     def _normalize_mc(mc: Any) -> None:
@@ -90,41 +79,65 @@ class CASSCF(ES_Strategy):
         if not isinstance(mc.ci, list):
             mc.ci = [mc.ci]
 
-    @staticmethod
-    def _coerce_ci_roots(ci_data: Any) -> list[np.ndarray]:
-        if ci_data is None:
-            return []
-        if isinstance(ci_data, (list, tuple)):
-            return [np.asarray(vec) for vec in ci_data]
-        return [np.asarray(ci_data)]
 
-    @staticmethod
-    def _phase_align_ci_roots(
-        prev_roots: list[np.ndarray], curr_roots: list[np.ndarray]
-    ) -> tuple[list[np.ndarray], list[np.ndarray]]:
-        prev = [np.asarray(vec) for vec in prev_roots]
-        curr = [np.asarray(vec) for vec in curr_roots]
-        for idx in range(min(len(prev), len(curr))):
-            if prev[idx].size == 0 or curr[idx].size == 0:
-                continue
-            overlap0 = np.vdot(prev[idx], curr[idx])
-            if abs(overlap0) > 1e-14:
-                phase = overlap0 / abs(overlap0)
-                curr[idx] = curr[idx] * np.conjugate(phase)
-        return prev, curr
+    @property
+    def num_threads(self) -> int:
+        return self._num_threads
 
-    def _active_mo_coeff(self, mc_obj: Any) -> np.ndarray:
-        mo_coeff = np.asarray(mc_obj.mo_coeff)
-        ncore = int(getattr(mc_obj, "ncore", 0))
-        ncas = int(getattr(mc_obj, "ncas", self._norbcas))
-        return mo_coeff[:, ncore:ncore + ncas]
+    @num_threads.setter
+    def num_threads(self, value: int) -> None:
+        value = int(value)
+        if value < 1:
+            raise ValueError(f"num_threads must be >= 1, got {value}")
+        self._num_threads = value
+
+    def _apply_num_threads(self) -> None:
+        lib.num_threads(self._num_threads)
+
+    def _n_total(self) -> int:
+        """Number of electronic states requested for the current calculation."""
+        if self._request is not None:
+            return int(self._request.n_singlets)
+        return int(self._nroots)
+
+    def _run_scf(self) -> None:
+        """Run restricted HF at ``self._mol``.
+
+        When a previous geometry exists, the SCF is restarted from the previous
+        HF 1-electron density matrix (same AO basis and ordering), which is the
+        standard warm-start used in dynamics.  Falls back to an MO-based guess
+        and then to the default SCF guess.
+        """
+        if self._state is None:
+            self._state = CASSCF_States(mol=self._mol, mf=None, mc=None)
+
+        prev_state = self.get_previous_state()
+        if prev_state is None or prev_state.mf is None:
+            self._state.mf = scf.RHF(self._mol).run(verbose=0)
+            return
+
+        try:
+            prev_dm = prev_state.mf.make_rdm1()
+        except Exception:
+            prev_dm = None
+
+        if prev_dm is not None:
+            try:
+                self._state.mf = scf.RHF(self._mol).run(dm0=prev_dm, verbose=0)
+                return
+            except Exception:
+                pass
+
+        try:
+            mf = scf.RHF(self._mol)
+            mf.init_guess_by_mo(prev_state.mf.mo_coeff)
+            self._state.mf = mf.run(verbose=0)
+        except Exception:
+            self._state.mf = scf.RHF(self._mol).run(verbose=0)
 
     def set_geom(self, geom: MolecularGeometry) -> None:
         self._geom = geom
-        self._previous_state = self.get_state()
-
-        self._mc = None
-        self._ao_overlap = None
+        self._previous_state = pycopy.deepcopy(self._state)
 
         charge: int = self._charge
         coords = getattr(geom, "coords_bohr", None)
@@ -144,21 +157,13 @@ class CASSCF(ES_Strategy):
             spin=0,
         )
 
-        prev_state = self.get_previous_state()
-        if prev_state is not None and prev_state.mol is not None:
-            self._ao_overlap = _compute_ao_overlap(prev_state.mol, self._mol)
+        self._run_scf()
 
-        if prev_state is not None and prev_state.mf is not None:
-            self._mf = scf.RHF(self._mol)
-            try:
-                self._mf.init_guess_by_mo(prev_state.mf.mo_coeff)
-            except Exception:
-                pass
-            self._mf = self._mf.run(verbose=0)
-        else:
-            self._mf = scf.RHF(self._mol).run(verbose=0)
-
-        self._state = CASSCF_States(mol=self._mol, mf=self._mf, mc=None)
+        # Write the current SCF result back into the state object.
+        if self._state is None:
+            self._state = CASSCF_States(mol=self._mol, mf=None, mc=None)
+        self._state.mol = self._mol
+        self._state.mc = None
 
     def get_geom(self) -> MolecularGeometry:
         if self._geom is None:
@@ -171,150 +176,125 @@ class CASSCF(ES_Strategy):
     def get_previous_state(self) -> Optional[CASSCF_States]:
         return self._previous_state
 
+    def snapshot_state(self) -> None:
+        """Save the current state of the calculation to a previous-state snapshot."""
+        self._previous_state = pycopy.deepcopy(self._state)
+
     def copy(self) -> "CASSCF":
         """Return an independent snapshot of the full strategy state."""
         return pycopy.deepcopy(self)
 
-    def _ensure_mc(self, previous: Optional[ES_Strategy] = None) -> None:
-        
-        
-        if self._mf is None:
-            raise ValueError("HF must be run before computing CASSCF energies.")
+    def compute_H_el(self) -> np.ndarray:
+        if self._previous_state is not None and self._previous_state.mc is not None:
+            mocoeff = self._previous_state.mc.mo_coeff
+        else:
+            mocoeff = self._state.mf.mo_coeff
 
-        if self._mc is None:
-            prev_state = self.get_previous_state()
-            if prev_state is None and previous is not None and isinstance(previous, CASSCF):
-                prev_state = previous.get_state()
-            prev_mc = prev_state.mc if prev_state is not None else None
-            self._mc = mcscf.CASSCF(self._mf, self._norbcas, self._nelecas)
-            self._mc.fcisolver = fci.direct_spin0.FCI(self._mol)
-            self._mc.fcisolver.nroots = self._nroots
-            if self._nroots > 1:
-                self._mc = self._mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
+        mc = mcscf.CASSCF(self._state.mf, self._norbcas, self._nelecas)
+        mc.fcisolver = fci.direct_spin0.FCI(self._state.mol)
+        mc.fcisolver.nroots = self._nroots
+        if self._nroots > 1:
+            mc = mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
 
-            if prev_mc is not None:
-                mo_coeff = getattr(prev_mc, "mo_coeff", None)
-            else:
-                mo_coeff = self._mf.mo_coeff
-                if self._cas_list is not None:
-                    mo_coeff = mcscf.sort_mo(self._mc, mo_coeff, self._cas_list)
-            try:
-                ci0 = prev_mc.ci if prev_mc is not None else None
-            except AttributeError:
-                ci0 = None
+        if self._cas_list is not None:
+            mocoeff = mcscf.sort_mo(mc, mocoeff, self._cas_list)
 
-            self._mc.kernel(mo_coeff=mo_coeff, ci0=ci0)
-            self._normalize_mc(self._mc)
-            state = self.get_state()
-            if state is not None:
-                state.mc = self._mc
+        mc.kernel(mocoeff)
 
-    def compute_H_el(self, previous: Optional[ES_Strategy] = None) -> np.ndarray:
-        self._ensure_mc(previous)
-        n_total = self._request.n_singlets if self._request is not None else self._nroots
-        e_states: List[float] = self._mc.e_states
-        if len(e_states) < n_total:
-            raise IndexError(f"Requested {n_total} states, but only {len(e_states)} are available.")
-        return np.asarray(e_states[:n_total], dtype=np.float64)
+        self._state.mc = mc
 
-    def compute_energy(self, root: int) -> float:
-        energies = self.compute_H_el()
-        return float(energies[root])
+        #write the energies to the H_el attribute of the state object and return the energies as a numpy array
+        self._state.H_el = np.asarray(mc.e_states, dtype=np.float64)
+        return self._state.H_el
 
     def compute_gradient(self, root: int = 0) -> np.ndarray:
-        self._ensure_mc()
-        e_states: List[float] = self._mc.e_states
+        
+        e_states: List[float] = self._state.mc.e_states
         if root < 0 or root >= len(e_states):
             raise IndexError(f"Requested root {root}, but only {len(e_states)} roots are available.")
-        return np.asarray(self._mc.nuc_grad_method(state=root).kernel())
+        return np.asarray(self._state.mc.nuc_grad_method(state=root).kernel())
+
+    def compute_all_gradients(self) -> list[np.ndarray]:
+        """Compute the nuclear gradients for all requested states together.
+
+        Since PySCF's state-averaged CASSCF gradient solves the response
+        equations per root, we reuse one gradient object (and the already
+        converged CASSCF wavefunction) for all roots.
+        """
+        n_total = self._n_total()
+        e_states: List[float] = self._state.mc.e_states
+        if len(e_states) < n_total:
+            raise IndexError(f"Requested {n_total} states, but only {len(e_states)} are available.")
+        grad = self._state.mc.nuc_grad_method(state=0)
+        return [
+            np.asarray(grad.kernel(state=root), dtype=np.float64)
+            for root in range(n_total)
+        ]
 
     # time overlap
-    def _require_time_overlap_state(self) -> None:
-        if self._mol is None or self._mf is None:
-            raise ValueError("Molecule and HF state are required for time-overlap computation.")
-        if self._mc is None:
-            raise ValueError("CASSCF must be run before computing time-overlap matrix.")
-        if getattr(self._mc, "ci", None) is None:
-            raise ValueError("CI vectors are required for time-overlap computation.")
 
-    def _time_overlap_nroots(self, right: "CASSCF") -> int:
-        if right._request is not None:
-            return int(right._request.n_singlets)
-        if self._request is not None:
-            return int(self._request.n_singlets)
-        return min(int(self._nroots), int(right._nroots))
-
-    def compute_ao_overlap(self, right: CASSCF) -> np.ndarray:
-        if not isinstance(right, CASSCF):
-            raise TypeError(f"right must be CASSCF, got {type(right).__name__}")
-        if self._mol is None or right._mol is None:
-            raise ValueError("Both CASSCF objects need molecule states before AO overlap.")
-        return _compute_ao_overlap(self._mol, right._mol)
-
-    def _compute_active_mo_overlap(self, right: "CASSCF", ao_overlap: np.ndarray) -> np.ndarray:
-        mo_left_act = self._active_mo_coeff(self._mc)
-        mo_right_act = right._active_mo_coeff(right._mc)
-        return mo_left_act.T @ ao_overlap @ mo_right_act
-
-    def _ci_roots(self) -> list[np.ndarray]:
-        roots = self._coerce_ci_roots(self._mc.ci)
-        if not roots:
-            raise ValueError("CI vectors are required for time-overlap computation.")
-        return roots
-
-    def _compute_ci_overlap_matrix(
+    def _compute_ao_overlap(
         self,
-        right: "CASSCF",
-        nroots: int,
-        active_mo_overlap: np.ndarray,
+        prev_state: CASSCF_States,
+        curr_state: CASSCF_States,
     ) -> np.ndarray:
-        left_roots = self._ci_roots()
-        right_roots = right._ci_roots()
-        if len(left_roots) < nroots or len(right_roots) < nroots:
-            raise ValueError(
-                f"Requested {nroots} roots, but only {len(left_roots)} left "
-                f"and {len(right_roots)} right roots are available."
-            )
-
-        overlap = np.zeros((nroots, nroots), dtype=float)
-        for i in range(nroots):
-            for j in range(nroots):
-                overlap[i, j] = fci.addons.overlap(
-                    left_roots[i],
-                    right_roots[j],
-                    self._mc.ncas,
-                    self._mc.nelecas,
-                    s=active_mo_overlap,
-                )
-        return np.asarray(np.real_if_close(overlap))
+        """Compute the AO overlap matrix between the previous and current geometries."""
+        prev_mol = prev_state.mol
+        curr_mol = curr_state.mol
+        if prev_mol is None or curr_mol is None:
+            raise ValueError("Both previous and current molecule objects are required.")
+        return gto.intor_cross("int1e_ovlp", prev_mol, curr_mol)
 
     @staticmethod
-    def _align_time_overlap_phases(overlap: np.ndarray) -> np.ndarray:
-        overlap = np.array(overlap, copy=True)
-        for j in range(overlap.shape[1]):
-            if overlap[j, j] < 0:
-                overlap[:, j] = -overlap[:, j]
-        return overlap
+    def _as_ci_vector_list(ci_data: Any) -> list[np.ndarray]:
+        """Normalize CI data from PySCF into a list of 1D coefficient vectors."""
+        if ci_data is None:
+            return []
+        if isinstance(ci_data, (list, tuple)):
+            return [np.asarray(vec).copy() for vec in ci_data]
+        return [np.asarray(ci_data).copy()]
 
-    def compute_time_overlap(self, right: CASSCF) -> np.ndarray:
-        if not isinstance(right, CASSCF):
-            raise TypeError(f"right must be CASSCF, got {type(right).__name__}")
-        if self._mf is None or right._mf is None:
+    def compute_time_overlap(self, state1: object, state2: object) -> np.ndarray:
+        """Compute the adiabatic time-overlap matrix between two state snapshots.
+
+        state1: the current-state snapshot (``CASSCF_States``).
+        state2: the previous-state snapshot (``CASSCF_States``).
+
+        Returns
+        -------
+        np.ndarray
+            Shape ``(n_total, n_total)``.
+        """
+        if not isinstance(state1, CASSCF_States) or not isinstance(state2, CASSCF_States):
+            raise TypeError(
+                f"state1/state2 must be CASSCF_States, got "
+                f"{type(state1).__name__} / {type(state2).__name__}."
+            )
+        prev_state = state2  # previous geometry
+        curr_state = state1  # current geometry
+
+        if prev_state.mf is None or curr_state.mf is None:
             raise ValueError("HF states are required for time-overlap computation.")
-        if self._mol is None or right._mol is None:
+        if prev_state.mol is None or curr_state.mol is None:
             raise ValueError("Molecule states are required for time-overlap computation.")
 
-        nroots = self._time_overlap_nroots(right)
+        self._apply_num_threads()
+        nroots = self._n_total()
         if nroots <= 0:
             raise ValueError(f"nroots must be positive, got {nroots}")
 
-        ao_overlap = self.compute_ao_overlap(right)
-        prev_casci = mcscf.CASCI(self._mf, self._norbcas, self._nelecas)
-        prev_casci.fcisolver = fci.direct_spin0.FCISolver(self._mol)
+        ao_overlap = self._compute_ao_overlap(prev_state, curr_state)
+
+        # Always build CASCI roots and matching active-space MO blocks for both
+        # geometries.  State-averaged CASSCF `mc.ci` representations can differ
+        # (and be incompatible with `fci.addons.overlap`'s expected transform),
+        # so recomputing CASCI ensures consistent CI + one-particle overlap.
+        prev_casci = mcscf.CASCI(prev_state.mf, self._norbcas, self._nelecas)
+        prev_casci.fcisolver = fci.direct_spin0.FCISolver(prev_state.mol)
         prev_casci.fcisolver.nroots = nroots
         h1prev, _ = prev_casci.get_h1eff(prev_casci.mo_coeff)
         h2prev = prev_casci.get_h2cas(prev_casci.mo_coeff)
-        _, prev_roots = prev_casci.fcisolver.kernel(
+        _, prev_roots_raw = prev_casci.fcisolver.kernel(
             h1prev,
             h2prev,
             prev_casci.ncas,
@@ -322,12 +302,12 @@ class CASSCF(ES_Strategy):
             nroots=nroots,
         )
 
-        curr_casci = mcscf.CASCI(right._mf, right._norbcas, right._nelecas)
-        curr_casci.fcisolver = fci.direct_spin0.FCISolver(right._mol)
+        curr_casci = mcscf.CASCI(curr_state.mf, self._norbcas, self._nelecas)
+        curr_casci.fcisolver = fci.direct_spin0.FCISolver(curr_state.mol)
         curr_casci.fcisolver.nroots = nroots
         h1curr, _ = curr_casci.get_h1eff(curr_casci.mo_coeff)
         h2curr = curr_casci.get_h2cas(curr_casci.mo_coeff)
-        _, curr_roots = curr_casci.fcisolver.kernel(
+        _, curr_roots_raw = curr_casci.fcisolver.kernel(
             h1curr,
             h2curr,
             curr_casci.ncas,
@@ -335,21 +315,19 @@ class CASSCF(ES_Strategy):
             nroots=nroots,
         )
 
-        prev_roots = [np.asarray(vec) for vec in prev_roots[:nroots]]
-        curr_roots = [np.asarray(vec) for vec in curr_roots[:nroots]]
-
+        prev_roots = [np.asarray(vec) for vec in prev_roots_raw[:nroots]]
+        curr_roots = [np.asarray(vec) for vec in curr_roots_raw[:nroots]]
         prev_act = np.asarray(prev_casci.mo_coeff)[:, : prev_casci.ncas]
         curr_act = np.asarray(curr_casci.mo_coeff)[:, : curr_casci.ncas]
-        s12_mo = prev_act.T @ ao_overlap @ curr_act
-
+        s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
                 overlap[i, j] = fci.addons.overlap(
                     prev_roots[i],
                     curr_roots[j],
-                    prev_casci.ncas,
-                    prev_casci.nelecas,
+                    self._norbcas,
+                    self._nelecas if isinstance(self._nelecas, int) else sum(self._nelecas),
                     s=s12_mo,
                 )
 
@@ -360,33 +338,30 @@ class CASSCF(ES_Strategy):
         return overlap
 
     def time_overlap_matrix(self, nroots: int) -> np.ndarray:
-        """Legacy same-object API: compare cached previous state to current state."""
+        """Legacy same-object API: compare the cached previous state to the current state."""
         if nroots <= 0:
             raise ValueError(f"nroots must be positive, got {nroots}")
         prev_state = self.get_previous_state()
+        curr_state = self.get_state()
         if prev_state is None or prev_state.mc is None:
-            raise ValueError("Previous CASSCF state must exist for time-overlap computation.")
+            raise ValueError(
+                "Previous CASSCF state must exist for time-overlap computation. "
+                "Run at least two geometries before requesting time overlaps."
+            )
+        if curr_state is None or curr_state.mc is None:
+            raise ValueError("Current CASSCF state must exist for time-overlap computation.")
+        if nroots != self._n_total():
+            raise ValueError(
+                f"Requested {nroots} roots, but the strategy is configured for "
+                f"{self._n_total()} states."
+            )
+        return self.compute_time_overlap(curr_state, prev_state)
 
-        left = self.copy()
-        left._mol = prev_state.mol
-        left._mf = prev_state.mf
-        left._mc = prev_state.mc
-        left._state = CASSCF_States(mol=prev_state.mol, mf=prev_state.mf, mc=prev_state.mc)
-        left._previous_state = None
-        left._nroots = int(nroots)
-
-        right = self.copy()
-        right._nroots = int(nroots)
-        return left.compute_time_overlap(right)
-
-    def compute_nac_vectors(self) -> np.ndarray:
-        use_etfs = True
-        if self._mc is None:
-            raise ValueError("CASSCF must be run before computing NAC vectors.")
-        nstates = self._nroots
+    def compute_nac_vectors(self, use_etfs: bool = True) -> np.ndarray:
+        nstates = self._n_total()
         natm = int(self._mol.natm)
-        
-        mc_nacs = self._mc.nac_method()
+
+        mc_nacs = self._state.mc.nac_method()
         nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
 
         for ket in range(nstates):
@@ -398,6 +373,126 @@ class CASSCF(ES_Strategy):
                     dtype=np.float64,
                 )
 
-        return nacv
+                return nacv
 
-    
+
+if __name__ == "__main__":
+
+    # test=CASSCF(norbcas=5, nelecas=2, nroots=2, basis={'Li': 'sto-3g', 'F': '6-311+g*'}, unit='Bohr', charge=0, cas_list=[4, 7, 11, 14, 17])
+
+    # geom = MolecularGeometry(
+    #     atom_labels=['Li', 'F'],
+    #     coords_bohr=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 7.0]]),
+    # )
+    # test.set_geom(geom)
+
+    # #print the test obj's state object
+    # print(test.get_state()) 
+
+    # print(test.compute_H_el())
+
+    # print(test.compute_gradient(root=0))
+
+    # print(test.compute_all_gradients())
+
+    # print(test.compute_nac_vectors())
+
+    # geom2 = MolecularGeometry(
+    #     atom_labels=['Li', 'F'],
+    #     coords_bohr=np.array([[0.0, 0.0, 0.0], [0.0, 0.0, 8.0]]),
+    # )
+    # test.set_geom(geom2)
+
+    # print(test.compute_time_overlap(2))
+
+    def _smoke_test_casscf_heh_plus_sequence() -> None:
+        """Smoke test for HeH+ CASSCF state sequencing and time-overlap."""
+        geom1 = MolecularGeometry(
+            atom_labels=['He', 'H'],
+            coords_bohr=np.array([
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.46379],
+            ], dtype=np.float64),
+        )
+        geom2 = MolecularGeometry(
+            atom_labels=['He', 'H'],
+            coords_bohr=np.array([
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 1.88973],
+            ], dtype=np.float64),
+        )
+
+        casscf = CASSCF(
+            norbcas=2,
+            nelecas=2,
+            nroots=3,
+            basis='sto-3g',
+            charge=1,
+            unit='Bohr',
+        )
+
+        request = ES_Request(
+            n_singlets=3,
+            gradient_state='all',
+            hessian_state=None,
+            nacv=False,
+            time_overlap=True,
+        )
+
+        result1 = casscf.compute_result(geom1, request)
+        print("\nResult 1 H_el:", result1.H_el)
+        print("Result 1 gradients:\n", result1.gradients)
+        print("Result 1 time_overlap:", result1.time_overlap)
+
+        result2 = casscf.compute_result(geom2, request)
+        print("\nResult 2 H_el:", result2.H_el)
+        print("Result 2 gradients:\n", result2.gradients)
+        print("Result 2 time_overlap:\n", result2.time_overlap)
+
+
+    def _smoke_test_casscf_nacv_sequence() -> None:
+        """Smoke test for CASSCF NACV + time-overlap request behavior."""
+        basis_dict = {'Li': 'sto-3g', 'F': '6-311+g*'}
+        cas_list = [4, 7, 11, 14, 17]
+
+        geom1 = MolecularGeometry(
+            atom_labels=['Li', 'F'],
+            coords_bohr=np.array([
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 7.0],
+            ], dtype=np.float64),
+        )
+        geom2 = MolecularGeometry(
+            atom_labels=['Li', 'F'],
+            coords_bohr=np.array([
+                [0.0, 0.0, 0.0],
+                [0.0, 0.0, 8.0],
+            ], dtype=np.float64),
+        )
+
+        casscf = CASSCF(
+            norbcas=5,
+            nelecas=2,
+            nroots=2,
+            basis=basis_dict,
+            unit='Bohr',
+            charge=0,
+            cas_list=cas_list,
+        )
+
+        request = ES_Request(
+            n_singlets=2,
+            nacv=True,
+        )
+
+        result1 = casscf.compute_result(geom1, request)
+        print("\nResult 1 H_el:", result1.H_el)
+        print("Result 1 NACV shape:", result1.nac_vectors.shape)
+
+
+        result2 = casscf.compute_result(geom2, request)
+        print("\nResult 2 H_el:", result2.H_el)
+        print("Result 2 NACV shape:", result2.nac_vectors.shape)
+
+    _smoke_test_casscf_heh_plus_sequence()
+    _smoke_test_casscf_nacv_sequence()
