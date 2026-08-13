@@ -47,7 +47,7 @@ class CISD(ES_Strategy):
         mol: Optional[Any] = None,
         nroots: int = 1,
         basis: str = "sto-3g",
-        unit: str = "Angstrom",
+        unit: str = "Bohr",
         charge: int = 0,
     ) -> None:
         self._mol: Optional[Any] = mol
