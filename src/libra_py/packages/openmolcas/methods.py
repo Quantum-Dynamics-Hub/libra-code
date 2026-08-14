@@ -28,41 +28,42 @@ import libra_py.orthogonalizations as ortho
 """
 How the Data Flows — Step by Step
 
-1️⃣ Libra reads the trajectory
+1. Libra reads the trajectory
 cp2k.read_trajectory_xyz_file() extracts nuclear coordinates q from each frame of your .xyz file.
 This is where Libra's CP2K module acts as a geometry reader.
 
-2️⃣ Libra writes + runs OpenMolcas
+2. Libra writes + runs OpenMolcas
 make_molcas_input() generates a complete OpenMolcas input file using your molcas_run_params.
 run_molcas() spawns pymolcas as a subprocess to run the SA-CASSCF calculation.
 OpenMolcas produces:
-job.out → CASSCF energies and CI vectors
-job.RasOrb → MO coefficients
+job.out -> CASSCF energies and CI vectors
+job.RasOrb -> MO coefficients
 
-3️⃣ Libra parses the results
+3. Libra parses the results
 read_molcas_orbital_info() reads both output files and returns:
-info → orbital space metadata (inactive, active, virtual boundaries)
-MO_curr → MO coefficient matrix (shape nbas × nmo) where nbas is Total number of AO basis functions
-data_curr → CI vectors and energies for each state
+info -> orbital space metadata (inactive, active, virtual boundaries)
+MO_curr -> MO coefficient matrix (shape nbas × nmo) where nbas is Total number of AO basis functions
+data_curr -> CI vectors and energies for each state
 
-4️⃣ Libra builds determinant cache
+4. Libra builds determinant cache
 build_det_cache() selects the most important Slater determinants (above ci_coeff_thresh), reducing computational cost.
 This cache is reused when computing overlaps between consecutive timesteps.
 
-5️⃣ Libra computes overlaps
+5. Libra computes overlaps
 ci_overlap_general() computes the overlap matrix between CI wavefunctions using:
 Slater determinant overlaps (derived from MO overlaps)
 CI coefficient products
 Two overlap matrices are produced:
-time_overlap_adi → ⟨Ψᵢ(t) | Ψⱼ(t+Δt)⟩ (time-overlap for nonadiabatic dynamics)
-overlap_adi → ⟨Ψᵢ(t) | Ψⱼ(t)⟩ (instantaneous overlap)
+time_overlap_adi -> ⟨Ψᵢ(t) | Ψⱼ(t+Δt)⟩ (time-overlap for nonadiabatic dynamics)
+overlap_adi -> ⟨Ψᵢ(t) | Ψⱼ(t)⟩ (instantaneous overlap)
 
-6️⃣ Results saved to disk
+6. Results saved to disk
 ham_adi — adiabatic Hamiltonian (diagonal = CASSCF energies)
 hvib_adi — nonadiabatic coupling vector approximation
 st_adi — time-overlap between consecutive timesteps
 s_adi — state overlap at the same timestep
 """
+
 def _write_gateway_coord(f, labels, coords, nat):
     """
     Internal helper: write the &GATEWAY Coord block into an open file handle.

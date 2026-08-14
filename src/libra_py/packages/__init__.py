@@ -8,12 +8,13 @@
 # ***********************************************************/
 
 __all__ = ["cp2k",
-           "hippynn",
            "dftbplus",
            "ergo",
            "gaussian",
+           "hippynn",
            "lammps",
            "mopac",
+           "openmolcas",
            "psi4",
            "pyscf",
            "qe",
