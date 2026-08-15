@@ -115,6 +115,49 @@ def test_make_molcas_input_requests_gradients_and_nacs(tmp_path):
     assert "NAC=1 3\nNOCSF" in text
 
 
+def test_make_molcas_input_uses_uhf_for_open_shell(tmp_path):
+    input_file = tmp_path / "open_shell.in"
+    params = {
+        "charge": 0,
+        "spin": 2,
+        "nactel": "3 0 0",
+        "inactive": 18,
+        "ras2": 6,
+        "ciroot": "3 3 1",
+        "scf_method": "auto",
+        "uhf_orbital_set": "beta",
+    }
+
+    make_molcas_input(input_file, params, ["Al", "Al", "Al"], {})
+    text = input_file.read_text()
+
+    assert text.index("&SCF\nUHF\n") < text.index("Spin=2")
+    assert "FILEORB=$Project.UhfOrb" in text
+    assert "AlphaOrBeta=-1" in text
+
+
+def test_make_molcas_input_rohf_uses_spin_adapted_rasscf(tmp_path):
+    input_file = tmp_path / "rohf.in"
+    params = {"spin": 2, "nactel": 3, "scf_method": "rohf"}
+
+    make_molcas_input(input_file, params, ["H"], {})
+    text = input_file.read_text()
+
+    assert "&SCF" not in text
+    assert "&RASSCF" in text
+    assert "FILEORB=$Project.GssOrb" in text
+
+
+def test_make_molcas_input_rejects_incompatible_spin_and_electron_parity(tmp_path):
+    with pytest.raises(ValueError, match="incompatible electron parity"):
+        make_molcas_input(
+            tmp_path / "invalid.in",
+            {"spin": 2, "nactel": "6 0 0", "scf_method": "uhf"},
+            ["Al", "Al", "Al"],
+            {},
+        )
+
+
 def test_read_alaska_gradients_and_nac_vectors(tmp_path):
     output = tmp_path / "molcas.out"
     output.write_text(

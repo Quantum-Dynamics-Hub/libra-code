@@ -109,6 +109,31 @@ def _normalize_property_requests(nstates, gradient_states=None, nac_pairs=None):
            for pair in pairs):
         raise ValueError(f"nac_pairs must contain distinct state pairs in [0, {nstates})")
     return gradients, pairs
+
+
+def _resolve_scf_method(method, spin):
+    """Resolve the preliminary SCF method for an OpenMolcas RASSCF run."""
+    method = str(method).lower()
+    if method == "auto":
+        return "uhf" if spin > 1 else "rhf"
+    if method not in {"rhf", "uhf", "rohf"}:
+        raise ValueError("scf_method must be 'auto', 'rhf', 'uhf', or 'rohf'")
+    if method == "rhf" and spin > 1:
+        raise ValueError("Open-shell multiplicities require scf_method='uhf' or 'rohf'")
+    return method
+
+
+def _active_electron_count(nactel):
+    """Extract the number of active electrons from an OpenMolcas NACTEL value."""
+    if isinstance(nactel, (int, np.integer)):
+        return int(nactel)
+    if isinstance(nactel, str):
+        fields = nactel.replace(",", " ").split()
+    else:
+        fields = list(nactel)
+    if not fields:
+        raise ValueError("nactel must specify the number of active electrons")
+    return int(fields[0])
         
         
 def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
@@ -151,18 +176,30 @@ def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
         # --- &SEWARD ---
         f.write("&SEWARD\n\n")
 
-        # --- &SCF ---
-        f.write("&SCF\n")
-        f.write(f"Charge={p.get('charge', 0)}\n")
-        f.write(f"Spin={p.get('spin', 1)}\n\n")
+        spin = int(p.get("spin", 1))
+        nactel = p.get("nactel", "6 0 0")
+        scf_method = _resolve_scf_method(p.get("scf_method", "auto"), spin)
+        if _active_electron_count(nactel) % 2 != (spin - 1) % 2:
+            raise ValueError(
+                f"nactel={nactel!r} and spin multiplicity {spin} have "
+                "incompatible electron parity"
+            )
+
+        # OpenMolcas SCF supports RHF and UHF, but not ROHF. For ROHF-like
+        # spin-adapted starting orbitals, proceed directly to RASSCF.
+        if scf_method != "rohf":
+            f.write("&SCF\n")
+            if scf_method == "uhf":
+                f.write("UHF\n")
+            f.write(f"Charge={p.get('charge', 0)}\n")
+            f.write(f"Spin={spin}\n\n")
 
         # --- &RASSCF ---
-        spin = p.get('spin', 1)
         f.write("&RASSCF\n")
         f.write(f"Title={p.get('title', 'Molcas Job')}\n")
         f.write("Symmetry=1\n")
         f.write(f"Spin={spin}\n")
-        f.write(f"Nactel={p.get('nactel', '6 0 0')}\n")
+        f.write(f"Nactel={nactel}\n")
         f.write(f"Inactive={p.get('inactive', 15)}\n")
         f.write(f"Ras2={p.get('ras2', 6)}\n")
         f.write(f"Ciroot={p.get('ciroot', '2 2 1')}\n")
@@ -187,7 +224,7 @@ def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
                 )
             f.write(f"LSHIFT={lshift}\n")
 
-        # Feed previous converged orbitals as starting guess 
+        # Feed previous converged orbitals as starting guess.
         fileorb = p.get('fileorb', None)
         if fileorb is not None:
             if os.path.isfile(fileorb):
@@ -200,6 +237,14 @@ def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
                     "convergence may be unreliable.",
                     UserWarning
                 )
+        elif scf_method == "uhf":
+            orbital_set = str(p.get("uhf_orbital_set", "beta")).lower()
+            if orbital_set not in {"alpha", "beta"}:
+                raise ValueError("uhf_orbital_set must be 'alpha' or 'beta'")
+            f.write("FILEORB=$Project.UhfOrb\n")
+            f.write(f"AlphaOrBeta={'1' if orbital_set == 'alpha' else '-1'}\n")
+        elif scf_method == "rohf":
+            f.write("FILEORB=$Project.GssOrb\n")
 
         f.write("\n")
 
@@ -288,6 +333,8 @@ def run_molcas(coords, params_):
             "thre":       params.get("thre", "1.0e-10 1.0e-6 1.0e-6"),
             "prwf":       params.get("prwf", "1.0d-10"),
             "lshift":     params.get("lshift", None),
+            "scf_method": params.get("scf_method", "auto"),
+            "uhf_orbital_set": params.get("uhf_orbital_set", "beta"),
             "nac_states": params.get("nac_states"),
             "fileorb":    params.get("fileorb", None),
         }
@@ -1259,6 +1306,13 @@ def molcas_compute_adi(q, params, full_id):
             vectors are requested from ALASKA and returned in ``dc1_adi``.
         nac_nocsf : bool, default=False
             Add ALASKA's NOCSF keyword to NAC calculations.
+        scf_method : {"auto", "rhf", "uhf", "rohf"}, default="auto"
+            Preliminary orbital method. ``auto`` selects UHF for multiplicity
+            greater than one. OpenMolcas has no SCF-level ROHF implementation;
+            ``rohf`` therefore proceeds directly to its spin-adapted RASSCF
+            module, which is the documented OpenMolcas route for ROHF.
+        uhf_orbital_set : {"alpha", "beta"}, default="beta"
+            UHF orbital set supplied to the first RASSCF calculation.
         is_first_time : dict
             Dictionary keyed by trajectory index (`itraj`) with boolean values.
             True indicates that the current step is the first step of this trajectory.
