@@ -209,7 +209,9 @@ def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
         f.write(f"Thre={p.get('thre', '1.0e-10 1.0e-6 1.0e-6')}\n")
 
         # FIX: respect prwf from params, don't hardcode
-        f.write(f"PRWF={p.get('prwf', '1.0d-10')}\n")
+        # PRSD/VecDet must see the full CSF list. Determinant selection is
+        # performed later with ci_threshold after repeated SDs are combined.
+        f.write(f"PRWF={p.get('prwf', '0.0')}\n")
         f.write("PRSD\n")
 
         # only write LSHIFT if explicitly requested and small
@@ -572,25 +574,243 @@ def check_energy_continuity(energies_curr, energies_prev, itraj, timestep,
     return all_ok
 
 
-def read_ci_vectors(out_file, expected_states=None):
+def _combine_determinants(determinants, coefficients, ci_threshold=0.0):
+    """Combine repeated determinants and discard weights below ``ci_threshold``."""
+    combined = {}
+    order = []
+    for determinant, coefficient in zip(determinants, coefficients):
+        if determinant not in combined:
+            combined[determinant] = 0.0
+            order.append(determinant)
+        combined[determinant] += coefficient
+
+    kept_determinants = []
+    kept_coefficients = []
+    for determinant in order:
+        coefficient = combined[determinant]
+        if abs(coefficient) ** 2 >= ci_threshold:
+            kept_determinants.append(determinant)
+            kept_coefficients.append(coefficient)
+    return kept_determinants, kept_coefficients
+
+
+def read_vecdet(filepath, ci_threshold=0.0):
+    """Read an OpenMolcas PRSD ``VecDet`` determinant expansion.
+
+    The returned occupation tuples use ``2`` for a doubly occupied spatial
+    orbital, ``1`` for alpha, ``-1`` for beta, and ``0`` for empty. For example,
+    the file row ``0.70710678 ab0`` becomes ``((1, -1, 0), 0.70710678)``.
+    Repeated determinants are combined, then determinants with
+    ``|C|**2 < ci_threshold`` are discarded.
+
+    A VecDet file describes the M_S component printed by OpenMolcas, normally
+    the highest-weight component M_S=S. Use :func:`expand_ms_projections` to
+    construct the other components of a spin multiplet.
     """
-    Parse OpenMolcas CI vectors from RASSCF/CASSCF output.
-    Keeps only the LAST occurrence of each root's CI block,
-    so intermediate CASSCF iteration printouts are discarded.
+    if not os.path.isfile(filepath):
+        raise FileNotFoundError(f"OpenMolcas VecDet file not found: {filepath}")
+
+    occupation_map = {"2": 2, "0": 0, "a": 1, "b": -1}
+    determinants = []
+    coefficients = []
+    with open(filepath, "r") as vecdet:
+        next(vecdet, None)  # inactive orbitals per symmetry
+        for line_number, line in enumerate(vecdet, start=2):
+            fields = line.split()
+            if len(fields) != 2:
+                if fields:
+                    raise ValueError(f"Malformed VecDet row {line_number} in {filepath}")
+                continue
+            coefficient = float(fields[0].replace("D", "E").replace("d", "e"))
+            occupation = fields[1].lower()
+            if not occupation or any(char not in occupation_map for char in occupation):
+                raise ValueError(
+                    f"Invalid determinant occupation {occupation!r} at "
+                    f"{filepath}:{line_number}"
+                )
+            determinants.append(tuple(occupation_map[char] for char in occupation))
+            coefficients.append(coefficient)
+
+    return _combine_determinants(determinants, coefficients, ci_threshold)
+
+
+def _read_hdf5_ci_vectors(h5_path):
+    """Return the full-precision CSF coefficient array when available."""
+    if not h5_path or not os.path.isfile(h5_path):
+        return None
+    with h5py.File(h5_path, "r") as h5_file:
+        if "CI_VECTORS" not in h5_file:
+            return None
+        return np.asarray(h5_file["CI_VECTORS"], dtype=np.float64)
+
+
+def _spin_orbital_occupation(determinant):
+    """Return occupied indices in OpenMolcas's interleaved a,b convention."""
+    occupied = []
+    for orbital, occupation in enumerate(determinant):
+        if occupation in (1, 2):
+            occupied.append(2 * orbital)
+        if occupation in (-1, 2):
+            occupied.append(2 * orbital + 1)
+    return occupied
+
+
+def _lower_spin_state(determinants, coefficients, spin, ms):
+    """Apply S_- to a normalized |S,M_S> determinant expansion."""
+    lowered_determinants = []
+    lowered_coefficients = []
+    normalization = math.sqrt(spin * (spin + 1.0) - ms * (ms - 1.0))
+
+    for determinant, coefficient in zip(determinants, coefficients):
+        occupied = _spin_orbital_occupation(determinant)
+        for orbital, occupation in enumerate(determinant):
+            if occupation != 1:
+                continue
+
+            alpha = 2 * orbital
+            beta = alpha + 1
+            annihilation_position = occupied.index(alpha)
+            intermediate = [index for index in occupied if index != alpha]
+            creation_position = sum(index < beta for index in intermediate)
+            sign = -1.0 if (annihilation_position + creation_position) % 2 else 1.0
+
+            lowered = list(determinant)
+            lowered[orbital] = -1
+            lowered_determinants.append(tuple(lowered))
+            lowered_coefficients.append(sign * coefficient / normalization)
+
+    return _combine_determinants(lowered_determinants, lowered_coefficients, 0.0)
+
+
+def expand_ms_projections(determinants, coefficients, spin_multiplicity):
+    """Expand each highest-weight spin state into all distinct M_S projections.
+
+    Parameters
+    ----------
+    determinants, coefficients : list[list]
+        Outer lists are spin-free CASSCF roots. Each input root must represent
+        a pure-spin, normalized highest-weight state ``|S, M_S=S>``. Inner
+        determinant tuples use ``2, 1, -1, 0`` for double, alpha, beta, and
+        empty spatial-orbital occupations, respectively.
+    spin_multiplicity : int
+        ``2*S + 1``. Any positive multiplicity is supported: 1 is a singlet,
+        2 a doublet, 3 a triplet, 4 a quartet, and so forth.
+
+    Returns
+    -------
+    expanded_determinants, expanded_coefficients : list[list]
+        One determinant expansion per explicit M_S state. Ordering is
+        root-major; within each root it is ``M_S=S, S-1, ..., -S``.
+    labels : list[tuple[int, int]]
+        ``(root_index, 2*M_S)`` for every returned state. Twice M_S is stored
+        as an integer so half-integer projections have an exact label.
+
+    Notes
+    -----
+    Lower projections are generated recursively with the normalized spin
+    lowering operator ``S_-``. Thus a triplet root has labels
+    ``[(root, 2), (root, 0), (root, -2)]`` and a doublet has
+    ``[(root, 1), (root, -1)]``. With two triplet roots, the complete ordering
+    is ``[(0, 2), (0, 0), (0, -2), (1, 2), (1, 0), (1, -2)]``.
+
+    Examples
+    --------
+    A two-orbital triplet highest-weight determinant expands as follows::
+
+        dets = [[(1, 1)]]
+        coeffs = [[1.0]]
+        dets_ms, coeffs_ms, labels = expand_ms_projections(dets, coeffs, 3)
+        # labels == [(0, 2), (0, 0), (0, -2)]
+        # dets_ms[0] == [(1, 1)]                 # M_S = +1
+        # dets_ms[1] == [(-1, 1), (1, -1)]      # M_S =  0
+        # dets_ms[2] == [(-1, -1)]               # M_S = -1
+
+    The signs and determinant order in an expansion follow the interleaved
+    spin-orbital convention ``(1a, 1b, 2a, 2b, ...)`` used by OpenMolcas.
     """
-    OCC_MAP = {'2': 2, '0': 0, 'u': 1, 'a': 1, 'd': -1, 'b': -1}
+    multiplicity = int(spin_multiplicity)
+    if multiplicity < 1:
+        raise ValueError("spin_multiplicity must be positive")
+    spin = 0.5 * (multiplicity - 1)
+
+    expanded_determinants = []
+    expanded_coefficients = []
+    labels = []
+    for root, (root_determinants, root_coefficients) in enumerate(
+            zip(determinants, coefficients)):
+        projection_determinants = list(root_determinants)
+        projection_coefficients = list(root_coefficients)
+        ms = spin
+        for projection in range(multiplicity):
+            expanded_determinants.append(projection_determinants)
+            expanded_coefficients.append(projection_coefficients)
+            labels.append((root, multiplicity - 1 - 2 * projection))
+            if projection + 1 < multiplicity:
+                projection_determinants, projection_coefficients = _lower_spin_state(
+                    projection_determinants, projection_coefficients, spin, ms
+                )
+                ms -= 1.0
+    return expanded_determinants, expanded_coefficients, labels
+
+
+def read_ci_vectors(out_file, expected_states=None, h5_path=None, ci_threshold=0.0,
+                    vecdet_prefix=None):
+    """Read OpenMolcas wave functions expanded in Slater determinants.
+
+    ``VecDet.<root>`` files are preferred because PRSD writes determinant
+    coefficients directly. Otherwise, CSF coefficients are read from HDF5 when
+    possible and multiplied by the CSF-to-determinant expansions printed in the
+    output. Repeated determinants are combined before ``ci_threshold`` is
+    applied to their final squared coefficient magnitudes.
+
+    Returns two root-indexed nested lists. For example, two roots may produce
+    ``confs = [[(2, 0)], [(1, -1), (-1, 1)]]`` and
+    ``CI = [[1.0], [0.7071, -0.7071]]``. These are spin-free roots, not an
+    enumeration of all M_S components. OpenMolcas normally prints the
+    highest-weight M_S=S component for a requested multiplicity.
+    """
+    if ci_threshold < 0.0:
+        raise ValueError("ci_threshold must be non-negative")
+
+    if vecdet_prefix is None:
+        vecdet_prefix = os.path.splitext(out_file)[0] + ".VecDet"
+
+    n_vecdet = 0
+    while os.path.isfile(f"{vecdet_prefix}.{n_vecdet + 1}"):
+        n_vecdet += 1
+    if n_vecdet:
+        nstates = max(n_vecdet, expected_states or 0)
+        all_determinants = []
+        all_coefficients = []
+        for root in range(1, nstates + 1):
+            path = f"{vecdet_prefix}.{root}"
+            if os.path.isfile(path):
+                determinants, coefficients = read_vecdet(path, ci_threshold)
+            else:
+                determinants, coefficients = [], []
+            all_determinants.append(determinants)
+            all_coefficients.append(coefficients)
+        return all_determinants, all_coefficients
+
+    csf_coefficients = _read_hdf5_ci_vectors(h5_path)
+    determinant_map = {"2": 2, "0": 0, "a": 1, "b": -1}
 
     root_pat = re.compile(
         r"printout\s+of\s+CI-coefficients.*for\s+root\s+(\d+)",
         re.IGNORECASE
     )
 
-    root_confs = {}  
-    root_CIs   = {}   
+    expansion_pat = re.compile(
+        r"^([+-])\s+sqrt\(\s*(\d+)\s*/\s*(\d+)\s*\)\s+\|([20ab]+)\|$",
+        re.IGNORECASE,
+    )
+    root_confs = {}
+    root_CIs = {}
 
     current_root   = None
     current_confs  = []
     current_CIs    = []
+    current_csf_coefficient = None
 
     CI_END = [
         "Natural orbitals",
@@ -605,15 +825,14 @@ def read_ci_vectors(out_file, expected_states=None):
             stripped = raw.strip()
             m = root_pat.search(stripped)
             if m:
-                
                 if current_root is not None:
-                    root_confs[current_root] = current_confs
-                    root_CIs[current_root]   = current_CIs
-
-               
+                    root_confs[current_root], root_CIs[current_root] = _combine_determinants(
+                        current_confs, current_CIs, ci_threshold
+                    )
                 current_root  = int(m.group(1)) - 1   
                 current_confs = []
                 current_CIs   = []
+                current_csf_coefficient = None
                 continue
 
             if current_root is None:
@@ -621,14 +840,25 @@ def read_ci_vectors(out_file, expected_states=None):
 
           
             if any(p in stripped for p in CI_END):
-                root_confs[current_root] = current_confs
-                root_CIs[current_root]   = current_CIs
+                root_confs[current_root], root_CIs[current_root] = _combine_determinants(
+                    current_confs, current_CIs, ci_threshold
+                )
                 current_root  = None
                 current_confs = []
                 current_CIs   = []
+                current_csf_coefficient = None
                 continue
 
             if not stripped:
+                continue
+            expansion = expansion_pat.match(stripped)
+            if expansion and current_csf_coefficient is not None:
+                sign = 1.0 if expansion.group(1) == "+" else -1.0
+                factor = sign * math.sqrt(int(expansion.group(2)) / int(expansion.group(3)))
+                occupation = expansion.group(4).lower()
+                determinant = tuple(determinant_map[char] for char in occupation)
+                current_confs.append(determinant)
+                current_CIs.append(current_csf_coefficient * factor)
                 continue
             if any(h in stripped for h in ["energy=", "conf/sym", "Coeff", "Weight"]):
                 continue
@@ -643,28 +873,24 @@ def read_ci_vectors(out_file, expected_states=None):
                 continue
 
             try:
-                coeff = float(parts[-2].replace('D', 'E').replace('d', 'e'))
-
-                # The columns are: Conf, SGUGA info, Occupation, Coef, Weight.
-                # SGUGA info contains digits such as 2 and 0, so joining all
-                # fields before Coef can silently turn those indices into extra
-                # orbital occupations.  Occupation is the single field directly
-                # before Coef.
-                config_str = parts[-3]
-                if not re.fullmatch(r"[20uadb]+", config_str):
-                    continue
-                config = tuple(OCC_MAP[c] for c in config_str)
-
-                if len(config) > 0:
-                    current_confs.append(config)
-                    current_CIs.append(coeff)
+                csf_index = int(parts[0]) - 1
+                printed_coefficient = float(
+                    parts[-2].replace("D", "E").replace("d", "e")
+                )
+                if (csf_coefficients is not None
+                        and current_root < csf_coefficients.shape[0]
+                        and csf_index < csf_coefficients.shape[1]):
+                    current_csf_coefficient = csf_coefficients[current_root, csf_index]
+                else:
+                    current_csf_coefficient = printed_coefficient
 
             except (ValueError, IndexError, KeyError):
                 continue
 
     if current_root is not None:
-        root_confs[current_root] = current_confs
-        root_CIs[current_root]   = current_CIs
+        root_confs[current_root], root_CIs[current_root] = _combine_determinants(
+            current_confs, current_CIs, ci_threshold
+        )
 
     if not root_confs:
         n_found = 0
@@ -678,11 +904,17 @@ def read_ci_vectors(out_file, expected_states=None):
     all_CIs   = [root_CIs.get(i, [])   for i in range(n_found)]
 
     n_total = sum(len(c) for c in all_confs)
-    print(f"[DEBUG] Found {len(all_confs)} CI vectors with {n_total} total configurations")
+    if root_confs and n_total == 0:
+        raise ValueError(
+            "No CSF-to-determinant expansions were found in the OpenMolcas "
+            "output. Add PRSD to &RASSCF or provide the generated VecDet files."
+        )
+    print(f"[DEBUG] Found {len(all_confs)} CI vectors with {n_total} total determinants")
 
     for i, state_confs in enumerate(all_confs):
         if state_confs:
-            print(f"[DEBUG] State {i+1}: first config = {state_confs[0]}, len = {len(state_confs[0])}")
+            print(f"[DEBUG] State {i+1}: first determinant = {state_confs[0]}, "
+                  f"norb = {len(state_confs[0])}")
         else:
             print(f"[WARNING]  State {i+1}: 0 configurations — "
                   f"check PRWF threshold and Ciroot in Molcas input")
@@ -770,6 +1002,7 @@ def read_molcas_orbital_info(params):
     out_file = params.get("filename", params.get("output_file", "job.out"))
     rasorb_file = params.get("rasorb_file", "job.RasOrb")
     h5_path = params.get("h5_path", rasorb_file.replace(".RasOrb", ".rasscf.h5"))
+    ci_threshold = float(params.get("ci_threshold", 0.0))
 
     if not os.path.isfile(out_file):
         raise FileNotFoundError(
@@ -819,7 +1052,12 @@ def read_molcas_orbital_info(params):
 
     mos = read_rasorb(rasorb_file)
     energies = read_rasscf_energies(h5_path)
-    confs, ci = read_ci_vectors(out_file)
+    confs, ci = read_ci_vectors(
+        out_file,
+        expected_states=params.get("nstates"),
+        h5_path=h5_path,
+        ci_threshold=ci_threshold,
+    )
 
     info = {
         "nao": nbas,
@@ -1045,6 +1283,11 @@ def occ_tuple_to_alpha_beta(occ_tuple, active_space):
         1  → singly occupied, alpha
        -1  → singly occupied, beta
         0  → unoccupied
+
+    The determinant phase convention is based on interleaved spin orbitals
+    ``(1a, 1b, 2a, 2b, ...)``. This function returns separate alpha and beta
+    lists for determinant factorization; :func:`slater_det_overlap` restores
+    the corresponding interleaved-order permutation phase.
     """
     alpha_orbs = []
     beta_orbs  = []
@@ -1102,6 +1345,16 @@ def slater_det_overlap(alpha_K, beta_K, alpha_L, beta_L, S_mo):
     Returns
     -------
     overlap : complex scalar
+
+    Notes
+    -----
+    Alpha and beta blocks are factorized for efficiency, but OpenMolcas
+    determinants are defined in interleaved spin-orbital order
+    ``(1a, 1b, 2a, 2b, ...)``. The permutation phases converting between that
+    convention and grouped ``(all alpha, all beta)`` order are included here.
+    Determinants with different numbers of alpha or beta electrons have zero
+    overlap. Consequently, different M_S projections are exactly orthogonal in
+    this spin-free collinear representation.
     """
     aK = [a - 1 for a in alpha_K]
     aL = [a - 1 for a in alpha_L]
@@ -1120,7 +1373,12 @@ def slater_det_overlap(alpha_K, beta_K, alpha_L, beta_L, S_mo):
         else np.linalg.det(S_mo[np.ix_(bK, bL)])
     )
 
-    return det_alpha * det_beta
+    # The factorized determinants above use grouped (all-alpha, all-beta)
+    # ordering. OpenMolcas occupations use interleaved (1a,1b,2a,2b,...)
+    # ordering, so restore the permutation phase for each determinant.
+    phase_K = -1.0 if sum(b < a for b in beta_K for a in alpha_K) % 2 else 1.0
+    phase_L = -1.0 if sum(b < a for b in beta_L for a in alpha_L) % 2 else 1.0
+    return phase_K * phase_L * det_alpha * det_beta
 
 
 def ci_overlap_general(data_bra, data_ket, S_mo, active_space, inactive_orbs, nstates,
@@ -1149,6 +1407,19 @@ def ci_overlap_general(data_bra, data_ket, S_mo, active_space, inactive_orbs, ns
     Returns
     -------
     S_ci : np.ndarray, shape (nstates, nstates), dtype complex128
+
+    Notes
+    -----
+    State ordering is exactly the outer-list ordering in ``data_bra`` and
+    ``data_ket``. Data returned directly by :func:`read_ci_vectors` is ordered
+    by spin-free root. Data returned by :func:`expand_ms_projections` is ordered
+    first by root and then by descending M_S.
+
+    In a spin-free calculation, matrix elements between different M_S values
+    vanish because those states contain different alpha/beta electron counts.
+    Equal-M_S components belonging to different roots need not have zero time
+    overlap. The different-M_S rule does not apply after spin-orbit or other
+    non-collinear interactions mix spin projections.
     """
     S_ci = np.zeros((nstates, nstates), dtype=np.complex128)
 
@@ -1233,6 +1504,174 @@ def _infer_nstates_from_ciroot(ciroot):
 class tmp:
     pass
 
+
+def _compute_spin_manifold(coords, params, itraj, manifold, manifold_index,
+                           multiple_manifolds):
+    """Run and evaluate one fixed-multiplicity OpenMolcas manifold."""
+    atom_labels = params["atom_labels"]
+    timestep = params.get("timestep", 0)
+    base_run_params = copy.deepcopy(params.get("molcas_run_params", {
+        "basis": "ANO-RCC-VDZP",
+        "charge": 0,
+        "spin": 1,
+        "nactel": "6 0 0",
+        "inactive": 5,
+        "ras2": 6,
+        "ciroot": "2 2 1",
+        "prwf": 0.0,
+        "thre": "1.0e-10",
+    }))
+    molcas_run_params = copy.deepcopy(base_run_params)
+    molcas_run_params.update(copy.deepcopy(manifold))
+
+    multiplicity = int(molcas_run_params.get("spin", 1))
+    nroots = int(manifold.get(
+        "nroots", params.get("nroots", params.get(
+            "nstates", _infer_nstates_from_ciroot(
+                molcas_run_params.get("ciroot")) or 2))
+    ))
+    include_ms = bool(manifold.get(
+        "include_ms_projections",
+        params.get("include_ms_projections", multiple_manifolds),
+    ))
+    nstates = nroots * multiplicity if include_ms else nroots
+
+    gradient_states, nac_pairs = _normalize_property_requests(
+        nroots,
+        manifold.get("gradient_states", params.get(
+            "gradient_states", molcas_run_params.get("gradient_states"))),
+        manifold.get("nac_pairs", params.get(
+            "nac_pairs", molcas_run_params.get("nac_pairs"))),
+    )
+    if not nac_pairs and molcas_run_params.get("nac_states") is not None:
+        legacy_i, legacy_j = molcas_run_params["nac_states"]
+        nac_pairs = [(int(legacy_i) - 1, int(legacy_j) - 1)]
+    molcas_run_params["nstates"] = nroots
+    molcas_run_params["gradient_states"] = gradient_states
+    molcas_run_params["nac_pairs"] = nac_pairs
+    if "nac_nocsf" in params and "nac_nocsf" not in manifold:
+        molcas_run_params["nac_nocsf"] = params["nac_nocsf"]
+
+    prwf = float(str(molcas_run_params.get("prwf", 0.0)).replace(
+        "D", "E").replace("d", "e"))
+    if prwf > 0.0:
+        warnings.warn(
+            f"PRWF={prwf:g} truncates CSFs before determinant expansion; use "
+            "PRWF=0.0 for rigorous post-expansion ci_threshold filtering.",
+            UserWarning,
+            stacklevel=3,
+        )
+
+    history_key = (itraj, manifold_index) if multiple_manifolds else itraj
+    suffix = f"_spin{multiplicity}_manifold{manifold_index}" if multiple_manifolds else ""
+    wd = f"{params.get('working_directory_prefix', 'wd')}_itraj{itraj}{suffix}"
+    jobid = f"_timestep_{timestep}_traj_{itraj}{suffix}"
+    run_params = {
+        "atom_labels": atom_labels,
+        "exe": params.get("exe", "pymolcas"),
+        "molcas_run_params": molcas_run_params,
+        "working_directory": wd,
+        "molcas_jobid": jobid,
+        "input_prefix": params.get("molcas_input_prefix", "input_"),
+        "output_prefix": params.get("molcas_output_prefix", "output_"),
+        "fileorb": params["rasorb_prev"].get(history_key),
+    }
+    out_path, rasorb_file = run_molcas(coords, run_params)
+    info, MO_curr, data_curr = read_molcas_orbital_info({
+        "filename": out_path,
+        "rasorb_file": rasorb_file,
+        "nstates": nroots,
+        "h5_path": rasorb_file.replace(".RasOrb", ".rasscf.h5"),
+        "ci_threshold": params.get(
+            "ci_threshold", params.get("ci_coeff_thresh", 1e-6)),
+    })
+    if isinstance(data_curr, dict):
+        energies = data_curr.get("energies", [])
+        confs = data_curr.get("confs", [])
+        coefficients = data_curr.get("CI", [])
+    else:
+        energies, confs, coefficients = data_curr
+    if len(energies) < nroots:
+        raise ValueError(
+            f"Spin multiplicity {multiplicity}: found {len(energies)} energies, "
+            f"expected {nroots}."
+        )
+    root_energies = list(energies[:nroots])
+    check_energy_continuity(
+        root_energies, params["energies_prev"].get(history_key),
+        itraj=itraj, timestep=timestep,
+        thresh_eV=params.get("energy_continuity_thresh_eV", 0.3),
+    )
+
+    ms_labels = [(root, multiplicity - 1) for root in range(nroots)]
+    if include_ms:
+        confs, coefficients, ms_labels = expand_ms_projections(
+            confs, coefficients, multiplicity)
+    energies = [root_energies[root] for root, _ in ms_labels]
+    if not any(confs):
+        raise ValueError(
+            f"Spin multiplicity {multiplicity}: all CI states are empty; "
+            "check PRWF, ci_threshold, and RASSCF convergence."
+        )
+
+    MO_curr = np.asarray(MO_curr, dtype=np.complex128)
+    nbas = info.get("nao", MO_curr.shape[0])
+    S_ao = np.asarray(read_ao_overlap(out_path, nbas), dtype=np.complex128)
+    active_space = info.get(
+        "actual_orbital_space",
+        list(range(info["min_active"], info["max_active"] + 1)),
+    )
+    inactive_orbs = list(range(1, info["nocc"] + 1))
+    for state_idx, state_confs in enumerate(confs):
+        for conf_idx, conf in enumerate(state_confs):
+            if len(conf) != len(active_space):
+                raise ValueError(
+                    f"Occupation tuple length ({len(conf)}) != active_space "
+                    f"length ({len(active_space)}) for spin {multiplicity}, "
+                    f"state {state_idx + 1}, configuration {conf_idx + 1}."
+                )
+
+    current_data = (energies, confs, coefficients)
+    is_first_time = params["is_first_time"].get(history_key, True)
+    if is_first_time:
+        MO_prev = copy.deepcopy(MO_curr)
+        data_prev = copy.deepcopy(current_data)
+    else:
+        MO_prev = params["MO_prev"].get(history_key, MO_curr)
+        data_prev = params["data_prev"].get(history_key, current_data)
+    st_mo = MO_prev.conj().T @ S_ao @ MO_curr
+    s_mo = MO_curr.conj().T @ S_ao @ MO_curr
+    overlap_kwargs = {
+        "active_space": active_space,
+        "inactive_orbs": inactive_orbs,
+        "nstates": nstates,
+        "coeff_thresh": params.get("overlap_pair_threshold", 0.0),
+        "verbose": params.get("verbose", False),
+    }
+    st_ci = ci_overlap_general(data_prev, current_data, st_mo, **overlap_kwargs)
+    s_ci = ci_overlap_general(current_data, current_data, s_mo, **overlap_kwargs)
+    gradients, nac_vectors = read_alaska_properties(
+        out_path, len(atom_labels), gradient_states=gradient_states,
+        nac_pairs=nac_pairs, nstates=nroots,
+    )
+
+    params["MO_prev"][history_key] = copy.deepcopy(MO_curr)
+    params["data_prev"][history_key] = copy.deepcopy(current_data)
+    params["is_first_time"][history_key] = False
+    params["rasorb_prev"][history_key] = rasorb_file
+    params["energies_prev"][history_key] = root_energies
+    return {
+        "multiplicity": multiplicity,
+        "nroots": nroots,
+        "nstates": nstates,
+        "energies": energies,
+        "ms_labels": ms_labels,
+        "time_overlap": st_ci,
+        "overlap": s_ci,
+        "gradients": gradients,
+        "nac_vectors": nac_vectors,
+    }
+
 def molcas_compute_adi(q, params, full_id):
     """
     Perform a single-time-step electronic structure evaluation using OpenMolcas
@@ -1250,9 +1689,10 @@ def molcas_compute_adi(q, params, full_id):
     Workflow
     --------
     1. Extract nuclear coordinates for the trajectory from `q`.
-    2. Write an OpenMolcas input file using `make_molcas_input()` with
-       SA-CASSCF settings (basis, active space, number of roots, etc.).
-    3. Run OpenMolcas (via `pymolcas`) in a trajectory-specific directory.
+    2. Normalize either the legacy single-multiplicity input or a list of
+       fixed-spin manifolds.
+    3. For each manifold, write and run an independent OpenMolcas SA-CASSCF
+       calculation in a trajectory- and spin-specific directory.
     4. Parse the output files:
         - `job.out` → CASSCF energies, CI vectors, orbital space metadata
         - `job.RasOrb` → MO coefficient matrix
@@ -1287,6 +1727,8 @@ def molcas_compute_adi(q, params, full_id):
                 - ras2 : list[int], active orbital indices (1-based)
                 - ciroot : list[list[int]], e.g. [[2,2],[2,1]] for state averaging
             See OpenMolcas documentation for all available keywords.
+            These values are also used as common defaults for every entry in
+            ``spin_manifolds``.
 
         **Optional / Internal (updated in-place):**
         dt : float, default=41.0
@@ -1295,9 +1737,31 @@ def molcas_compute_adi(q, params, full_id):
             Command to invoke OpenMolcas.
         working_directory_prefix : str, default="wd"
             Prefix for trajectory-specific directories.
-        ci_coeff_thresh : float, default=0.01
-            Threshold for truncating CI expansion in determinant cache.
-            Determinants with |C_I| < thresh are discarded for overlap computations.
+        ci_threshold : float, default=1e-6
+            Discard determinants whose final combined weight ``|C|^2`` is below
+            this value. ``ci_coeff_thresh`` is accepted as a legacy alias.
+        include_ms_projections : bool, default=False
+            Represent every spin-free root by all ``2S+1`` distinct M_S
+            projections, ordered root-major from M_S=S through M_S=-S.
+            Here ``spin`` in ``molcas_run_params`` is the multiplicity ``2S+1``.
+            It defaults to ``True`` when ``spin_manifolds`` is supplied, while
+            retaining ``False`` for the legacy single-manifold calculation.
+        spin_manifolds : list[dict], optional
+            Fixed-spin calculations to combine into one Libra state space.
+            Each dictionary must define a unique positive ``spin`` multiplicity,
+            overrides ``molcas_run_params``, and may additionally define
+            ``nroots``, ``include_ms_projections``, ``gradient_states``, and
+            ``nac_pairs``. List order defines manifold order; roots and M_S
+            projections define the ordering within each manifold. Omitting this
+            key selects the backward-compatible single-multiplicity path.
+        nroots : int, optional
+            Number of spin-free CASSCF roots. If omitted, ``nstates`` is used,
+            followed by the number inferred from ``ciroot``. When M_S expansion
+            is enabled, the returned Libra dimension is
+            ``nroots * spin_multiplicity``.
+        overlap_pair_threshold : float, default=0.0
+            Optional screening threshold for products of determinant
+            coefficients inside the overlap double sum.
         gradient_states : "all", int, or iterable[int], optional
             Zero-based states whose analytical energy gradients are requested
             from ALASKA and returned in ``d1ham_adi``.
@@ -1365,12 +1829,41 @@ def molcas_compute_adi(q, params, full_id):
             One spatial derivative-coupling matrix per nuclear degree of freedom.
             Requested ALASKA NAC vectors populate anti-Hermitian off-diagonals.
 
+        ms_labels : list[tuple[int, int]]
+            State labels ``(spin_free_root, 2*M_S)`` in the same ordering as
+            every returned electronic matrix. Retained for compatibility; root
+            numbers restart at zero in each manifold.
+
+        spin_labels : list[tuple[int, int, int]]
+            Unambiguous global labels
+            ``(spin_multiplicity, spin_free_root, 2*M_S)``.
+
     Notes
     -----
     - All computations are performed in **trajectory-specific directories**
       to ensure thread safety when running multiple trajectories in parallel.
+      Mixed-spin calculations add ``_spin<M>_manifold<K>`` to keep their files
+      and orbital restarts independent.
     - The SA-CASSCF calculation uses a **state-averaged** formalism; energies
       are printed for each root included in the averaging.
+    - Without ``include_ms_projections``, each OpenMolcas root appears once and
+      ``ms_labels`` identifies its highest-weight component. With the option
+      enabled, every root is expanded into all ``2S+1`` projections. Thus two
+      doublet roots give ``[(0, 1), (0, -1), (1, 1), (1, -1)]``, while two
+      quartet roots give twelve states ordered as root 0 projections
+      ``3/2, 1/2, -1/2, -3/2`` followed by the same ordering for root 1.
+    - Spin-free energies and gradients are identical for every M_S component
+      of a root. They are therefore repeated on the corresponding diagonal
+      entries. A root-to-root ALASKA NAC is copied only between components with
+      equal M_S; different-M_S elements remain zero.
+    - Different M_S components have zero same-time and time overlap in the
+      present spin-free, collinear formalism. Spin-orbit-coupled states require
+      a spin-mixed representation and do not obey this block structure.
+    - Different multiplicities are assembled as exact zero-coupled blocks for
+      the Hamiltonian, overlaps, derivative couplings, and time couplings.
+      Therefore this basis is ready to receive later SOC matrix elements, but
+      it cannot produce intersystem crossing until such spin-dependent terms
+      are supplied.
     - CI overlaps are computed using the method of Plasser et al. (JCP 2016):
       the Slater determinant overlap is factorised into MO overlap contributions,
       and the CI overlap is assembled as:
@@ -1414,161 +1907,71 @@ def molcas_compute_adi(q, params, full_id):
     >>> obj = molcas_compute_adi(q, params, full_id)
     >>> print(obj.ham_adi)
     >>> print(obj.time_overlap_adi)
+
+    A triplet calculation with two spin-free roots can request explicit spin
+    projections as follows::
+
+        params["nroots"] = 2
+        params["molcas_run_params"]["spin"] = 3
+        params["include_ms_projections"] = True
+        obj = molcas_compute_adi(q, params, full_id)
+        # obj.ham_adi is 6 x 6
+        # obj.ms_labels == [(0, 2), (0, 0), (0, -2),
+        #                   (1, 2), (1, 0), (1, -2)]
+
+    One singlet root and one triplet root form a four-state spin-diabatic basis
+    using independent OpenMolcas calculations::
+
+        params["spin_manifolds"] = [
+            {"spin": 1, "nroots": 1, "ciroot": "1 1 1"},
+            {"spin": 3, "nroots": 1, "ciroot": "1 1 1"},
+        ]
+        obj = molcas_compute_adi(q, params, full_id)
+        # obj.spin_labels == [(1, 0, 0),
+        #                     (3, 0, 2), (3, 0, 0), (3, 0, -2)]
+        # All singlet-triplet matrix blocks are zero without SOC.
     """
-    Id    = Cpp2Py(full_id)
+    Id = Cpp2Py(full_id)
     itraj = Id[-1]
     coords = q.col(itraj)
+    for name in ("MO_prev", "data_prev", "is_first_time", "rasorb_prev",
+                 "energies_prev"):
+        params.setdefault(name, {})
 
-    params.setdefault("MO_prev",          {})
-    params.setdefault("data_prev",        {})
-    params.setdefault("is_first_time",    {})
-    params.setdefault("rasorb_prev",      {})  
-    params.setdefault("energies_prev",    {})  
-
-    atom_labels          = params["atom_labels"]
-    timestep             = params.get("timestep", 0)
-    wd_prefix            = params.get("working_directory_prefix", "wd")
-    molcas_input_prefix  = params.get("molcas_input_prefix", "input_")
-    molcas_output_prefix = params.get("molcas_output_prefix", "output_")
-    dt                   = params.get("dt", 1.0 * units.fs2au)
-    verbose              = params.get("verbose", False)
-    ci_coeff_thresh      = params.get("ci_coeff_thresh", 1e-6)
-    energy_thresh_eV     = params.get("energy_continuity_thresh_eV", 0.3)
-
-    molcas_run_params = copy.deepcopy(
-        params.get("molcas_run_params", {
-            "basis":    "ANO-RCC-VDZP",
-            "charge":   0,
-            "spin":     1,
-            "nactel":   "6 0 0",
-            "inactive": 5,
-            "ras2":     6,
-            "ciroot":   "2 2 1",
-            "prwf":     "1.0d-10",
-            "thre":     "1.0e-10",
-           
-        })
-    )
-
-    nstates       = params.get("nstates", 2)
-    gradient_states, nac_pairs = _normalize_property_requests(
-        nstates,
-        params.get("gradient_states", molcas_run_params.get("gradient_states")),
-        params.get("nac_pairs", molcas_run_params.get("nac_pairs")),
-    )
-    if not nac_pairs and molcas_run_params.get("nac_states") is not None:
-        legacy_i, legacy_j = molcas_run_params["nac_states"]
-        nac_pairs = [(int(legacy_i) - 1, int(legacy_j) - 1)]
-    molcas_run_params["nstates"] = nstates
-    molcas_run_params["gradient_states"] = gradient_states
-    molcas_run_params["nac_pairs"] = nac_pairs
-    if "nac_nocsf" in params:
-        molcas_run_params["nac_nocsf"] = params["nac_nocsf"]
-    is_first_time = params["is_first_time"].get(itraj, True)
-    wd            = f"{wd_prefix}_itraj{itraj}"
-    molcas_jobid  = f"_timestep_{timestep}_traj_{itraj}"
-
-    rasorb_prev_path = params["rasorb_prev"].get(itraj, None)
-
-    run_params = {
-        "atom_labels":      atom_labels,
-        "exe":              params.get("exe", "pymolcas"),
-        "molcas_run_params": molcas_run_params,
-        "working_directory": wd,
-        "molcas_jobid":     molcas_jobid,
-        "input_prefix":     molcas_input_prefix,
-        "output_prefix":    molcas_output_prefix,
-        "fileorb":          rasorb_prev_path,  
-    }
-
-    out_path, rasorb_file = run_molcas(coords, run_params)
-
-    h5_path = rasorb_file.replace(".RasOrb", ".rasscf.h5")
-
-    read_params = {
-        "filename":    out_path,
-        "rasorb_file": rasorb_file,
-        "nstates":     nstates,
-        "h5_path":     h5_path,
-    }
-    info, MO_curr, data_curr = read_molcas_orbital_info(read_params)
-
-    if isinstance(data_curr, dict):
-        energies = data_curr.get("energies", [])
-        confs    = data_curr.get("confs",    [])
-        CI       = data_curr.get("CI",       [])
+    requested_manifolds = params.get("spin_manifolds")
+    multiple_manifolds = requested_manifolds is not None
+    if multiple_manifolds:
+        if not isinstance(requested_manifolds, (list, tuple)) or not requested_manifolds:
+            raise ValueError("spin_manifolds must be a non-empty list of dictionaries")
+        if any(not isinstance(item, dict) for item in requested_manifolds):
+            raise TypeError("Each spin_manifolds entry must be a dictionary")
+        manifolds = list(requested_manifolds)
+        if any("spin" not in item for item in manifolds):
+            raise ValueError("Each spin_manifolds entry must define spin multiplicity")
+        multiplicities = [int(item["spin"]) for item in manifolds]
+        if any(value < 1 for value in multiplicities):
+            raise ValueError("Spin multiplicities must be positive integers")
+        if len(set(multiplicities)) != len(multiplicities):
+            raise ValueError("spin_manifolds must not repeat a spin multiplicity")
     else:
-        energies, confs, CI = data_curr
+        manifolds = [{}]
 
-    if len(energies) < nstates:
-        raise ValueError(f"Found only {len(energies)} energies, expected {nstates}.")
-
-    energies_prev_itraj = params["energies_prev"].get(itraj, None)
-    check_energy_continuity(
-        energies, energies_prev_itraj,
-        itraj=itraj, timestep=timestep,
-        thresh_eV=energy_thresh_eV
-    )
-
-    sample_conf = None
-    for idx, state_confs in enumerate(confs):
-        if state_confs:
-            sample_conf = state_confs[0]
-            sample_state_idx = idx
-            break
-
-    if sample_conf is None:
-        raise ValueError(
-            "All CI states are empty — check PRWF threshold and RASSCF convergence."
+    results = [
+        _compute_spin_manifold(
+            coords, params, itraj, manifold, index, multiple_manifolds
         )
-
-    MO_curr  = np.asarray(MO_curr, dtype=np.complex128)
-    nbas     = info.get("nao", MO_curr.shape[0])
-    S_ao     = np.asarray(read_ao_overlap(out_path, nbas), dtype=np.complex128)
-
-    active_space  = info.get("actual_orbital_space",
-                             list(range(info["min_active"], info["max_active"] + 1)))
-    inactive_orbs = list(range(1, info["nocc"] + 1))
-
-    for state_idx, state_confs in enumerate(confs):
-        for conf_idx, conf in enumerate(state_confs):
-            if len(conf) != len(active_space):
-                raise ValueError(
-                    f"Occupation tuple length ({len(conf)}) != active_space "
-                    f"length ({len(active_space)}) for state {state_idx + 1}, "
-                    f"configuration {conf_idx + 1}."
-                )
-
-    if is_first_time:
-        MO_prev   = copy.deepcopy(MO_curr)
-        data_prev = copy.deepcopy((energies, confs, CI))
-    else:
-        MO_prev   = params["MO_prev"].get(itraj, MO_curr)
-        data_prev = params["data_prev"].get(itraj, (energies, confs, CI))
-
-    st_mo_orb = MO_prev.conj().T @ S_ao @ MO_curr
-    s_mo_orb  = MO_curr.conj().T @ S_ao @ MO_curr
-
-    mrci_kwargs = {
-        "active_space":  active_space,
-        "inactive_orbs": inactive_orbs,
-        "nstates":       nstates,
-        "coeff_thresh":  ci_coeff_thresh,
-        "verbose":       verbose,
-    }
-
-    st_ci = ci_overlap_general(data_prev, (energies, confs, CI), st_mo_orb, **mrci_kwargs)
-    s_ci  = ci_overlap_general((energies, confs, CI), (energies, confs, CI), s_mo_orb, **mrci_kwargs)
-
-    gradients, nac_vectors = read_alaska_properties(
-        out_path,
-        len(atom_labels),
-        gradient_states=gradient_states,
-        nac_pairs=nac_pairs,
-        nstates=nstates,
-    )
+        for index, manifold in enumerate(manifolds)
+    ]
+    nstates = sum(result["nstates"] for result in results)
+    dt = params.get("dt", 1.0 * units.fs2au)
+    atom_labels = params["atom_labels"]
 
     obj = SimpleNamespace()
+    obj.spin_labels = [
+        (result["multiplicity"], root, twice_ms)
+        for result in results for root, twice_ms in result["ms_labels"]
+    ]
+    obj.ms_labels = [label[1:] for label in obj.spin_labels]
     obj.ham_adi          = CMATRIX(nstates, nstates)
     obj.nac_adi          = CMATRIX(nstates, nstates)
     obj.hvib_adi         = CMATRIX(nstates, nstates)
@@ -1582,29 +1985,51 @@ def molcas_compute_adi(q, params, full_id):
         obj.d1ham_adi.append(CMATRIX(nstates, nstates))
         obj.dc1_adi.append(CMATRIX(nstates, nstates))
 
-    for i in range(nstates):
-        obj.ham_adi.set(i, i, complex(energies[i]))
-        obj.hvib_adi.set(i, i, complex(energies[i]))
-        obj.basis_transform.set(i, i, 1.0 + 0.0j)
-        for j in range(nstates):
-            obj.time_overlap_adi.set(i, j, complex(st_ci[i, j]))
-            obj.overlap_adi.set(i, j, complex(s_ci[i, j]))
+    offset = 0
+    for result in results:
+        local_nstates = result["nstates"]
+        for i in range(local_nstates):
+            gi = offset + i
+            energy = complex(result["energies"][i])
+            obj.ham_adi.set(gi, gi, energy)
+            obj.hvib_adi.set(gi, gi, energy)
+            obj.basis_transform.set(gi, gi, 1.0 + 0.0j)
+            for j in range(local_nstates):
+                gj = offset + j
+                obj.time_overlap_adi.set(
+                    gi, gj, complex(result["time_overlap"][i, j]))
+                obj.overlap_adi.set(gi, gj, complex(result["overlap"][i, j]))
 
-    for state, gradient in gradients.items():
-        for atom in range(len(atom_labels)):
-            for xyz in range(3):
-                obj.d1ham_adi[3 * atom + xyz].set(
-                    state, state, complex(gradient[atom, xyz])
-                )
+        for root, gradient in result["gradients"].items():
+            local_states = [
+                state for state, (state_root, _) in enumerate(result["ms_labels"])
+                if state_root == root
+            ]
+            for atom in range(len(atom_labels)):
+                for xyz in range(3):
+                    for state in local_states:
+                        obj.d1ham_adi[3 * atom + xyz].set(
+                            offset + state, offset + state,
+                            complex(gradient[atom, xyz]),
+                        )
 
-    # ALASKA NAC=i,j prints <Psi_j|nabla Psi_i>. Enforce the corresponding
-    # anti-Hermitian spatial derivative-coupling matrix in Libra's convention.
-    for (i, j), vector in nac_vectors.items():
-        for atom in range(len(atom_labels)):
-            for xyz in range(3):
-                value = complex(vector[atom, xyz])
-                obj.dc1_adi[3 * atom + xyz].set(j, i, value)
-                obj.dc1_adi[3 * atom + xyz].set(i, j, -value.conjugate())
+        # ALASKA NAC=i,j prints <Psi_j|nabla Psi_i>. Only equal-M_S
+        # components within this fixed-spin manifold are coupled.
+        for (root_i, root_j), vector in result["nac_vectors"].items():
+            local_pairs = [
+                (i, j) for i, (ri, msi) in enumerate(result["ms_labels"])
+                for j, (rj, msj) in enumerate(result["ms_labels"])
+                if ri == root_i and rj == root_j and msi == msj
+            ]
+            for atom in range(len(atom_labels)):
+                for xyz in range(3):
+                    value = complex(vector[atom, xyz])
+                    for i, j in local_pairs:
+                        gi, gj = offset + i, offset + j
+                        obj.dc1_adi[3 * atom + xyz].set(gj, gi, value)
+                        obj.dc1_adi[3 * atom + xyz].set(
+                            gi, gj, -value.conjugate())
+        offset += local_nstates
 
     for i in range(nstates):
         for j in range(i + 1, nstates):
@@ -1613,11 +2038,5 @@ def molcas_compute_adi(q, params, full_id):
             obj.nac_adi.set(j, i, -dij.conjugate())
             obj.hvib_adi.set(i, j, -1.0j * dij)
             obj.hvib_adi.set(j, i,  1.0j * dij.conjugate())
-
-    params["MO_prev"][itraj]       = copy.deepcopy(MO_curr)
-    params["data_prev"][itraj]     = copy.deepcopy((energies, confs, CI))
-    params["is_first_time"][itraj] = False
-    params["rasorb_prev"][itraj]   = rasorb_file     
-    params["energies_prev"][itraj] = list(energies) 
 
     return obj
