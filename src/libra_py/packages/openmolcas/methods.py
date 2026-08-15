@@ -78,6 +78,37 @@ def _write_gateway_coord(f, labels, coords, nat):
         y = coords.get(3 * i + 1, 0)
         z = coords.get(3 * i + 2, 0)
         f.write(f"{labels[i]:4s}  {x:14.8f}  {y:14.8f}  {z:14.8f}\n")
+
+
+def _normalize_property_requests(nstates, gradient_states=None, nac_pairs=None):
+    """Normalize zero-based Libra state selections for OpenMolcas properties."""
+    if gradient_states is None:
+        gradients = []
+    elif isinstance(gradient_states, str) and gradient_states.lower() == "all":
+        gradients = list(range(nstates))
+    elif isinstance(gradient_states, (int, np.integer)):
+        gradients = [int(gradient_states)]
+    else:
+        gradients = [int(state) for state in gradient_states]
+
+    if nac_pairs is None:
+        pairs = []
+    elif isinstance(nac_pairs, str) and nac_pairs.lower() == "all":
+        pairs = [(i, j) for i in range(nstates) for j in range(i + 1, nstates)]
+    elif (isinstance(nac_pairs, (list, tuple)) and len(nac_pairs) == 2
+          and all(isinstance(state, (int, np.integer)) for state in nac_pairs)):
+        pairs = [tuple(map(int, nac_pairs))]
+    else:
+        pairs = [tuple(map(int, pair)) for pair in nac_pairs]
+
+    gradients = list(dict.fromkeys(gradients))
+    pairs = list(dict.fromkeys(tuple(sorted(pair)) for pair in pairs))
+    if any(state < 0 or state >= nstates for state in gradients):
+        raise ValueError(f"gradient_states must be in [0, {nstates})")
+    if any(len(pair) != 2 or pair[0] == pair[1] or pair[0] < 0 or pair[1] >= nstates
+           for pair in pairs):
+        raise ValueError(f"nac_pairs must contain distinct state pairs in [0, {nstates})")
+    return gradients, pairs
         
         
 def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
@@ -172,12 +203,28 @@ def make_molcas_input(molcas_input_filename, molcas_run_params, labels, coords):
 
         f.write("\n")
 
-        # --- &ALASKA ---
-        nac_states = p.get('nac_states', None)
-        if nac_states is not None:
-            i, j = nac_states
+        nstates = p.get("nstates", _infer_nstates_from_ciroot(p.get("ciroot")))
+        if nstates is None:
+            nstates = 1
+        gradient_states, nac_pairs = _normalize_property_requests(
+            nstates, p.get("gradient_states"), p.get("nac_pairs")
+        )
+
+        # ``nac_states`` is the legacy one-based single-pair option.
+        if not nac_pairs and p.get("nac_states") is not None:
+            i, j = p["nac_states"]
+            nac_pairs = [(int(i) - 1, int(j) - 1)]
+
+        for state in gradient_states:
             f.write("&ALASKA\n")
-            f.write(f"NAC={i} {j}\n")
+            f.write(f"ROOT={state + 1}\n")
+            f.write("SHOW\n\n")
+
+        for i, j in nac_pairs:
+            f.write("&ALASKA\n")
+            f.write(f"NAC={i + 1} {j + 1}\n")
+            if p.get("nac_nocsf", False):
+                f.write("NOCSF\n")
             f.write("SHOW\n\n")
 
 def _print_output_tail(path, n=80):
@@ -370,6 +417,85 @@ def read_rasscf_energies(h5_path):
     return energies
 
 
+def read_alaska_vectors(out_file):
+    """Read Cartesian gradients and derivative couplings printed by ALASKA.
+
+    The returned list contains ``(kind, values)`` pairs in output order, where
+    ``kind`` is ``"gradient"`` or ``"nac"`` and ``values`` has shape
+    ``(natoms, 3)``. OpenMolcas prints gradients in Hartree/Bohr and total
+    derivative couplings in Bohr^-1.
+    """
+    if not os.path.isfile(out_file):
+        raise FileNotFoundError(f"OpenMolcas output file not found: {out_file}")
+
+    marker = re.compile(r"(Molecular gradients|Total derivative coupling)", re.I)
+    number = re.compile(r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[EeDd][+-]?\d+)?$")
+    blocks = []
+    current_kind = None
+    rows = []
+
+    def finish_block():
+        nonlocal current_kind, rows
+        if current_kind is not None and rows:
+            blocks.append((current_kind, np.asarray(rows, dtype=np.float64)))
+        current_kind = None
+        rows = []
+
+    with open(out_file, "r") as output:
+        for line in output:
+            match = marker.search(line)
+            if match:
+                finish_block()
+                current_kind = ("gradient" if "molecular" in match.group(1).lower()
+                                else "nac")
+                continue
+            if current_kind is None:
+                continue
+
+            numeric = [
+                float(token.replace("D", "E").replace("d", "e"))
+                for token in line.split() if number.fullmatch(token)
+            ]
+            if len(numeric) >= 3:
+                rows.append(numeric[-3:])
+            elif rows and set(line.strip()) == {"-"}:
+                finish_block()
+    finish_block()
+    return blocks
+
+
+def read_alaska_properties(out_file, natoms, gradient_states=None, nac_pairs=None,
+                           nstates=None):
+    """Associate ALASKA tables with requested zero-based states and pairs."""
+    if nstates is None:
+        requested = list(gradient_states or [])
+        requested += [state for pair in (nac_pairs or []) for state in pair]
+        nstates = max(requested, default=-1) + 1
+    gradient_states, nac_pairs = _normalize_property_requests(
+        nstates, gradient_states, nac_pairs
+    )
+    blocks = read_alaska_vectors(out_file)
+    gradient_blocks = [values for kind, values in blocks if kind == "gradient"]
+    nac_blocks = [values for kind, values in blocks if kind == "nac"]
+
+    if len(gradient_blocks) != len(gradient_states):
+        raise ValueError(
+            f"Found {len(gradient_blocks)} ALASKA gradient tables, expected "
+            f"{len(gradient_states)}"
+        )
+    if len(nac_blocks) != len(nac_pairs):
+        raise ValueError(
+            f"Found {len(nac_blocks)} ALASKA NAC tables, expected {len(nac_pairs)}"
+        )
+    for values in gradient_blocks + nac_blocks:
+        if values.shape != (natoms, 3):
+            raise ValueError(
+                f"ALASKA Cartesian table has shape {values.shape}, expected ({natoms}, 3)"
+            )
+
+    return dict(zip(gradient_states, gradient_blocks)), dict(zip(nac_pairs, nac_blocks))
+
+
 def check_energy_continuity(energies_curr, energies_prev, itraj, timestep,
                              thresh_eV=0.3, hartree_to_eV=27.2114):
     """
@@ -470,9 +596,17 @@ def read_ci_vectors(out_file, expected_states=None):
                 continue
 
             try:
-                coeff      = float(parts[-2].replace('D', 'E').replace('d', 'e'))
-                config_str = "".join(parts[1:-2])
-                config     = tuple(OCC_MAP[c] for c in config_str if c in OCC_MAP)
+                coeff = float(parts[-2].replace('D', 'E').replace('d', 'e'))
+
+                # The columns are: Conf, SGUGA info, Occupation, Coef, Weight.
+                # SGUGA info contains digits such as 2 and 0, so joining all
+                # fields before Coef can silently turn those indices into extra
+                # orbital occupations.  Occupation is the single field directly
+                # before Coef.
+                config_str = parts[-3]
+                if not re.fullmatch(r"[20uadb]+", config_str):
+                    continue
+                config = tuple(OCC_MAP[c] for c in config_str)
 
                 if len(config) > 0:
                     current_confs.append(config)
@@ -1117,6 +1251,14 @@ def molcas_compute_adi(q, params, full_id):
         ci_coeff_thresh : float, default=0.01
             Threshold for truncating CI expansion in determinant cache.
             Determinants with |C_I| < thresh are discarded for overlap computations.
+        gradient_states : "all", int, or iterable[int], optional
+            Zero-based states whose analytical energy gradients are requested
+            from ALASKA and returned in ``d1ham_adi``.
+        nac_pairs : "all", pair[int, int], or iterable[pair[int, int]], optional
+            Zero-based state pairs whose analytical spatial derivative-coupling
+            vectors are requested from ALASKA and returned in ``dc1_adi``.
+        nac_nocsf : bool, default=False
+            Add ALASKA's NOCSF keyword to NAC calculations.
         is_first_time : dict
             Dictionary keyed by trajectory index (`itraj`) with boolean values.
             True indicates that the current step is the first step of this trajectory.
@@ -1162,12 +1304,12 @@ def molcas_compute_adi(q, params, full_id):
             Basis transformation matrix (currently set to identity).
 
         d1ham_adi : CMATRIXList
-            List of derivative Hamiltonians with respect to nuclear coordinates.
-            (Currently an empty list placeholder.)
+            One derivative Hamiltonian per nuclear degree of freedom. Requested
+            energy gradients populate the corresponding diagonal elements.
 
         dc1_adi : CMATRIXList
-            List of derivative couplings for each nuclear degree of freedom.
-            (Currently an empty list placeholder.)
+            One spatial derivative-coupling matrix per nuclear degree of freedom.
+            Requested ALASKA NAC vectors populate anti-Hermitian off-diagonals.
 
     Notes
     -----
@@ -1255,6 +1397,19 @@ def molcas_compute_adi(q, params, full_id):
     )
 
     nstates       = params.get("nstates", 2)
+    gradient_states, nac_pairs = _normalize_property_requests(
+        nstates,
+        params.get("gradient_states", molcas_run_params.get("gradient_states")),
+        params.get("nac_pairs", molcas_run_params.get("nac_pairs")),
+    )
+    if not nac_pairs and molcas_run_params.get("nac_states") is not None:
+        legacy_i, legacy_j = molcas_run_params["nac_states"]
+        nac_pairs = [(int(legacy_i) - 1, int(legacy_j) - 1)]
+    molcas_run_params["nstates"] = nstates
+    molcas_run_params["gradient_states"] = gradient_states
+    molcas_run_params["nac_pairs"] = nac_pairs
+    if "nac_nocsf" in params:
+        molcas_run_params["nac_nocsf"] = params["nac_nocsf"]
     is_first_time = params["is_first_time"].get(itraj, True)
     wd            = f"{wd_prefix}_itraj{itraj}"
     molcas_jobid  = f"_timestep_{timestep}_traj_{itraj}"
@@ -1321,11 +1476,14 @@ def molcas_compute_adi(q, params, full_id):
                              list(range(info["min_active"], info["max_active"] + 1)))
     inactive_orbs = list(range(1, info["nocc"] + 1))
 
-    if len(sample_conf) != len(active_space):
-        raise ValueError(
-            f"Occupation tuple length ({len(sample_conf)}) != "
-            f"active_space length ({len(active_space)})."
-        )
+    for state_idx, state_confs in enumerate(confs):
+        for conf_idx, conf in enumerate(state_confs):
+            if len(conf) != len(active_space):
+                raise ValueError(
+                    f"Occupation tuple length ({len(conf)}) != active_space "
+                    f"length ({len(active_space)}) for state {state_idx + 1}, "
+                    f"configuration {conf_idx + 1}."
+                )
 
     if is_first_time:
         MO_prev   = copy.deepcopy(MO_curr)
@@ -1348,6 +1506,14 @@ def molcas_compute_adi(q, params, full_id):
     st_ci = ci_overlap_general(data_prev, (energies, confs, CI), st_mo_orb, **mrci_kwargs)
     s_ci  = ci_overlap_general((energies, confs, CI), (energies, confs, CI), s_mo_orb, **mrci_kwargs)
 
+    gradients, nac_vectors = read_alaska_properties(
+        out_path,
+        len(atom_labels),
+        gradient_states=gradient_states,
+        nac_pairs=nac_pairs,
+        nstates=nstates,
+    )
+
     obj = SimpleNamespace()
     obj.ham_adi          = CMATRIX(nstates, nstates)
     obj.nac_adi          = CMATRIX(nstates, nstates)
@@ -1355,6 +1521,12 @@ def molcas_compute_adi(q, params, full_id):
     obj.time_overlap_adi = CMATRIX(nstates, nstates)
     obj.overlap_adi      = CMATRIX(nstates, nstates)
     obj.basis_transform  = CMATRIX(nstates, nstates)
+    obj.d1ham_adi        = CMATRIXList()
+    obj.dc1_adi           = CMATRIXList()
+
+    for _ in range(3 * len(atom_labels)):
+        obj.d1ham_adi.append(CMATRIX(nstates, nstates))
+        obj.dc1_adi.append(CMATRIX(nstates, nstates))
 
     for i in range(nstates):
         obj.ham_adi.set(i, i, complex(energies[i]))
@@ -1363,6 +1535,22 @@ def molcas_compute_adi(q, params, full_id):
         for j in range(nstates):
             obj.time_overlap_adi.set(i, j, complex(st_ci[i, j]))
             obj.overlap_adi.set(i, j, complex(s_ci[i, j]))
+
+    for state, gradient in gradients.items():
+        for atom in range(len(atom_labels)):
+            for xyz in range(3):
+                obj.d1ham_adi[3 * atom + xyz].set(
+                    state, state, complex(gradient[atom, xyz])
+                )
+
+    # ALASKA NAC=i,j prints <Psi_j|nabla Psi_i>. Enforce the corresponding
+    # anti-Hermitian spatial derivative-coupling matrix in Libra's convention.
+    for (i, j), vector in nac_vectors.items():
+        for atom in range(len(atom_labels)):
+            for xyz in range(3):
+                value = complex(vector[atom, xyz])
+                obj.dc1_adi[3 * atom + xyz].set(j, i, value)
+                obj.dc1_adi[3 * atom + xyz].set(i, j, -value.conjugate())
 
     for i in range(nstates):
         for j in range(i + 1, nstates):
