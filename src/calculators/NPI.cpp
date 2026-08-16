@@ -21,6 +21,11 @@
 
 #include "../Units.h"
 
+#include <algorithm>
+#include <cmath>
+#include <sstream>
+#include <stdexcept>
+
 /// liblibra namespace
 namespace liblibra{
 
@@ -32,6 +37,116 @@ using namespace libmeigen;
 /// libcalculators namespace
 namespace libcalculators{
 
+namespace {
+
+const double NPI_ORTHOGONALITY_TOL = 1.0e-6;
+const double NPI_SINGULARITY_TOL = 1.0e-12;
+
+double clamp_unit_interval(double value){
+  return std::max(-1.0, std::min(1.0, value));
+}
+
+double determinant(MATRIX matrix){
+  double result = 1.0;
+  int sign = 1;
+
+  for(int col=0; col<matrix.n_cols; col++){
+    int pivot = col;
+    double pivot_abs = std::fabs(matrix.get(col, col));
+    for(int row=col+1; row<matrix.n_rows; row++){
+      double candidate = std::fabs(matrix.get(row, col));
+      if(candidate > pivot_abs){
+        pivot = row;
+        pivot_abs = candidate;
+      }
+    }
+
+    if(pivot_abs < NPI_SINGULARITY_TOL){ return 0.0; }
+    if(pivot != col){
+      for(int k=col; k<matrix.n_cols; k++){
+        double tmp = matrix.get(col, k);
+        matrix.set(col, k, matrix.get(pivot, k));
+        matrix.set(pivot, k, tmp);
+      }
+      sign = -sign;
+    }
+
+    double pivot_value = matrix.get(col, col);
+    result *= pivot_value;
+    for(int row=col+1; row<matrix.n_rows; row++){
+      double factor = matrix.get(row, col) / pivot_value;
+      for(int k=col+1; k<matrix.n_cols; k++){
+        matrix.set(row, k, matrix.get(row, k) - factor * matrix.get(col, k));
+      }
+    }
+  }
+  return sign * result;
+}
+
+void validate_npi_input(const MATRIX& St, double dt){
+  if(St.n_rows != St.n_cols || St.n_rows == 0){
+    std::ostringstream msg;
+    msg << "nac_npi: the time-overlap matrix must be a non-empty square matrix; "
+        << "received " << St.n_rows << " x " << St.n_cols
+        << ". Supply overlaps between the same complete set of states at the two time steps.";
+    throw std::invalid_argument(msg.str());
+  }
+  if(!std::isfinite(dt) || dt <= 0.0){
+    std::ostringstream msg;
+    msg << "nac_npi: dt must be finite and positive; received " << dt
+        << ". Pass the positive time interval separating the two overlap matrices.";
+    throw std::invalid_argument(msg.str());
+  }
+
+  double max_orthogonality_error = 0.0;
+  for(int i=0; i<St.n_rows; i++){
+    for(int j=0; j<St.n_cols; j++){
+      double value = St.get(i, j);
+      if(!std::isfinite(value)){
+        std::ostringstream msg;
+        msg << "nac_npi: overlap element (" << i << ", " << j << ") is not finite. "
+            << "Check the electronic-structure calculation and state-overlap construction.";
+        throw std::invalid_argument(msg.str());
+      }
+    }
+    if(St.get(i, i) < -NPI_ORTHOGONALITY_TOL){
+      std::ostringstream msg;
+      msg << "nac_npi: diagonal overlap S(" << i << ", " << i << ") = " << St.get(i, i)
+          << " is negative, indicating a discontinuous electronic-state phase. "
+          << "Phase-match and reorder the states so corresponding-state overlaps are non-negative.";
+      throw std::invalid_argument(msg.str());
+    }
+  }
+
+  for(int i=0; i<St.n_cols; i++){
+    for(int j=0; j<St.n_cols; j++){
+      double dot = 0.0;
+      for(int k=0; k<St.n_rows; k++){
+        dot += St.get(k, i) * St.get(k, j);
+      }
+      double expected = (i == j) ? 1.0 : 0.0;
+      max_orthogonality_error = std::max(max_orthogonality_error, std::fabs(dot - expected));
+    }
+  }
+  if(max_orthogonality_error > NPI_ORTHOGONALITY_TOL){
+    std::ostringstream msg;
+    msg << "nac_npi: the time-overlap matrix is not orthogonal; max|S^T S - I| = "
+        << max_orthogonality_error << " exceeds " << NPI_ORTHOGONALITY_TOL
+        << ". Use the same complete state space at both steps and orthogonalize the overlap "
+        << "matrix (for example, by polar/Lowdin orthogonalization) after state matching.";
+    throw std::invalid_argument(msg.str());
+  }
+
+  double det = determinant(St);
+  if(det <= 0.0){
+    std::ostringstream msg;
+    msg << "nac_npi: the phase-matched overlap matrix must represent a proper rotation, but det(S) = "
+        << det << ". Correct state phases/permutations so det(S) is positive before applying NPI.";
+    throw std::invalid_argument(msg.str());
+  }
+}
+
+} // namespace
 
 MATRIX nac_npi(MATRIX& St, double dt){
 /** 
@@ -43,10 +158,10 @@ MATRIX nac_npi(MATRIX& St, double dt){
 
 */
 
+  validate_npi_input(St, dt);
+
   int nstates = St.n_cols;
   MATRIX nac(nstates, nstates);
-
-  double tol = 0.0;
 
   for(int i=0; i<nstates; i++){
     for(int j=i+1; j<nstates; j++){
@@ -54,20 +169,10 @@ MATRIX nac_npi(MATRIX& St, double dt){
 // W_jk = <j|d/dt|k>      j->i;   k->j
 // d_kj = ...
 
-      double W00 = St.get(i,i); 
-      double W01 = St.get(i,j);
-      double W10 = St.get(j,i);
-      double W11 = St.get(j,j);
-
-      //if( (W00>1.0) && (W00<1.01)) { W00 = 0.99999; }
-      //if( (W00>-1.01) && (W00<-1.0)) { W00 = -0.99999; }
-      //if( (W11>1.0) && (W11<1.01)) { W11 = 0.99999; }
-      //if( (W11>-1.01) && (W11<-1.0)) { W11 = -0.99999; }
-
-      if( (W00>1.0) && (W00<1.01)) { W00 = 1.0; }
-      if( (W00>-1.01) && (W00<-1.0)) { W00 = -1.0; }
-      if( (W11>1.0) && (W11<1.01)) { W11 = 1.0; }
-      if( (W11>-1.01) && (W11<-1.0)) { W11 = -1.0; }
+      double W00 = clamp_unit_interval(St.get(i,i));
+      double W01 = clamp_unit_interval(St.get(i,j));
+      double W10 = clamp_unit_interval(St.get(j,i));
+      double W11 = clamp_unit_interval(St.get(j,j));
 
       double A = acos(W00) - asin(W01);
       double B = acos(W00) + asin(W01);
@@ -78,16 +183,16 @@ MATRIX nac_npi(MATRIX& St, double dt){
       //  if (Wlj != Wlj){
       //      Wlj = 0.0;}
 
-      if( fabs(A) <= tol){ A = -1.0; }
+      if(A == 0.0){ A = -1.0; }
       else{  A = -1.0 * sin(A) / A; }
 
-      if(fabs(B) <= tol){  B = 1.0; }
+      if(B == 0.0){  B = 1.0; }
       else{   B = sin(B) / B; }
 
-      if(fabs(C) <= tol){  C = 1.0; }
+      if(C == 0.0){  C = 1.0; }
       else{   C = sin(C) / C; }
 
-      if(fabs(D) <= tol){  D = 1.0; }
+      if(D == 0.0){  D = 1.0; }
       else{   D = sin(D) / D; }
 
       //cout << "Flag A:" << A << endl;
@@ -104,7 +209,7 @@ MATRIX nac_npi(MATRIX& St, double dt){
       double E; 
       if(Wlj == 0.0){     E = 0.0;      }
       else{
-         double Wlk = -1.0 * (W01 * W00 + W11 * W10) / Wlj;
+         double Wlk = clamp_unit_interval(-1.0 * (W01 * W00 + W11 * W10) / Wlj);
          E = (1.0 - Wlj * Wlj) * (1.0 - Wlk * Wlk);
          if(E < 0.0 ){   E = 0.0; }
          else{
@@ -116,7 +221,12 @@ MATRIX nac_npi(MATRIX& St, double dt){
            E = sqrt(E); 
            double denom = sWlj * sWlj - sWlk * sWlk;
            //cout << "Flag NPI, denom:" << denom << endl;
-           E = 2.0 * asin(Wlj) * (Wlj * Wlk * sWlj + (E - 1.0) * sWlk) / denom;
+           if(std::fabs(denom) <= NPI_SINGULARITY_TOL){
+             E = (Wlk < 0.0) ? -Wlj * Wlj : Wlj * Wlj;
+           }
+           else{
+             E = 2.0 * sWlj * (Wlj * Wlk * sWlj + (E - 1.0) * sWlk) / denom;
+           }
          } // else Wlk > 1.0       
       }// else: Wlj != 0.0
       

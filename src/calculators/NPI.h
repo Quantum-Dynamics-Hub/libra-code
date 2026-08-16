@@ -28,6 +28,14 @@ using namespace liblinalg;
 /// libcalculators namespace
 namespace libcalculators{
 
+/**
+ * Compute the interval-averaged real time-derivative coupling using the
+ * Meek-Levine norm-preserving interpolation.
+ *
+ * St must be a finite, square, phase-matched orthogonal overlap matrix with
+ * positive determinant, and dt must be finite and positive. Invalid inputs
+ * raise std::invalid_argument with guidance for correcting the overlap.
+ */
 MATRIX nac_npi(MATRIX& St, double dt);
 
 

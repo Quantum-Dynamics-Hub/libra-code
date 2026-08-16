@@ -11,6 +11,7 @@ from .engine import DynamicsEngine, StepResult, dynamics_defaults, run_dynamics
 
 __all__ = ["DynamicsEngine",
            "StepResult",
+           "algorithms",
            "backends",
            "control_params",
            "core",
