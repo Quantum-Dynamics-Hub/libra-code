@@ -38,7 +38,7 @@ namespace liblibra{
 
 using namespace std;
 
-/// libcontrol_parameters namespace
+/// libcommon_types namespace
 namespace libcommon_types{
 
 

@@ -24,8 +24,8 @@ endif()
 #
 #  Link to external libraries
 #
-TARGET_LINK_LIBRARIES(calculators  linalg meigen specialfunctions common_types timer)
+TARGET_LINK_LIBRARIES(calculators  linalg meigen specialfunctions timer)
 
-TARGET_LINK_LIBRARIES(calculators_stat linalg_stat meigen_stat specialfunctions_stat  common_types_stat timer_stat)
+TARGET_LINK_LIBRARIES(calculators_stat linalg_stat meigen_stat specialfunctions_stat timer_stat)
 
                                                  

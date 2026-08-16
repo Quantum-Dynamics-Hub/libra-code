@@ -21,7 +21,6 @@
 #include "io/libio.h"
 #include "context/libcontext.h"
 #include "timer/libtimer.h"
-#include "common_types/libcommon_types.h"
 
 #include "math_ann/libann.h"
 #include "math_data/libdata.h"
@@ -35,8 +34,6 @@
 
 #include "molint/libmolint.h"
 #include "qobjects/libqobjects.h"
-#include "basis/libbasis.h"
-#include "basis_setups/libbasis_setups.h"
 
 #include "calculators/libcalculators.h"
 
@@ -48,9 +45,6 @@
 
 #include "cell/libcell.h"
 
-#include "control_parameters/libcontrol_parameters.h"
-#include "model_parameters/libmodel_parameters.h"
-#include "basis_setups/libbasis_setups.h"
 #include "libint2_wrappers/liblibint2_wrappers.h"
 
 
