@@ -64,14 +64,40 @@ def _get_trajectory_index(full_id):
     return int(Id[-1])
 
 
-def _params_to_request(params):
+def _resolve_gradient_state(params, itraj):
+    """Translate ``params["gradient_state"]`` into what ``ES_Request`` expects.
+
+    Accepted values:
+        None    -> no gradient
+        int     -> gradient for that one state
+        "all"   -> gradients for every state
+        "active"-> gradient for the trajectory's current active state, read
+                   from ``params["act_state"][itraj]`` (written every step by
+                   the dynamics driver, e.g. libra_py.dynamics.tsh.compute).
+    """
+    gradient_state = params.get("gradient_state", "all")
+
+    if gradient_state != "active":
+        return gradient_state
+
+    act_state = params.get("act_state")
+    if act_state is None:
+        raise KeyError(
+            "gradient_state='active' requires params['act_state'], which is "
+            "written by the dynamics driver each step and is not present yet "
+            "(e.g. this is a warm-up call before dynamics has started)."
+        )
+    return act_state[itraj]
+
+
+def _params_to_request(params, itraj):
     nstates = params.get("nstates", 2)
 
     return ES_Request(
         n_singlets=nstates,
-        n_triplet=0,
+        n_triplets=0,
         H_soc=params.get("H_soc", False),
-        gradient_state=params.get("gradient_state", "all"),
+        gradient_state=_resolve_gradient_state(params, itraj),
         hessian_state=params.get("hessian_state"),
         nacv=params.get("nacv", False),
         time_overlap=params.get("time_overlap", True),
@@ -86,18 +112,11 @@ def _compute_es_result(
     strategy: ES_Strategy,
     geometry: MolecularGeometry,
     request: ES_Request,
-    previous: ES_Strategy | None,
 ):
-    result = ES_Result()
-
-    strategy.compute_result(
+    return strategy.compute_result(
         geometry,
         request,
-        result,
-        previous=previous,
     )
-
-    return result
 
 
 # =============================================================================
@@ -290,15 +309,9 @@ def strategy_compute_adi(
         itraj,
         params["atom_labels"],
     )
-    request = _params_to_request(params)
+    request = _params_to_request(params, itraj)
 
-    # 2. Get current and previous ES snapshots
-    previous = params.setdefault(
-        "es_previous",
-        {},
-    ).get(itraj)
-
-    strategy_spec = params.get(
+    strategy_spec = params.get( 
         "strategy_factory",
         params.get("es_strategy"),
     )
@@ -315,12 +328,14 @@ def strategy_compute_adi(
     else:
         current = strategy_spec
 
-    # 3. Run ES calculation
+    # 3. Run ES calculation. ES_Strategy tracks its own previous-state
+    # snapshot internally (get_previous_state/snapshot_state), so "current"
+    # must be the same persistent instance across calls for a given
+    # trajectory for time-overlaps/NACs to be meaningful.
     result = _compute_es_result(
         current,
         geometry,
         request,
-        previous,
     )
 
     # 4. Generic ES result -> Libra result
@@ -331,7 +346,6 @@ def strategy_compute_adi(
         dt=float(params.get("dt", 41.0)),
     )
 
-    # 5. Current becomes previous
-    params["es_previous"][itraj] = current
-
     return obj
+
+
