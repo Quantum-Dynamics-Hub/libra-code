@@ -170,3 +170,73 @@ def test_factorized_sd_overlap_matches_full_spin_orbital_determinant():
     assert np.allclose(st_sd, ref_sd, atol=1e-12)
     assert np.allclose(st_csf, ref_csf, atol=1e-12)
 
+
+def test_triplet_overlap_keeps_singlet_ground_state_and_triplet_excitation():
+    spin_orbital_overlap = np.eye(4)
+
+    st_csf, st_sd = interfaces.sd_and_csf_overlaps(
+        spin_orbital_overlap,
+        lowest_orbital=1,
+        highest_orbital=2,
+        nelec=2,
+        homo_indx=1,
+        common_sd_basis=[[1, 2]],
+        S=1,
+        Ms=0,
+    )
+
+    assert st_sd.shape == (3, 3)
+    assert st_csf.shape == (2, 2)
+    assert np.allclose(st_csf, np.eye(2), atol=1e-12)
+
+
+def test_explicit_doublet_reference_supports_odd_electron_count():
+    st_csf, st_sd = interfaces.sd_and_csf_overlaps(
+        np.eye(4),
+        lowest_orbital=1,
+        highest_orbital=2,
+        nelec=1,
+        homo_indx=1,
+        common_sd_basis=[[1, 2]],
+        S=0.5,
+        Ms=0.5,
+        reference_det=[1],
+    )
+
+    assert st_sd.shape == (2, 2)
+    assert np.allclose(st_csf, np.eye(2), atol=1e-12)
+
+
+def test_explicit_triplet_reference_does_not_add_closed_shell_state():
+    raw_configs = [(1, 2)]
+    mapped_basis, _ = interfaces.configs_and_T_matrix(
+        raw_configs, [1, 2], [1, 2], nelec=2, S=1, Ms=0,
+    )
+    st_csf, st_sd = interfaces.sd_and_csf_overlaps(
+        np.eye(4),
+        lowest_orbital=1,
+        highest_orbital=2,
+        nelec=2,
+        homo_indx=2,
+        common_sd_basis=[],
+        S=1,
+        Ms=0,
+        reference_det=[1, 2],
+    )
+
+    assert all(not (orb in det and -orb in det) for det in mapped_basis for orb in det)
+    assert st_sd.shape == (2, 2)
+    assert st_csf.shape == (1, 1)
+    assert np.allclose(st_csf, np.eye(1), atol=1e-12)
+
+
+def test_shared_spin_helpers_cover_open_shell_package_interfaces():
+    assert interfaces.spin_quantum_numbers(2, -0.5) == (0.5, -0.5)
+    assert interfaces.spin_quantum_numbers(3, None) == (1.0, 1.0)
+    assert interfaces.make_open_shell_reference(1, 4) == [1, -1, 2, 3, 4]
+    assert interfaces.reference_from_electron_count(5, 4, 4) == [1, -1, 2, 3, 4]
+
+
+def test_reference_builder_rejects_incompatible_electron_parity():
+    with np.testing.assert_raises_regex(ValueError, "incompatible"):
+        interfaces.reference_from_electron_count(4, 2)

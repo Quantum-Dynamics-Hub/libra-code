@@ -78,6 +78,42 @@ class tmp:
     pass
 
 
+def make_open_shell_reference(n_doubly, multiplicity):
+    """Construct the highest-Ms restricted open-shell reference determinant."""
+    return interfaces.make_open_shell_reference(n_doubly, multiplicity)
+
+
+def spin_quantum_numbers(multiplicity, spin_projection=None):
+    """Validate a multiplicity and return its total spin and selected Ms."""
+    return interfaces.spin_quantum_numbers(multiplicity, spin_projection)
+
+
+def add_mopac_spin_keyword(run_params, multiplicity):
+    """Add the requested MOPAC spin keyword and reject conflicting keywords."""
+    spin_names = {
+        1: "SINGLET", 2: "DOUBLET", 3: "TRIPLET", 4: "QUARTET",
+        5: "QUINTET", 6: "SEXTET", 7: "SEPTET", 8: "OCTET", 9: "NONET",
+    }
+    multiplicity = int(multiplicity)
+    tokens = run_params.upper().split()
+    name_to_multiplicity = {name: value for value, name in spin_names.items()}
+    for token in tokens:
+        selected = None
+        if token in name_to_multiplicity:
+            selected = name_to_multiplicity[token]
+        elif token.startswith("MS="):
+            selected = int(round(2 * float(token.split("=", 1)[1]) + 1))
+        if selected is not None:
+            if selected != multiplicity:
+                raise ValueError(
+                    f"mopac_run_params selects multiplicity {selected}, but "
+                    f"multiplicity={multiplicity} was requested"
+                )
+            return run_params
+    keyword = spin_names.get(multiplicity, f"MS={0.5 * (multiplicity - 1):g}")
+    return f"{run_params} {keyword}"
+
+
 def run_mopac(coords, params_):
     """
     Execute a MOPAC calculation in a thread-safe manner within a specified
@@ -357,10 +393,17 @@ def read_mopac_orbital_info(params_):
     params = dict(params_)
 
     critical_params = []
-    default_params = {"filename": "output", "orbital_space": None, "nstates":2 }
+    default_params = {
+        "filename": "output", "orbital_space": None, "nstates": 2,
+        "multiplicity": 1, "spin_projection": None,
+    }
     comn.check_input(params, default_params, critical_params)
 
     out_file = params["filename"]
+    multiplicity = int(params["multiplicity"])
+    spin, spin_projection = spin_quantum_numbers(
+        multiplicity, params["spin_projection"]
+    )
 
     # Check the successful completion of the calculations like this:
     if os.path.isfile(out_file):
@@ -390,7 +433,9 @@ def read_mopac_orbital_info(params_):
             max_occ = int(float(line.split()[6]))
             min_vir = int(float(line.split()[9]))
             max_vir = int(float(line.split()[11]))
-    nelec = 2 * nocc
+    reference_det = make_open_shell_reference(nocc, multiplicity)
+    nelec = len(reference_det)
+    homo_indx = max(abs(orb) for orb in reference_det)
 
     # First, let's find where the MOs are and count how many of them we have
     ibeg, iend, nmo = 0, nlines - 1, 0
@@ -451,7 +496,8 @@ def read_mopac_orbital_info(params_):
     configs_dict = {}
     for i in range(nlines):
         line = output[i]
-        if line.find("The lowest") != -1 and line.find("spin-adapted configurations of multiplicity=  1"):
+        match = re.search(r"spin-adapted configurations of multiplicity=\s*(\d+)", line)
+        if line.find("The lowest") != -1 and match and int(match.group(1)) == multiplicity:
             tmp = line.split()
             if (len(tmp) > 3):
                 nconfig = int(float(tmp[2]))
@@ -464,7 +510,19 @@ def read_mopac_orbital_info(params_):
                         i_orb = int(float(tmp[10].split(")->(")[0]))
                         j_orb = int(float(tmp[11]))
                         conf_indx = int(float(tmp[0]))
-                        configs_dict[conf_indx] = [i_orb, j_orb]
+                        # Excitation into a singly occupied alpha orbital can
+                        # only occur in the beta channel. Other one-
+                        # determinant configurations use the alpha channel;
+                        # spin adaptation supplies their partners as needed.
+                        if j_orb in reference_det and -j_orb not in reference_det:
+                            configs_dict[conf_indx] = [-i_orb, -j_orb]
+                        else:
+                            configs_dict[conf_indx] = [i_orb, j_orb]
+
+    if not configs_dict:
+        raise RuntimeError(
+            f"Could not find MOPAC spin-adapted configurations for multiplicity {multiplicity}"
+        )
 
 
     # Find the line indices that contain the beginning and end of the CI information
@@ -516,8 +574,13 @@ def read_mopac_orbital_info(params_):
 
     data = [E_CI, confs, CI ]
 
-    info = { "nocc":nocc, 
+    info = { "nocc":nocc,
              "nelec":nelec,
+             "homo_indx": homo_indx,
+             "multiplicity": multiplicity,
+             "spin": spin,
+             "spin_projection": spin_projection,
+             "reference_det": reference_det,
              "nao":nao, "nmo":nmo,
              "nci":nci,
              "min_occ":min_occ, "max_occ":max_occ, 
@@ -627,6 +690,14 @@ def mopac_compute_adi(q, params, full_id):
             the active space reported by MOPAC is used.
 
             Default: None
+
+        multiplicity : int
+            Spin multiplicity ``2*S+1`` of the MOPAC CI calculation.
+            Default: 1.
+
+        spin_projection : int or float or None
+            Desired spin projection ``Ms``. If omitted, the highest-weight
+            component ``Ms=S`` is used.
 
         MO_prev : dict
             Trajectory-indexed storage of molecular orbital coefficients
@@ -760,6 +831,10 @@ def mopac_compute_adi(q, params, full_id):
                                   "INDO C.I.=(6,3) CHARGE=0 RELSCF=0.000001 ALLVEC  WRTCONF=0.00  WRTCI=2")
     do_Lowdin = params.get("do_Lowdin", True)
     nelec_act_space = params.get("nelec_act_space", None)
+    multiplicity = int(params.get("multiplicity", 1))
+    spin, spin_projection = spin_quantum_numbers(
+        multiplicity, params.get("spin_projection", None)
+    )
     
 
     # Trajectory-specific
@@ -769,7 +844,9 @@ def mopac_compute_adi(q, params, full_id):
     wd = f"{wd_prefix}_itraj{itraj}"
     
     # ================= Run MOPAC =================
-    mopac_params = copy.deepcopy(mopac_run_params)
+    mopac_params = add_mopac_spin_keyword(
+        copy.deepcopy(mopac_run_params), multiplicity
+    )
     #mopac_params["StateOfInterest"] = act_state
 
     mopac_jobid = F"_timestep_{timestep}_traj_{itraj}"
@@ -788,9 +865,11 @@ def mopac_compute_adi(q, params, full_id):
     # Read the MOPAC output
     # This is counterintuitive, but the actual output file name is derived from
     # that of the input
-    read_params = {"nstates":nstates, 
+    read_params = {"nstates":nstates,
                    "filename":F"{wd}/{mopac_input_prefix}{mopac_jobid}.out", 
-                   "orbital_space":None}
+                   "orbital_space":orbital_space,
+                   "multiplicity": multiplicity,
+                   "spin_projection": spin_projection}
     info, MO_curr, data_curr = read_mopac_orbital_info(read_params)
 
     #================= Construct active space ==================
@@ -798,11 +877,16 @@ def mopac_compute_adi(q, params, full_id):
     if nelec_act_space is None:
         active_space = info["actual_orbital_space"]
     else: 
-        min_indx = info["nocc"] - nelec_act_space//2 + 1
-        if min_indx > info["min_occ"]:
-            min_elec = ((info["nocc"] - info["min_occ"]) + 1 )*2
-            raise ValueError(f"The `nelec_act_space` should be at least { min_elec }")
-        active_space = list(range(min_indx, info["nmo"]+1))
+        occupied = sorted(abs(orb) for orb in info["reference_det"])
+        if nelec_act_space < 1 or nelec_act_space > len(occupied):
+            raise ValueError(
+                f"nelec_act_space must be between 1 and {len(occupied)}"
+            )
+        min_indx = occupied[-nelec_act_space]
+        # Keep the requested number of active reference electrons and only
+        # the virtual orbitals that MOPAC included in its CI expansion.  The
+        # MO overlap itself may still be evaluated in the full MO space.
+        active_space = list(range(min_indx, info["max_vir"] + 1))
 
     # Get the properties at the previous time-steps
     MO_prev, data_prev = None, None
@@ -834,12 +918,21 @@ def mopac_compute_adi(q, params, full_id):
 
 
     #================= Compute CI time-overlaps ============= 
-    ovlp_params = {"homo_indx":info["nocc"], 
-                   "nocc":info["nocc"] - 1, 
-                   "nvirt":info["nmo"] - info["nocc"], 
+    lowest_orbital = info["actual_orbital_space"][0]
+    highest_orbital = info["actual_orbital_space"][-1]
+    if info["actual_orbital_space"] != list(range(lowest_orbital, highest_orbital + 1)):
+        raise ValueError("orbital_space must be a contiguous range")
+
+    ovlp_params = {"homo_indx":info["homo_indx"],
+                   "nocc":info["homo_indx"] - lowest_orbital,
+                   "nvirt":highest_orbital - info["homo_indx"],
                    "nelec":info["nelec"], "nstates":nstates,
-                   "active_space":active_space
+                   "active_space":active_space,
+                   "spin": info["spin"],
+                   "spin_projection": info["spin_projection"],
                    }
+    if info["multiplicity"] != 1:
+        ovlp_params["reference_det"] = info["reference_det"]
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
     s_ci = ci.overlap(s_mo, data_curr, data_curr, ovlp_params)
 
@@ -869,8 +962,12 @@ def mopac_compute_adi(q, params, full_id):
         obj.basis_transform.set(istate, istate, 1.0 + 0.0j)  # assume identity
 
         for jstate in range(nstates):
-            obj.time_overlap_adi.set(istate, jstate, float(st_ci[istate, jstate]) * (1.0 + 0.0j))
-            obj.overlap_adi.set(istate,  jstate, float(s_ci[istate, jstate]) * (1.0 + 0.0j) )
+            obj.time_overlap_adi.set(
+                istate, jstate, float(np.real(st_ci[istate, jstate])) * (1.0 + 0.0j)
+            )
+            obj.overlap_adi.set(
+                istate, jstate, float(np.real(s_ci[istate, jstate])) * (1.0 + 0.0j)
+            )
 
     # Update the Hvib:
     for istate in range(nstates):
@@ -889,4 +986,3 @@ def mopac_compute_adi(q, params, full_id):
     params["is_first_time"][itraj] = False
 
     return obj
-

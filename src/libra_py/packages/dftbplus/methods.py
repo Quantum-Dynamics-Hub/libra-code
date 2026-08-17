@@ -30,6 +30,7 @@ from libra_py import units
 from libra_py import scan
 from libra_py import regexlib as rgl
 import libra_py.citools.ci as ci
+import libra_py.citools.interfaces as interfaces
 from libra_py import data_conv
 import libra_py.packages.cp2k.methods as CP2K_methods
 import libra_py.orthogonalizations as ortho
@@ -2476,7 +2477,8 @@ def read_dftb_orbital_info(params_):
             Number of occupied orbitals.
 
         nelec : int
-            Number of electrons (assumes closed-shell: nelec = 2 * nocc).
+            Number of electrons inferred from the highest occupied orbital
+            and requested multiplicity.
 
         nao : int
             Number of atomic orbitals.
@@ -2543,8 +2545,7 @@ def read_dftb_orbital_info(params_):
 
     Assumptions
     ~~~~~~~~~~~
-    - Closed-shell system (nelec = 2 * nocc).
-    - Spin-restricted DFTB calculation.
+    - Restricted and explicitly spin-labelled SPX transitions are supported.
     - Single excitations only (Casida formalism).
 
     """
@@ -2556,6 +2557,10 @@ def read_dftb_orbital_info(params_):
     orbital_space = params.get("orbital_space", None)
     wd = params.get("source_directory", "calc")
     ci_threshold = params.get("ci_threshold", 0.0)
+    multiplicity = int(params.get("multiplicity", 1))
+    spin, spin_projection = interfaces.spin_quantum_numbers(
+        multiplicity, params.get("spin_projection", None)
+    )
 
     # ================= SPX: excitation mappings =================
 
@@ -2600,7 +2605,11 @@ def read_dftb_orbital_info(params_):
     nci = min(nexc, nstates - 1)
 
     # Configuration list from SPX lookup (convert to 1-based indexing)
-    all_confs = [[v[0] + 1, v[1] + 1] for v in rpa_lookup]
+    all_confs = [
+        [v[0] + 1, v[1] + 1] if v[2] == 0
+        else [-(v[0] + 1), -(v[1] + 1)]
+        for v in rpa_lookup
+    ]
     nconf = len(all_confs)
 
     # Orbital ranges
@@ -2631,14 +2640,15 @@ def read_dftb_orbital_info(params_):
         filtered_confs = conf_arr[mask]
 
         for iconf in filtered_confs:
-            if iconf[0]<min_occ:
-                min_occ = iconf[0] 
-            if iconf[0]>max_occ:
-                max_occ = iconf[0]
-            if iconf[1]<min_vir:
-                min_vir = iconf[1]
-            if iconf[1]>max_vir:
-                max_vir = iconf[1]
+            occ, vir = abs(iconf[0]), abs(iconf[1])
+            if occ < min_occ:
+                min_occ = occ
+            if occ > max_occ:
+                max_occ = occ
+            if vir < min_vir:
+                min_vir = vir
+            if vir > max_vir:
+                max_vir = vir
 
         E_CI.append(results[i]["energy"])
         CI.append(filtered_vec)
@@ -2652,12 +2662,31 @@ def read_dftb_orbital_info(params_):
 
     # ================= Build info dictionary ====================
 
-    nocc = max_occ
-    nelec = 2 * nocc
+    # The reference occupation must not depend on CI-amplitude truncation.
+    nocc = max(occ_indices)
+    nunpaired = multiplicity - 1
+    nelec = 2 * nocc - nunpaired
+    reference_det = params.get("reference_det", None)
+    if reference_det is None:
+        reference_det = interfaces.reference_from_electron_count(
+            nelec, multiplicity, highest_occupied=nocc
+        )
+    else:
+        reference_det = list(reference_det)
+
+    for state in confs:
+        for iconf, conf in enumerate(state):
+            occ, vir = map(int, conf)
+            if occ > 0 and vir in reference_det and -vir not in reference_det:
+                state[iconf] = [-occ, -vir]
 
     info = {
         "nocc": nocc,
         "nelec": nelec,
+        "multiplicity": multiplicity,
+        "spin": spin,
+        "spin_projection": spin_projection,
+        "reference_det": reference_det,
         "nao": nao,
         "nmo": nmo,
         "nci": nci,
@@ -2722,8 +2751,8 @@ def dftb_compute_adi(q, params, full_id):
         ---------
         atom_labels : list of str
             Atomic symbols, e.g., ["O", "H", "H"].
-        orbital_space : dict
-            Active-space molecular orbitals indices.
+        orbital_space : iterable of int, optional
+            Contiguous molecular-orbital window used for MO overlaps.
 
         Optional / Internal (updated in-place):
         --------------------------------------
@@ -2751,6 +2780,16 @@ def dftb_compute_adi(q, params, full_id):
             Previous nuclear coordinates per trajectory (updated in-place).
         ci_threshold : float, default=0.01
             Threshold for CI truncation.
+        nelec_act_space : int, optional
+            Number of reference electrons retained in the reduced SD/CSF
+            representation.
+        multiplicity : int, default=1
+            Spin multiplicity ``2*S+1``.
+        spin_projection : int or float, optional
+            Selected ``Ms`` component; defaults to ``Ms=S``.
+        reference_det : iterable of int, optional
+            Explicit signed spin-orbital reference determinant. If omitted,
+            it is inferred from occupations and multiplicity.
         odin_max_ang_mom : dict, optional
             Maximum angular momentum per element for ODIN.
 
@@ -2832,6 +2871,11 @@ def dftb_compute_adi(q, params, full_id):
     dftb_run_params = params.get("dftb_run_params", {})
     atom_labels = params["atom_labels"]
     energy_zero = params.get("energy_zero", 0.0 )
+    nelec_act_space = params.get("nelec_act_space", None)
+    multiplicity = int(params.get("multiplicity", 1))
+    spin, spin_projection = interfaces.spin_quantum_numbers(
+        multiplicity, params.get("spin_projection", None)
+    )
 
     wd_prefix = params.get("working_directory_prefix", "wd")
     wd = f"{wd_prefix}_itraj{itraj}"
@@ -2884,9 +2928,12 @@ def dftb_compute_adi(q, params, full_id):
 
     read_params = {
         "nstates": nstates,
-        "orbital_space": params["orbital_space"],
+        "orbital_space": params.get("orbital_space", None),
         "source_directory": wd,
         "ci_threshold": params.get("ci_threshold", 0.01),
+        "multiplicity": multiplicity,
+        "spin_projection": spin_projection,
+        "reference_det": params.get("reference_det", None),
     }
 
     info, MO_curr, data_curr = read_dftb_orbital_info(read_params)
@@ -2925,14 +2972,33 @@ def dftb_compute_adi(q, params, full_id):
     st_mo_orb = MO_prev.T @ st_ao @ MO_curr
     st_mo = np.kron(np.eye(2), st_mo_orb)
 
+    orbital_space = info["actual_orbital_space"]
+    lowest_orbital = orbital_space[0]
+    highest_orbital = orbital_space[-1]
+    if orbital_space != list(range(lowest_orbital, highest_orbital + 1)):
+        raise ValueError("orbital_space must be a contiguous range")
+
+    if nelec_act_space is None:
+        active_space = list(orbital_space)
+    else:
+        occupied = sorted(abs(orb) for orb in info["reference_det"])
+        if nelec_act_space < 1 or nelec_act_space > len(occupied):
+            raise ValueError(f"nelec_act_space must be between 1 and {len(occupied)}")
+        min_indx = occupied[-nelec_act_space]
+        active_space = list(range(min_indx, info["max_vir"] + 1))
+
     ovlp_params = {
-        "homo_indx": info["nocc"],
-        "nocc": info["nocc"] - 1,
-        "nvirt": info["nmo"] - info["nocc"],
+        "homo_indx": max(abs(orb) for orb in info["reference_det"]),
+        "nocc": max(abs(orb) for orb in info["reference_det"]) - lowest_orbital,
+        "nvirt": highest_orbital - max(abs(orb) for orb in info["reference_det"]),
         "nelec": info["nelec"],
         "nstates": nstates,
-        "active_space": info["actual_orbital_space"],
+        "active_space": active_space,
+        "spin": info["spin"],
+        "spin_projection": info["spin_projection"],
     }
+    if multiplicity != 1 or params.get("reference_det", None) is not None:
+        ovlp_params["reference_det"] = info["reference_det"]
 
     st_ci = ci.overlap(st_mo, data_prev, data_curr, ovlp_params)
     s_ci = ci.overlap(s_mo, data_curr, data_curr, ovlp_params)
@@ -3024,4 +3090,3 @@ def dftb_compute_adi(q, params, full_id):
     params["is_first_time"][itraj] = False
 
     return obj
-
