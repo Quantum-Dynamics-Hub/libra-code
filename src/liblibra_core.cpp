@@ -27,7 +27,6 @@ using namespace boost::python;
 using namespace libutil;
 using namespace libio;
 using namespace libcontext;
-using namespace libcommon_types;
 
 using namespace libann;
 using namespace libdata;
@@ -41,8 +40,6 @@ using namespace libsymmetry;
 
 using namespace libmolint;
 using namespace libqobjects;
-using namespace libbasis;
-using namespace libbasis_setups;
 using namespace liblibint2_wrappers;
 
 using namespace libcalculators;
@@ -52,7 +49,6 @@ using namespace librigidbody;
 using namespace libchemobjects;
 using namespace libcell;
 
-using namespace libcontrol_parameters;
 using namespace libnhamiltonian;
 
 using namespace libmodels;
@@ -80,7 +76,6 @@ void export_libra_core_objects(){
   export_util_objects();
   export_io_objects();
   export_context_objects();
-  export_common_types_objects();
 
   export_NeuralNetwork_objects();
   export_Data_objects();
@@ -95,7 +90,6 @@ void export_libra_core_objects(){
 
   export_molint_objects();
   export_qobjects_objects();
-  export_basis_objects();
   export_libint2_wrappers_objects();
 
 
@@ -106,11 +100,6 @@ void export_libra_core_objects(){
   export_RigidBody_objects();
   export_chemobjects_objects();
   export_Cell_objects();
-
-
-  export_Control_Parameters_objects();
-  export_Model_Parameters_objects();
-  export_basis_setups_objects();
 
 
   export_nhamiltonian_objects();

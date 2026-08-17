@@ -292,14 +292,11 @@ class ES_Strategy(ABC):
             result.hessians[root] = hessian
 
         if request.nacv is True:
-
-            result.nac_vectors = np.asarray(
-                self.compute_nac_vectors(),
-                dtype=np.float64,
-            )
+            result.nac_vectors = np.asarray( self.compute_nac_vectors(), dtype=np.float64 )
 
         if request.time_overlap is True:
-            if self.get_previous_state() is  not None: # if none, then this is the first geometry, and there is no previous state to compute time-overlap with.
+            if self.get_previous_state() is not None: # if none, then this is the first 
+                                                      # geometry, and there is no previous state to compute time-overlap with.
                 state1 = self.get_state()
                 state2 = self.get_previous_state()
                 result.time_overlap = np.asarray(

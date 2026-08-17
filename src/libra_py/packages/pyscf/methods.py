@@ -131,19 +131,13 @@ def _numpy_to_cmatrix(array):
 
     for i in range(nrows):
         for j in range(ncols):
-            matrix.set(
-                i,
-                j,
-                complex(array[i, j]),
-            )
+            matrix.set( i, j, complex(array[i, j]) )
 
     return matrix
 
 
 def _energies_to_ham_adi(energies):
-    return _numpy_to_cmatrix(
-        np.diag(energies)
-    )
+    return _numpy_to_cmatrix( np.diag(energies)  )
 
 
 def _gradients_to_d1ham_adi(
@@ -154,9 +148,7 @@ def _gradients_to_d1ham_adi(
     d1ham_adi = CMATRIXList()
 
     for dof in range(3 * natoms):
-        d1ham_adi.append(
-            CMATRIX(nstates, nstates)
-        )
+        d1ham_adi.append(  CMATRIX(nstates, nstates) )
 
     for state, gradient in enumerate(gradients):
 
@@ -164,59 +156,27 @@ def _gradients_to_d1ham_adi(
             continue
 
         for atom in range(natoms):
-
             for xyz in range(3):
-
                 dof = 3 * atom + xyz
-
-                d1ham_adi[dof].set(
-                    state,
-                    state,
-                    complex(
-                        gradient[atom, xyz]
-                    ),
-                )
+                d1ham_adi[dof].set( state, state, complex(gradient[atom, xyz]) )
 
     return d1ham_adi
 
 
 def _time_overlap_to_cmatrix(time_overlap):
-    return _numpy_to_cmatrix(
-        time_overlap
-    )
+    return _numpy_to_cmatrix( time_overlap )
 
 
-def _time_overlap_to_hvib(
-    energies,
-    time_overlap,
-    dt,
-):
+def _time_overlap_to_hvib(  energies, time_overlap, dt):
+
     nstates = len(energies)
-
-    hvib = _energies_to_ham_adi(
-        energies
-    )
+    hvib = _energies_to_ham_adi( energies  )
 
     for i in range(nstates):
-
         for j in range(i + 1, nstates):
-
-            dij = (
-                time_overlap[i, j]
-                - time_overlap[j, i]
-            ) / (2.0 * dt)
-
-            hvib.set(
-                i,
-                j,
-                -1j * dij,
-            )
-
-            hvib.set(
-                j,
-                i,
-                +1j * dij,
-            )
+            dij = ( time_overlap[i, j] - time_overlap[j, i] ) / (2.0 * dt)
+            hvib.set( i, j, -1j * dij )
+            hvib.set( j, i, +1j * dij )
 
     return hvib
 
@@ -231,64 +191,31 @@ def _es_result_to_libra(
     natoms: int,
     dt: float,
 ) -> tmp:
+
     nstates = request.n_total
 
     obj = tmp()
 
     # Energies
-    obj.ham_adi = _energies_to_ham_adi(
-        result.H_el
-    )
+    obj.ham_adi = _energies_to_ham_adi( result.H_el )
 
     # Identity adiabatic transformation
-    obj.basis_transform = CMATRIX(
-        nstates,
-        nstates,
-    )
+    obj.basis_transform = CMATRIX( nstates, nstates )
 
     for i in range(nstates):
-        obj.basis_transform.set(
-            i,
-            i,
-            1.0 + 0.0j,
-        )
+        obj.basis_transform.set( i, i, 1.0 + 0.0j )
 
     # Gradients
     if result.gradients is not None:
-
-        obj.d1ham_adi = _gradients_to_d1ham_adi(
-            result.gradients,
-            nstates,
-            natoms,
-        )
+        obj.d1ham_adi = _gradients_to_d1ham_adi( result.gradients, nstates, natoms )
 
     # Time overlaps
     if result.time_overlap is not None:
-
-        obj.time_overlap_adi = (
-            _time_overlap_to_cmatrix(
-                result.time_overlap
-            )
-        )
-
-        obj.hvib_adi = (
-            _time_overlap_to_hvib(
-                result.H_el,
-                result.time_overlap,
-                dt,
-            )
-        )
-
+        obj.time_overlap_adi = _time_overlap_to_cmatrix( result.time_overlap )
+        obj.hvib_adi = _time_overlap_to_hvib( result.H_el, result.time_overlap, dt )
     else:
-
-        obj.time_overlap_adi = CMATRIX(
-            nstates,
-            nstates,
-        )
-
-        obj.hvib_adi = _energies_to_ham_adi(
-            result.H_el
-        )
+        obj.time_overlap_adi = CMATRIX( nstates, nstates )
+        obj.hvib_adi = _energies_to_ham_adi( result.H_el )
 
     return obj
 
@@ -297,24 +224,17 @@ def _es_result_to_libra(
 # Main Libra callback
 # =============================================================================
 
-def strategy_compute_adi(
-    q,
-    params,
-    full_id,
-):
+def pyscf_compute_adi(q,params,full_id):
+
     # 1. Libra input -> generic ES input
     itraj = _get_trajectory_index(full_id)
-    geometry = _q_to_geometry(
-        q,
-        itraj,
-        params["atom_labels"],
-    )
-    request = _params_to_request(params, itraj)
+    geometry = _q_to_geometry(q, itraj, params["atom_labels"] )
+    request = _params_to_request(params)
 
-    strategy_spec = params.get( 
-        "strategy_factory",
-        params.get("es_strategy"),
-    )
+    # 2. Get current and previous ES snapshots
+    previous = params.setdefault( "es_previous",  {} ).get(itraj)
+
+    strategy_spec = params.get(  "strategy_factory",params.get("es_strategy") )
 
     if strategy_spec is None:
         raise KeyError("Missing strategy specification: expected 'strategy_factory' or 'es_strategy'.")

@@ -1,5 +1,5 @@
 # *********************************************************************************
-# * Copyright (C) 2026 Jieyang Gu <jieyanggu792@gmail.com>
+# * Copyright (C) 2026 Aniket Mandal
 # * This file is distributed under the terms of the GNU General Public License
 # * as published by the Free Software Foundation, either version 3 of
 # * the License, or (at your option) any later version.
@@ -17,7 +17,7 @@
    (``CASSCF``, ``CASSCF_States``).
 
 .. moduleauthor::
-       Jieyang Gu <jieyanggu792@gmail.com>
+       Aniket Mandal
 
 """
 

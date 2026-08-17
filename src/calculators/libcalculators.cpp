@@ -104,17 +104,6 @@ void export_calculators_objects(){
   def("Fock_to_P",expt_Fock_to_P_v1);
   def("Fock_to_P",expt_Fock_to_P_v2);
 
-
-
-
-  //----------------- Excitations.cpp ---------------------------
-  boost::python::list (*expt_excite_v1)(int I, int J, boost::python::list occ_ini) = &excite;
-
-  def("excite",expt_excite_v1);
-
-
-
-
   //----------------- Energy_Electronic.cpp ---------------------
   double (*expt_energy_elec_v1)(MATRIX Pao,MATRIX Hao,MATRIX Fao) = &energy_elec;
   double (*expt_energy_elec_v2)(MATRIX P_alp, MATRIX P_bet, 

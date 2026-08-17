@@ -31,12 +31,6 @@ ADD_SUBDIRECTORY("io")
 MESSAGE("Going into subdirectory timer...")
 ADD_SUBDIRECTORY("timer")
 
-MESSAGE("Going into subdirectory common_types...")
-ADD_SUBDIRECTORY("common_types")
-
-
-
-
 MESSAGE("Going into subdirectory linalg...")
 ADD_SUBDIRECTORY("math_linalg")
 
@@ -72,9 +66,6 @@ ADD_SUBDIRECTORY("molint")
 MESSAGE("Going into subdirectory qobjects...")
 ADD_SUBDIRECTORY("qobjects")
 
-MESSAGE("Going into subdirectory basis...")
-ADD_SUBDIRECTORY("basis")
-
 MESSAGE("Going into subdirectory libint2_wrappers...")
 ADD_SUBDIRECTORY("libint2_wrappers")
 
@@ -108,20 +99,6 @@ ADD_SUBDIRECTORY("cell")
 
 MESSAGE("Going into subdirectory opt...")
 ADD_SUBDIRECTORY("opt")
-
-
-
-
-
-MESSAGE("Going into subdirectory control_parameters...")
-ADD_SUBDIRECTORY("control_parameters")
-
-MESSAGE("Going into subdirectory model_parameters...")
-ADD_SUBDIRECTORY("model_parameters")
-
-
-MESSAGE("Going into subdirectory basis_setups...")
-ADD_SUBDIRECTORY("basis_setups")
 
 
 
@@ -206,18 +183,13 @@ TARGET_LINK_LIBRARIES(libra_core_stat
                       fgr_stat
                       ivr_stat
                       dyn_stat
-                      common_types_stat
-                      basis_setups_stat
-                      model_parameters_stat
                       models_stat
-                      control_parameters_stat
                       nhamiltonian_stat
                       util_stat
                       opt_stat
                       cell_stat
                       chemobjects_stat
                       rigidbody_stat
-                      basis_stat
                       qobjects_stat
                       libint2_wrappers_stat
                       molint_stat

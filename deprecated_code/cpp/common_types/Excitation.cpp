@@ -20,7 +20,7 @@
 /// liblibra namespace
 namespace liblibra{
 
-/// libcontrol_parameters namespace
+/// libcommon_types namespace
 namespace libcommon_types{
 
 }

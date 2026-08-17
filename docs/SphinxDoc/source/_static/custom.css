@@ -1,0 +1,80 @@
+:root {
+  --libra-navy: #152b3c;
+  --libra-blue: #176b87;
+  --libra-cyan: #27a6c1;
+  --libra-paper: #f7f9fb;
+}
+
+.wy-side-nav-search,
+.wy-nav-top {
+  background: linear-gradient(135deg, var(--libra-navy), var(--libra-blue));
+}
+
+.wy-side-nav-search > a,
+.wy-side-nav-search .wy-dropdown > a {
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.wy-nav-content {
+  max-width: 1120px;
+}
+
+.wy-nav-content-wrap {
+  background: var(--libra-paper);
+}
+
+.rst-content {
+  color: #243442;
+}
+
+.rst-content h1,
+.rst-content h2,
+.rst-content h3 {
+  color: var(--libra-navy);
+  font-weight: 650;
+}
+
+.rst-content h1 {
+  border-bottom: 3px solid var(--libra-cyan);
+  padding-bottom: 0.35rem;
+}
+
+.rst-content code.literal {
+  color: #0f6079;
+  background: #eef6f8;
+  border-color: #d6e9ee;
+}
+
+.rst-content dl.py > dt,
+.rst-content dl.cpp > dt {
+  background: #eef6f8;
+  border-top: 3px solid var(--libra-blue);
+  color: var(--libra-navy);
+  padding: 0.55rem 0.75rem;
+}
+
+.rst-content .admonition {
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgb(21 43 60 / 12%);
+}
+
+.wy-table-responsive table td,
+.wy-table-responsive table th {
+  white-space: normal;
+}
+
+@media screen and (min-width: 1100px) {
+  .wy-nav-side {
+    width: 320px;
+  }
+
+  .wy-side-scroll {
+    width: 340px;
+  }
+
+  .wy-nav-content-wrap {
+    margin-left: 320px;
+  }
+}

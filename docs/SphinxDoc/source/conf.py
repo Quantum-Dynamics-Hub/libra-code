@@ -13,21 +13,38 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import shutil
+import subprocess
 import sys
-#sys.path.insert(0, os.path.abspath('../../../cookbook'))
-#sys.path.insert(0, os.path.abspath('../../../notebooks'))
+from pathlib import Path
+
+DOCS_DIR = Path(__file__).resolve().parents[1]
+REPO_ROOT = DOCS_DIR.parents[1]
+SOURCE_ROOT = REPO_ROOT / 'src'
+BUILD_EXTENSION_ROOT = REPO_ROOT / '_build' / 'src'
+
+if BUILD_EXTENSION_ROOT.is_dir():
+    # The build tree supplies liblibra_core and its legacy split extensions
+    # (libutil, liblinalg, ...), which many Python modules import directly.
+    sys.path.insert(0, str(BUILD_EXTENSION_ROOT))
+sys.path.insert(1 if BUILD_EXTENSION_ROOT.is_dir() else 0, str(SOURCE_ROOT))
+
+# Load the package using the complete local build environment, then prefer the
+# live source directory for all libra_py submodules so docs never lag edits.
+import libra_py
+libra_py.__path__.insert(0, str(SOURCE_ROOT / 'libra_py'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = u'Libra'
-copyright = u'2019, Alexey V. Akimov'
-author = u'Alexey V. Akimov'
+project = 'Libra'
+copyright = '2019–2026, Libra development team'
+author = 'Libra development team'
 
 # The short X.Y version
-version = u'1.0'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = u'1.0.0'
+release = '1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -52,6 +69,55 @@ extensions = [
     'myst_parser'
 ]
 
+
+def _generate_python_api_reference():
+    """Regenerate recursive ``libra_py`` stubs before reading sources."""
+    destination = Path(__file__).parent / 'reference' / 'generated'
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.mkdir(parents=True)
+    command = [
+        sys.executable, '-m', 'sphinx.ext.apidoc',
+        '-q', '--force', '--module-first', '--separate',
+        '--maxdepth', '5', '--output-dir', str(destination),
+        str(SOURCE_ROOT / 'libra_py'),
+        str(SOURCE_ROOT / 'libra_py' / 'dynamics' / 'tsh' / 'recipes'),
+        str(SOURCE_ROOT / 'libra_py' / 'workflows' / 'librax' / 'md.py'),
+    ]
+    subprocess.run(command, check=True)
+
+    recipe_root = SOURCE_ROOT / 'libra_py' / 'dynamics' / 'tsh' / 'recipes'
+    recipe_modules = sorted(
+        path.stem for path in recipe_root.glob('*.py')
+        if path.name != '__init__.py'
+    )
+    catalog = [
+        'Surface-hopping recipe catalog',
+        '==============================',
+        '',
+        f'This catalog contains all {len(recipe_modules)} generated configuration ',
+        'modules in ``libra_py.dynamics.tsh.recipes``. Each module exposes the ',
+        'same public function:',
+        '',
+        '``load(dyn_general)``',
+        '   Update and return the supplied dynamics-parameter dictionary with ',
+        '   the method combination encoded by the module name.',
+        '',
+        '.. hlist::',
+        '   :columns: 3',
+        '',
+    ]
+    catalog.extend(
+        f'   * ``libra_py.dynamics.tsh.recipes.{name}``'
+        for name in recipe_modules
+    )
+    (destination / 'recipe_catalog.rst').write_text(
+        '\n'.join(catalog) + '\n', encoding='utf-8'
+    )
+
+
+_generate_python_api_reference()
+
 language = 'en'
 
 myst_enable_extensions = [
@@ -74,6 +140,17 @@ napoleon_use_param = True
 napoleon_use_rtype = True
 autosummary_generate = True
 napoleon_use_ivar = True
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'show-inheritance': True,
+    'member-order': 'bysource',
+}
+autodoc_typehints = 'description'
+autodoc_mock_imports = [
+    'dftbplus', 'hippynn', 'lammps', 'mpi4py', 'openbabel', 'psi4', 'pyscf',
+    'qchem', 'tensorflow',
+]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -83,7 +160,7 @@ templates_path = ['_templates']
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = ['.rst', '.md', '.ipynb' ]
+source_suffix = ['.rst', '.md']
 
 # The master toctree document.
 master_doc = 'index'
@@ -93,12 +170,14 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = [
+    'reference/generated/**/__pycache__',
+    'reference/libra_py.rst',
+    'reference/libra_py/**',
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'default'
@@ -117,12 +196,21 @@ html_theme = 'sphinx_rtd_theme'
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-# html_theme_options = {}
+html_theme_options = {
+    'collapse_navigation': True,
+    'navigation_depth': 2,
+    'sticky_navigation': True,
+    'titles_only': True,
+}
+html_title = 'Libra Documentation'
+html_short_title = 'Libra'
+html_show_sourcelink = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+html_css_files = ['custom.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -215,4 +303,4 @@ epub_exclude_files = ['search.html']
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {}

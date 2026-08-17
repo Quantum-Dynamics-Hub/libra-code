@@ -1,18 +1,26 @@
-# Compiling Libra's Documentation
+# Building Libra's documentation
 
 The docs for this project are built with [Sphinx](http://www.sphinx-doc.org/en/master/).
-To compile the docs, first ensure that Sphinx and the ReadTheDocs theme are installed.
+Install the pinned documentation dependencies:
 
 
 ```bash
-conda install sphinx sphinx_rtd_theme 
+python -m pip install -r requirements.txt
 ```
 
 
-Once installed, you can use the `Makefile` in this directory to compile static HTML pages by
+Build the static website:
 ```bash
 make html
 ```
 
-The compiled docs will be in the `build` directory and can be viewed by opening `index.html` (which may itself 
-be inside a directory called `html/` depending on what version of Sphinx is installed).
+Open `build/html/index.html` in a browser. The build regenerates the complete
+`libra_py` API catalog from the source tree. If C++ bindings changed, rebuild
+Libra first so the `liblibra_core` page reflects the current Boost.Python
+extension.
+
+For a clean warning audit, run:
+
+```bash
+make clean html SPHINXOPTS="-W --keep-going"
+```

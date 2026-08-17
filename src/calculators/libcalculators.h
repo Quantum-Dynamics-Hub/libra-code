@@ -24,7 +24,6 @@
 #include "Energy_Nuclear.h"
 #include "Annihilate.h"
 #include "Density_Matrix.h"
-#include "Excitations.h"
 #include "Mulliken.h"
 #include "NPI.h"
 

@@ -1,0 +1,31 @@
+&GATEWAY
+Coord
+2
+Bohr
+H         0.00000000      0.00000000     -0.70000000
+H         0.00000000      0.00000000      0.70000000
+Basis=STO-3G
+Group=NoSym
+
+&SEWARD
+
+&SCF
+UHF
+Charge=0
+Spin=3
+
+&RASSCF
+Title=Molcas_triplet
+Symmetry=1
+Spin=3
+Nactel=2 0 0
+Inactive=0
+Ras2=2
+Ciroot=1 1 1
+Maxiter=200
+Thre=1.0e-10 1.0e-8 1.0e-8
+PRWF=0.0
+PRSD
+FILEORB=$Project.UhfOrb
+AlphaOrBeta=-1
+
