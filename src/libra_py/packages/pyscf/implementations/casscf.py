@@ -19,10 +19,10 @@
 from __future__ import annotations
 import copy as pycopy
 from dataclasses import dataclass
-from typing import Any, List, Optional, Tuple, Union
+from typing import Any, List, Optional, Sequence, Tuple, Union
 import numpy as np
-from pyscf import fci, gto, lib, mcscf, scf
-from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
+from pyscf import fci, gto, mcscf, scf
+from interface.interfaces import ES_Request, ES_Strategy, MolecularGeometry
 
 BOHR_TO_ANG = 0.529177210903
 
@@ -32,6 +32,10 @@ class CASSCF_States:
     mol: Optional[Any] = None
     mf: Optional[Any] = None
     mc: Optional[Any] = None
+    # MO-basis ERI at the converged CASSCF orbitals, mc.ao2mo(mc.mo_coeff).
+    # Shared by compute_gradient and compute_nac_vectors; built lazily, so
+    # energy-only steps never pay for it.
+    eris: Optional[Any] = None 
 
 class CASSCF(ES_Strategy):
     """PySCF-based CASSCF backend for the universal ES interface."""
@@ -43,8 +47,6 @@ class CASSCF(ES_Strategy):
     #    stored in the member attribute `mc`, which also contains energies of other
     #    states.
 
-    _request: Optional[ES_Request] = None
-
     def __init__(
         self,
         mol: Optional[Any] = None,
@@ -55,7 +57,6 @@ class CASSCF(ES_Strategy):
         unit: str = "Bohr",
         charge: int = 0,
         cas_list: Optional[List[int]] = None,
-        num_threads: int = 1,
     ) -> None:
         #setting up the initial state 
         self._mol: Optional[Any] = mol
@@ -69,35 +70,19 @@ class CASSCF(ES_Strategy):
         self._geom: Optional[MolecularGeometry] = None
         self._state: CASSCF_States | None = None
         self._previous_state: CASSCF_States | None = None
-        self._num_threads: int = int(num_threads)
-
-    @staticmethod
-    def _normalize_mc(mc: Any) -> None:
-        """Promote single-root mc result to list layout so all callers see a uniform interface."""
-        if not hasattr(mc, "e_states"):
-            mc.e_states = [float(mc.e_tot)]
-        if not isinstance(mc.ci, list):
-            mc.ci = [mc.ci]
-
 
     @property
-    def num_threads(self) -> int:
-        return self._num_threads
+    def nroots(self) -> int:
+        """Number of roots this strategy solves for.
 
-    @num_threads.setter
-    def num_threads(self, value: int) -> None:
-        value = int(value)
-        if value < 1:
-            raise ValueError(f"num_threads must be >= 1, got {value}")
-        self._num_threads = value
-
-    def _apply_num_threads(self) -> None:
-        lib.num_threads(self._num_threads)
+        Fixed at construction, and the single source of truth for the state
+        count: the adapter builds ``ES_Request.n_singlets`` from it rather than
+        from a separate ``model_params["nstates"]`` entry.
+        """
+        return int(self._nroots)
 
     def _n_total(self) -> int:
         """Number of electronic states requested for the current calculation."""
-        if self._request is not None:
-            return int(self._request.n_singlets)
         return int(self._nroots)
 
     def _run_scf(self) -> None:
@@ -164,6 +149,7 @@ class CASSCF(ES_Strategy):
             self._state = CASSCF_States(mol=self._mol, mf=None, mc=None)
         self._state.mol = self._mol
         self._state.mc = None
+        self._state.eris = None   # new geometry -> the cached integrals are stale
 
     def get_geom(self) -> MolecularGeometry:
         if self._geom is None:
@@ -202,57 +188,60 @@ class CASSCF(ES_Strategy):
         mc.kernel(mocoeff)
 
         self._state.mc = mc
+        self._state.eris = None   # new wavefunction -> the cached integrals are stale
 
         #write the energies to the H_el attribute of the state object and return the energies as a numpy array
         self._state.H_el = np.asarray(mc.e_states, dtype=np.float64)
         return self._state.H_el
 
-    def compute_gradient(self, root: int = 0) -> np.ndarray:
-        
-        e_states: List[float] = self._state.mc.e_states
-        if root < 0 or root >= len(e_states):
-            raise IndexError(f"Requested root {root}, but only {len(e_states)} roots are available.")
-        return np.asarray(self._state.mc.nuc_grad_method(state=root).kernel())
+    #gradient 
 
-    def compute_all_gradients(self) -> list[np.ndarray]:
-        """Compute the nuclear gradients for all requested states together.
+    def _share_eris(self, solver: Any) -> Any:
+        """transform the integrals to the CASSCF MO basis and save in the state object"""
+        st = self._state
+        if st.eris is None:
+            st.eris = st.mc.ao2mo(st.mc.mo_coeff)
+        for name in ("make_fcasscf", "make_fcasscf_nacs"):
+            builder = getattr(solver, name, None)
+            if builder is None:
+                continue
+            def patched(*args, _build=builder, **kwargs):
+                fcasscf = _build(*args, **kwargs)
+                fcasscf.ao2mo = lambda mo_coeff=None: st.eris
+                return fcasscf
+            setattr(solver, name, patched)
+        return solver
 
-        Since PySCF's state-averaged CASSCF gradient solves the response
-        equations per root, we reuse one gradient object (and the already
-        converged CASSCF wavefunction) for all roots.
-        """
-        n_total = self._n_total()
-        e_states: List[float] = self._state.mc.e_states
-        if len(e_states) < n_total:
-            raise IndexError(f"Requested {n_total} states, but only {len(e_states)} are available.")
-        grad = self._state.mc.nuc_grad_method(state=0)
+    def compute_gradient(self, roots: Sequence[int]) -> list[np.ndarray]:
+        """Nuclear gradients for ``roots``, returned in the order requested."""
+        mc = self._state.mc
+        roots = list(roots)
+        n_avail = len(mc.e_states)
+        for root in roots:
+            if not 0 <= root < n_avail:
+                raise IndexError(
+                    f"Requested root {root}, but only {n_avail} roots are available."
+                )
+
+        # 1. compute the intermediate shared by every root
+        grad = self._share_eris(mc.nuc_grad_method(state=0))
+
+        # 2. per root
         return [
-            np.asarray(grad.kernel(state=root), dtype=np.float64)
-            for root in range(n_total)
+            np.asarray(grad.kernel(state=root, eris=self._state.eris), dtype=np.float64)
+            for root in roots
         ]
+
 
     # time overlap
 
-    def _compute_ao_overlap(
-        self,
-        prev_state: CASSCF_States,
-        curr_state: CASSCF_States,
-    ) -> np.ndarray:
+    def _compute_ao_overlap(self, prev_state: CASSCF_States, curr_state: CASSCF_States) -> np.ndarray:
         """Compute the AO overlap matrix between the previous and current geometries."""
         prev_mol = prev_state.mol
         curr_mol = curr_state.mol
         if prev_mol is None or curr_mol is None:
             raise ValueError("Both previous and current molecule objects are required.")
         return gto.intor_cross("int1e_ovlp", prev_mol, curr_mol)
-
-    @staticmethod
-    def _as_ci_vector_list(ci_data: Any) -> list[np.ndarray]:
-        """Normalize CI data from PySCF into a list of 1D coefficient vectors."""
-        if ci_data is None:
-            return []
-        if isinstance(ci_data, (list, tuple)):
-            return [np.asarray(vec).copy() for vec in ci_data]
-        return [np.asarray(ci_data).copy()]
 
     def compute_time_overlap(self, state1: object, state2: object) -> np.ndarray:
         """Compute the adiabatic time-overlap matrix between two state snapshots.
@@ -278,7 +267,6 @@ class CASSCF(ES_Strategy):
         if prev_state.mol is None or curr_state.mol is None:
             raise ValueError("Molecule states are required for time-overlap computation.")
 
-        self._apply_num_threads()
         nroots = self._n_total()
         if nroots <= 0:
             raise ValueError(f"nroots must be positive, got {nroots}")
@@ -337,43 +325,34 @@ class CASSCF(ES_Strategy):
                 overlap[:, j] = -overlap[:, j]
         return overlap
 
-    def time_overlap_matrix(self, nroots: int) -> np.ndarray:
-        """Legacy same-object API: compare the cached previous state to the current state."""
-        if nroots <= 0:
-            raise ValueError(f"nroots must be positive, got {nroots}")
-        prev_state = self.get_previous_state()
-        curr_state = self.get_state()
-        if prev_state is None or prev_state.mc is None:
-            raise ValueError(
-                "Previous CASSCF state must exist for time-overlap computation. "
-                "Run at least two geometries before requesting time overlaps."
-            )
-        if curr_state is None or curr_state.mc is None:
-            raise ValueError("Current CASSCF state must exist for time-overlap computation.")
-        if nroots != self._n_total():
-            raise ValueError(
-                f"Requested {nroots} roots, but the strategy is configured for "
-                f"{self._n_total()} states."
-            )
-        return self.compute_time_overlap(curr_state, prev_state)
-
     def compute_nac_vectors(self, use_etfs: bool = True) -> np.ndarray:
+        """Non-adiabatic coupling vectors for every ordered state pair.
+
+        Same split as the gradient, and it pays off harder: this is one Lagrange
+        solve per *ordered pair*, so an n-state run reuses the shared ERI and
+        Jacobian across n(n-1) solves rather than n.  Both come out of the same
+        CASSCF_States cache that compute_gradient already populated.
+        """
+        mc = self._state.mc
         nstates = self._n_total()
         natm = int(self._mol.natm)
 
-        mc_nacs = self._state.mc.nac_method()
-        nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
+        # 1. shared by every pair
+        nacs = self._share_eris(mc.nac_method())
 
+        # 2. per pair
+        nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
         for ket in range(nstates):
             for bra in range(nstates):
                 if bra == ket:
                     continue
                 nacv[bra, ket] = np.asarray(
-                    mc_nacs.kernel(state=(ket, bra), use_etfs=use_etfs, mult_ediff=False),
+                    nacs.kernel(state=(ket, bra), use_etfs=use_etfs,
+                                mult_ediff=False, eris=self._state.eris),
                     dtype=np.float64,
                 )
+        return nacv
 
-                return nacv
 
 
 if __name__ == "__main__":
@@ -422,14 +401,7 @@ if __name__ == "__main__":
             ], dtype=np.float64),
         )
 
-        casscf = CASSCF(
-            norbcas=2,
-            nelecas=2,
-            nroots=3,
-            basis='sto-3g',
-            charge=1,
-            unit='Bohr',
-        )
+        casscf = CASSCF( norbcas=2, nelecas=2, nroots=3, basis='sto-3g', charge=1, unit='Bohr' )
 
         request = ES_Request(
             n_singlets=3,
@@ -480,10 +452,7 @@ if __name__ == "__main__":
             cas_list=cas_list,
         )
 
-        request = ES_Request(
-            n_singlets=2,
-            nacv=True,
-        )
+        request = ES_Request( n_singlets=2, gradient_state="all", nacv=True )
 
         result1 = casscf.compute_result(geom1, request)
         print("\nResult 1 H_el:", result1.H_el)

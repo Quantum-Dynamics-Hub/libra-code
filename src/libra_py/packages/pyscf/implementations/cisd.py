@@ -19,7 +19,7 @@ from __future__ import annotations
 import copy as pycopy
 from dataclasses import dataclass
 from functools import reduce
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 import numpy as np
 from pyscf import ci, gto, scf
 from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
@@ -36,7 +36,32 @@ class CISD_States:
 
     mol: Optional[Any] = None
     mf: Optional[Any] = None
-    ci: Optional[Any] = None
+    # The converged pyscf.ci.cisd.CISD object -- the CISD analogue of
+    # CASSCF_States.mc, and the object gradients restart from.  The CI vectors
+    # themselves are myci.ci.
+    myci: Optional[Any] = None
+    # MO-basis ERI at the HF-canonical orbitals, myci.ao2mo(myci.mo_coeff).
+    # CISD never rotates the orbitals -- ccsd_grad.grad_elec in fact requires
+    # them to stay canonical -- so ONE transform serves the energy and every
+    # gradient root.  PySCF keeps none itself: it is a local in CISD.cisd().
+    eris: Optional[Any] = None
+
+    def __deepcopy__(self, memo):
+        """Snapshot the wavefunction; never the integrals.
+
+        set_geom, snapshot_state and copy all deepcopy this object.  Outcore,
+        _ChemistsERIs is backed by an h5py file and deepcopy raises
+        "TypeError: h5py objects cannot be pickled"; incore it would pin a
+        second copy for an extra geometry.  compute_time_overlap does not
+        need them.
+        """
+        new = CISD_States(
+            mol=pycopy.deepcopy(self.mol, memo),
+            mf=pycopy.deepcopy(self.mf, memo),
+            myci=pycopy.deepcopy(self.myci, memo),
+        )
+        memo[id(self)] = new
+        return new
 
 
 class CISD(ES_Strategy):
@@ -47,7 +72,7 @@ class CISD(ES_Strategy):
         mol: Optional[Any] = None,
         nroots: int = 1,
         basis: str = "sto-3g",
-        unit: str = "Bohr",
+        unit: str = "Angstrom",
         charge: int = 0,
     ) -> None:
         self._mol: Optional[Any] = mol
@@ -78,9 +103,9 @@ class CISD(ES_Strategy):
     def _ci_guess(self) -> Optional[Any]:
         """CI guess from the previous geometry's CISD vectors (hot start)."""
         prev_state = self.get_previous_state()
-        if prev_state is None or prev_state.ci is None:
+        if prev_state is None or prev_state.myci is None:
             return None
-        ci_guess = self._as_ci_vector_list(getattr(prev_state.ci, "ci", None))
+        ci_guess = self._as_ci_vector_list(getattr(prev_state.myci, "ci", None))
         if not ci_guess:
             return None
         if self._n_total() == 1:
@@ -117,7 +142,7 @@ class CISD(ES_Strategy):
         )
 
         self._mf = scf.RHF(self._mol).run(verbose=0)
-        self._state = CISD_States(mol=self._mol, mf=self._mf, ci=None)
+        self._state = CISD_States(mol=self._mol, mf=self._mf, myci=None)
 
     def get_geom(self) -> MolecularGeometry:
         if self._geom is None:
@@ -143,14 +168,22 @@ class CISD(ES_Strategy):
     def _build_ci(self) -> None:
         if self._mf is None:
             raise ValueError("HF must be run before computing CISD energies.")
+        # Already solved at this geometry?  set_geom clears self._ci, so a live
+        # converged object means there is nothing to redo -- without this guard
+        # every compute_gradient call re-solves the whole CISD.
+        if (self._ci is not None and self._ci.ci is not None
+                and self._ci.nroots == self._n_total()):
+            return
         if self._ci is None:
             self._ci = ci.cisd.CISD(self._mf)
         self._ci.nroots = self._n_total()
         self._ci.verbose = 0
-        self._ci.kernel(ci0=self._ci_guess())
         state = self.get_state()
+        if state is not None and state.eris is None:
+            state.eris = self._ci.ao2mo(self._ci.mo_coeff)
+        self._ci.kernel(ci0=self._ci_guess(), eris=None if state is None else state.eris)
         if state is not None:
-            state.ci = self._ci
+            state.myci = self._ci
 
     def compute_H_el(self) -> np.ndarray:
         self._build_ci()
@@ -170,42 +203,42 @@ class CISD(ES_Strategy):
         """Legacy convenience: energy of a single root."""
         return float(self.compute_H_el()[root])
 
-    def compute_gradient(self, root: int = 0) -> np.ndarray:
-        self._build_ci()
-        ci_vectors = self._ci.ci
-        if isinstance(ci_vectors, (list, tuple)):
-            ci_roots = [np.asarray(vec) for vec in ci_vectors]
-        else:
-            ci_roots = [np.asarray(ci_vectors)]
-        if root < 0 or root >= len(ci_roots):
-            raise IndexError(
-                f"Requested root {root}, but only {len(ci_roots)} roots are available."
-            )
-        if len(ci_roots) == 1:
-            if root != 0:
-                raise IndexError("Only root 0 is available for a single-state CISD calculation.")
-            return np.asarray(self._ci.nuc_grad_method().kernel())
-        return np.asarray(self._ci.nuc_grad_method().kernel(state=root))
+    def compute_gradient(self, roots: Sequence[int]) -> list[np.ndarray]:
+        """Nuclear gradients for ``roots``, returned in the order requested.
 
-    def compute_all_gradients(self) -> list[np.ndarray]:
-        """Compute the nuclear gradients for all requested states together."""
-        self._build_ci()
-        n_total = self._n_total()
-        ci_vectors = self._ci.ci
-        n_avail = len(ci_vectors) if isinstance(ci_vectors, (list, tuple)) else 1
-        if n_total > n_avail:
-            raise IndexError(
-                f"Requested {n_total} states, but only {n_avail} are available."
-            )
-        return [self.compute_gradient(root) for root in range(n_total)]
+        Restarts from the converged CISD object the energy step left behind --
+        the CISD analogue of restarting from ``mc``.  It deliberately does NOT
+        call _build_ci(): compute_result guarantees compute_H_el ran first, and
+        re-entering the builder would re-run the whole Davidson solve.
+
+        The stored MO ERI is passed through so the CPHF takes the MO branch of
+        ccsd_grad._response_dm1 instead of rebuilding an AO-basis JK on every
+        iteration (pyscf/grad/ccsd.py:269-289).  Everything else is per root:
+        the CI vector, its relaxed 1-/2-RDMs, the CPHF right-hand side, and the
+        AO-derivative contraction.
+        """
+        myci = self._state.myci
+        if myci is None or myci.ci is None:
+            raise ValueError("compute_H_el must run before gradients are requested.")
+
+        roots = list(roots)
+        n_avail = len(myci.ci) if isinstance(myci.ci, (list, tuple)) else 1
+        for root in roots:
+            if not 0 <= root < n_avail:
+                raise IndexError(
+                    f"Requested root {root}, but only {n_avail} roots are available."
+                )
+
+        grad = myci.nuc_grad_method()
+        return [
+            np.asarray(grad.kernel(state=root, eris=self._state.eris),
+                       dtype=np.float64)
+            for root in roots
+        ]
 
     # ------------------------------------------------------------- time overlap
 
-    def _compute_ao_overlap(
-        self,
-        prev_state: CISD_States,
-        curr_state: CISD_States,
-    ) -> np.ndarray:
+    def _compute_ao_overlap( self, prev_state: CISD_States, curr_state: CISD_States ) -> np.ndarray:
         """Compute the AO overlap matrix between the previous and current geometries."""
         prev_mol = prev_state.mol
         curr_mol = curr_state.mol
@@ -236,7 +269,7 @@ class CISD(ES_Strategy):
             raise ValueError("Molecule states are required for time-overlap computation.")
         if prev_state.mf is None or curr_state.mf is None:
             raise ValueError("HF states are required for time-overlap computation.")
-        if prev_state.ci is None or curr_state.ci is None:
+        if prev_state.myci is None or curr_state.myci is None:
             raise ValueError("Both CISD states must be run before computing time-overlap.")
 
         nroots = self._n_total()
@@ -247,15 +280,15 @@ class CISD(ES_Strategy):
         s12_ao = self._compute_ao_overlap(prev_state, curr_state)
         s12_mo = reduce(np.dot, (prev_state.mf.mo_coeff.T, s12_ao, curr_state.mf.mo_coeff))
 
-        prev_ci_list = self._as_ci_vector_list(prev_state.ci.ci) or []
-        curr_ci_list = self._as_ci_vector_list(curr_state.ci.ci) or []
+        prev_ci_list = self._as_ci_vector_list(prev_state.myci.ci) or []
+        curr_ci_list = self._as_ci_vector_list(curr_state.myci.ci) or []
         if len(prev_ci_list) < nroots or len(curr_ci_list) < nroots:
             raise ValueError(
                 f"Requested {nroots} roots, but only {len(prev_ci_list)} previous "
                 f"and {len(curr_ci_list)} current roots are available."
             )
 
-        nmo = curr_state.ci.nmo
+        nmo = curr_state.myci.nmo
         nelec = curr_state.mol.nelectron // 2
 
         overlap = np.zeros((nroots, nroots), dtype=float)
@@ -281,12 +314,12 @@ class CISD(ES_Strategy):
             raise ValueError(f"nroots must be positive, got {nroots}")
         prev_state = self.get_previous_state()
         curr_state = self.get_state()
-        if prev_state is None or prev_state.ci is None:
+        if prev_state is None or prev_state.myci is None:
             raise ValueError(
                 "Previous CISD state must exist for time-overlap computation. "
                 "Run at least two geometries before requesting time overlaps."
             )
-        if curr_state is None or curr_state.ci is None:
+        if curr_state is None or curr_state.myci is None:
             raise ValueError("Current CISD state must exist for time-overlap computation.")
         if nroots != self._n_total():
             raise ValueError(
@@ -316,12 +349,7 @@ if __name__ == "__main__":
     )
 
     # 1) Demonstrate: set geom1 → run SCF → print the AO (overlap) matrix.
-    demo = CISD(
-        nroots=3,
-        basis="sto-3g",
-        charge=1,
-        unit="Bohr",
-    )
+    demo = CISD( nroots=3, basis="sto-3g", charge=1, unit="Bohr" )
     demo.set_geom(geom1)  # sets the geometry and triggers the HF SCF
     ao_overlap = demo._mol.intor("int1e_ovlp")
     np.set_printoptions(precision=4, suppress=True)
@@ -334,18 +362,8 @@ if __name__ == "__main__":
 
     # 2) Full two-geometry sequencing flow on a fresh strategy.
     # (geom1 and geom2 already defined above — reuse them.)
-    cisd = CISD(
-        nroots=3,
-        basis="sto-3g",
-        charge=1,
-        unit="Bohr",
-    )
-    request = ES_Request(
-        n_singlets=3,
-        gradient_state="all",
-        nacv=False,
-        time_overlap=True,
-    )
+    cisd = CISD( nroots=3, basis="sto-3g", charge=1, unit="Bohr" )
+    request = ES_Request( n_singlets=3, gradient_state="all", nacv=False, time_overlap=True )
 
     result1 = cisd.compute_result(geom1, request)
     print("\nResult 1 H_el:", result1.H_el)
