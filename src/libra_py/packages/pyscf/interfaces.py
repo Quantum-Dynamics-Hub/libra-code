@@ -28,7 +28,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Sequence
 
 import numpy as np
 
@@ -142,9 +142,7 @@ class ES_Strategy(ABC):
     # -----------------------------------------------------------------------
 
     @abstractmethod
-    def compute_H_el(
-        self,
-    ) -> np.ndarray:
+    def compute_H_el( self ) -> np.ndarray:
         """Compute adiabatic electronic energies."""
         raise NotImplementedError
 
@@ -165,30 +163,21 @@ class ES_Strategy(ABC):
             "override compute_H_soc or do not request H_soc."
         )
 
-    def compute_gradient(self, root: int = 0) -> np.ndarray:
-        """Compute the nuclear gradient for one electronic state.
+    def compute_gradient(self, roots: Sequence[int]) -> list[np.ndarray]:
+        """Compute nuclear gradients for the given electronic states.
 
-        Returns
-        -------
-        np.ndarray
-            Shape ``(natoms, 3)`` in Hartree/Bohr.
-        """
-        raise NotImplementedError(
-            f"{type(self).__name__}: "
-            "override compute_gradient or do not request gradients."
-        )
-
-    def compute_all_gradients(self) -> list[np.ndarray]:
-        """Compute the nuclear gradients for all electronic states together to reuse intermediate quantities. 
+        Backends receive the whole set at once so they can build whatever the
+        states share -- integrals, response-equation operators -- a single time.
 
         Returns
         -------
         list[np.ndarray]
-            Each entry has shape ``(natoms, 3)`` in Hartree/Bohr.
+            One entry per element of ``roots``, in that order, each of shape
+            ``(natoms, 3)`` in Hartree/Bohr.
         """
         raise NotImplementedError(
             f"{type(self).__name__}: "
-            "override compute_all_gradients or do not request gradients."
+            "override compute_gradient or do not request gradients."
         )
 
     def compute_hessian(self, root: int = 0) -> np.ndarray:
@@ -218,11 +207,7 @@ class ES_Strategy(ABC):
         )
 
     
-    def compute_time_overlap(
-        self,
-        state1: object,
-        state2: object,
-    ) -> np.ndarray:
+    def compute_time_overlap( self, state1: object, state2: object ) -> np.ndarray:
         """Compute the time-overlap matrix between two states.
         np.ndarray
             Shape ``(n_total, n_total)``.
@@ -236,48 +221,41 @@ class ES_Strategy(ABC):
     # Sequencing contract
     # -----------------------------------------------------------------------
 
-    def compute_result(
-        self,
-        geom: MolecularGeometry,
-        request: ES_Request,
-    ) -> ES_Result:
+    def compute_result( self, geom: MolecularGeometry, request: ES_Request ) -> ES_Result:
 
         result = ES_Result()
 
 
         """Compute all requested quantities at one geometry and enforce a sequence of calculations."""
         if request.n_triplets != 0:
-            raise NotImplementedError(
-                "Triplet states are not supported yet."
-            )
+            raise NotImplementedError( "Triplet states are not supported yet." )
 
         n_total = request.n_total
         natoms = len(geom.coords_bohr)
             
         self.set_geom(geom)
 
-        result.H_el = np.asarray(
-            self.compute_H_el(),
-            dtype=np.float64,
-        )
+        result.H_el = np.asarray( self.compute_H_el(), dtype=np.float64 )
 
         if request.H_soc:
-            result.H_soc = np.asarray(
-                self.compute_H_soc()
-            )
+            result.H_soc = np.asarray( self.compute_H_soc() )
 
         if request.gradient_state is not None:
-            result.gradients = [None] * n_total
-
             if request.gradient_state == "all":
-                result.gradients = self.compute_all_gradients()
+                roots = list(range(n_total))
             else:
-                root = int(request.gradient_state)
+                roots = [int(request.gradient_state)]
+            for root in roots:
                 if not 0 <= root < n_total:
                     raise ValueError(
                         f"gradient_state={root} is outside the valid range [0, {n_total})."
                     )
-                result.gradients[root] = self.compute_gradient(root)
+
+            # Scatter into a slot-per-state layout; the backend only ever sees
+            # the roots that were asked for, in the order it was asked for them.
+            result.gradients = [None] * n_total
+            for root, grad in zip(roots, self.compute_gradient(roots)):
+                result.gradients[root] = grad
 
         if request.hessian_state is not None:
 
@@ -285,18 +263,15 @@ class ES_Strategy(ABC):
 
             result.hessians = [None] * n_total
 
-            hessian = np.asarray(
-                self.compute_hessian(root),
-                dtype=np.float64,
-            )
+            hessian = np.asarray( self.compute_hessian(root), dtype=np.float64 )
             result.hessians[root] = hessian
 
         if request.nacv is True:
+
             result.nac_vectors = np.asarray( self.compute_nac_vectors(), dtype=np.float64 )
 
         if request.time_overlap is True:
-            if self.get_previous_state() is not None: # if none, then this is the first 
-                                                      # geometry, and there is no previous state to compute time-overlap with.
+            if self.get_previous_state() is  not None: # if none, then this is the first geometry, and there is no previous state to compute time-overlap with.
                 state1 = self.get_state()
                 state2 = self.get_previous_state()
                 result.time_overlap = np.asarray(
