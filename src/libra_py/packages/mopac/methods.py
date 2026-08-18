@@ -505,7 +505,11 @@ def read_mopac_orbital_info(params_):
                 for iconfig in range(nconfig):
                     tmp = output[i + 4 + iconfig].split()
                     if len(tmp) == 12:
-                        configs_dict[1] = [1, 1]
+                        # The reference determinant is normally configuration
+                        # 1, but orbital shifting can reorder it.  Preserve
+                        # the configuration index printed by MOPAC.
+                        conf_indx = int(float(tmp[0]))
+                        configs_dict[conf_indx] = [1, 1]
                     if len(tmp) == 13:
                         i_orb = int(float(tmp[10].split(")->(")[0]))
                         j_orb = int(float(tmp[11]))
@@ -565,7 +569,7 @@ def read_mopac_orbital_info(params_):
                 if tmp[0] == "Config":
                     iconf = int(float(tmp[1])) # - 1
                     coeff = float(tmp[2])
-                    if iconf > 1:
+                    if configs_dict[iconf] != [1, 1]:
                         ci_i.append(coeff)
                         conf_i.append( configs_dict[ iconf ] )
                     
