@@ -304,11 +304,23 @@ if __name__ == "__main__":
     TIME_OVERLAP_FROM_MODEL = 0
 
     # state_tracking_algo -- how the adiabatic states are re-projected step to
-    # step. -1 (local diabatization) is the Libra default, and it inverts the
-    # time-overlap matrix on every trajectory every step (src/dyn/dyn_ham.cpp:392):
-    # a config that never asks the ES code for time-overlaps hands it a zero
-    # matrix here, and the run exits with "Problem inverting time-overlap matrix".
+    # step, and the one setting that decides whether time-overlaps are needed at
+    # all (src/dyn/dyn_ham.cpp:377-470):
+    #
+    #  -1  local diabatization, the Libra default: inverts the time-overlap
+    #      matrix for every trajectory every step. Handed the zero matrix a
+    #      config gets when it never asks the ES code for overlaps, the run
+    #      exits with "Problem inverting time-overlap matrix".
+    #   1, 2, 21, 3, 32, 33  reordering + phase correction: also built on the
+    #      time-overlap matrix.
+    #   4  force-based: needs every state's force, so it contradicts
+    #      gradient_state = "active".
+    #   0  leave the projectors alone. No branch claims it in the if-chain, so
+    #      proj_adi keeps its previous (identity) value -- no state tracking,
+    #      which is the consistent choice when the coupling comes from
+    #      continuous NAC vectors instead of step-to-step overlaps.
     LD_STATE_TRACKING = -1
+    NO_STATE_TRACKING = 0
 
     REP_ADIABATIC = 1               # rep_* and elec_params["rep"]; 0 = diabatic
     ELEC_INIT_ON_ISTATE = 0         # all trajectories on istate, identical phases
@@ -398,11 +410,13 @@ if __name__ == "__main__":
         the active root's gradient.
         """
         # What these algorithms demand of the ES code -- decided here, with them.
+        # The NAC vectors carry everything: the couplings (NAC_FROM_DC1), the
+        # rescaling direction (RESCALE_ALONG_NAC) and, through them, Hvib. So no
+        # time-overlap is computed at all, and every setting below that would
+        # otherwise consume one is pointed away from it -- see state_tracking_algo.
         gradient_state = "active"          # for FORCE_STATE_SPECIFIC
         nacv = True                        # for RESCALE_ALONG_NAC and NAC_FROM_DC1
-        time_overlap = True                # NOT for the NACs -- those come from
-                                           # dc1_adi -- but for state_tracking_algo
-                                           # below, which inverts S every step
+        time_overlap = False               # nothing left that needs S(t, t+dt)
 
         strategies = copy_strategies(strategy, ntraj)
         nucl_params = nucl_params_from_geometry(geom)
@@ -424,10 +438,19 @@ if __name__ == "__main__":
             "ham_update_method": 2,             # the model returns the adiabatic Ham directly
             "ham_transform_method": 0,          # no further transformation
             "time_overlap_method": TIME_OVERLAP_FROM_MODEL,
-            "state_tracking_algo": LD_STATE_TRACKING,
+            "state_tracking_algo": NO_STATE_TRACKING,  # the LD default would invert
+                                                # a time-overlap this config never
+                                                # computes; the NACVs track the
+                                                # states instead
             "nac_update_method": NAC_FROM_DC1,
             "nac_algo": NAC_ALGO_EXTERNAL,      # unused when nac_update_method == 1
-            "hvib_update_method": 1,            # Hvib = Ham - i*hbar*NAC
+            "hvib_update_method": 1,            # Hvib = Ham - i*hbar*NAC, built in
+                                                # C++ from the dc1_adi NACs, since
+                                                # the adapter supplies no hvib_adi
+                                                # when no overlap was requested
+
+            "do_phase_correction": 0,
+            "do_nac_phase_correction": 1,
 
             # --- integration ---
             "dt": dt,
@@ -469,13 +492,16 @@ if __name__ == "__main__":
         return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
 
 
-    def config_nbra(strategy, geom, ntraj=2, istate=0, dt=41.0, nsteps=2):
-        """NBRA-style: energies and time-overlaps only, no forces at all.
+    def config_nbra(strategy, geom, ntraj=1, istate=0, dt=41.0, nsteps=2):
+        """NBRA: one Hamiltonian for all trajectories, no forces at all.
 
-        The trajectories are propagated on frozen nuclei, so nothing asks the ES
-        code for a gradient and the couplings come from the time-overlap matrix.
-        See the comment on isNBRA below for why the Hamiltonian is still
-        per-trajectory rather than shared.
+        The nuclei are frozen (no forces, zero initial momenta), so every
+        trajectory would see the identical electronic structure -- which is what
+        the NBRA exploits: compute it once and let the electronic dynamics be
+        the only thing that differs between trajectories.
+
+        ntraj defaults to 1 here, and must stay 1 in this build -- see the
+        comment on isNBRA below.
         """
         gradient_state = None              # for FORCE_NONE
         nacv = False                       # no derivative couplings in the NBRA
@@ -502,8 +528,8 @@ if __name__ == "__main__":
             #
             # What the NBRA means for the ES code -- no forces, couplings from
             # time-overlaps alone -- is set below and is independent of the flag.
-            "isNBRA": 0,
-            "is_nbra": 0,
+            "isNBRA": 1,
+            "is_nbra": 1,
             "rep_tdse": REP_ADIABATIC,
             "rep_sh": REP_ADIABATIC,
             "rep_force": REP_ADIABATIC,
@@ -515,6 +541,8 @@ if __name__ == "__main__":
             "nac_update_method": NAC_FROM_TIME_OVERLAP,
             "nac_algo": NAC_ALGO_NPI,
             "hvib_update_method": 1,
+            "do_phase_correction": 0,
+            "do_nac_phase_correction": 0,
 
             # --- integration ---
             "dt": dt,
@@ -575,8 +603,10 @@ if __name__ == "__main__":
                               [0.0, 0.0, 1.46379]], dtype=np.float64),
     )
 
+    # ntraj is left to each config's own default: 2 for fssh_nacv, 1 for nbra,
+    # which is the only value isNBRA = 1 survives (see config_nbra).
     dyn_params, compute_model, model_params, elec_params, nucl_params = \
-        CONFIGS[name](strategy, geom, ntraj=2)
+        CONFIGS[name](strategy, geom)
 
     print(f"config {name}: {''.join(geom.atom_labels)} / {type(strategy).__name__}, "
           f"nstates={elec_params['nadi']}, ntraj={dyn_params['ntraj']}, "
