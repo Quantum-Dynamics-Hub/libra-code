@@ -2758,6 +2758,12 @@ def dftb_compute_adi(q, params, full_id):
         --------------------------------------
         dt : float, default=41.0
             Nuclear time step in atomic units.
+        energy_zero : float, default=0.0
+            Constant energy reference, in Hartree, subtracted from every
+            adiabatic-state energy.  This common shift changes only the global
+            electronic phase and can reduce the absolute energy scale used by
+            TDSE propagators without changing energy gaps, forces, or
+            nonadiabatic couplings.
         dftb_run_params : dict
             Parameters for DFTB+ calculations, e.g. NrOfExcitations, sk_prefix.
         dftb_exe : str, default="dftb+"
@@ -2803,10 +2809,12 @@ def dftb_compute_adi(q, params, full_id):
         Attributes include:
 
         ham_adi : CMATRIX (nstates, nstates)
-            Adiabatic Hamiltonian matrix.
+            Adiabatic Hamiltonian matrix. Its diagonal energies include the
+            common ``-energy_zero`` gauge shift.
 
         hvib_adi : CMATRIX (nstates, nstates)
-            Vibronic Hamiltonian including derivative couplings.
+            Vibronic Hamiltonian including derivative couplings. Its diagonal
+            contains the same gauge-shifted energies as ``ham_adi``.
 
         time_overlap_adi : CMATRIX (nstates, nstates)
             Time-overlap matrix S_ij(t, t+dt) = <Ψ_i(t)|Ψ_j(t+dt)>.
@@ -2833,6 +2841,9 @@ def dftb_compute_adi(q, params, full_id):
       time-overlap matrix divided by 2*dt:
           Hvib_ij = E_i δ_ij - i d_ij
           d_ij = (S_ij - S_ji) / (2 dt)
+      Here ``E_i = E_GS + E_i^exc - energy_zero``. The same constant shift is
+      applied to both ``ham_adi`` and ``hvib_adi`` so that it affects the TDSE
+      only through a global phase.
     - Energies are in Hartree, time in atomic units, coordinates in Bohr,
       and overlaps are dimensionless.
     - `is_first_time` and `act_state` are dictionaries keyed by trajectory index,
@@ -3044,10 +3055,11 @@ def dftb_compute_adi(q, params, full_id):
     #else:
     #    forces = results_ex['forces']
 
-    e0 = results_gs['mermin_energy'] - energy_zero
-    print(F"GS energy = {e0}")
+    shifted_ground_energy = results_gs['mermin_energy'] - energy_zero
+    print(F"Gauge-shifted GS energy = {shifted_ground_energy}")
     for i in range(nstates):
-        obj.ham_adi.add(i, i, e0)
+        obj.ham_adi.add(i, i, shifted_ground_energy)
+        obj.hvib_adi.add(i, i, shifted_ground_energy)
 
     obj.d1ham_adi = CMATRIXList()
     for idof in range(ndof):
