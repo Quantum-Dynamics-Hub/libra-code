@@ -18,6 +18,7 @@
 
 """
 import numpy as np
+from types import SimpleNamespace
 
 from liblibra_core import CMATRIX, CMATRIXList, Cpp2Py
 
@@ -218,11 +219,219 @@ def _es_result_to_libra(result: ES_Result, request: ES_Request, natoms: int, dt:
     return obj
 
 
+def _copy_strategy(strategy_spec):
+    """Create an independent electronic-structure strategy from a specification."""
+    if callable(strategy_spec):
+        return strategy_spec()
+    if hasattr(strategy_spec, "copy"):
+        return strategy_spec.copy()
+    if hasattr(strategy_spec, "clone"):
+        return strategy_spec.clone()
+    return strategy_spec
+
+
+def _manifold_ms_labels(nroots, multiplicity, include_ms=True):
+    """Return ``(root, 2*Ms)`` labels for one spin-free manifold."""
+    if multiplicity < 1:
+        raise ValueError("Spin multiplicities must be positive integers")
+    if include_ms:
+        return [
+            (root, multiplicity - 1 - 2 * projection)
+            for root in range(nroots)
+            for projection in range(multiplicity)
+        ]
+    return [(root, multiplicity - 1) for root in range(nroots)]
+
+
+def _compute_spin_manifold(geometry, params, itraj, manifold, index):
+    """Compute one PySCF spin manifold and expand it over requested Ms values."""
+    multiplicity = int(manifold["spin"])
+    nroots = int(manifold.get("nroots", 1))
+    include_ms = bool(manifold.get("include_ms_projections", True))
+    labels = _manifold_ms_labels(nroots, multiplicity, include_ms)
+
+    strategy_spec = manifold.get("strategy_factory", manifold.get("es_strategy"))
+    if strategy_spec is None:
+        raise KeyError(
+            f"spin_manifolds[{index}] requires 'strategy_factory' or 'es_strategy'"
+        )
+
+    all_strategies = params.setdefault("es_spin_strategies", {})
+    trajectory_strategies = all_strategies.setdefault(itraj, {})
+    if index not in trajectory_strategies:
+        trajectory_strategies[index] = _copy_strategy(strategy_spec)
+    strategy = trajectory_strategies[index]
+
+    if int(strategy.nroots) != nroots:
+        raise ValueError(
+            f"spin_manifolds[{index}] requests {nroots} roots, but its strategy "
+            f"provides {strategy.nroots}"
+        )
+    strategy_multiplicity = getattr(strategy, "spin_multiplicity", multiplicity)
+    if int(strategy_multiplicity) != multiplicity:
+        raise ValueError(
+            f"spin_manifolds[{index}] has multiplicity {multiplicity}, but its "
+            f"strategy provides {strategy_multiplicity}"
+        )
+
+    request = ES_Request(
+        n_singlets=nroots,
+        n_triplets=0,
+        H_soc=False,
+        gradient_state=manifold.get(
+            "gradient_state", params.get("gradient_state", "all")
+        ),
+        hessian_state=manifold.get(
+            "hessian_state", params.get("hessian_state")
+        ),
+        nacv=bool(manifold.get("nacv", params.get("nacv", False))),
+        time_overlap=bool(
+            manifold.get("time_overlap", params.get("time_overlap", True))
+        ),
+    )
+    result = strategy.compute_result(geometry, request)
+
+    root_of_state = [root for root, _ in labels]
+    ms_of_state = [twice_ms for _, twice_ms in labels]
+    nstates = len(labels)
+    energies = np.asarray(result.H_el, dtype=float)
+    if energies.shape != (nroots,):
+        raise ValueError(
+            f"spin_manifolds[{index}] returned energies with shape "
+            f"{energies.shape}; expected ({nroots},)"
+        )
+
+    time_overlap = np.eye(nstates)
+    if result.time_overlap is not None:
+        root_overlap = np.asarray(result.time_overlap)
+        time_overlap = np.zeros((nstates, nstates), dtype=root_overlap.dtype)
+        for i in range(nstates):
+            for j in range(nstates):
+                if ms_of_state[i] == ms_of_state[j]:
+                    time_overlap[i, j] = root_overlap[root_of_state[i], root_of_state[j]]
+
+    return {
+        "multiplicity": multiplicity,
+        "labels": labels,
+        "root_of_state": root_of_state,
+        "energies": energies[root_of_state],
+        "gradients": result.gradients,
+        "nac_vectors": result.nac_vectors,
+        "time_overlap": time_overlap,
+    }
+
+
+def _pyscf_compute_adi_spin_manifolds(q, params, full_id):
+    """Build a block-diagonal Libra Hamiltonian from PySCF spin manifolds.
+
+    Each entry of ``params['spin_manifolds']`` represents an independent
+    spin-free PySCF calculation and defines ``spin`` (the multiplicity),
+    ``nroots``, and either ``es_strategy`` or ``strategy_factory``. Every root
+    is expanded over its ``2*S+1`` spin projections by default. Without SOC,
+    matrix elements between different multiplicities and different Ms values
+    are zero.
+    """
+    itraj = _get_trajectory_index(full_id)
+    geometry = _q_to_geometry(q, itraj, params["atom_labels"])
+    manifolds = params["spin_manifolds"]
+    if not isinstance(manifolds, (list, tuple)) or not manifolds:
+        raise ValueError("spin_manifolds must be a non-empty list of dictionaries")
+    if any(not isinstance(item, dict) or "spin" not in item for item in manifolds):
+        raise ValueError("Each spin_manifolds entry must be a dictionary with 'spin'")
+    multiplicities = [int(item["spin"]) for item in manifolds]
+    if len(set(multiplicities)) != len(multiplicities):
+        raise ValueError("spin_manifolds must not repeat a spin multiplicity")
+
+    results = [
+        _compute_spin_manifold(geometry, params, itraj, manifold, index)
+        for index, manifold in enumerate(manifolds)
+    ]
+    natoms = len(params["atom_labels"])
+    ndof = 3 * natoms
+    nstates = sum(len(result["labels"]) for result in results)
+    dt = float(params.get("dt", 41.0))
+    energy_zero = float(params.get("energy_zero", 0.0))
+
+    obj = SimpleNamespace()
+    obj.spin_labels = [
+        (result["multiplicity"], root, twice_ms)
+        for result in results for root, twice_ms in result["labels"]
+    ]
+    obj.ms_labels = [label[1:] for label in obj.spin_labels]
+    obj.ham_adi = CMATRIX(nstates, nstates)
+    obj.nac_adi = CMATRIX(nstates, nstates)
+    obj.hvib_adi = CMATRIX(nstates, nstates)
+    obj.time_overlap_adi = CMATRIX(nstates, nstates)
+    obj.overlap_adi = CMATRIX(nstates, nstates)
+    obj.basis_transform = CMATRIX(nstates, nstates)
+    obj.d1ham_adi = CMATRIXList()
+    obj.dc1_adi = CMATRIXList()
+    for _ in range(ndof):
+        obj.d1ham_adi.append(CMATRIX(nstates, nstates))
+        obj.dc1_adi.append(CMATRIX(nstates, nstates))
+
+    offset = 0
+    for result in results:
+        local_nstates = len(result["labels"])
+        for i in range(local_nstates):
+            gi = offset + i
+            energy = complex(result["energies"][i] - energy_zero)
+            obj.ham_adi.set(gi, gi, energy)
+            obj.hvib_adi.set(gi, gi, energy)
+            obj.basis_transform.set(gi, gi, 1.0 + 0.0j)
+            obj.overlap_adi.set(gi, gi, 1.0 + 0.0j)
+            for j in range(local_nstates):
+                obj.time_overlap_adi.set(
+                    gi, offset + j, complex(result["time_overlap"][i, j])
+                )
+
+        if result["gradients"] is not None:
+            for i, root in enumerate(result["root_of_state"]):
+                gradient = result["gradients"][root]
+                if gradient is None:
+                    continue
+                for atom in range(natoms):
+                    for xyz in range(3):
+                        obj.d1ham_adi[3 * atom + xyz].set(
+                            offset + i, offset + i, complex(gradient[atom, xyz])
+                        )
+
+        if result["nac_vectors"] is not None:
+            nac_vectors = np.asarray(result["nac_vectors"])
+            for i, (root_i, ms_i) in enumerate(result["labels"]):
+                for j, (root_j, ms_j) in enumerate(result["labels"]):
+                    if ms_i != ms_j:
+                        continue
+                    for atom in range(natoms):
+                        for xyz in range(3):
+                            obj.dc1_adi[3 * atom + xyz].set(
+                                offset + i,
+                                offset + j,
+                                complex(nac_vectors[root_i, root_j, atom, xyz]),
+                            )
+        offset += local_nstates
+
+    for i in range(nstates):
+        for j in range(i + 1, nstates):
+            dij = (
+                obj.time_overlap_adi.get(i, j)
+                - obj.time_overlap_adi.get(j, i)
+            ) / (2.0 * dt)
+            obj.nac_adi.set(i, j, dij)
+            obj.nac_adi.set(j, i, -dij.conjugate())
+            obj.hvib_adi.set(i, j, -1.0j * dij)
+            obj.hvib_adi.set(j, i, 1.0j * dij.conjugate())
+    return obj
+
+
 # =============================================================================
 # Main Libra callback
 # =============================================================================
 
 def pyscf_compute_adi(q,params,full_id):
+
+    if params.get("spin_manifolds") is not None:
+        return _pyscf_compute_adi_spin_manifolds(q, params, full_id)
 
     # 1. Libra input -> generic ES input
     itraj = _get_trajectory_index(full_id)
@@ -269,352 +478,3 @@ def pyscf_compute_adi(q,params,full_id):
     )
 
     return obj
-
-if __name__ == "__main__":
-    import os
-    import sys
-
-    from liblibra_core import Random, Universe
-    import libra_py
-    from libra_py import LoadPT
-    import libra_py.dynamics.tsh.compute as tsh_dynamics
-    from libra_py.packages.pyscf.implementations.casscf import CASSCF
-
-    TSH_FSSH = 0                    # -1 adiabatic (no hops), 0 FSSH, 1 GFSH, 2 MSSH
-
-    # momenta_rescaling_algo -- what direction the momenta are rescaled along
-    RESCALE_NONE = 0                # don't rescale
-    RESCALE_ALONG_NAC = 201         # along derivative coupling vectors, reverse on frustrated hops
-    RESCALE_ALONG_GRAD_DIFF = 211   # along the difference of state-specific forces
-
-    # nac_update_method -- where the NACs come from
-    NAC_FROM_DC1 = 1                # contract dc1_adi with p/M  (needs nacv from the ES code)
-    NAC_FROM_TIME_OVERLAP = 2       # finite-difference the time-overlap matrix
-
-    # nac_algo -- only in effect when nac_update_method == NAC_FROM_TIME_OVERLAP
-    NAC_ALGO_EXTERNAL = -1          # NACs come from somewhere else
-    NAC_ALGO_NPI = 1                # Meek & Levine norm-preserving interpolation (0 = HST)
-
-    # force_method
-    FORCE_NONE = 0                  # no forces at all (NBRA)
-    FORCE_STATE_SPECIFIC = 1        # the active state's force (TSH); 2 = Ehrenfest
-
-    # time_overlap_method -- 0 means "the model supplies time_overlap_adi", which
-    # is exactly what this adapter does in _es_result_to_libra.
-    TIME_OVERLAP_FROM_MODEL = 0
-
-    # state_tracking_algo -- how the adiabatic states are re-projected step to
-    # step, and the one setting that decides whether time-overlaps are needed at
-    # all (src/dyn/dyn_ham.cpp:377-470):
-    #
-    #  -1  local diabatization, the Libra default: inverts the time-overlap
-    #      matrix for every trajectory every step. Handed the zero matrix a
-    #      config gets when it never asks the ES code for overlaps, the run
-    #      exits with "Problem inverting time-overlap matrix".
-    #   1, 2, 21, 3, 32, 33  reordering + phase correction: also built on the
-    #      time-overlap matrix.
-    #   4  force-based: needs every state's force, so it contradicts
-    #      gradient_state = "active".
-    #   0  leave the projectors alone. No branch claims it in the if-chain, so
-    #      proj_adi keeps its previous (identity) value -- no state tracking,
-    #      which is the consistent choice when the coupling comes from
-    #      continuous NAC vectors instead of step-to-step overlaps.
-    LD_STATE_TRACKING = -1
-    NO_STATE_TRACKING = 0
-
-    REP_ADIABATIC = 1               # rep_* and elec_params["rep"]; 0 = diabatic
-    ELEC_INIT_ON_ISTATE = 0         # all trajectories on istate, identical phases
-    NUCL_INIT_EXACT = 0             # coords and momenta set exactly to the given values
-
-    # -------------------------------------------------------------------------
-    # Shared construction: the parts every config builds the same way
-    # -------------------------------------------------------------------------
-
-    def copy_strategies(strategy, ntraj):
-        """The ES template, copied once per trajectory.
-
-        Each trajectory needs its own instance: ES_Strategy carries a
-        previous-geometry snapshot internally, so sharing one would destroy the
-        time-overlaps. Copy while the template is still fresh -- CASSCF.copy() is
-        a deepcopy, cheap before the first calculation and expensive after it,
-        once mol/mf/mc are attached.
-        """
-        return {itraj: strategy.copy() for itraj in range(ntraj)}
-
-
-    def nucl_params_from_geometry(geom, force_constant=0.01):
-        """nucl_params straight out of the geometry -- masses included.
-
-        The masses come from Libra's own periodic table (libra_py/elements.dat),
-        which LoadPT.Load_PT already converts from Dalton to atomic units
-        (LoadPT.py:25). So the atom labels are the only statement of which atoms
-        these are; nothing restates their masses by hand.
-        """
-        U = Universe()
-        LoadPT.Load_PT(U, os.path.join(os.path.dirname(libra_py.__file__), "elements.dat"), 0)
-
-        masses = []
-        for symbol in geom.atom_labels:
-            masses += [U.Get_Element(symbol).Elt_mass] * 3
-
-        ndof = 3 * len(geom.atom_labels)
-
-        # ---- where a sampler plugs in ---------------------------------------
-        # NUCL_INIT_EXACT (0) puts every trajectory at exactly this geometry with
-        # zero momenta. Libra samples for you with init_type 1/2/3 (widths built
-        # from force_constant and mass) or 4 (explicit q_width/p_width lists) --
-        # src/dyn/dyn_variables_nuclear.cpp:265-295.
-        #
-        # For samples drawn OUTSIDE Libra -- a Wigner distribution, say -- use
-        # init_type 5, which copies q_init/p_init straight into the dynamical
-        # variables with no sampling of its own (dyn_variables_nuclear.cpp:304-313).
-        # Both are ndof lists of ntraj floats: the TRANSPOSE of the (ntraj, ndof)
-        # arrays a sampler normally hands back.
-        #
-        #     q, p, _ = wigner_sample(omega, L, masses, R0, ntraj, temperature)
-        #     nucl["init_type"] = 5
-        #     nucl["q_init"] = q.T.tolist()   # ndof lists of ntraj floats
-        #     nucl["p_init"] = p.T.tolist()
-        #
-        # "q"/"p" below stay as the means: init_type 5 ignores them, but the
-        # length of "q" is what fixes ndof for the checks upstream.
-        #
-        # libra_py.wigner already builds these: generate_wigner_ics() returns one
-        # {"traj", "q", "p"} dict per trajectory, and prepare_wigner_from_modes /
-        # generate_wigner_from_hessian produce the modes it needs -- from the same
-        # masses this function looks up.
-
-        return {
-            "ndof": ndof,
-            "init_type": NUCL_INIT_EXACT,
-            "q": np.asarray(geom.coords_bohr, dtype=np.float64).reshape(-1).tolist(),
-            "p": [0.0] * ndof,
-            "mass": masses,
-            "force_constant": [force_constant] * ndof,
-        }
-
-
-    # -------------------------------------------------------------------------
-    # Scenario configurations
-    #
-    # Each returns the five arguments of generic_recipe, in its argument order:
-    #
-    #     dyn_params, compute_model, model_params, elec_params, nucl_params
-    # -------------------------------------------------------------------------
-
-    def config_fssh_nacv(strategy, geom, ntraj=2, istate=1, dt=41.0, nsteps=2):
-        """FSSH with derivative couplings: rescale momenta along the NAC vector.
-
-        Consistent by construction: rescaling along d_ij needs dc1_adi, which the
-        ES code only returns when nacv=True; and force_method=1 only ever needs
-        the active root's gradient.
-        """
-        # What these algorithms demand of the ES code -- decided here, with them.
-        # The NAC vectors carry everything: the couplings (NAC_FROM_DC1), the
-        # rescaling direction (RESCALE_ALONG_NAC) and, through them, Hvib. So no
-        # time-overlap is computed at all, and every setting below that would
-        # otherwise consume one is pointed away from it -- see state_tracking_algo.
-        gradient_state = "active"          # for FORCE_STATE_SPECIFIC
-        nacv = True                        # for RESCALE_ALONG_NAC and NAC_FROM_DC1
-        time_overlap = False               # nothing left that needs S(t, t+dt)
-
-        strategies = copy_strategies(strategy, ntraj)
-        nucl_params = nucl_params_from_geometry(geom)
-
-        dyn_params = {
-            # --- surface hopping ---
-            "tsh_method": TSH_FSSH,
-            "hop_acceptance_algo": 0,           # based on adiabatic energy
-            "momenta_rescaling_algo": RESCALE_ALONG_NAC,
-            "use_Jasper_Truhlar_criterion": 1,  # only in effect for algo 201
-
-            # --- Hamiltonian / couplings ---
-            "isNBRA": 0,
-            "is_nbra": 0,                       # generic_recipe reads this spelling too
-            "rep_tdse": REP_ADIABATIC,
-            "rep_sh": REP_ADIABATIC,
-            "rep_force": REP_ADIABATIC,
-            "force_method": FORCE_STATE_SPECIFIC,
-            "ham_update_method": 2,             # the model returns the adiabatic Ham directly
-            "ham_transform_method": 0,          # no further transformation
-            "time_overlap_method": TIME_OVERLAP_FROM_MODEL,
-            "state_tracking_algo": NO_STATE_TRACKING,  # the LD default would invert
-                                                # a time-overlap this config never
-                                                # computes; the NACVs track the
-                                                # states instead
-            "nac_update_method": NAC_FROM_DC1,
-            "nac_algo": NAC_ALGO_EXTERNAL,      # unused when nac_update_method == 1
-            "hvib_update_method": 1,            # Hvib = Ham - i*hbar*NAC, built in
-                                                # C++ from the dc1_adi NACs, since
-                                                # the adapter supplies no hvib_adi
-                                                # when no overlap was requested
-
-            "do_phase_correction": 0,
-            "do_nac_phase_correction": 1,
-
-            # --- integration ---
-            "dt": dt,
-            "nsteps": nsteps,
-            "progress_frequency": 1.0,          # print_freq = int(progress_frequency
-                                                # * nsteps) (tsh/save.py:1027), which
-                                                # is a division by zero for any run
-                                                # shorter than 1/progress_frequency
-                                                # steps -- the 0.1 default needs 10+
-            "ntraj": len(strategies),
-            "quantum_dofs": list(range(nucl_params["ndof"])),
-
-            # --- output ---
-            "prefix": "run_fssh_nacv",
-            "prefix2": "run_fssh_nacv_aux",
-        }
-        elec_params = {
-            "ndia": strategy.nroots, "nadi": strategy.nroots,
-            "init_type": ELEC_INIT_ON_ISTATE,
-            "istate": istate,
-            "rep": REP_ADIABATIC,
-        }
-        model_params = {
-            "model0": 0,                        # generic_recipe demands it; the callback ignores it
-            "atom_labels": geom.atom_labels,
-            "dt": dt,
-            "nstates": strategy.nroots,         # the template decides the state count
-
-            "gradient_state": gradient_state,
-            "nacv": nacv,
-            "time_overlap": time_overlap,
-
-            # The per-trajectory strategies, and the initial active state seeded
-            # as generic_recipe would from elec_params["istate"]; the driver
-            # rewrites act_state every step (dynamics/tsh/compute.py:1082).
-            "es_strategies": strategies,
-            "act_state": {itraj: istate for itraj in range(ntraj)},
-        }
-        return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
-
-
-    def config_nbra(strategy, geom, ntraj=1, istate=0, dt=41.0, nsteps=2):
-        """NBRA: one Hamiltonian for all trajectories, no forces at all.
-
-        The nuclei are frozen (no forces, zero initial momenta), so every
-        trajectory would see the identical electronic structure -- which is what
-        the NBRA exploits: compute it once and let the electronic dynamics be
-        the only thing that differs between trajectories.
-
-        ntraj defaults to 1 here, and must stay 1 in this build -- see the
-        comment on isNBRA below.
-        """
-        gradient_state = None              # for FORCE_NONE
-        nacv = False                       # no derivative couplings in the NBRA
-        time_overlap = True                # for NAC_FROM_TIME_OVERLAP
-
-        strategies = copy_strategies(strategy, ntraj)
-        nucl_params = nucl_params_from_geometry(geom)
-
-        dyn_params = {
-            # --- surface hopping ---
-            "tsh_method": TSH_FSSH,
-            "hop_acceptance_algo": 0,
-            "momenta_rescaling_algo": RESCALE_NONE,   # no momenta to rescale in the NBRA
-            "use_Jasper_Truhlar_criterion": 0,
-
-            # --- Hamiltonian / couplings ---
-            # isNBRA = 1 is what would let ONE Hamiltonian serve every
-            # trajectory -- the point of the NBRA. It is off here because it
-            # crashes in this build: generic_recipe then allocates a single child
-            # (dynamics/tsh/compute.py:1214) while dyn_variables keeps looping
-            # over ntraj of them (src/dyn/dyn_variables_electronic.cpp:148), so
-            # any ntraj > 1 reads past the end of children[] and segfaults before
-            # the first ES call. Set it to 1 only together with ntraj = 1.
-            #
-            # What the NBRA means for the ES code -- no forces, couplings from
-            # time-overlaps alone -- is set below and is independent of the flag.
-            "isNBRA": 1,
-            "is_nbra": 1,
-            "rep_tdse": REP_ADIABATIC,
-            "rep_sh": REP_ADIABATIC,
-            "rep_force": REP_ADIABATIC,
-            "force_method": FORCE_NONE,
-            "ham_update_method": 2,
-            "ham_transform_method": 0,
-            "time_overlap_method": TIME_OVERLAP_FROM_MODEL,
-            "state_tracking_algo": LD_STATE_TRACKING,
-            "nac_update_method": NAC_FROM_TIME_OVERLAP,
-            "nac_algo": NAC_ALGO_NPI,
-            "hvib_update_method": 1,
-            "do_phase_correction": 0,
-            "do_nac_phase_correction": 0,
-
-            # --- integration ---
-            "dt": dt,
-            "nsteps": nsteps,
-            "progress_frequency": 1.0,          # print_freq = int(progress_frequency
-                                                # * nsteps) (tsh/save.py:1027), which
-                                                # is a division by zero for any run
-                                                # shorter than 1/progress_frequency
-                                                # steps -- the 0.1 default needs 10+
-            "ntraj": len(strategies),
-            "quantum_dofs": list(range(nucl_params["ndof"])),
-
-            # --- output ---
-            "prefix": "run_nbra",
-            "prefix2": "run_nbra_aux",
-        }
-        elec_params = {
-            "ndia": strategy.nroots, "nadi": strategy.nroots,
-            "init_type": ELEC_INIT_ON_ISTATE,
-            "istate": istate,
-            "rep": REP_ADIABATIC,
-        }
-        model_params = {
-            "model0": 0,
-            "atom_labels": geom.atom_labels,
-            "dt": dt,
-            "nstates": strategy.nroots,
-
-            "gradient_state": gradient_state,
-            "nacv": nacv,
-            "time_overlap": time_overlap,
-
-            "es_strategies": strategies,
-            "act_state": {itraj: istate for itraj in range(ntraj)},
-        }
-        return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
-
-
-    # -------------------------------------------------------------------------
-    # The run -- one generic_recipe call, whichever config is selected
-    # -------------------------------------------------------------------------
-
-    CONFIGS = { "fssh_nacv": config_fssh_nacv, "nbra": config_nbra }
-
-    name = sys.argv[1] if len(sys.argv) > 1 else "fssh_nacv"
-    if name not in CONFIGS:
-        sys.exit(f"unknown config {name!r}; pick one of {', '.join(CONFIGS)}")
-
-    # The ES template: 2 electrons in 2 CAS orbitals, 3 roots, HeH+ in STO-3G.
-    # Copied once per trajectory by the config; nothing else states the state count.
-    strategy = CASSCF(norbcas=2, nelecas=2, nroots=3, basis="sto-3g", charge=1, unit="Bohr")
-
-    # The geometry: HeH+ at its equilibrium bond length, He at the origin.
-    # The labels alone fix ndof, the masses, and what the ES code is handed.
-    geom = MolecularGeometry(
-        atom_labels=("He", "H"),
-        coords_bohr=np.array([[0.0, 0.0, 0.0],
-                              [0.0, 0.0, 1.46379]], dtype=np.float64),
-    )
-
-    # ntraj is left to each config's own default: 2 for fssh_nacv, 1 for nbra,
-    # which is the only value isNBRA = 1 survives (see config_nbra).
-    dyn_params, compute_model, model_params, elec_params, nucl_params = \
-        CONFIGS[name](strategy, geom)
-
-    print(f"config {name}: {''.join(geom.atom_labels)} / {type(strategy).__name__}, "
-          f"nstates={elec_params['nadi']}, ntraj={dyn_params['ntraj']}, "
-          f"istate={elec_params['istate']}, nsteps={dyn_params['nsteps']}, "
-          f"dt={dyn_params['dt']} a.u.")
-    print(f"  masses (a.u.): {nucl_params['mass'][::3]}")
-
-    rnd = Random()
-
-    res = tsh_dynamics.generic_recipe(dyn_params, compute_model, model_params,
-                                      elec_params, nucl_params, rnd)
