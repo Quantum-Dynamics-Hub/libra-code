@@ -26,6 +26,8 @@
 
 from __future__ import annotations
 
+import copy as pycopy
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Literal, Sequence
@@ -196,15 +198,20 @@ class ES_Strategy(ABC):
     def compute_nac_vectors(self) -> np.ndarray:
         """Compute nonadiabatic coupling vectors.
 
+        The default implementation is the numerical fallback at the bottom of
+        this module: it central-differences the wavefunction overlap with
+        respect to every nuclear coordinate, so a backend that can only produce
+        ``compute_time_overlap`` gets NAC vectors for free.  Backends with an
+        analytic coupling (CASSCF, TDDFT response) should override this -- the
+        fallback costs ``6 * natoms`` extra electronic-structure calculations
+        per geometry.
+
         Returns
         -------
         np.ndarray
             Shape ``(n_total, n_total, natoms, 3)`` in Bohr^-1.
         """
-        raise NotImplementedError(
-            f"{type(self).__name__}: "
-            "override compute_nac_vectors or do not request NAC vectors."
-        )
+        return numerical_nac_vectors(self)
 
     
     def compute_time_overlap( self, state1: object, state2: object ) -> np.ndarray:
@@ -286,6 +293,147 @@ class ES_Strategy(ABC):
 
         return result
 
+
+
+# ---------------------------------------------------------------------------
+# Fallbacks
+# ---------------------------------------------------------------------------
+#
+# Generic implementations of the optional quantities, written entirely against
+# the ES_Strategy interface.  They let a backend that implements only the
+# cheap, always-available pieces still answer the full request; a backend with
+# an analytic route overrides the corresponding method and never reaches here.
+
+# Central-difference displacement for the numerical NAC vectors, in Bohr.
+#
+# Hard-coded rather than exposed as a parameter: the useful window is narrow
+# and roughly the same for every backend.  The finite-difference error is the
+# sum of a truncation term ~ h^2 * (third derivative) and a noise term
+# ~ eps_S / (2h), where eps_S is how reproducibly the backend converges its
+# wavefunction overlaps (~1e-7..1e-6 for a default-threshold CASSCF/CASCI).
+# At h = 1e-3 Bohr both sit near 1e-4 Bohr^-1, which is well below the
+# ~1e-1..1e+1 Bohr^-1 scale of a coupling that matters.
+NUMERICAL_NACV_STEP_BOHR = 1.0e-3
+
+
+def _clone_strategy(strategy: ES_Strategy) -> ES_Strategy:
+    """Return an independent copy of ``strategy``.
+
+    The displaced-geometry calculations must not touch the caller's strategy:
+    it is mid-``compute_result`` at the reference geometry, and set_geom would
+    overwrite both its current and its previous state.  Same copy/clone/deepcopy
+    ladder the Libra adapter uses when it hands one strategy template to many
+    trajectories.
+    """
+    for name in ("copy", "clone"):
+        cloner = getattr(strategy, name, None)
+        if callable(cloner):
+            return cloner()
+    return pycopy.deepcopy(strategy)
+
+
+def numerical_nac_vectors(
+    strategy: ES_Strategy,
+    step: float = NUMERICAL_NACV_STEP_BOHR,
+) -> np.ndarray:
+    """NAC vectors by central-differencing the wavefunction overlap.
+
+    The coupling is the derivative of an overlap::
+
+        d_ij^(A,x) = < psi_i(R) | d/dR_Ax | psi_j(R) >
+                   ~ [ <psi_i(R)|psi_j(R+h)> - <psi_i(R)|psi_j(R-h)> ] / (2h)
+
+    with ``h = step`` along one Cartesian coordinate at a time, so the whole
+    thing is built out of ``compute_time_overlap`` calls: the bra stays pinned
+    at the reference geometry and only the ket moves.  That matches the
+    argument order used by ``compute_result``, namely
+    ``compute_time_overlap(state1, state2) -> <state2_i | state1_j>``, where
+    state2 is the earlier -- here, the reference -- snapshot.
+
+    Two properties of the exact d_ij are imposed rather than hoped for: it is
+    antisymmetric for real wavefunctions, and its diagonal vanishes.  Averaging
+    d against -d^T also cancels the leading symmetric part of the numerical
+    error, so the symmetrization buys a little accuracy and is not only
+    cosmetic.
+
+    Relies on the backend's own overlap phase convention to keep the displaced
+    roots gauge-aligned with the reference ones (CASSCF, for one, fixes the
+    sign of each column so the diagonal comes out positive).  Without that the
+    two displacements could disagree on the sign of a root and the difference
+    would be meaningless.
+
+    Requires a converged reference calculation to already be in place -- i.e.
+    this runs after compute_H_el, which is what compute_result guarantees.
+
+    Returns
+    -------
+    np.ndarray
+        Shape ``(n_total, n_total, natoms, 3)`` in Bohr^-1.
+    """
+    geom = strategy.get_geom()
+    coords = np.asarray(geom.coords_bohr, dtype=np.float64)
+    natoms = coords.shape[0]
+
+    if natoms == 0:
+        raise ValueError("Numerical NAC vectors need at least one atom.")
+
+    # Frozen copy of the reference wavefunction: it is the bra of every overlap
+    # below, and the worker would otherwise mutate it out from under us.
+    reference_state = pycopy.deepcopy(strategy.get_state())
+    if reference_state is None:
+        raise ValueError(
+            f"{type(strategy).__name__}: numerical NAC vectors need a converged "
+            "reference calculation; call compute_H_el before compute_nac_vectors."
+        )
+
+    # One worker for all 6*natoms displaced calculations.  Reusing it keeps the
+    # backend's own warm-start chain alive -- each displaced SCF/CASSCF starts
+    # from the previous one -- which is both faster and steadier in the root
+    # ordering across the scan.
+    worker = _clone_strategy(strategy)
+
+    nacv = None
+
+    for atom in range(natoms):
+        for xyz in range(3):
+
+            overlaps = []
+
+            for direction in (+1.0, -1.0):
+
+                displaced_coords = coords.copy()
+                displaced_coords[atom, xyz] += direction * step
+
+                worker.set_geom(
+                    MolecularGeometry(
+                        atom_labels=geom.atom_labels,
+                        coords_bohr=displaced_coords,
+                    )
+                )
+                worker.compute_H_el()
+
+                # <reference_i | displaced_j>
+                overlaps.append(
+                    np.asarray(
+                        worker.compute_time_overlap(worker.get_state(), reference_state),
+                        dtype=np.float64,
+                    )
+                )
+
+            derivative = (overlaps[0] - overlaps[1]) / (2.0 * step)
+
+            if nacv is None:
+                n_total = derivative.shape[0]
+                nacv = np.zeros((n_total, n_total, natoms, 3), dtype=np.float64)
+
+            nacv[:, :, atom, xyz] = derivative
+
+    # Enforce antisymmetry and a zero diagonal.
+    nacv = 0.5 * (nacv - np.swapaxes(nacv, 0, 1))
+    for state in range(nacv.shape[0]):
+        nacv[state, state] = 0.0
+
+    return nacv
 
 
 # Backward-compatible alias used by older PySCF package imports.

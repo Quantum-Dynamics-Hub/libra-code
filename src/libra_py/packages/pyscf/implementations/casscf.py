@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Sequence, Tuple, Union
 import numpy as np
 from pyscf import fci, gto, mcscf, scf
-from interface.interfaces import ES_Request, ES_Strategy, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import ES_Request, ES_Strategy, MolecularGeometry
 
 BOHR_TO_ANG = 0.529177210903
 
@@ -171,10 +171,9 @@ class CASSCF(ES_Strategy):
         return pycopy.deepcopy(self)
 
     def compute_H_el(self) -> np.ndarray:
-        if self._previous_state is not None and self._previous_state.mc is not None:
-            mocoeff = self._previous_state.mc.mo_coeff
-        else:
-            mocoeff = self._state.mf.mo_coeff
+        restarting = (
+            self._previous_state is not None and self._previous_state.mc is not None
+        )
 
         mc = mcscf.CASSCF(self._state.mf, self._norbcas, self._nelecas)
         mc.fcisolver = fci.direct_spin0.FCI(self._state.mol)
@@ -182,8 +181,38 @@ class CASSCF(ES_Strategy):
         if self._nroots > 1:
             mc = mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
 
-        if self._cas_list is not None:
-            mocoeff = mcscf.sort_mo(mc, mocoeff, self._cas_list)
+        if restarting:
+            # Orbitals converged at the PREVIOUS geometry are orthonormal in
+            # that geometry's AO metric, not in this one.  Handing them to
+            # mc.kernel unprojected leaves mc.mo_coeff non-orthonormal here,
+            # because the orbital optimizer only applies unitary rotations and
+            # so preserves whatever non-orthonormality it was given.  When the
+            # state-averaged surface is flat -- e.g. HeH+ CAS(2,2) with 3 roots,
+            # where the roots span the complete active space and the SA energy
+            # is a basis-independent trace -- the optimizer returns the guess
+            # bit-for-bit and the error survives untouched into mc.mo_coeff.
+            #
+            # project_init_guess re-orthonormalizes against the current
+            # molecule (SVD per orbital subspace) while keeping the active
+            # space in the canonical ncore:ncore+ncas block, which is what
+            # makes it safe to skip cas_list below.
+            mocoeff = mcscf.project_init_guess(
+                mc,
+                self._previous_state.mc.mo_coeff,
+                prev_mol=self._previous_state.mol,
+            )
+        else:
+            mocoeff = self._state.mf.mo_coeff
+
+            # cas_list indexes the *HF* orbitals, so it only applies to an HF
+            # starting guess.  A restart already carries its active space in
+            # the canonical block; re-sorting would pull a different set of
+            # columns entirely -- e.g. cas_list = [4, 7, 11, 14, 17] selects
+            # 0-indexed 3, 6, 10, 13, 16 while the active space already sits at
+            # 5-9.  CASSCF often re-converges to the same energies from that
+            # scrambled guess, which is what makes the bug easy to miss.
+            if self._cas_list is not None:
+                mocoeff = mcscf.sort_mo(mc, mocoeff, self._cas_list)
 
         mc.kernel(mocoeff)
 
@@ -273,41 +302,52 @@ class CASSCF(ES_Strategy):
 
         ao_overlap = self._compute_ao_overlap(prev_state, curr_state)
 
-        # Always build CASCI roots and matching active-space MO blocks for both
-        # geometries.  State-averaged CASSCF `mc.ci` representations can differ
-        # (and be incompatible with `fci.addons.overlap`'s expected transform),
-        # so recomputing CASCI ensures consistent CI + one-particle overlap.
-        prev_casci = mcscf.CASCI(prev_state.mf, self._norbcas, self._nelecas)
-        prev_casci.fcisolver = fci.direct_spin0.FCISolver(prev_state.mol)
-        prev_casci.fcisolver.nroots = nroots
-        h1prev, _ = prev_casci.get_h1eff(prev_casci.mo_coeff)
-        h2prev = prev_casci.get_h2cas(prev_casci.mo_coeff)
-        _, prev_roots_raw = prev_casci.fcisolver.kernel(
-            h1prev,
-            h2prev,
-            prev_casci.ncas,
-            prev_casci.nelecas,
-            nroots=nroots,
-        )
+        # Solve a CASCI in the CONVERGED CASSCF orbitals at each geometry, and
+        # take the active block from mc.mo_coeff.  Both halves matter:
+        #
+        #  * the orbitals must come from mc, not mf.  mf.mo_coeff has neither
+        #    the cas_list selection nor the CASSCF optimization, so a
+        #    cas_list-driven run would silently overlap a different active
+        #    space than the one compute_H_el converged.
+        #  * the active block is mo_coeff[:, ncore:ncore+ncas], not
+        #    mo_coeff[:, :ncas].  Those agree only when ncore == 0; for LiF
+        #    CAS(2,5) (ncore = 5) they are orthogonal to 1e-15.
+        #
+        # The CI vectors are re-solved rather than taken from mc.ci because
+        # PySCF canonicalizes the orbitals at the end of a state-averaged
+        # CASSCF and leaves mc.ci in the pre-canonicalization basis; pairing
+        # mc.ci with mc.mo_coeff yields a non-unitary overlap (|S^T S - I| ~ h,
+        # a spurious non-zero diagonal in dS/dR, and ~50% errors in the NACs on
+        # HeH+).  A self-overlap S(state, state) cannot detect that -- the
+        # mismatch cancels between bra and ket and the identity comes out
+        # perfectly -- which is what makes it worth stating here.
+        def _casci_roots_and_active(state):
+            mc = state.mc
+            if mc is None:
+                raise ValueError(
+                    "Time overlaps need a converged CASSCF at both geometries; "
+                    "call compute_H_el before compute_time_overlap."
+                )
+            casci = mcscf.CASCI(state.mf, mc.ncas, mc.nelecas)
+            casci.fcisolver = fci.direct_spin0.FCISolver(state.mol)
+            casci.fcisolver.nroots = nroots
+            h1, _ = casci.get_h1eff(mc.mo_coeff)
+            h2 = casci.get_h2cas(mc.mo_coeff)
+            _, roots = casci.fcisolver.kernel(
+                h1, h2, casci.ncas, casci.nelecas, nroots=nroots
+            )
+            if isinstance(roots, np.ndarray):
+                roots = [roots]
+            active = np.asarray(mc.mo_coeff)[:, mc.ncore : mc.ncore + mc.ncas]
+            return [np.asarray(vec) for vec in roots[:nroots]], active
 
-        curr_casci = mcscf.CASCI(curr_state.mf, self._norbcas, self._nelecas)
-        curr_casci.fcisolver = fci.direct_spin0.FCISolver(curr_state.mol)
-        curr_casci.fcisolver.nroots = nroots
-        h1curr, _ = curr_casci.get_h1eff(curr_casci.mo_coeff)
-        h2curr = curr_casci.get_h2cas(curr_casci.mo_coeff)
-        _, curr_roots_raw = curr_casci.fcisolver.kernel(
-            h1curr,
-            h2curr,
-            curr_casci.ncas,
-            curr_casci.nelecas,
-            nroots=nroots,
-        )
+        prev_roots, prev_act = _casci_roots_and_active(prev_state)
+        curr_roots, curr_act = _casci_roots_and_active(curr_state)
 
-        prev_roots = [np.asarray(vec) for vec in prev_roots_raw[:nroots]]
-        curr_roots = [np.asarray(vec) for vec in curr_roots_raw[:nroots]]
-        prev_act = np.asarray(prev_casci.mo_coeff)[:, : prev_casci.ncas]
-        curr_act = np.asarray(curr_casci.mo_coeff)[:, : curr_casci.ncas]
+        # s12_mo[p, q] = <prev_p | curr_q>, the convention
+        # fci.addons.overlap(bra, ket, s=...) expects.
         s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
+
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
@@ -341,13 +381,24 @@ class CASSCF(ES_Strategy):
         nacs = self._share_eris(mc.nac_method())
 
         # 2. per pair
+        #
+        # nacv[i, j] is d_ij = <psi_i | d/dR | psi_j>, and PySCF's
+        # nacs.kernel(state=(a, b)) returns exactly that for (i, j) = (a, b).
+        # Note this contradicts the docstring on
+        # pyscf.nac.sacasscf.NonAdiabaticCouplings, which reads the tuple the
+        # other way round ("state = (ket, bra)", returning <state[1]|d state[0]>).
+        # The order used here is the one the code actually implements: it
+        # reproduces a central-difference <psi_a(R) | psi_b(R +/- h)> derivative
+        # to 7 figures, while the docstring order comes out transposed --
+        # verified against interfaces.numerical_nac_vectors with use_etfs=False,
+        # which is the ETF-free quantity a finite difference measures.
         nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
-        for ket in range(nstates):
-            for bra in range(nstates):
-                if bra == ket:
+        for i in range(nstates):
+            for j in range(nstates):
+                if i == j:
                     continue
-                nacv[bra, ket] = np.asarray(
-                    nacs.kernel(state=(ket, bra), use_etfs=use_etfs,
+                nacv[i, j] = np.asarray(
+                    nacs.kernel(state=(i, j), use_etfs=use_etfs,
                                 mult_ediff=False, eris=self._state.eris),
                     dtype=np.float64,
                 )

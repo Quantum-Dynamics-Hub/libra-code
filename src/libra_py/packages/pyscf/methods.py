@@ -330,18 +330,6 @@ if __name__ == "__main__":
     # Shared construction: the parts every config builds the same way
     # -------------------------------------------------------------------------
 
-    def copy_strategies(strategy, ntraj):
-        """The ES template, copied once per trajectory.
-
-        Each trajectory needs its own instance: ES_Strategy carries a
-        previous-geometry snapshot internally, so sharing one would destroy the
-        time-overlaps. Copy while the template is still fresh -- CASSCF.copy() is
-        a deepcopy, cheap before the first calculation and expensive after it,
-        once mol/mf/mc are attached.
-        """
-        return {itraj: strategy.copy() for itraj in range(ntraj)}
-
-
     def nucl_params_from_geometry(geom, force_constant=0.01):
         """nucl_params straight out of the geometry -- masses included.
 
@@ -418,7 +406,7 @@ if __name__ == "__main__":
         nacv = True                        # for RESCALE_ALONG_NAC and NAC_FROM_DC1
         time_overlap = False               # nothing left that needs S(t, t+dt)
 
-        strategies = copy_strategies(strategy, ntraj)
+        strategies = {itraj: strategy.copy() for itraj in range(ntraj)}
         nucl_params = nucl_params_from_geometry(geom)
 
         dyn_params = {
@@ -491,6 +479,89 @@ if __name__ == "__main__":
         }
         return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
 
+    def config_fssh_timeoverlap(strategy, geom, ntraj=2, istate=1, dt=41.0, nsteps=2):
+        """FSSH with timeoverlap for nac and grad diff for rescaling."""
+        # What these algorithms demand of the ES code -- decided here, with them.
+        # The NAC vectors carry everything: the couplings (NAC_FROM_DC1), the
+        # rescaling direction (RESCALE_ALONG_NAC) and, through them, Hvib. So no
+        # time-overlap is computed at all, and every setting below that would
+        # otherwise consume one is pointed away from it -- see state_tracking_algo.
+        gradient_state = "all"            # for FORCE_STATE_SPECIFIC
+        nacv = False                        # for RESCALE_ALONG_NAC and NAC_FROM_DC1
+        time_overlap = True               # nothing left that needs S(t, t+dt)
+
+        strategies = {itraj: strategy.copy() for itraj in range(ntraj)}
+        nucl_params = nucl_params_from_geometry(geom)
+
+        dyn_params = {
+            # --- surface hopping ---
+            "tsh_method": TSH_FSSH,
+            "hop_acceptance_algo": 0,           # based on adiabatic energy
+            "momenta_rescaling_algo": RESCALE_ALONG_GRAD_DIFF,
+            "use_Jasper_Truhlar_criterion": 1,  # only in effect for algo 201
+
+            # --- Hamiltonian / couplings ---
+            "isNBRA": 0,
+            "is_nbra": 0,                       # generic_recipe reads this spelling too
+            "rep_tdse": REP_ADIABATIC,
+            "rep_sh": REP_ADIABATIC,
+            "rep_force": REP_ADIABATIC,
+            "force_method": FORCE_STATE_SPECIFIC,
+            "ham_update_method": 2,             # the model returns the adiabatic Ham directly
+            "ham_transform_method": 0,          # no further transformation
+            "time_overlap_method": TIME_OVERLAP_FROM_MODEL,
+            "state_tracking_algo": NO_STATE_TRACKING,  # the LD default would invert
+                                                # a time-overlap this config never
+                                                # computes; the NACVs track the
+                                                # states instead
+            "nac_update_method": NAC_FROM_DC1,
+            "nac_algo": NAC_ALGO_EXTERNAL,      # unused when nac_update_method == 1
+            "hvib_update_method": 1,            # Hvib = Ham - i*hbar*NAC, built in
+                                                # C++ from the dc1_adi NACs, since
+                                                # the adapter supplies no hvib_adi
+                                                # when no overlap was requested
+
+            "do_phase_correction": 0,
+            "do_nac_phase_correction": 1,
+
+            # --- integration ---
+            "dt": dt,
+            "nsteps": nsteps,
+            "progress_frequency": 1.0,          # print_freq = int(progress_frequency
+                                                # * nsteps) (tsh/save.py:1027), which
+                                                # is a division by zero for any run
+                                                # shorter than 1/progress_frequency
+                                                # steps -- the 0.1 default needs 10+
+            "ntraj": len(strategies),
+            "quantum_dofs": list(range(nucl_params["ndof"])),
+
+            # --- output ---
+            "prefix": "run_fssh_nacv",
+            "prefix2": "run_fssh_nacv_aux",
+        }
+        elec_params = {
+            "ndia": strategy.nroots, "nadi": strategy.nroots,
+            "init_type": ELEC_INIT_ON_ISTATE,
+            "istate": istate,
+            "rep": REP_ADIABATIC,
+        }
+        model_params = {
+            "model0": 0,                        # generic_recipe demands it; the callback ignores it
+            "atom_labels": geom.atom_labels,
+            "dt": dt,
+            "nstates": strategy.nroots,         # the template decides the state count
+
+            "gradient_state": gradient_state,
+            "nacv": nacv,
+            "time_overlap": time_overlap,
+
+            # The per-trajectory strategies, and the initial active state seeded
+            # as generic_recipe would from elec_params["istate"]; the driver
+            # rewrites act_state every step (dynamics/tsh/compute.py:1082).
+            "es_strategies": strategies,
+            "act_state": {itraj: istate for itraj in range(ntraj)},
+        }
+        return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
 
     def config_nbra(strategy, geom, ntraj=1, istate=0, dt=41.0, nsteps=2):
         """NBRA: one Hamiltonian for all trajectories, no forces at all.
@@ -507,7 +578,9 @@ if __name__ == "__main__":
         nacv = False                       # no derivative couplings in the NBRA
         time_overlap = True                # for NAC_FROM_TIME_OVERLAP
 
-        strategies = copy_strategies(strategy, ntraj)
+        #make a dictionary of n copies of the "strategy"
+        strategies = {itraj: strategy.copy() for itraj in range(ntraj)}
+
         nucl_params = nucl_params_from_geometry(geom)
 
         dyn_params = {
@@ -580,12 +653,14 @@ if __name__ == "__main__":
         }
         return dyn_params, pyscf_compute_adi, model_params, elec_params, nucl_params
 
-
     # -------------------------------------------------------------------------
     # The run -- one generic_recipe call, whichever config is selected
     # -------------------------------------------------------------------------
 
-    CONFIGS = { "fssh_nacv": config_fssh_nacv, "nbra": config_nbra }
+    CONFIGS = { "fssh_nacv": config_fssh_nacv, 
+                "nbra": config_nbra, 
+                "fssh_timeoverlap" : config_fssh_timeoverlap
+            }
 
     name = sys.argv[1] if len(sys.argv) > 1 else "fssh_nacv"
     if name not in CONFIGS:

@@ -51,6 +51,7 @@ import libra_py.tsh_stat as tsh_stat
 # import libra_py.dynamics as dynamics_io
 
 from . import save
+from . import debug as debug_mod
 
 
 def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
@@ -915,6 +916,11 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
                            })
 
     # ================= Variables specific to Python version: saving ================
+    default_params.update({"debug_print_step": 0,   # 1: dump C_adi/C_dia and the nHam
+                                                     # fields to the console every step
+                           "debug_print_traj": None})  # which trajectories to dump;
+                                                       # None = all of them
+
     default_params.update({"nsteps": 1,
                            "nprint": 1,
                            "prefix": "out",
@@ -1083,6 +1089,12 @@ def run_dynamics(dyn_var, _dyn_params, ham, compute_model, _model_params, rnd):
 
 
         compute_dynamics(dyn_var, dyn_params, ham, ham_aux, compute_model, model_params, rnd, therm)
+
+        if dyn_params["debug_print_step"]:
+            # dyn_var and ham are mutated in place by compute_dynamics, so at
+            # this point they hold the state produced by *this* step.
+            debug_mod.print_step_debug(i, dyn_var, ham, dyn_params,
+                                       traj=dyn_params["debug_print_traj"])
 
         if _savers["txt_saver"] is not None:
             _savers["txt_saver"].save_data_txt(F"{prefix}", properties_to_save, "a", i)
