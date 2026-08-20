@@ -57,6 +57,7 @@ class CASSCF(ES_Strategy):
         unit: str = "Bohr",
         charge: int = 0,
         cas_list: Optional[List[int]] = None,
+        spin_multiplicity: int = 1,
     ) -> None:
         #setting up the initial state 
         self._mol: Optional[Any] = mol
@@ -67,6 +68,10 @@ class CASSCF(ES_Strategy):
         self._unit: str = unit  #default to Bohr, but can be set to Angstrom
         self._charge: int = int(charge)
         self._cas_list: Optional[List[int]] = cas_list
+        self._spin_multiplicity = int(spin_multiplicity)
+        if self._spin_multiplicity < 1:
+            raise ValueError("spin_multiplicity must be a positive integer")
+        self._spin = self._spin_multiplicity - 1
         self._geom: Optional[MolecularGeometry] = None
         self._state: CASSCF_States | None = None
         self._previous_state: CASSCF_States | None = None
@@ -80,6 +85,11 @@ class CASSCF(ES_Strategy):
         from a separate ``model_params["nstates"]`` entry.
         """
         return int(self._nroots)
+
+    @property
+    def spin_multiplicity(self) -> int:
+        """Spin multiplicity ``2*S+1`` represented by this strategy."""
+        return self._spin_multiplicity
 
     def _n_total(self) -> int:
         """Number of electronic states requested for the current calculation."""
@@ -98,7 +108,8 @@ class CASSCF(ES_Strategy):
 
         prev_state = self.get_previous_state()
         if prev_state is None or prev_state.mf is None:
-            self._state.mf = scf.RHF(self._mol).run(verbose=0)
+            scf_cls = scf.RHF if self._spin == 0 else scf.ROHF
+            self._state.mf = scf_cls(self._mol).run(verbose=0)
             return
 
         try:
@@ -108,17 +119,20 @@ class CASSCF(ES_Strategy):
 
         if prev_dm is not None:
             try:
-                self._state.mf = scf.RHF(self._mol).run(dm0=prev_dm, verbose=0)
+                scf_cls = scf.RHF if self._spin == 0 else scf.ROHF
+                self._state.mf = scf_cls(self._mol).run(dm0=prev_dm, verbose=0)
                 return
             except Exception:
                 pass
 
         try:
-            mf = scf.RHF(self._mol)
+            scf_cls = scf.RHF if self._spin == 0 else scf.ROHF
+            mf = scf_cls(self._mol)
             mf.init_guess_by_mo(prev_state.mf.mo_coeff)
             self._state.mf = mf.run(verbose=0)
         except Exception:
-            self._state.mf = scf.RHF(self._mol).run(verbose=0)
+            scf_cls = scf.RHF if self._spin == 0 else scf.ROHF
+            self._state.mf = scf_cls(self._mol).run(verbose=0)
 
     def set_geom(self, geom: MolecularGeometry) -> None:
         self._geom = geom
@@ -139,7 +153,7 @@ class CASSCF(ES_Strategy):
             basis=self._basis,
             unit=self._unit,
             charge=charge,
-            spin=0,
+            spin=self._spin,
         )
 
         self._run_scf()
@@ -176,7 +190,14 @@ class CASSCF(ES_Strategy):
         )
 
         mc = mcscf.CASSCF(self._state.mf, self._norbcas, self._nelecas)
-        mc.fcisolver = fci.direct_spin0.FCI(self._state.mol)
+        if self._spin == 0:
+            mc.fcisolver = fci.direct_spin0.FCI(self._state.mol)
+        else:
+            mc.fcisolver = fci.direct_spin1.FCI(self._state.mol)
+            target_s = 0.5 * self._spin
+            mc.fcisolver = fci.addons.fix_spin_(
+                mc.fcisolver, ss=target_s * (target_s + 1.0)
+            )
         mc.fcisolver.nroots = self._nroots
         if self._nroots > 1:
             mc = mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
@@ -220,7 +241,10 @@ class CASSCF(ES_Strategy):
         self._state.eris = None   # new wavefunction -> the cached integrals are stale
 
         #write the energies to the H_el attribute of the state object and return the energies as a numpy array
-        self._state.H_el = np.asarray(mc.e_states, dtype=np.float64)
+        energies = getattr(mc, "e_states", None)
+        if energies is None:
+            energies = [mc.e_tot]
+        self._state.H_el = np.asarray(energies, dtype=np.float64)
         return self._state.H_el
 
     #gradient 
@@ -245,7 +269,7 @@ class CASSCF(ES_Strategy):
         """Nuclear gradients for ``roots``, returned in the order requested."""
         mc = self._state.mc
         roots = list(roots)
-        n_avail = len(mc.e_states)
+        n_avail = self._nroots
         for root in roots:
             if not 0 <= root < n_avail:
                 raise IndexError(
@@ -253,6 +277,13 @@ class CASSCF(ES_Strategy):
                 )
 
         # 1. compute the intermediate shared by every root
+        if self._nroots == 1:
+            grad = mc.nuc_grad_method()
+            return [
+                np.asarray(grad.kernel(), dtype=np.float64)
+                for _ in roots
+            ]
+
         grad = self._share_eris(mc.nuc_grad_method(state=0))
 
         # 2. per root
@@ -302,50 +333,59 @@ class CASSCF(ES_Strategy):
 
         ao_overlap = self._compute_ao_overlap(prev_state, curr_state)
 
-        # Solve a CASCI in the CONVERGED CASSCF orbitals at each geometry, and
-        # take the active block from mc.mo_coeff.  Both halves matter:
-        #
-        #  * the orbitals must come from mc, not mf.  mf.mo_coeff has neither
-        #    the cas_list selection nor the CASSCF optimization, so a
-        #    cas_list-driven run would silently overlap a different active
-        #    space than the one compute_H_el converged.
-        #  * the active block is mo_coeff[:, ncore:ncore+ncas], not
-        #    mo_coeff[:, :ncas].  Those agree only when ncore == 0; for LiF
-        #    CAS(2,5) (ncore = 5) they are orthogonal to 1e-15.
-        #
-        # The CI vectors are re-solved rather than taken from mc.ci because
-        # PySCF canonicalizes the orbitals at the end of a state-averaged
-        # CASSCF and leaves mc.ci in the pre-canonicalization basis; pairing
-        # mc.ci with mc.mo_coeff yields a non-unitary overlap (|S^T S - I| ~ h,
-        # a spurious non-zero diagonal in dS/dR, and ~50% errors in the NACs on
-        # HeH+).  A self-overlap S(state, state) cannot detect that -- the
-        # mismatch cancels between bra and ket and the identity comes out
-        # perfectly -- which is what makes it worth stating here.
-        def _casci_roots_and_active(state):
-            mc = state.mc
-            if mc is None:
-                raise ValueError(
-                    "Time overlaps need a converged CASSCF at both geometries; "
-                    "call compute_H_el before compute_time_overlap."
-                )
-            casci = mcscf.CASCI(state.mf, mc.ncas, mc.nelecas)
-            casci.fcisolver = fci.direct_spin0.FCISolver(state.mol)
-            casci.fcisolver.nroots = nroots
-            h1, _ = casci.get_h1eff(mc.mo_coeff)
-            h2 = casci.get_h2cas(mc.mo_coeff)
-            _, roots = casci.fcisolver.kernel(
-                h1, h2, casci.ncas, casci.nelecas, nroots=nroots
+        # Always build CASCI roots and matching active-space MO blocks for both
+        # geometries.  State-averaged CASSCF `mc.ci` representations can differ
+        # (and be incompatible with `fci.addons.overlap`'s expected transform),
+        # so recomputing CASCI ensures consistent CI + one-particle overlap.
+        prev_casci = mcscf.CASCI(prev_state.mf, self._norbcas, self._nelecas)
+        solver_cls = fci.direct_spin0.FCISolver if self._spin == 0 else fci.direct_spin1.FCISolver
+        prev_casci.fcisolver = solver_cls(prev_state.mol)
+        if self._spin != 0:
+            target_s = 0.5 * self._spin
+            prev_casci.fcisolver = fci.addons.fix_spin_(
+                prev_casci.fcisolver, ss=target_s * (target_s + 1.0)
             )
-            if isinstance(roots, np.ndarray):
-                roots = [roots]
-            active = np.asarray(mc.mo_coeff)[:, mc.ncore : mc.ncore + mc.ncas]
-            return [np.asarray(vec) for vec in roots[:nroots]], active
+        prev_casci.fcisolver.nroots = nroots
+        h1prev, _ = prev_casci.get_h1eff(prev_casci.mo_coeff)
+        h2prev = prev_casci.get_h2cas(prev_casci.mo_coeff)
+        _, prev_roots_raw = prev_casci.fcisolver.kernel(
+            h1prev,
+            h2prev,
+            prev_casci.ncas,
+            prev_casci.nelecas,
+            nroots=nroots,
+        )
 
-        prev_roots, prev_act = _casci_roots_and_active(prev_state)
-        curr_roots, curr_act = _casci_roots_and_active(curr_state)
+        curr_casci = mcscf.CASCI(curr_state.mf, self._norbcas, self._nelecas)
+        curr_casci.fcisolver = solver_cls(curr_state.mol)
+        if self._spin != 0:
+            target_s = 0.5 * self._spin
+            curr_casci.fcisolver = fci.addons.fix_spin_(
+                curr_casci.fcisolver, ss=target_s * (target_s + 1.0)
+            )
+        curr_casci.fcisolver.nroots = nroots
+        h1curr, _ = curr_casci.get_h1eff(curr_casci.mo_coeff)
+        h2curr = curr_casci.get_h2cas(curr_casci.mo_coeff)
+        _, curr_roots_raw = curr_casci.fcisolver.kernel(
+            h1curr,
+            h2curr,
+            curr_casci.ncas,
+            curr_casci.nelecas,
+            nroots=nroots,
+        )
 
-        # s12_mo[p, q] = <prev_p | curr_q>, the convention
-        # fci.addons.overlap(bra, ket, s=...) expects.
+        if nroots == 1:
+            prev_roots = [np.asarray(prev_roots_raw)]
+            curr_roots = [np.asarray(curr_roots_raw)]
+        else:
+            prev_roots = [np.asarray(vec) for vec in prev_roots_raw[:nroots]]
+            curr_roots = [np.asarray(vec) for vec in curr_roots_raw[:nroots]]
+        prev_act = np.asarray(prev_casci.mo_coeff)[
+            :, prev_casci.ncore : prev_casci.ncore + prev_casci.ncas
+        ]
+        curr_act = np.asarray(curr_casci.mo_coeff)[
+            :, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas
+        ]
         s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
 
         overlap = np.zeros((nroots, nroots), dtype=float)
@@ -355,7 +395,7 @@ class CASSCF(ES_Strategy):
                     prev_roots[i],
                     curr_roots[j],
                     self._norbcas,
-                    self._nelecas if isinstance(self._nelecas, int) else sum(self._nelecas),
+                    self._nelecas,
                     s=s12_mo,
                 )
 
@@ -376,6 +416,9 @@ class CASSCF(ES_Strategy):
         mc = self._state.mc
         nstates = self._n_total()
         natm = int(self._mol.natm)
+
+        if nstates == 1:
+            return np.zeros((1, 1, natm, 3), dtype=np.float64)
 
         # 1. shared by every pair
         nacs = self._share_eris(mc.nac_method())

@@ -24,6 +24,7 @@ import scipy.linalg
 from libra_py.workflows.nbra import step2_many_body
 import scipy.io as io
 import libra_py.citools.ci as ci
+import libra_py.citools.interfaces as interfaces
 
 if sys.platform == "cygwin":
     from cyglibra_core import *
@@ -705,7 +706,7 @@ def cp2k_distribute(istep, fstep, nsteps_this_job, cp2k_positions, cp2k_input, c
     os.chdir("../../")
 
 
-def read_trajectory_xyz_file(file_name: str, step: int):
+def read_trajectory_xyz_file(file_name: str, step: int, output_directory=None):
     """
     This function reads the trajectory of a molecular dynamics .xyz file and
     extract the 'step' th step then writes it to coord-step.xyz file. This function
@@ -715,8 +716,13 @@ def read_trajectory_xyz_file(file_name: str, step: int):
     Args:
 
         file_name (string): The trajectory .xyz file name.
-            step (integer): The desired time to extract its .xyz
-                            coordinates which starts from zero.
+
+        step (integer): The desired time to extract its .xyz coordinates,
+            starting from zero.
+
+        output_directory (string or path-like, optional): Directory in which
+            to write ``coord-<step>.xyz``. If omitted, the current directory
+            is used for backward compatibility.
 
     Returns:
 
@@ -733,8 +739,14 @@ def read_trajectory_xyz_file(file_name: str, step: int):
 
     q = MATRIX(3 * number_of_atoms, 1)
 
-    # Write the coordinates of the 't' th step in file coord-t.xyz
-    f = open('coord-%d' % step + '.xyz', 'w')
+    # Write the coordinates of the requested step. Keep the historical
+    # current-directory default, while allowing callers such as tests to
+    # contain generated files in a dedicated working directory.
+    if output_directory is None:
+        output_directory = "."
+    os.makedirs(output_directory, exist_ok=True)
+    coord_filename = os.path.join(os.fspath(output_directory), f"coord-{step}.xyz")
+    f = open(coord_filename, 'w')
 
     # This is used to skip the first two lines for each time step.
     n = number_of_atoms + 2
@@ -2761,6 +2773,18 @@ def cp2k_compute_adi(q, params, full_id):
             Number of electrons in the active space. If not provided,
             the full orbital space is used.
 
+        multiplicity : int, default=1
+            Spin multiplicity ``2*S+1``.
+
+        spin_projection : int or float, optional
+            Selected ``Ms`` component. Defaults to the highest-weight
+            component ``Ms=S``.
+
+        reference_det : iterable of int, optional
+            Explicit reference determinant in signed spin-orbital notation.
+            If omitted, it is inferred from CP2K's electron count and the
+            requested multiplicity.
+
         working_directory_prefix : str, default="wd"
             Prefix for trajectory-specific working directories.
 
@@ -2831,9 +2855,8 @@ def cp2k_compute_adi(q, params, full_id):
         * If `nelec_act_space` is None → full orbital space is used.
         * Otherwise, a truncated space around HOMO is constructed.
 
-    - The function assumes:
-        * Closed-shell (restricted) calculations (`isUKS=False`)
-        * Real-valued CI overlaps
+    - Singlet and open-shell references use the same spin-adapted ``citools``
+      overlap machinery. Real-valued CI overlaps are assumed.
 
     - NACVs (analytic derivative couplings) and forces are currently disabled
       but can be enabled via the commented sections.
@@ -2879,6 +2902,10 @@ def cp2k_compute_adi(q, params, full_id):
 
     nelec_act_space = params.get("nelec_act_space", None)
     lowest_orbital = params["lowest_orbital"]
+    multiplicity = int(params.get("multiplicity", 1))
+    spin, spin_projection = interfaces.spin_quantum_numbers(
+        multiplicity, params.get("spin_projection", None)
+    )
 
     # ================= Read parameters =================
     dt = float(params.get("dt", 41.0))
@@ -2903,10 +2930,27 @@ def cp2k_compute_adi(q, params, full_id):
         "number_of_states": nstates,
         "logfile_name": params["logfile_name"],
         "ci_threshold": params.get("ci_threshold", 0.001),
-        "isUKS": False,
+        "isUKS": bool(params.get("isUKS", False)),
     }
 
     info, data_curr = read_cp2k_tddfpt_log_file(read_params)
+    reference_det = params.get("reference_det", None)
+    if reference_det is None:
+        reference_det = interfaces.reference_from_electron_count(
+            info["nelec"], multiplicity
+        )
+    else:
+        reference_det = list(reference_det)
+
+    # Preserve explicit CP2K alpha/beta labels. For restricted open-shell
+    # output, an excitation into an alpha-only SOMO must be beta.
+    for state, spin_labels in zip(data_curr[1], data_curr[3]):
+        for iconf, (occ, vir) in enumerate(state):
+            label = spin_labels[iconf].lower() if iconf < len(spin_labels) else ""
+            if label.startswith("bet") or (vir in reference_det and -vir not in reference_det):
+                state[iconf] = [-abs(occ), -abs(vir)]
+            else:
+                state[iconf] = [abs(occ), abs(vir)]
     # print(f"info = {info}")
 
     # ================= Previous electronic data =================
@@ -2946,26 +2990,28 @@ def cp2k_compute_adi(q, params, full_id):
     if nelec_act_space is None:
         active_space = list(orbital_space)
     else:
-        min_indx = info["nocc"] - nelec_act_space // 2 + 1
-
-        if min_indx > info["min_occ"]:
-            min_elec = ((info["nocc"] - info["min_occ"]) + 1) * 2
-            raise ValueError(f"The `nelec_act_space` should be at least {min_elec}")
-
+        occupied = sorted(abs(orb) for orb in reference_det)
+        if nelec_act_space < 1 or nelec_act_space > len(occupied):
+            raise ValueError(f"nelec_act_space must be between 1 and {len(occupied)}")
+        min_indx = occupied[-nelec_act_space]
         active_space = list(range(min_indx, info["max_vir"] + 1))
 
     # ================= Compute CI time-overlaps =================
     highest_orbital = lowest_orbital + ndim - 1
 
     ovlp_params = {
-        "homo_indx": info["nocc"],
-        "nocc": info["nocc"] - lowest_orbital,
-        "nvirt": highest_orbital - info["nocc"],
-        "nelec": (info["nocc"] - lowest_orbital + 1) * 2,
+        "homo_indx": max(abs(orb) for orb in reference_det),
+        "nocc": max(abs(orb) for orb in reference_det) - lowest_orbital,
+        "nvirt": highest_orbital - max(abs(orb) for orb in reference_det),
+        "nelec": len(reference_det),
         "nstates": nstates,
         "active_space": active_space,
         "orbital_space": orbital_space,
+        "spin": spin,
+        "spin_projection": spin_projection,
     }
+    if multiplicity != 1 or params.get("reference_det", None) is not None:
+        ovlp_params["reference_det"] = reference_det
 
     # print(f"orbital_space: {orbital_space}")
     # print(f"active_space: {active_space}")

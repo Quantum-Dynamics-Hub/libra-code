@@ -40,11 +40,19 @@ the spin-orbital overlap matrix has zero alpha/beta off-diagonal blocks.
    used by package interfaces: build Slater-determinant overlaps, transform
    them to spin-adapted CSFs, then contract with CI amplitudes.
 
+4. `04_spin_multiplet_overlaps.py`
+
+   Builds doublet, singlet, and triplet examples with one to three spatial
+   orbitals. It prints the Slater-determinant basis, the SD-to-CSF
+   transformation, and the resulting overlap matrices. The open-shell
+   examples explicitly verify that no closed-shell reference determinant was
+   introduced.
+
 Run from the repository root with:
 
 ```bash
-PYTHONPATH=src python examples/citools/01_slater_determinant_overlaps.py
-PYTHONPATH=src python examples/citools/02_spin_adapted_csfs.py
-PYTHONPATH=src python examples/citools/03_ci_time_overlap.py
+PYTHONPATH=src python examples/libra_py/citools/01_slater_determinant_overlaps.py
+PYTHONPATH=src python examples/libra_py/citools/02_spin_adapted_csfs.py
+PYTHONPATH=src python examples/libra_py/citools/03_ci_time_overlap.py
+PYTHONPATH=src python examples/libra_py/citools/04_spin_multiplet_overlaps.py
 ```
-

@@ -29,6 +29,56 @@ from . import slatdet as sd
 
 #from liblibra_core import MATRIX, CMATRIX
 
+
+def spin_quantum_numbers(multiplicity, spin_projection=None):
+    """Validate ``2*S+1`` and return ``(S, Ms)``."""
+    multiplicity = int(multiplicity)
+    if multiplicity < 1:
+        raise ValueError("multiplicity must be a positive integer")
+    spin = 0.5 * (multiplicity - 1)
+    if spin_projection is None:
+        spin_projection = spin
+    spin_projection = float(spin_projection)
+    if (
+        abs(spin_projection) > spin
+        or not np.isclose(spin - spin_projection, round(spin - spin_projection))
+    ):
+        raise ValueError(
+            f"Ms={spin_projection} is not a component of multiplicity {multiplicity}"
+        )
+    return spin, spin_projection
+
+
+def make_open_shell_reference(n_doubly, multiplicity):
+    """Build the highest-Ms determinant from paired and unpaired orbitals."""
+    n_doubly = int(n_doubly)
+    multiplicity = int(multiplicity)
+    if n_doubly < 0 or multiplicity < 1:
+        raise ValueError("n_doubly must be non-negative and multiplicity positive")
+    reference = [
+        spin_orbital
+        for orbital in range(1, n_doubly + 1)
+        for spin_orbital in (orbital, -orbital)
+    ]
+    reference.extend(range(n_doubly + 1, n_doubly + multiplicity))
+    return reference
+
+
+def reference_from_electron_count(nelec, multiplicity, highest_occupied=None):
+    """Build a high-spin reference consistent with electron count and multiplicity."""
+    nelec = int(nelec)
+    multiplicity = int(multiplicity)
+    nunpaired = multiplicity - 1
+    if nelec < nunpaired or (nelec - nunpaired) % 2:
+        raise ValueError(
+            f"nelec={nelec} is incompatible with multiplicity={multiplicity}"
+        )
+    n_doubly = (nelec - nunpaired) // 2
+    reference = make_open_shell_reference(n_doubly, multiplicity)
+    if highest_occupied is not None and max(map(abs, reference)) != highest_occupied:
+        raise ValueError("Electron count, multiplicity, and highest occupied orbital disagree")
+    return reference
+
 def find_matches(
     config: List[int],
     possible_configs: List[Tuple[List[int], float]],
@@ -738,7 +788,7 @@ def ci_amplitudes_mtx(nstates, common_sd_basis, configs, ci_amplitudes):
 
 
 
-def sd_and_csf_overlaps_singlet(
+def sd_and_csf_overlaps(
     st_mo,
     lowest_orbital,
     highest_orbital,
@@ -749,16 +799,15 @@ def sd_and_csf_overlaps_singlet(
     S=0,
     Ms=0,
     max_unpaired=0,
+    reference_det=None,
 ):
     """
     Compute Slater-determinant (SD) and configuration-state-function (CSF)
-    overlap matrices for singlet excitations using molecular-orbital
-    time-overlaps.
+    overlap matrices for spin-adapted single excitations.
 
     This function constructs a reference determinant and a set of singly
     excited determinants defined by `common_sd_basis`, maps them into a
-    spin-adapted singlet CSF basis, and computes both SD and CSF overlap
-    matrices.
+    spin-adapted CSF basis, and computes both SD and CSF overlap matrices.
 
     Parameters
     ----------
@@ -787,15 +836,20 @@ def sd_and_csf_overlaps_singlet(
         Spatial orbital indices (1-based) defining the active space for
         spin adaptation. If None, all available orbitals are used.
 
-    S : int, optional
+    S : int or float, optional
         Total spin quantum number (default: 0, singlet).
 
-    Ms : int, optional
+    Ms : int or float, optional
         Spin projection quantum number (default: 0).
 
     max_unpaired : int, optional
         Maximum number of unpaired electrons allowed (currently unused;
         included for interface consistency).
+
+    reference_det : iterable of int, optional
+        Explicit reference determinant in signed spin-orbital notation. This
+        enables open-shell references and odd electron counts. If omitted, a
+        closed-shell determinant is generated from `nelec` and `homo_indx`.
 
     Returns
     -------
@@ -813,7 +867,8 @@ def sd_and_csf_overlaps_singlet(
 
     Notes
     -----
-    - The reference determinant is assumed to be a closed-shell singlet.
+    - If `reference_det` is omitted, the generated reference is a
+      closed-shell singlet.
     - Only singly excited determinants relative to the reference are
       constructed.
     - Determinants are mapped to spin-adapted CSFs via a transformation
@@ -827,11 +882,18 @@ def sd_and_csf_overlaps_singlet(
     # ==================================================================
     # Basic consistency checks
     # ==================================================================
-    if nelec % 2 != 0:
-        raise ValueError("Closed-shell singlet requires an even number of electrons")
-
-    if S != 0 or Ms != 0:
-        raise ValueError("This routine is restricted to singlet states (S=0, Ms=0)")
+    closed_shell_reference = reference_det is None
+    if closed_shell_reference and nelec % 2 != 0:
+        raise ValueError("A generated closed-shell reference requires an even number of electrons")
+    if closed_shell_reference and S not in (0, 1):
+        raise ValueError("A closed-shell reference can only form singlet or triplet single excitations")
+    if abs(Ms) > S:
+        raise ValueError("Ms must satisfy -S <= Ms <= S")
+    if closed_shell_reference and S == 1 and Ms != 0:
+        raise ValueError(
+            "Closed-shell ground-state overlaps currently use the Ms=0 "
+            "component of the triplet manifold"
+        )
 
     if lowest_orbital > highest_orbital:
         raise ValueError("lowest_orbital must be <= highest_orbital")
@@ -865,7 +927,10 @@ def sd_and_csf_overlaps_singlet(
     # ==================================================================
     # Build reference determinant
     # ==================================================================
-    gs = sd.make_ref_det(nelec, homo_indx)
+    if closed_shell_reference:
+        gs = sd.make_ref_det(nelec, homo_indx)
+    else:
+        gs = list(reference_det)
 
     if len(gs) != nelec:
         raise ValueError("Reference determinant does not contain nelec electrons")
@@ -901,17 +966,32 @@ def sd_and_csf_overlaps_singlet(
     # ==================================================================
     # Spin adaptation: SD → CSF
     # ==================================================================
-    mapped_basis, T = configs_and_T_matrix_singlet(
-        configs0_raw,
-        active_space,
-        orbital_space,
-        nelec,
-        S,
-        Ms,
+    build_spin_basis = configs_and_T_matrix
+    if closed_shell_reference and S == 0:
+        build_spin_basis = configs_and_T_matrix_singlet
+    mapped_basis, T = build_spin_basis(
+        configs0_raw, active_space, orbital_space, nelec, S, Ms,
     )
 
-    if T.shape[0] != 2*(len(configs0_raw) - 1) + 1 :
+    if closed_shell_reference and T.shape[0] != 2*(len(configs0_raw) - 1) + 1:
         raise ValueError("Transformation matrix T has inconsistent dimensions")
+
+    # For a triplet excited-state manifold, the closed-shell reference is not
+    # part of the (S=1, Ms) CSF sector.  Keep it as the first, singlet ground-
+    # state column and append the triplet CSFs after it.
+    if closed_shell_reference and S == 1:
+        ground = coo_matrix(
+            ([1.0 + 0.0j], ([0], [0])), shape=(T.shape[0], 1),
+            dtype=np.complex128,
+        )
+        T = sparse.hstack((ground, T), format="coo")
+
+    expected_ncsf = len(configs0_raw)
+    if T.shape[1] != expected_ncsf:
+        raise ValueError(
+            f"Expected {expected_ncsf} spin-adapted states, got {T.shape[1]}; "
+            "check that the excitation list contains unique configurations"
+        )
 
     dets = list(mapped_basis)
 
@@ -948,3 +1028,16 @@ def sd_and_csf_overlaps_singlet(
     st_csf = T.T @ st_sd @ T
 
     return st_csf, st_sd
+
+
+def sd_and_csf_overlaps_singlet(
+    st_mo, lowest_orbital, highest_orbital, nelec, homo_indx,
+    common_sd_basis, _active_space=None, S=0, Ms=0, max_unpaired=0,
+):
+    """Backward-compatible singlet wrapper for :func:`sd_and_csf_overlaps`."""
+    if S != 0 or Ms != 0:
+        raise ValueError("This routine is restricted to singlet states (S=0, Ms=0)")
+    return sd_and_csf_overlaps(
+        st_mo, lowest_orbital, highest_orbital, nelec, homo_indx,
+        common_sd_basis, _active_space, S, Ms, max_unpaired,
+    )

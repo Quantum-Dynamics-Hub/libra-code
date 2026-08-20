@@ -61,3 +61,21 @@ def test_equivalent_active_space_constructions_produce_same_ci_overlap():
     for st_ci in results[1:]:
         assert np.allclose(st_ci, ref_ci, atol=1e-12)
 
+
+def test_triplet_ci_overlap_uses_spin_adapted_excited_state():
+    params = dict(
+        nelec=2,
+        nocc=0,
+        nvirt=1,
+        homo_indx=1,
+        nstates=2,
+        active_space=None,
+        spin=1,
+        spin_projection=0,
+    )
+    data = [[], [[[1, 2]]], [[1.0]]]
+
+    st_ci = overlap(np.eye(4), data, data, params)
+
+    assert st_ci.shape == (2, 2)
+    assert np.allclose(st_ci, np.eye(2), atol=1e-12)

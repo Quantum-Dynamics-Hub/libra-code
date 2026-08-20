@@ -1,0 +1,11 @@
+# Libra dynamics results and plots
+/FSSH2_/
+/trajectories/
+
+# OpenMolcas and model working directories
+/wd_molcas_*/
+/al3/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
