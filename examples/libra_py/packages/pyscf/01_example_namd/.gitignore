@@ -1,4 +1,4 @@
-/FSSH2_/
-/trajectories/
-__pycache__/
+**/FSSH2_/
+**/trajectories/
+**/__pycache__/
 *.py[cod]
