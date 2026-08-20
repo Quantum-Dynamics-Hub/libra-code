@@ -30,7 +30,12 @@ from typing import Any, List, Optional, Sequence
 import numpy as np
 from pyscf import dft, gto, scf, tdscf
 
-from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
+from libra_py.packages.pyscf.interfaces import (
+    ES_Request,
+    ES_Result,
+    ES_Strategy,
+    MolecularGeometry,
+)
 
 # Electron masses per amu; Libra nuclear dynamics use atomic units throughout.
 AMU = 1822.888486209
@@ -54,7 +59,7 @@ class TDDFT_States:
     td: Optional[Any] = None
     mo_coeff: Optional[np.ndarray] = None
     dm: Optional[np.ndarray] = None
-    amplitudes: Optional[List[np.ndarray]] = None
+    amplitudes: Optional[List[Any]] = None
     energies: Optional[np.ndarray] = None
 
 
@@ -136,6 +141,16 @@ class TDDFT(ES_Strategy):
     @property
     def nstates(self) -> int:
         return self._nstates
+
+    @property
+    def nroots(self) -> int:
+        """Number of spin-free roots, including the reference state."""
+        return self._nstates
+
+    @property
+    def spin_multiplicity(self) -> int:
+        """Spin multiplicity ``2*S+1`` represented by this strategy."""
+        return self._spin + 1
 
     @property
     def natoms(self) -> int:
@@ -239,7 +254,8 @@ class TDDFT(ES_Strategy):
         if prev_state is not None and prev_state.mol is not None:
             self._ao_overlap = _compute_ao_overlap(prev_state.mol, self._mol)
 
-        self._mf = dft.RKS(self._mol, xc=self._xc)
+        dft_cls = dft.RKS if self._spin == 0 else dft.UKS
+        self._mf = dft_cls(self._mol, xc=self._xc)
         self._mf.grids.level = self._grid_level
         self._mf.conv_tol = self._conv_tol
 
@@ -254,10 +270,11 @@ class TDDFT(ES_Strategy):
         if not self._mf.converged:
             print("  WARNING: TDDFT SCF not converged")
 
-        nocc = int((self._mf.mo_occ > 0).sum())
-        nmo = self._mf.mo_coeff.shape[1]
-        self._occ = np.arange(nocc)
-        self._vir = np.arange(nocc, nmo)
+        if self._spin == 0:
+            nocc = int((self._mf.mo_occ > 0).sum())
+            nmo = self._mf.mo_coeff.shape[1]
+            self._occ = np.arange(nocc)
+            self._vir = np.arange(nocc, nmo)
 
         self._state = TDDFT_States(
             mol=self._mol,
@@ -284,16 +301,18 @@ class TDDFT(ES_Strategy):
         """Return an independent snapshot of the full strategy state."""
         return pycopy.deepcopy(self)
 
+    def snapshot_state(self) -> None:
+        """Save the current electronic structure for the next time overlap."""
+        self._previous_state = pycopy.deepcopy(self._state)
+
     def compute_result(
         self,
         geom: MolecularGeometry,
         request: ES_Request,
-        result,
-        previous: Optional[ES_Strategy] = None,
-    ) -> None:
-        """Store the active request, then run the shared sequencing contract."""
+    ) -> ES_Result:
+        """Store the active request, then use the shared sequencing contract."""
         self._request = request
-        super().compute_result(geom, request, result, previous=previous)
+        return super().compute_result(geom, request)
 
     # ------------------------------------------------------------------ TDA/TDDFT
 
@@ -323,6 +342,12 @@ class TDDFT(ES_Strategy):
                     pass
 
         if self._td is None:
+            if self._nexc == 0:
+                state = self.get_state()
+                if state is not None:
+                    state.amplitudes = []
+                    state.energies = np.asarray([float(self._mf.e_tot)])
+                return
             if self._use_tda:
                 self._td = tdscf.TDA(self._mf)
             else:
@@ -345,17 +370,23 @@ class TDDFT(ES_Strategy):
                 state.dm = np.asarray(self._mf.make_rdm1())
 
     @staticmethod
-    def _amplitudes(td: Any) -> List[np.ndarray]:
+    def _amplitudes(td: Any) -> List[Any]:
         """Normalized TDA/TDDFT X amplitudes as (nocc, nvir) arrays."""
-        X: List[np.ndarray] = []
+        X: List[Any] = []
         for n in range(len(td.e)):
-            x = np.asarray(td.xy[n][0])
-            norm = np.linalg.norm(x)
-            X.append(x / norm if norm > 0 else x)
+            x = td.xy[n][0]
+            if isinstance(x, (tuple, list)):
+                blocks = tuple(np.asarray(block) for block in x)
+                norm = np.sqrt(sum(np.linalg.norm(block) ** 2 for block in blocks))
+                X.append(tuple(block / norm if norm > 0 else block for block in blocks))
+            else:
+                x = np.asarray(x)
+                norm = np.linalg.norm(x)
+                X.append(x / norm if norm > 0 else x)
         return X
 
-    def compute_H_el(self, previous: Optional[ES_Strategy] = None) -> np.ndarray:
-        self._ensure_td(previous)
+    def compute_H_el(self) -> np.ndarray:
+        self._ensure_td()
         n_total = self._request.n_singlets if self._request is not None else self._nstates
         energies = self._state.energies if self._state is not None else None
         if energies is None:
@@ -369,18 +400,32 @@ class TDDFT(ES_Strategy):
     def compute_energy(self, root: int) -> float:
         return float(self.compute_H_el()[root])
 
-    def compute_gradient(self, root: int = 0) -> np.ndarray:
+    def compute_gradient(self, roots: Sequence[int]) -> list[np.ndarray]:
+        """Nuclear gradients for ``roots``, returned in request order."""
         self._ensure_td()
-        if root < 0 or root >= self._nstates:
-            raise IndexError(
-                f"Requested TDDFT root {root}, but only {self._nstates} states are available."
-            )
-        if root == 0:
-            return np.asarray(self._mf.nuc_grad_method().kernel(), dtype=np.float64)
+        roots = list(roots)
+        for root in roots:
+            if root < 0 or root >= self._nstates:
+                raise IndexError(
+                    f"Requested TDDFT root {root}, but only "
+                    f"{self._nstates} states are available."
+                )
 
-        tdg = self._td.nuc_grad_method()
-        # PySCF excited-state gradient indexing is 1-based over the LR roots.
-        return np.asarray(tdg.kernel(state=root), dtype=np.float64)
+        ground_gradient = None
+        excited_gradient = None
+        gradients = []
+        for root in roots:
+            if root == 0:
+                if ground_gradient is None:
+                    ground_gradient = self._mf.nuc_grad_method()
+                gradient = ground_gradient.kernel()
+            else:
+                if excited_gradient is None:
+                    excited_gradient = self._td.nuc_grad_method()
+                # PySCF excited-state gradient indexing is 1-based over LR roots.
+                gradient = excited_gradient.kernel(state=root)
+            gradients.append(np.asarray(gradient, dtype=np.float64))
+        return gradients
 
     # ------------------------------------------------------------------ overlaps
 
@@ -417,6 +462,11 @@ class TDDFT(ES_Strategy):
                 f"{len(left.amplitudes)} left and {len(right.amplitudes)} right are available."
             )
 
+        if np.asarray(left.mo_coeff).ndim == 3:
+            return self._unrestricted_cis_overlap(
+                left, right, ao_overlap, nstates
+            )
+
         s_mo = left.mo_coeff.T @ ao_overlap @ right.mo_coeff
         nocc = left.amplitudes[0].shape[0]
         nmo = s_mo.shape[0]
@@ -447,6 +497,54 @@ class TDDFT(ES_Strategy):
         return st
 
     @staticmethod
+    def _unrestricted_configurations(amplitude, nmo, nocc):
+        """Return determinant coefficients and occupations for one LR state."""
+        occ_a = tuple(range(nocc[0]))
+        occ_b = tuple(range(nocc[1]))
+        if amplitude is None:
+            return [(1.0, occ_a, occ_b)]
+        configs = []
+        for spin, block in enumerate(amplitude):
+            for i in range(block.shape[0]):
+                for a in range(block.shape[1]):
+                    if abs(block[i, a]) < 1e-14:
+                        continue
+                    occupations = [list(occ_a), list(occ_b)]
+                    occupations[spin][i] = nocc[spin] + a
+                    configs.append(
+                        (float(block[i, a]), tuple(occupations[0]), tuple(occupations[1]))
+                    )
+        return configs
+
+    def _unrestricted_cis_overlap(self, left, right, ao_overlap, nstates):
+        """Factorized determinant overlap for UKS response amplitudes."""
+        left_mo = np.asarray(left.mo_coeff)
+        right_mo = np.asarray(right.mo_coeff)
+        s_mo = tuple(
+            left_mo[spin].T @ ao_overlap @ right_mo[spin]
+            for spin in range(2)
+        )
+        nmo = (left_mo[0].shape[1], left_mo[1].shape[1])
+        nocc = tuple(int(np.count_nonzero(left.mf.mo_occ[spin])) for spin in range(2))
+        left_states = [None] + list(left.amplitudes[: nstates - 1])
+        right_states = [None] + list(right.amplitudes[: nstates - 1])
+        overlap = np.zeros((nstates, nstates), dtype=float)
+        for i, amplitude_i in enumerate(left_states):
+            configs_i = self._unrestricted_configurations(amplitude_i, nmo, nocc)
+            for j, amplitude_j in enumerate(right_states):
+                configs_j = self._unrestricted_configurations(amplitude_j, nmo, nocc)
+                value = 0.0
+                for coeff_i, occ_ia, occ_ib in configs_i:
+                    for coeff_j, occ_ja, occ_jb in configs_j:
+                        value += (
+                            coeff_i * coeff_j
+                            * np.linalg.det(s_mo[0][np.ix_(occ_ia, occ_ja)])
+                            * np.linalg.det(s_mo[1][np.ix_(occ_ib, occ_jb)])
+                        )
+                overlap[i, j] = value
+        return overlap
+
+    @staticmethod
     def _align_time_overlap_phases(overlap: np.ndarray, phase_tol: float) -> np.ndarray:
         """Flip columns only when the diagonal sign is well determined."""
         overlap = np.array(overlap, copy=True)
@@ -455,29 +553,23 @@ class TDDFT(ES_Strategy):
         sgn[sgn == 0.0] = 1.0
         return overlap * sgn[None, :]
 
-    def compute_time_overlap(self, right: "TDDFT") -> np.ndarray:
-        if not isinstance(right, TDDFT):
-            raise TypeError(f"right must be TDDFT, got {type(right).__name__}")
-
-        left_state = self.get_state()
-        right_state = right.get_state()
-        if left_state is None or right_state is None:
-            raise ValueError("Both TDDFT objects need completed states for time-overlap.")
-        if left_state.td is None:
-            self._ensure_td()
-            left_state = self.get_state()
-        if right_state.td is None:
-            right._ensure_td()
-            right_state = right.get_state()
-        if left_state is None or right_state is None:
-            raise ValueError("TDDFT states missing after ensuring LR calculation.")
-
-        nstates = self._time_overlap_nstates(right)
+    def compute_time_overlap(self, state1: object, state2: object) -> np.ndarray:
+        """Return ``<Psi(t)|Psi(t+dt)>`` from previous/current snapshots."""
+        if not isinstance(state1, TDDFT_States) or not isinstance(state2, TDDFT_States):
+            raise TypeError(
+                "state1/state2 must be TDDFT_States, got "
+                f"{type(state1).__name__} / {type(state2).__name__}."
+            )
+        current_state = state1
+        previous_state = state2
+        nstates = int(self._request.n_singlets) if self._request else self._nstates
         if nstates <= 0:
             raise ValueError(f"nstates must be positive, got {nstates}")
 
-        ao_overlap = self.compute_ao_overlap(right)
-        overlap = self._factorized_cis_overlap(left_state, right_state, ao_overlap, nstates)
+        ao_overlap = _compute_ao_overlap(previous_state.mol, current_state.mol)
+        overlap = self._factorized_cis_overlap(
+            previous_state, current_state, ao_overlap, nstates
+        )
         return self._align_time_overlap_phases(overlap, self._phase_tol)
 
     def compute_nac_vectors(self) -> np.ndarray:

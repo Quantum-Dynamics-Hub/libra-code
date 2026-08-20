@@ -74,16 +74,33 @@ class CISD(ES_Strategy):
         basis: str = "sto-3g",
         unit: str = "Angstrom",
         charge: int = 0,
+        spin_multiplicity: int = 1,
+        frozen: Optional[int | Sequence[int]] = None,
     ) -> None:
         self._mol: Optional[Any] = mol
         self._nroots: int = nroots
         self._basis: str = basis
         self._unit: str = unit
         self._charge: int = int(charge)
+        self._spin_multiplicity = int(spin_multiplicity)
+        if self._spin_multiplicity < 1:
+            raise ValueError("spin_multiplicity must be a positive integer")
+        self._spin = self._spin_multiplicity - 1
+        self._frozen = frozen
         self._geom: Optional[MolecularGeometry] = None
         self._request: Optional[ES_Request] = None
         self._state: Optional[CISD_States] = None
         self._previous_state: Optional[CISD_States] = None
+
+    @property
+    def nroots(self) -> int:
+        """Number of CISD roots represented by this strategy."""
+        return int(self._nroots)
+
+    @property
+    def spin_multiplicity(self) -> int:
+        """Spin multiplicity ``2*S+1`` represented by this strategy."""
+        return self._spin_multiplicity
 
     # --------------------------------------------------------------- settings
     def _n_total(self) -> int:
@@ -138,10 +155,13 @@ class CISD(ES_Strategy):
             basis=self._basis,
             unit=self._unit,
             charge=self._charge,
-            spin=0,
+            spin=self._spin,
         )
 
-        self._mf = scf.RHF(self._mol).run(verbose=0)
+        # UCISD gradients require canonical unrestricted orbitals; converting
+        # ROHF to UHF inside PySCF yields a non-canonical reference.
+        scf_cls = scf.RHF if self._spin == 0 else scf.UHF
+        self._mf = scf_cls(self._mol).run(verbose=0)
         self._state = CISD_States(mol=self._mol, mf=self._mf, myci=None)
 
     def get_geom(self) -> MolecularGeometry:
@@ -175,7 +195,9 @@ class CISD(ES_Strategy):
                 and self._ci.nroots == self._n_total()):
             return
         if self._ci is None:
-            self._ci = ci.cisd.CISD(self._mf)
+            # The public dispatcher selects RCISD for RHF and UCISD for the
+            # UHF open-shell references used by doublet/quartet manifolds.
+            self._ci = ci.CISD(self._mf, frozen=self._frozen)
         self._ci.nroots = self._n_total()
         self._ci.verbose = 0
         state = self.get_state()
@@ -278,8 +300,6 @@ class CISD(ES_Strategy):
 
 
         s12_ao = self._compute_ao_overlap(prev_state, curr_state)
-        s12_mo = reduce(np.dot, (prev_state.mf.mo_coeff.T, s12_ao, curr_state.mf.mo_coeff))
-
         prev_ci_list = self._as_ci_vector_list(prev_state.myci.ci) or []
         curr_ci_list = self._as_ci_vector_list(curr_state.myci.ci) or []
         if len(prev_ci_list) < nroots or len(curr_ci_list) < nroots:
@@ -289,16 +309,41 @@ class CISD(ES_Strategy):
             )
 
         nmo = curr_state.myci.nmo
-        nelec = curr_state.mol.nelectron // 2
+        nocc = curr_state.myci.nocc
+        unrestricted = isinstance(nocc, (tuple, list))
+        if unrestricted:
+            prev_mo = prev_state.myci.mo_coeff
+            curr_mo = curr_state.myci.mo_coeff
+            prev_mask = prev_state.myci.get_frozen_mask()
+            curr_mask = curr_state.myci.get_frozen_mask()
+            s12_mo = tuple(
+                prev_mo[spin][:, prev_mask[spin]].T
+                @ s12_ao
+                @ curr_mo[spin][:, curr_mask[spin]]
+                for spin in range(2)
+            )
+            overlap_function = ci.ucisd.overlap
+        else:
+            prev_mask = prev_state.myci.get_frozen_mask()
+            curr_mask = curr_state.myci.get_frozen_mask()
+            s12_mo = reduce(
+                np.dot,
+                (
+                    prev_state.myci.mo_coeff[:, prev_mask].T,
+                    s12_ao,
+                    curr_state.myci.mo_coeff[:, curr_mask],
+                ),
+            )
+            overlap_function = ci.cisd.overlap
 
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
-                overlap[i, j] = ci.cisd.overlap(
+                overlap[i, j] = overlap_function(
                     prev_ci_list[i],
                     curr_ci_list[j],
                     nmo,
-                    nelec,
+                    nocc,
                     s12_mo,
                 )
 
@@ -381,4 +426,3 @@ if __name__ == "__main__":
     print("\nCISD __main__ smoke test passed.")
 
     
-

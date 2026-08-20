@@ -15,6 +15,7 @@ __all__ = [
     "ElectronicStructureStrategy",
     "MolecularGeometry",
     "CISD",
+    "CISD_States",
     "CASSCF",
     "TDDFT",
     "TDDFT_States",
@@ -22,10 +23,14 @@ __all__ = [
 
 
 def __getattr__(name: str):
-    if name in {"CASSCF", "TDDFT", "TDDFT_States"}:
-        from .implementations import CASSCF, TDDFT, TDDFT_States
+    if name in {"CASSCF", "CISD", "CISD_States", "TDDFT", "TDDFT_States"}:
+        from .implementations import CASSCF, CISD, CISD_States, TDDFT, TDDFT_States
 
-        return { "CASSCF": CASSCF, "TDDFT": TDDFT, "TDDFT_States": TDDFT_States }[name]
-    if name == "CISD":
-        raise AttributeError( "CISD backend is not available yet; use CASSCF or TDDFT" )
+        return {
+            "CASSCF": CASSCF,
+            "CISD": CISD,
+            "CISD_States": CISD_States,
+            "TDDFT": TDDFT,
+            "TDDFT_States": TDDFT_States,
+        }[name]
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
