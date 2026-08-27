@@ -76,6 +76,9 @@ class CISD(ES_Strategy):
         charge: int = 0,
         spin_multiplicity: int = 1,
         frozen: Optional[int | Sequence[int]] = None,
+        conv_tol: float = 1e-9,
+        max_cycle: int = 200,
+        max_space: int = 20,
     ) -> None:
         self._mol: Optional[Any] = mol
         self._nroots: int = nroots
@@ -87,6 +90,9 @@ class CISD(ES_Strategy):
             raise ValueError("spin_multiplicity must be a positive integer")
         self._spin = self._spin_multiplicity - 1
         self._frozen = frozen
+        self._conv_tol = float(conv_tol)
+        self._max_cycle = int(max_cycle)
+        self._max_space = int(max_space)
         self._geom: Optional[MolecularGeometry] = None
         self._request: Optional[ES_Request] = None
         self._state: Optional[CISD_States] = None
@@ -199,11 +205,21 @@ class CISD(ES_Strategy):
             # UHF open-shell references used by doublet/quartet manifolds.
             self._ci = ci.CISD(self._mf, frozen=self._frozen)
         self._ci.nroots = self._n_total()
+        self._ci.conv_tol = self._conv_tol
+        self._ci.max_cycle = self._max_cycle
+        self._ci.max_space = self._max_space
         self._ci.verbose = 0
         state = self.get_state()
         if state is not None and state.eris is None:
             state.eris = self._ci.ao2mo(self._ci.mo_coeff)
         self._ci.kernel(ci0=self._ci_guess(), eris=None if state is None else state.eris)
+        converged = np.atleast_1d(self._ci.converged)
+        if not np.all(converged):
+            unconverged = np.flatnonzero(~converged).tolist()
+            raise RuntimeError(
+                "CISD Davidson solver did not converge roots "
+                f"{unconverged} in {self._max_cycle} cycles"
+            )
         if state is not None:
             state.myci = self._ci
 

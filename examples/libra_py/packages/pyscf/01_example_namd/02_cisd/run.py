@@ -33,7 +33,7 @@ ndof = len(q)
 nat = len(labels)
 ntraj = int(os.environ.get("LIBRA_NTRAJ", "1"))
 nstates = 8
-DT = 0.5  # fs
+DT = 0.1  # fs; the excited UCISD surface requires a smaller nuclear step
 ISTATE = 2
 nsteps = int(os.environ.get("LIBRA_NSTEPS", "5"))
 
@@ -127,18 +127,15 @@ dyn_general["momenta_rescaling_algo"] = 211
 ### 3. PySCF model parameters
 ###########################################################
 
-# Correlate five frontier orbitals. This leaves both an occupied beta orbital
-# and an unoccupied alpha orbital in the quartet, as required by PySCF's
-# current UCISD gradient implementation.
-frozen_orbitals = list(range(17)) + list(range(22, 27))
-
 doublet = CISD(
     nroots=2,
     basis="sto-3g",
     charge=0,
     unit="Bohr",
     spin_multiplicity=2,
-    frozen=frozen_orbitals,
+    frozen=18,
+    max_cycle=500,
+    max_space=40,
 )
 quartet = CISD(
     nroots=1,
@@ -146,7 +143,9 @@ quartet = CISD(
     charge=0,
     unit="Bohr",
     spin_multiplicity=4,
-    frozen=frozen_orbitals,
+    frozen=18,
+    max_cycle=500,
+    max_space=40,
 )
 
 model_params = {
@@ -167,6 +166,10 @@ model_params = {
             "spin": 4,
             "nroots": 1,
             "es_strategy": quartet,
+            # This block is uncoupled from the active doublet block without
+            # SOC. PySCF's UCISD gradient cannot handle its empty correlated
+            # beta-occupied space, so no unused quartet gradient is requested.
+            "gradient_state": None,
         },
     ],
     "model": 0,
