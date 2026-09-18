@@ -204,22 +204,19 @@ class DynamicsEngine:
             raise ValueError("num_electronic_substeps must be positive")
         if self._previous_hamiltonian is None:
             raise RuntimeError("electronic propagation requires the previous Hamiltonian")
-        result = None
-        for substep in range(nsubsteps):
-            substep_dt = dt / nsubsteps
-            result = tdse_step(
-                self.traj,
-                self.storage,
-                substep_dt,
-                backend=self.storage.backend,
-                propagator=self.propagator,
-                rep=self.rep,
-                hamiltonian_type=self.hamiltonian_type,
-                T=T,
-                previous_state=self._previous_hamiltonian,
-                method=integrator,
-            )
-        return result
+        return tdse_step(
+            self.traj,
+            self.storage,
+            dt,
+            backend=self.storage.backend,
+            propagator=self.propagator,
+            rep=self.rep,
+            hamiltonian_type=self.hamiltonian_type,
+            T=T,
+            previous_state=self._previous_hamiltonian,
+            method=integrator,
+            nsubsteps=nsubsteps,
+        )
 
     def surface_hopping_step(self, decoherence_rates=None):
         """Propose, accept, and handle hops for active TBFs."""

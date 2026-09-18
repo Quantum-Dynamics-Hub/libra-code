@@ -16,6 +16,8 @@ from libra_py.dyn.core.trajectory import Trajectory
 from libra_py.dyn.propagation import (
     drift,
     kick,
+    interpolated_hamiltonian_propagator,
+    propagate_electronic_method,
     state_specific_forces,
     tdse_step,
     update_density,
@@ -69,6 +71,55 @@ def test_tdse_step_updates_amplitudes_and_density():
 
     np.testing.assert_allclose(storage.ampl_adi[0, 0], [1.0 + 0.0j, 0.0 + 0.0j])
     np.testing.assert_allclose(storage.dm_adi[0, 0, 0, 0], 1.0 + 0.0j)
+
+
+def test_interpolated_hamiltonian_propagator_converges_with_substeps():
+    """Noncommuting, linearly varying endpoint Hamiltonians converge."""
+    coefficients = np.array([[1.0 + 0.0j, 0.0 + 0.0j]])
+    previous = np.array([[[0.7, 0.0], [0.0, -0.7]]], dtype=complex)
+    current = np.array([[[0.0, 1.1], [1.1, 0.0]]], dtype=complex)
+    reference = interpolated_hamiltonian_propagator(
+        coefficients, previous, current, 1.3, nsubsteps=4096
+    )
+
+    errors = []
+    for nsubsteps in (1, 2, 4, 8, 16):
+        result = interpolated_hamiltonian_propagator(
+            coefficients, previous, current, 1.3, nsubsteps=nsubsteps
+        )
+        errors.append(np.linalg.norm(result - reference))
+
+    assert all(fine < coarse for coarse, fine in zip(errors, errors[1:]))
+    assert errors[-1] < errors[0] / 100.0
+
+
+def test_method_substeps_interpolate_and_apply_projector_once():
+    coefficients = np.array([[1.0 + 0.0j, 0.0 + 0.0j]])
+    previous = np.array([[[0.4, 0.3], [0.3, -0.4]]], dtype=complex)
+    current = np.array([[[-0.2, 0.8], [0.8, 0.2]]], dtype=complex)
+    projector = np.array([[[0.0, 1.0], [1.0, 0.0]]], dtype=complex)
+    common = dict(
+        ham_previous=previous,
+        ham_current=current,
+        hvib_previous=previous,
+        hvib_current=current,
+        dt=0.9,
+        method=4,
+        projector=projector,
+    )
+    result = propagate_electronic_method(
+        coefficients, nsubsteps=32, **common
+    )
+    expected_old_basis = interpolated_hamiltonian_propagator(
+        coefficients,
+        previous,
+        np.swapaxes(projector.conj(), -1, -2) @ current @ projector,
+        0.9,
+        nsubsteps=32,
+    )
+    expected = np.einsum("tij,tj->ti", projector, expected_old_basis)
+
+    np.testing.assert_allclose(result, expected, atol=1.0e-13)
 
 
 def test_state_specific_forces_preserve_multi_dof_shape():

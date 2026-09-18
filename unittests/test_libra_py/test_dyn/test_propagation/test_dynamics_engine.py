@@ -303,9 +303,8 @@ def test_engine_uses_electronic_substeps_and_legacy_defaults():
         propagator=propagator,
     ).step(0.3)
 
-    # C++ adiabatic method 0 applies an old and a new Hamiltonian half-step
-    # during each electronic substep.
-    np.testing.assert_allclose(calls, [0.05] * 6)
+    # Each substep samples one interpolated Hamiltonian over dt / nsubsteps.
+    np.testing.assert_allclose(calls, [0.1] * 3)
     defaults = dynamics_defaults({"tsh_method": 0})
     assert defaults["tsh_method"] == 0
     assert defaults["rep_tdse"] == 1

@@ -78,6 +78,150 @@ def split_step_propagator(C, H_prev, H, dt, backend=backend_default):
     )
 
 
+def _propagate_fixed_hamiltonian(
+    C,
+    H,
+    dt,
+    nsubsteps=1,
+    backend=backend_default,
+    propagator: Propagator = exp_propagator,
+):
+    """Propagate electronic states while holding the Hamiltonian fixed.
+
+    Parameters
+    ----------
+    C : backend array, shape ``(..., nstates)`` or ``(..., nstates, nvec)``
+        Electronic state vector(s) at the beginning of the interval. Leading
+        dimensions identify independent trajectories or other batches. The
+        penultimate dimension is the electronic-state dimension when multiple
+        vectors are stored in the final dimension.
+    H : backend array, shape ``(..., nstates, nstates)``
+        Fixed electronic Hamiltonian. Its leading dimensions must be
+        broadcast-compatible with those of ``C``.
+    dt : float
+        Total propagation interval, in the time units reciprocal to the
+        energy units of ``H`` (atomic units in dynamics calculations).
+    nsubsteps : int, optional
+        Number of equal intervals into which ``dt`` is divided. Expected to be
+        a positive integer; validation is performed by the public caller.
+    backend : linear-algebra backend, optional
+        Backend object supplying the array operations needed by
+        ``propagator``. The default is the configured Libra backend.
+    propagator : callable, optional
+        One-step function with signature ``(C, H, dt, backend) -> C_new``.
+
+    Returns
+    -------
+    backend array, same shape as ``C``
+        Electronic state vector(s) after ``nsubsteps`` applications over the
+        complete interval ``dt``. The input arrays are not explicitly
+        modified by this helper.
+    """
+
+    state = C
+    substep_dt = dt / nsubsteps
+    for _ in range(nsubsteps):
+        state = propagator(state, H, substep_dt, backend)
+    return state
+
+
+def _rotate_matrix(matrix, transform, transform_h, backend=backend_default):
+    """Express a matrix in the old dynamically tracked adiabatic basis.
+
+    Parameters
+    ----------
+    matrix : backend array, shape ``(..., nstates, nstates)``
+        Matrix represented in the current raw adiabatic basis. In this module
+        it is normally an electronic or vibronic Hamiltonian.
+    transform : backend array, shape ``(..., nstates, nstates)``
+        Old-to-current basis transformation ``T``. Its columns express old
+        dynamically tracked state labels in the current raw basis.
+    transform_h : backend array, shape ``(..., nstates, nstates)``
+        Conjugate transpose ``T†`` of ``transform``. It is accepted explicitly
+        so callers that rotate several matrices can compute it once.
+    backend : linear-algebra backend, optional
+        Backend object providing batched ``matmul``.
+
+    Returns
+    -------
+    backend array, shape ``(..., nstates, nstates)``
+        The matrix ``T† @ matrix @ T`` in the old tracked basis. Its dtype is
+        determined by the input arrays and backend, and is normally complex.
+    """
+
+    return backend.matmul(transform_h, backend.matmul(matrix, transform))
+
+
+def interpolated_hamiltonian_propagator(
+    C,
+    H_previous,
+    H_current,
+    dt,
+    nsubsteps=1,
+    backend=backend_default,
+    propagator: Propagator = exp_propagator,
+):
+    """Propagate through a Hamiltonian that varies linearly in time.
+
+    Each substep uses the Hamiltonian at its temporal midpoint,
+
+    ``H(alpha) = (1 - alpha) H_previous + alpha H_current``.
+
+    Both endpoint matrices must be expressed in the same basis. The midpoint
+    rule is second-order accurate and is exact for scalar/commuting endpoint
+    Hamiltonians.
+
+    Parameters
+    ----------
+    C : backend array, shape ``(..., nstates)`` or ``(..., nstates, nvec)``
+        Electronic state vector(s) at the previous endpoint. Leading
+        dimensions may batch independent trajectories.
+    H_previous : backend array, shape ``(..., nstates, nstates)``
+        Hamiltonian at the beginning of the interval. For adiabatic dynamics,
+        it contains the previous-endpoint adiabatic energies and any coupling
+        terms required by the selected electronic equation of motion.
+    H_current : backend array, shape ``(..., nstates, nstates)``
+        Hamiltonian at the end of the interval, expressed in the same basis
+        and state ordering as ``H_previous``. Its entries are linearly
+        interpolated with those of ``H_previous``.
+    dt : float
+        Total endpoint-to-endpoint propagation interval, in the time units
+        reciprocal to the Hamiltonian energy units.
+    nsubsteps : int, optional
+        Positive number of equal electronic substeps. Substep ``k`` uses the
+        midpoint fraction ``alpha = (k + 1/2) / nsubsteps``.
+    backend : linear-algebra backend, optional
+        Backend object used for array and matrix operations.
+    propagator : callable, optional
+        One-step function with signature ``(C, H, dt, backend) -> C_new``.
+        The default applies the matrix exponential ``exp(-i H dt)``.
+
+    Returns
+    -------
+    backend array, same shape as ``C``
+        Electronic state vector(s) at the current endpoint. The returned dtype
+        is determined by ``C``, the Hamiltonians, and the selected propagator;
+        TD-SE propagation normally returns a complex array. Endpoint
+        Hamiltonians and ``C`` are not explicitly modified.
+
+    Raises
+    ------
+    ValueError
+        If ``nsubsteps`` is less than one.
+    """
+
+    nsubsteps = int(nsubsteps)
+    if nsubsteps < 1:
+        raise ValueError("nsubsteps must be positive")
+    state = C
+    substep_dt = dt / nsubsteps
+    for substep in range(nsubsteps):
+        alpha = (substep + 0.5) / nsubsteps
+        hamiltonian = (1.0 - alpha) * H_previous + alpha * H_current
+        state = propagator(state, hamiltonian, substep_dt, backend)
+    return state
+
+
 def propagate_electronic_method(
     coefficients,
     *,
@@ -92,6 +236,7 @@ def propagate_electronic_method(
     overlap_current=None,
     backend=backend_default,
     propagator: Propagator = exp_propagator,
+    nsubsteps: int = 1,
 ):
     """Propagate amplitudes using the ``Dynamics.cpp`` method selectors.
 
@@ -114,6 +259,11 @@ def propagate_electronic_method(
         10--15 are implemented, as are aliases 100--115. Method 9 is absent in
         the C++ dispatcher. Diabatic methods 0--3 and aliases 100--103 are
         implemented using their midpoint/split/non-Hermitian forms.
+    nsubsteps
+        Number of subdivisions used for continuous time evolution. Two-point
+        adiabatic methods linearly interpolate their endpoint Hamiltonians at
+        substep midpoints. Discrete old-to-new basis mappings are applied
+        exactly once per nuclear step.
 
     Notes
     -----
@@ -143,6 +293,10 @@ def propagate_electronic_method(
     """
 
     method = int(method)
+    nsubsteps = int(nsubsteps)
+    if nsubsteps < 1:
+        raise ValueError("nsubsteps must be positive")
+
     if method == -1:
         return coefficients
     base_method = method - 100 if 100 <= method < 200 else method
@@ -158,6 +312,7 @@ def propagate_electronic_method(
             overlap_current,
             backend,
             propagator,
+            nsubsteps,
         )
     if rep != "adiabatic":
         raise ValueError("rep must be 'adiabatic' or 'diabatic'")
@@ -172,45 +327,104 @@ def propagate_electronic_method(
     previous_v = _as_matrix_batch(hvib_previous, "hvib_previous")
     transform = _projector_batch(projector, current_h)
     transform_h = backend.conjugate_transpose(transform)
+    current_h_tracked = _rotate_matrix(
+        current_h, transform, transform_h, backend
+    )
+    current_v_tracked = _rotate_matrix(
+        current_v, transform, transform_h, backend
+    )
 
-    evolve = lambda state, matrix, interval: propagator(
-        state, matrix, interval, backend
-    )
-    apply_t = lambda state: _apply_matrix_to_state(transform, state, backend)
-    apply_th = lambda state: _apply_matrix_to_state(transform_h, state, backend)
-    rotate_new = lambda matrix: backend.matmul(
-        transform_h, backend.matmul(matrix, transform)
-    )
+    # Endpoint interpolation must occur in one common basis. Coefficients
+    # remain in the old dynamically consistent basis during the continuous
+    # propagation and are mapped to the current raw basis only at the end.
+    if nsubsteps > 1 and base_method in (0, 1, 2):
+        state = interpolated_hamiltonian_propagator(
+            coefficients,
+            previous_h,
+            current_h_tracked,
+            dt,
+            nsubsteps,
+            backend,
+            propagator,
+        )
+        return _apply_matrix_to_state(transform, state, backend)
+    if nsubsteps > 1 and base_method in (4, 5):
+        state = interpolated_hamiltonian_propagator(
+            coefficients,
+            previous_v,
+            current_v_tracked,
+            dt,
+            nsubsteps,
+            backend,
+            propagator,
+        )
+        return _apply_matrix_to_state(transform, state, backend)
 
     if base_method == 0:
-        state = evolve(coefficients, previous_h, 0.5 * dt)
-        return evolve(apply_t(state), current_h, 0.5 * dt)
+        state = _propagate_fixed_hamiltonian(
+            coefficients, previous_h, 0.5 * dt, nsubsteps, backend, propagator
+        )
+        state = _apply_matrix_to_state(transform, state, backend)
+        return _propagate_fixed_hamiltonian(
+            state, current_h, 0.5 * dt, nsubsteps, backend, propagator
+        )
     if base_method == 1:
-        state = evolve(coefficients, previous_h, 0.25 * dt)
-        state = apply_t(state)
-        state = evolve(state, current_h, 0.5 * dt)
-        state = apply_th(state)
-        state = evolve(state, previous_h, 0.25 * dt)
-        return apply_t(state)
+        state = _propagate_fixed_hamiltonian(
+            coefficients, previous_h, 0.25 * dt, nsubsteps, backend, propagator
+        )
+        state = _apply_matrix_to_state(transform, state, backend)
+        state = _propagate_fixed_hamiltonian(
+            state, current_h, 0.5 * dt, nsubsteps, backend, propagator
+        )
+        state = _apply_matrix_to_state(transform_h, state, backend)
+        state = _propagate_fixed_hamiltonian(
+            state, previous_h, 0.25 * dt, nsubsteps, backend, propagator
+        )
+        return _apply_matrix_to_state(transform, state, backend)
     if base_method == 2:
-        effective = previous_h + rotate_new(current_h)
-        return apply_t(evolve(coefficients, effective, 0.5 * dt))
+        effective = previous_h + current_h_tracked
+        state = _propagate_fixed_hamiltonian(
+            coefficients, effective, 0.5 * dt, nsubsteps, backend, propagator
+        )
+        return _apply_matrix_to_state(transform, state, backend)
     if base_method == 3:
-        return apply_t(evolve(coefficients, previous_v, dt))
+        state = _propagate_fixed_hamiltonian(
+            coefficients, previous_v, dt, nsubsteps, backend, propagator
+        )
+        return _apply_matrix_to_state(transform, state, backend)
     if base_method == 4:
-        return apply_t(evolve(coefficients, previous_v + current_v, 0.5 * dt))
+        state = _propagate_fixed_hamiltonian(
+            coefficients, previous_v + current_v, 0.5 * dt,
+            nsubsteps, backend, propagator,
+        )
+        return _apply_matrix_to_state(transform, state, backend)
     if base_method == 5:
-        effective = previous_v + rotate_new(current_v)
-        return apply_t(evolve(coefficients, effective, 0.5 * dt))
+        effective = previous_v + current_v_tracked
+        state = _propagate_fixed_hamiltonian(
+            coefficients, effective, 0.5 * dt, nsubsteps, backend, propagator
+        )
+        return _apply_matrix_to_state(transform, state, backend)
     if base_method == 6:
-        return evolve(coefficients, previous_v, 0.5 * dt)
+        return _propagate_fixed_hamiltonian(
+            coefficients, previous_v, 0.5 * dt, nsubsteps, backend, propagator
+        )
     if base_method == 7:
-        state = evolve(coefficients, previous_v, 0.5 * dt)
-        state = apply_th(state)
-        return evolve(state, rotate_new(current_v), 0.5 * dt)
+        state = _propagate_fixed_hamiltonian(
+            coefficients, previous_v, 0.5 * dt, nsubsteps, backend, propagator
+        )
+        state = _apply_matrix_to_state(transform_h, state, backend)
+        return _propagate_fixed_hamiltonian(
+            state, current_v_tracked, 0.5 * dt,
+            nsubsteps, backend, propagator,
+        )
     # Intended form of the C++ "new LD" option 8.
-    state = evolve(coefficients, previous_v, 0.5 * dt)
-    return evolve(state, rotate_new(current_v), 0.5 * dt)
+    state = _propagate_fixed_hamiltonian(
+        coefficients, previous_v, 0.5 * dt, nsubsteps, backend, propagator
+    )
+    return _propagate_fixed_hamiltonian(
+        state, current_v_tracked, 0.5 * dt,
+        nsubsteps, backend, propagator,
+    )
 
 
 def _propagate_diabatic_method(
@@ -224,6 +438,7 @@ def _propagate_diabatic_method(
     overlap_current,
     backend,
     propagator,
+    nsubsteps,
 ):
     """Diabatic amplitude branches corresponding to C++ options 0--3."""
 
@@ -232,7 +447,9 @@ def _propagate_diabatic_method(
     previous = _as_matrix_batch(hvib_previous, "hvib_previous")
     midpoint = 0.5 * (current + previous)
     if method in (0, 1):
-        return propagator(coefficients, midpoint, dt, backend)
+        return _propagate_fixed_hamiltonian(
+            coefficients, midpoint, dt, nsubsteps, backend, propagator
+        )
     if method == 2:
         return split_step_propagator(
             coefficients, previous, current, dt, backend
@@ -242,7 +459,9 @@ def _propagate_diabatic_method(
             raise ValueError("diabatic method 3 requires overlap_current")
         overlap = _as_matrix_batch(overlap_current, "overlap_current")
         effective = backend.solve(overlap, midpoint)
-        return propagator(coefficients, effective, dt, backend)
+        return _propagate_fixed_hamiltonian(
+            coefficients, effective, dt, nsubsteps, backend, propagator
+        )
     raise ValueError(f"unsupported diabatic electronic integrator {method}")
 
 
@@ -281,6 +500,7 @@ def tdse_step(
     T: Optional[object] = None,
     previous_state: Optional[object] = None,
     method: Optional[int] = None,
+    nsubsteps: int = 1,
 ):
     """
     Full electronic propagation step.
@@ -323,6 +543,10 @@ def tdse_step(
         old/current Hamiltonians and ``T`` are dispatched through
         :func:`propagate_electronic_method`. When omitted, the original
         one-matrix propagation behavior is retained.
+
+    nsubsteps :
+        Number of subdivisions for continuous electronic evolution. Basis
+        transformations remain single operations over the full nuclear step.
     """
 
     state = None
@@ -374,6 +598,7 @@ def tdse_step(
             ),
             backend=backend,
             propagator=propagator,
+            nsubsteps=nsubsteps,
         )
     else:
         # This is a generic basis rotation, not the C++ T_new propagation
