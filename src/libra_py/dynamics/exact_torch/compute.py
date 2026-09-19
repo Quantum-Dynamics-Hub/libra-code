@@ -321,15 +321,31 @@ class exact_tdse_solver_multistate:
 
     def update_adi_r(self):
         """
-        Convert diabatic to adiabatic r-space wavefunction: C_adi = U * C_dia
+        Convert diabatic to adiabatic r-space wavefunction.
+
+        ``torch.linalg.eigh`` stores eigenvectors as columns of ``U``. Thus,
+        for ``V = U E U†``, the coefficient transformation is
+        ``C_adi = U† C_dia``. Wavefunctions have shape
+        ``(*grid_size, Nstates)`` and ``U`` has shape
+        ``(*grid_size, Nstates, Nstates)``.
         """
-        self.psi_r_adi = torch.einsum("...ij, ...j->...i", self.eigvecs, self.psi_r_dia)
+        self.psi_r_adi = torch.einsum(
+            "...ij,...j->...i",
+            self.eigvecs.conj().transpose(-2, -1),
+            self.psi_r_dia,
+        )
 
     def update_dia_r(self):
         """
-        Convert adiabatic to diabatic r-space wavefunction: C_dia = U.H * C_adi
+        Convert adiabatic to diabatic r-space wavefunction.
+
+        With eigenvectors stored as columns of ``U``, the transformation is
+        ``C_dia = U C_adi``. Input and output wavefunctions have shape
+        ``(*grid_size, Nstates)``.
         """
-        self.psi_r_dia = torch.einsum("...ij, ...j->...i", self.eigvecs.conj().transpose(-2,-1), self.psi_r_adi)
+        self.psi_r_dia = torch.einsum(
+            "...ij,...j->...i", self.eigvecs, self.psi_r_adi
+        )
 
 
     def transform_r2k(self, rep):
@@ -374,17 +390,36 @@ class exact_tdse_solver_multistate:
         self.V = self.potential_fn(self.Q, self.potential_fn_params) # V: [*grid_size, Nstates, Nstates]
         print("V.shape = ", self.V.shape)
 
+        expected_shape = (*self.grid_size.tolist(), self.Nstates, self.Nstates)
+        if tuple(self.V.shape) != expected_shape:
+            raise ValueError(
+                "potential_fn must return a tensor with shape "
+                f"{expected_shape}; received {tuple(self.V.shape)}"
+            )
+        hermitian_residual = torch.max(
+            torch.abs(self.V - self.V.conj().transpose(-2, -1))
+        )
+        hermitian_tolerance = 1.0e-6 if self.V.dtype == torch.complex64 else 1.0e-12
+        if hermitian_residual.item() > hermitian_tolerance:
+            raise ValueError(
+                "potential_fn must return a Hermitian matrix at every grid "
+                f"point; maximum |V - V†| is {hermitian_residual.item():.3e}"
+            )
+
         # dia  <-> adi transformation for all points
-        # V U = E U => H = U.H * E * U
+        # V U = U E => V = U E U.H
         # E = <psi_adi | H | psi_adi >
         # V = <psi_dia | H | psi_dia >
-        # | psi_adi > U = | psi_dia >
-        # | Psi > = | psi_dia> C_dia = | psi_adi > C_adi = | psi_adi > U C_dia
-        # so C_adi = U C_dia 
+        # |psi_adi> = |psi_dia> U
+        # C_adi = U.H C_dia and C_dia = U C_adi
 
         self.eigvals, self.eigvecs = torch.linalg.eigh(self.V)  # V: [*grid_size, Nstates, Nstates]
         self.exp_diag = torch.exp(-0.5j * self.dt * self.eigvals)
-        self.expV_half = self.eigvecs.conj().transpose(-2, -1) @ torch.diag_embed(self.exp_diag) @ self.eigvecs
+        self.expV_half = (
+            self.eigvecs
+            @ torch.diag_embed(self.exp_diag)
+            @ self.eigvecs.conj().transpose(-2, -1)
+        )
         print("expV_half.shape = ", self.expV_half.shape)
 
         # Initialize the wavefunction in r-space
@@ -446,7 +481,7 @@ class exact_tdse_solver_multistate:
                 self.time[istep] = step * self.dt
                 self.kinetic_energy[istep] = KE.real.item()
                 self.potential_energy[istep] = PE.real.item()
-                self.total_energy[istep] = KE + PE
+                self.total_energy[istep] = (KE + PE).real
                 #self.population_right.append(pop_right.item())
                         
                 print(f"Step {step}: Norm = {nrm:.4f}")
@@ -524,5 +559,3 @@ class exact_tdse_solver_multistate:
         self.initialize_operators()
         self.propagate()
         self.save()
-
-
