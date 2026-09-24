@@ -19,13 +19,13 @@ from __future__ import annotations
 import copy as pycopy
 from dataclasses import dataclass
 from functools import reduce
+from pathlib import Path
 from typing import Any, Optional, Sequence
 import numpy as np
 from pyscf import ci, gto, scf
+from pyscf.grad.deriv_eri import DerivativeERICache
 from libra_py.packages.pyscf.interfaces import ES_Strategy, ES_Request, MolecularGeometry
 
-# Backward-compatible alias used by older imports.
-ElectronicStructureStrategy = ES_Strategy
 
 BOHR_TO_ANG = 0.529177210903
 
@@ -64,6 +64,32 @@ class CISD_States:
         return new
 
 
+@dataclass
+class gradient_nacv_shared:
+    """Intermediates reused by every gradient/NACV call at one geometry.
+
+    Only the AO derivative integrals live here.  The MO-basis ERI is kept on
+    ``CISD_States`` instead: CISD never rotates its orbitals, so that transform
+    belongs to the wavefunction, while (nabla i,j|k,l) depends on the geometry
+    and basis alone and is rebuilt whenever either changes.
+    """
+
+    AO_derivative_integrals: Optional[Any] = None  # provider for (nabla i,j|k,l)
+
+
+def compute_deriv_eri(shared: gradient_nacv_shared) -> Any:
+    """Provider for the AO derivative integrals (nabla i,j|k,l).
+
+    They depend on the geometry and basis alone -- not on the root, the CI
+    vectors or the orbitals -- so one evaluation feeds every gradient root.
+    PySCF streams them block by block and keeps nothing; this hands its kernels
+    a provider that keeps them instead.
+    """
+    if shared.AO_derivative_integrals is None:
+        shared.AO_derivative_integrals = DerivativeERICache()
+    return shared.AO_derivative_integrals
+
+
 class CISD(ES_Strategy):
     """PySCF-based CISD backend for the universal ES interface."""
 
@@ -74,39 +100,19 @@ class CISD(ES_Strategy):
         basis: str = "sto-3g",
         unit: str = "Angstrom",
         charge: int = 0,
-        spin_multiplicity: int = 1,
-        frozen: Optional[int | Sequence[int]] = None,
-        conv_tol: float = 1e-9,
-        max_cycle: int = 200,
-        max_space: int = 20,
     ) -> None:
         self._mol: Optional[Any] = mol
         self._nroots: int = nroots
         self._basis: str = basis
         self._unit: str = unit
         self._charge: int = int(charge)
-        self._spin_multiplicity = int(spin_multiplicity)
-        if self._spin_multiplicity < 1:
-            raise ValueError("spin_multiplicity must be a positive integer")
-        self._spin = self._spin_multiplicity - 1
-        self._frozen = frozen
-        self._conv_tol = float(conv_tol)
-        self._max_cycle = int(max_cycle)
-        self._max_space = int(max_space)
         self._geom: Optional[MolecularGeometry] = None
         self._request: Optional[ES_Request] = None
         self._state: Optional[CISD_States] = None
         self._previous_state: Optional[CISD_States] = None
-
-    @property
-    def nroots(self) -> int:
-        """Number of CISD roots represented by this strategy."""
-        return int(self._nroots)
-
-    @property
-    def spin_multiplicity(self) -> int:
-        """Spin multiplicity ``2*S+1`` represented by this strategy."""
-        return self._spin_multiplicity
+        # rebuilt with the geometry: one per molecule, never snapshotted
+        self._shared: gradient_nacv_shared = gradient_nacv_shared()
+        self.deriv_eri_reuse: bool = False  # whether to reuse the AO derivative integrals across gradient roots
 
     # --------------------------------------------------------------- settings
     def _n_total(self) -> int:
@@ -161,14 +167,12 @@ class CISD(ES_Strategy):
             basis=self._basis,
             unit=self._unit,
             charge=self._charge,
-            spin=self._spin,
+            spin=0,
         )
 
-        # UCISD gradients require canonical unrestricted orbitals; converting
-        # ROHF to UHF inside PySCF yields a non-canonical reference.
-        scf_cls = scf.RHF if self._spin == 0 else scf.UHF
-        self._mf = scf_cls(self._mol).run(verbose=0)
+        self._mf = scf.RHF(self._mol).run(verbose=0)
         self._state = CISD_States(mol=self._mol, mf=self._mf, myci=None)
+        self._shared = gradient_nacv_shared()   # new geometry -> everything shared is stale
 
     def get_geom(self) -> MolecularGeometry:
         if self._geom is None:
@@ -188,7 +192,15 @@ class CISD(ES_Strategy):
 
     def copy(self) -> "CISD":
         """Return an independent snapshot of the full strategy state."""
-        return pycopy.deepcopy(self)
+        # The clone starts with empty shared intermediates.  They are rebuilt on
+        # demand and belong to this geometry, so copying them would duplicate the
+        # derivative-integral tensor once per trajectory to no purpose -- and the
+        # MO ERI may be h5py-backed, which deepcopy refuses outright.
+        shared, self._shared = self._shared, gradient_nacv_shared()
+        try:
+            return pycopy.deepcopy(self)
+        finally:
+            self._shared = shared
 
     # --------------------------------------------------------------- required
     def _build_ci(self) -> None:
@@ -201,25 +213,14 @@ class CISD(ES_Strategy):
                 and self._ci.nroots == self._n_total()):
             return
         if self._ci is None:
-            # The public dispatcher selects RCISD for RHF and UCISD for the
-            # UHF open-shell references used by doublet/quartet manifolds.
-            self._ci = ci.CISD(self._mf, frozen=self._frozen)
+            self._ci = ci.cisd.CISD(self._mf)
         self._ci.nroots = self._n_total()
-        self._ci.conv_tol = self._conv_tol
-        self._ci.max_cycle = self._max_cycle
-        self._ci.max_space = self._max_space
         self._ci.verbose = 0
         state = self.get_state()
         if state is not None and state.eris is None:
             state.eris = self._ci.ao2mo(self._ci.mo_coeff)
-        self._ci.kernel(ci0=self._ci_guess(), eris=None if state is None else state.eris)
-        converged = np.atleast_1d(self._ci.converged)
-        if not np.all(converged):
-            unconverged = np.flatnonzero(~converged).tolist()
-            raise RuntimeError(
-                "CISD Davidson solver did not converge roots "
-                f"{unconverged} in {self._max_cycle} cycles"
-            )
+        self._ci.kernel(ci0=self._ci_guess(),
+                        eris=None if state is None else state.eris)
         if state is not None:
             state.myci = self._ci
 
@@ -268,15 +269,20 @@ class CISD(ES_Strategy):
                 )
 
         grad = myci.nuc_grad_method()
+        if self.deriv_eri_reuse:
+            grad.deriv_eri = compute_deriv_eri(self._shared)
         return [
-            np.asarray(grad.kernel(state=root, eris=self._state.eris),
-                       dtype=np.float64)
+            np.asarray(grad.kernel(state=root, eris=self._state.eris),dtype=np.float64)
             for root in roots
         ]
 
     # ------------------------------------------------------------- time overlap
 
-    def _compute_ao_overlap( self, prev_state: CISD_States, curr_state: CISD_States ) -> np.ndarray:
+    def _compute_ao_overlap(
+        self,
+        prev_state: CISD_States,
+        curr_state: CISD_States,
+    ) -> np.ndarray:
         """Compute the AO overlap matrix between the previous and current geometries."""
         prev_mol = prev_state.mol
         curr_mol = curr_state.mol
@@ -316,6 +322,8 @@ class CISD(ES_Strategy):
 
 
         s12_ao = self._compute_ao_overlap(prev_state, curr_state)
+        s12_mo = reduce(np.dot, (prev_state.mf.mo_coeff.T, s12_ao, curr_state.mf.mo_coeff))
+
         prev_ci_list = self._as_ci_vector_list(prev_state.myci.ci) or []
         curr_ci_list = self._as_ci_vector_list(curr_state.myci.ci) or []
         if len(prev_ci_list) < nroots or len(curr_ci_list) < nroots:
@@ -325,41 +333,16 @@ class CISD(ES_Strategy):
             )
 
         nmo = curr_state.myci.nmo
-        nocc = curr_state.myci.nocc
-        unrestricted = isinstance(nocc, (tuple, list))
-        if unrestricted:
-            prev_mo = prev_state.myci.mo_coeff
-            curr_mo = curr_state.myci.mo_coeff
-            prev_mask = prev_state.myci.get_frozen_mask()
-            curr_mask = curr_state.myci.get_frozen_mask()
-            s12_mo = tuple(
-                prev_mo[spin][:, prev_mask[spin]].T
-                @ s12_ao
-                @ curr_mo[spin][:, curr_mask[spin]]
-                for spin in range(2)
-            )
-            overlap_function = ci.ucisd.overlap
-        else:
-            prev_mask = prev_state.myci.get_frozen_mask()
-            curr_mask = curr_state.myci.get_frozen_mask()
-            s12_mo = reduce(
-                np.dot,
-                (
-                    prev_state.myci.mo_coeff[:, prev_mask].T,
-                    s12_ao,
-                    curr_state.myci.mo_coeff[:, curr_mask],
-                ),
-            )
-            overlap_function = ci.cisd.overlap
+        nelec = curr_state.mol.nelectron // 2
 
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
-                overlap[i, j] = overlap_function(
+                overlap[i, j] = ci.cisd.overlap(
                     prev_ci_list[i],
                     curr_ci_list[j],
                     nmo,
-                    nocc,
+                    nelec,
                     s12_mo,
                 )
 
@@ -410,7 +393,12 @@ if __name__ == "__main__":
     )
 
     # 1) Demonstrate: set geom1 → run SCF → print the AO (overlap) matrix.
-    demo = CISD( nroots=3, basis="sto-3g", charge=1, unit="Bohr" )
+    demo = CISD(
+        nroots=3,
+        basis="sto-3g",
+        charge=1,
+        unit="Bohr",
+    )
     demo.set_geom(geom1)  # sets the geometry and triggers the HF SCF
     ao_overlap = demo._mol.intor("int1e_ovlp")
     np.set_printoptions(precision=4, suppress=True)
@@ -423,8 +411,18 @@ if __name__ == "__main__":
 
     # 2) Full two-geometry sequencing flow on a fresh strategy.
     # (geom1 and geom2 already defined above — reuse them.)
-    cisd = CISD( nroots=3, basis="sto-3g", charge=1, unit="Bohr" )
-    request = ES_Request( n_singlets=3, gradient_state="all", nacv=False, time_overlap=True )
+    cisd = CISD(
+        nroots=3,
+        basis="sto-3g",
+        charge=1,
+        unit="Bohr",
+    )
+    request = ES_Request(
+        n_singlets=3,
+        gradient_state="all",
+        nacv=False,
+        time_overlap=True,
+    )
 
     result1 = cisd.compute_result(geom1, request)
     print("\nResult 1 H_el:", result1.H_el)
@@ -442,3 +440,4 @@ if __name__ == "__main__":
     print("\nCISD __main__ smoke test passed.")
 
     
+

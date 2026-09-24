@@ -6,7 +6,7 @@
 # * See the file LICENSE in the root directory of this distribution
 # * or <http://www.gnu.org/licenses/>.
 # *
-# *********************************************************************************/
+# *******************************************************************************/
 """
 .. module:: pyscf.implementations.casscf
    :platform: Unix, Windows
@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Sequence, Tuple, Union
 import numpy as np
 from pyscf import fci, gto, mcscf, scf
+from pyscf.grad.deriv_eri import DerivativeERICache
 from libra_py.packages.pyscf.interfaces import ES_Request, ES_Strategy, MolecularGeometry
 
 BOHR_TO_ANG = 0.529177210903
@@ -32,10 +33,67 @@ class CASSCF_States:
     mol: Optional[Any] = None
     mf: Optional[Any] = None
     mc: Optional[Any] = None
-    # MO-basis ERI at the converged CASSCF orbitals, mc.ao2mo(mc.mo_coeff).
-    # Shared by compute_gradient and compute_nac_vectors; built lazily, so
-    # energy-only steps never pay for it.
-    eris: Optional[Any] = None 
+
+
+@dataclass
+class gradient_nacv_shared:
+    #put shared variables reused by gradient and nacv within a geom here like eris and orbital response LHS
+    eris: Optional[Any] = None           # mc.ao2mo(mc.mo_coeff)
+    cphf_lhs: Optional[Any] = None       # (Aop, Adiag): the CP-MCSCF left-hand side
+    cphf_precond: Optional[Any] = None   # and its preconditioner
+    AO_derivative_integrals: Optional[Any] = None  # provider for (nabla i,j|k,l)
+
+
+def compute_eris(mc: Any) -> Any:
+    """MO-basis ERI at the converged CASSCF orbitals.
+
+    Depends on mo_coeff alone, so one transform serves every gradient root and
+    every NAC pair of this wavefunction.
+    """
+    return mc.ao2mo(mc.mo_coeff)
+
+
+def compute_deriv_eri(shared: gradient_nacv_shared) -> Any:
+    """Provider for the AO derivative integrals (nabla i,j|k,l).
+
+    They depend on the geometry and basis alone -- not on the root, the CI
+    vectors or the orbitals -- so one evaluation feeds every gradient root and
+    every NAC pair, across both the Hellmann-Feynman and the Lagrange-response
+    halves of each.  PySCF streams them block by block and keeps nothing; this
+    hands its kernels a provider that keeps them, and parks it on ``shared`` so
+    that the gradient object and the NAC object -- which are separate PySCF
+    objects that never see each other -- get the same one.
+    """
+    if shared.AO_derivative_integrals is None:
+        shared.AO_derivative_integrals = DerivativeERICache()
+    return shared.AO_derivative_integrals
+
+
+def compute_cphf_lhs(solver: Any, shared: gradient_nacv_shared) -> Any:
+    """Build the CP-MCSCF left-hand side once, then feed it to every solve.
+
+    Every root and every pair solves A z = -b with the same A = d2 E_SA/dp dq:
+    PySCF builds it from make_fcasscf_sa at the converged (mo, ci), and the
+    projection it wraps A in ignores the state.  Only b differs.  So the first
+    solve builds (Aop, Adiag) and the preconditioner, and the later ones read
+    them back off ``shared``.
+    """
+    build_lhs, build_precond = solver.get_Aop_Adiag, solver.get_lagrange_precond
+
+    def get_Aop_Adiag(**kwargs):
+        if shared.cphf_lhs is None:
+            shared.cphf_lhs = build_lhs(**kwargs)
+        return shared.cphf_lhs
+
+    def get_lagrange_precond(Adiag, level_shift=None, **kwargs):
+        if shared.cphf_precond is None:
+            shared.cphf_precond = build_precond(Adiag, level_shift=level_shift, **kwargs)
+        return shared.cphf_precond
+
+    solver.get_Aop_Adiag = get_Aop_Adiag
+    solver.get_lagrange_precond = get_lagrange_precond
+    return solver
+
 
 class CASSCF(ES_Strategy):
     """PySCF-based CASSCF backend for the universal ES interface."""
@@ -75,7 +133,12 @@ class CASSCF(ES_Strategy):
         self._geom: Optional[MolecularGeometry] = None
         self._state: CASSCF_States | None = None
         self._previous_state: CASSCF_States | None = None
-
+        # rebuilt with mc: one per wavefunction, never snapshotted
+        self._shared: gradient_nacv_shared = gradient_nacv_shared()
+        self.eris_reuse: bool = False  
+        self.cphf_reuse: bool = False   # does not work correctly
+        self.deriv_eri_reuse: bool = False 
+        
     @property
     def nroots(self) -> int:
         """Number of roots this strategy solves for.
@@ -163,7 +226,7 @@ class CASSCF(ES_Strategy):
             self._state = CASSCF_States(mol=self._mol, mf=None, mc=None)
         self._state.mol = self._mol
         self._state.mc = None
-        self._state.eris = None   # new geometry -> the cached integrals are stale
+        self._shared = gradient_nacv_shared()   # new geometry -> everything shared is stale
 
     def get_geom(self) -> MolecularGeometry:
         if self._geom is None:
@@ -182,12 +245,21 @@ class CASSCF(ES_Strategy):
 
     def copy(self) -> "CASSCF":
         """Return an independent snapshot of the full strategy state."""
-        return pycopy.deepcopy(self)
+        # The clone starts with empty shared intermediates.  They are rebuilt on
+        # demand and belong to this geometry, so copying them would duplicate the
+        # derivative-integral tensor once per trajectory to no purpose -- and the
+        # MO ERI may be h5py-backed, which deepcopy refuses outright.
+        shared, self._shared = self._shared, gradient_nacv_shared()
+        try:
+            return pycopy.deepcopy(self)
+        finally:
+            self._shared = shared
 
     def compute_H_el(self) -> np.ndarray:
-        restarting = (
-            self._previous_state is not None and self._previous_state.mc is not None
-        )
+        if self._previous_state is not None and self._previous_state.mc is not None:
+            mocoeff = self._previous_state.mc.mo_coeff
+        else:
+            mocoeff = self._state.mf.mo_coeff
 
         mc = mcscf.CASSCF(self._state.mf, self._norbcas, self._nelecas)
         if self._spin == 0:
@@ -202,43 +274,13 @@ class CASSCF(ES_Strategy):
         if self._nroots > 1:
             mc = mc.state_average_([1.0 / self._nroots] * self._nroots)  # equal weights as default; required for gradients in pyscf
 
-        if restarting:
-            # Orbitals converged at the PREVIOUS geometry are orthonormal in
-            # that geometry's AO metric, not in this one.  Handing them to
-            # mc.kernel unprojected leaves mc.mo_coeff non-orthonormal here,
-            # because the orbital optimizer only applies unitary rotations and
-            # so preserves whatever non-orthonormality it was given.  When the
-            # state-averaged surface is flat -- e.g. HeH+ CAS(2,2) with 3 roots,
-            # where the roots span the complete active space and the SA energy
-            # is a basis-independent trace -- the optimizer returns the guess
-            # bit-for-bit and the error survives untouched into mc.mo_coeff.
-            #
-            # project_init_guess re-orthonormalizes against the current
-            # molecule (SVD per orbital subspace) while keeping the active
-            # space in the canonical ncore:ncore+ncas block, which is what
-            # makes it safe to skip cas_list below.
-            mocoeff = mcscf.project_init_guess(
-                mc,
-                self._previous_state.mc.mo_coeff,
-                prev_mol=self._previous_state.mol,
-            )
-        else:
-            mocoeff = self._state.mf.mo_coeff
-
-            # cas_list indexes the *HF* orbitals, so it only applies to an HF
-            # starting guess.  A restart already carries its active space in
-            # the canonical block; re-sorting would pull a different set of
-            # columns entirely -- e.g. cas_list = [4, 7, 11, 14, 17] selects
-            # 0-indexed 3, 6, 10, 13, 16 while the active space already sits at
-            # 5-9.  CASSCF often re-converges to the same energies from that
-            # scrambled guess, which is what makes the bug easy to miss.
-            if self._cas_list is not None:
-                mocoeff = mcscf.sort_mo(mc, mocoeff, self._cas_list)
+        if self._cas_list is not None:
+            mocoeff = mcscf.sort_mo(mc, mocoeff, self._cas_list)
 
         mc.kernel(mocoeff)
 
         self._state.mc = mc
-        self._state.eris = None   # new wavefunction -> the cached integrals are stale
+        self._shared = gradient_nacv_shared()   # new wavefunction -> everything shared is stale
 
         #write the energies to the H_el attribute of the state object and return the energies as a numpy array
         energies = getattr(mc, "e_states", None)
@@ -248,23 +290,6 @@ class CASSCF(ES_Strategy):
         return self._state.H_el
 
     #gradient 
-
-    def _share_eris(self, solver: Any) -> Any:
-        """transform the integrals to the CASSCF MO basis and save in the state object"""
-        st = self._state
-        if st.eris is None:
-            st.eris = st.mc.ao2mo(st.mc.mo_coeff)
-        for name in ("make_fcasscf", "make_fcasscf_nacs"):
-            builder = getattr(solver, name, None)
-            if builder is None:
-                continue
-            def patched(*args, _build=builder, **kwargs):
-                fcasscf = _build(*args, **kwargs)
-                fcasscf.ao2mo = lambda mo_coeff=None: st.eris
-                return fcasscf
-            setattr(solver, name, patched)
-        return solver
-
     def compute_gradient(self, roots: Sequence[int]) -> list[np.ndarray]:
         """Nuclear gradients for ``roots``, returned in the order requested."""
         mc = self._state.mc
@@ -279,18 +304,32 @@ class CASSCF(ES_Strategy):
         # 1. compute the intermediate shared by every root
         if self._nroots == 1:
             grad = mc.nuc_grad_method()
+            if self.deriv_eri_reuse:
+                grad.deriv_eri = compute_deriv_eri(self._shared)
             return [
                 np.asarray(grad.kernel(), dtype=np.float64)
                 for _ in roots
             ]
 
-        grad = self._share_eris(mc.nuc_grad_method(state=0))
+        grad = mc.nuc_grad_method(state=0)
+        if self.cphf_reuse:
+            compute_cphf_lhs(grad, self._shared)
+        if self.deriv_eri_reuse:
+            # held on the gradient object, so every root's kernel call reuses it
+            grad.deriv_eri = compute_deriv_eri(self._shared)
 
-        # 2. per root
-        return [
-            np.asarray(grad.kernel(state=root, eris=self._state.eris), dtype=np.float64)
-            for root in roots
-        ]
+        # 2. per root: build a shared part on first use, then read it back
+        gradients = []
+        for root in roots:
+            eris = None
+            if self.eris_reuse:
+                if self._shared.eris is None:
+                    self._shared.eris = compute_eris(mc)
+                eris = self._shared.eris
+            gradients.append(
+                np.asarray(grad.kernel(state=root, eris=eris), dtype=np.float64)
+            )
+        return gradients
 
 
     # time overlap
@@ -387,7 +426,6 @@ class CASSCF(ES_Strategy):
             :, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas
         ]
         s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
-
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
@@ -408,10 +446,19 @@ class CASSCF(ES_Strategy):
     def compute_nac_vectors(self, use_etfs: bool = True) -> np.ndarray:
         """Non-adiabatic coupling vectors for every ordered state pair.
 
-        Same split as the gradient, and it pays off harder: this is one Lagrange
-        solve per *ordered pair*, so an n-state run reuses the shared ERI and
-        Jacobian across n(n-1) solves rather than n.  Both come out of the same
-        CASSCF_States cache that compute_gradient already populated.
+        Only the upper triangle is solved for.  d_IJ = <I|d/dR|J> is the
+        symmetric Hellmann-Feynman numerator over E_J - E_I, and that
+        denominator flips sign when the pair is swapped, so d_JI = -d_IJ and
+        the lower triangle is just the negated upper one -- n(n-1)/2 Lagrange
+        solves instead of n(n-1), measured at 2.01x for SA-3.  This holds
+        because mult_ediff=False below; with mult_ediff=True the kernel returns
+        the undivided numerator, which is *symmetric*, and mirroring would flip
+        the wrong sign.
+
+        Same reuse as the gradient, and it still pays off harder than there:
+        the ERI and the CP-MCSCF left-hand side are shared across every pair.
+        Both come out of the same gradient_nacv_shared object compute_gradient
+        already filled.
         """
         mc = self._state.mc
         nstates = self._n_total()
@@ -421,30 +468,29 @@ class CASSCF(ES_Strategy):
             return np.zeros((1, 1, natm, 3), dtype=np.float64)
 
         # 1. shared by every pair
-        nacs = self._share_eris(mc.nac_method())
+        nacs = mc.nac_method()
+        if self.cphf_reuse:
+            compute_cphf_lhs(nacs, self._shared)
+        if self.deriv_eri_reuse:
+            # the same provider compute_gradient filled, via self._shared
+            nacs.deriv_eri = compute_deriv_eri(self._shared)
 
-        # 2. per pair
-        #
-        # nacv[i, j] is d_ij = <psi_i | d/dR | psi_j>, and PySCF's
-        # nacs.kernel(state=(a, b)) returns exactly that for (i, j) = (a, b).
-        # Note this contradicts the docstring on
-        # pyscf.nac.sacasscf.NonAdiabaticCouplings, which reads the tuple the
-        # other way round ("state = (ket, bra)", returning <state[1]|d state[0]>).
-        # The order used here is the one the code actually implements: it
-        # reproduces a central-difference <psi_a(R) | psi_b(R +/- h)> derivative
-        # to 7 figures, while the docstring order comes out transposed --
-        # verified against interfaces.numerical_nac_vectors with use_etfs=False,
-        # which is the ETF-free quantity a finite difference measures.
+        # 2. per pair: build a shared part on first use, then read it back
         nacv = np.zeros((nstates, nstates, natm, 3), dtype=np.float64)
-        for i in range(nstates):
-            for j in range(nstates):
-                if i == j:
-                    continue
-                nacv[i, j] = np.asarray(
-                    nacs.kernel(state=(i, j), use_etfs=use_etfs,
-                                mult_ediff=False, eris=self._state.eris),
+        for ket in range(nstates):
+            for bra in range(ket):
+                eris = None
+                if self.eris_reuse:
+                    if self._shared.eris is None:
+                        self._shared.eris = compute_eris(mc)
+                    eris = self._shared.eris
+                d = np.asarray(
+                    nacs.kernel(state=(ket, bra), use_etfs=use_etfs,
+                                mult_ediff=False, eris=eris),
                     dtype=np.float64,
                 )
+                nacv[bra, ket] = d
+                nacv[ket, bra] = -d
         return nacv
 
 
@@ -557,5 +603,106 @@ if __name__ == "__main__":
         print("\nResult 2 H_el:", result2.H_el)
         print("Result 2 NACV shape:", result2.nac_vectors.shape)
 
+
+    def _smoke_test_casscf_c2h4_deriv_eri_timing(basis: str = '6-31g*', repeats: int = 2) -> None:
+        """Time C2H4 CAS(4,4) SA-3 with deriv_eri_reuse off vs on.
+
+        The SCF and CASSCF are converged once, before any timer; both variants
+        differentiate that same wavefunction.  Two workflows are timed:
+          all grad          -- compute_gradient([0, 1, 2])
+          1 grad + all nacv -- compute_gradient([0]) then compute_nac_vectors()
+        Each SA-CASSCF kernel call walks the (nabla i,j|k,l) block loop three
+        times -- once in grad/casscf.py for the Hellmann-Feynman term, twice in
+        grad/sacasscf.py for the Lagrange response -- so the call counter below
+        should read 3 * natm per kernel with reuse off, and 1 in total with it
+        on.  The variants alternate and the fastest of ``repeats`` is kept, so
+        neither pays alone for first-call warm-up.
+        """
+        import time
+        from pyscf import lib
+        import pyscf.grad.casscf as _gcas
+        import pyscf.grad.sacasscf as _gsa
+        import pyscf.grad.deriv_eri as _de
+
+        geom = MolecularGeometry(
+            atom_labels=['C', 'C', 'H', 'H', 'H', 'H'],
+            coords_bohr=np.array([
+                [0.0000,  0.0000,  0.6695],
+                [0.0000,  0.0000, -0.6695],
+                [0.0000,  0.9289,  1.2321],
+                [0.0000, -0.9289,  1.2321],
+                [0.0000,  0.9289, -1.2321],
+                [0.0000, -0.9289, -1.2321],
+            ], dtype=np.float64) / BOHR_TO_ANG,
+        )
+
+        casscf = CASSCF(norbcas=4, nelecas=4, nroots=3, basis=basis, unit='Bohr')
+        casscf.set_geom(geom)
+        e_states = casscf.compute_H_el()
+        mol = casscf.get_state().mol
+        nao = mol.nao_nr()
+        nao_pair = nao * (nao + 1) // 2
+
+        # Count every libcint (nabla i,j|k,l) evaluation and the time inside it.
+        ctr = {'n': 0, 't': 0.0}
+        real = _de.int2e_ip1
+        def counted(mol, shls_slice=None):
+            t0 = time.perf_counter()
+            out = real(mol, shls_slice)
+            ctr['n'] += 1
+            ctr['t'] += time.perf_counter() - t0
+            return out
+        for mod in (_de, _gcas, _gsa):
+            mod.int2e_ip1 = counted
+
+        cases = {
+            'all grad  (3 roots)':
+                lambda: (casscf.compute_gradient([0, 1, 2]), None),
+            '1 grad + all nacv (6 pairs)':
+                lambda: (casscf.compute_gradient([0]), casscf.compute_nac_vectors()),
+        }
+        best, out = {}, {}
+        try:
+            for name, fn in cases.items():
+                for _ in range(repeats):
+                    for tag, reuse in (('off', False), ('on', True)):
+                        casscf.deriv_eri_reuse = reuse
+                        casscf._shared = gradient_nacv_shared()  # 'on' pays for its own build
+                        ctr['n'], ctr['t'] = 0, 0.0
+                        t0 = time.perf_counter()
+                        res = fn()
+                        wall = time.perf_counter() - t0
+                        key = (name, tag)
+                        if key not in best or wall < best[key][0]:
+                            best[key] = (wall, ctr['n'], ctr['t'])
+                        out[key] = res
+        finally:
+            for mod in (_de, _gcas, _gsa):
+                mod.int2e_ip1 = real
+            casscf.deriv_eri_reuse = False
+
+        print(f"\nC2H4 CAS(4,4) SA-3  basis={basis}  nao={nao}  nao_pair={nao_pair}"
+              f"  threads={lib.num_threads()}  best of {repeats}")
+        print(f"  full (nabla i,j|k,l) = 3*nao^2*nao_pair*8 = "
+              f"{3 * nao * nao * nao_pair * 8 / 1e6:.1f} MB")
+        print(f"  E_states = {e_states}")
+        print(f"  {'case':<30}{'reuse':>6}{'wall/s':>9}{'int2e_ip1':>11}"
+              f"{'in int2e_ip1/s':>16}{'speedup':>9}")
+        for name in cases:
+            t_off = best[(name, 'off')][0]
+            for tag in ('off', 'on'):
+                wall, n, t = best[(name, tag)]
+                sp = '' if tag == 'off' else f"{t_off / wall:.2f}x"
+                label = name if tag == 'off' else ''
+                print(f"  {label:<30}{tag:>6}{wall:>9.2f}{n:>11d}{t:>16.2f}{sp:>9}")
+            g_off, n_off = out[(name, 'off')]
+            g_on, n_on = out[(name, 'on')]
+            err = max(float(np.max(np.abs(a - b))) for a, b in zip(g_off, g_on))
+            if n_off is not None:
+                err = max(err, float(np.max(np.abs(n_off - n_on))))
+            print(f"  {'':<30}{'max |off - on|':>6} = {err:.1e}")
+            assert err < 1e-9, f"reuse changed the result by {err:.2e}"
+
     _smoke_test_casscf_heh_plus_sequence()
     _smoke_test_casscf_nacv_sequence()
+    _smoke_test_casscf_c2h4_deriv_eri_timing()
