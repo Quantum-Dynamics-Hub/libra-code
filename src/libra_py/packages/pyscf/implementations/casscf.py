@@ -38,7 +38,16 @@ class CASSCF_States:
     eris: Optional[Any] = None 
 
 class CASSCF(ES_Strategy):
-    """PySCF-based CASSCF backend for the universal ES interface."""
+    """PySCF-based CASSCF backend for the universal ES interface.
+
+    ``overlap_orbitals="hf"`` (default) preserves the historical time-overlap
+    calculation: auxiliary CASCI roots in the HF orbital basis.
+    ``overlap_orbitals="casscf"`` uses the optimized CASSCF orbitals and their
+    matching, stored CI roots, preserving the energy/gradient root ordering.
+    Both choices contract only the active-space wavefunctions; inactive-core
+    determinant contributions and core--active cross terms are not included.
+    The choice affects overlaps only, not CASSCF energies or gradients.
+    """
 
     # 1) when a geom is set the HF is run; the MF is written to the member attribute
     #    `_mf`
@@ -58,7 +67,11 @@ class CASSCF(ES_Strategy):
         charge: int = 0,
         cas_list: Optional[List[int]] = None,
         spin_multiplicity: int = 1,
+        overlap_orbitals: str = "hf",
     ) -> None:
+        if overlap_orbitals not in ("hf", "casscf"):
+            raise ValueError("overlap_orbitals must be 'hf' or 'casscf'")
+        self._overlap_orbitals = overlap_orbitals
         #setting up the initial state 
         self._mol: Optional[Any] = mol
         self._norbcas: int = norbcas
@@ -75,6 +88,11 @@ class CASSCF(ES_Strategy):
         self._geom: Optional[MolecularGeometry] = None
         self._state: CASSCF_States | None = None
         self._previous_state: CASSCF_States | None = None
+
+    @property
+    def overlap_orbitals(self) -> str:
+        """Orbital/CI representation used for active-space time overlaps."""
+        return self._overlap_orbitals
 
     @property
     def nroots(self) -> int:
@@ -280,6 +298,11 @@ class CASSCF(ES_Strategy):
         state1: the current-state snapshot (``CASSCF_States``).
         state2: the previous-state snapshot (``CASSCF_States``).
 
+        Rows correspond to previous roots and columns to current roots. The
+        constructor's ``overlap_orbitals`` selects auxiliary HF/CASCI states
+        or optimized CASSCF states. Both omit inactive-core contributions and
+        align column signs to make the diagonal nonnegative.
+
         Returns
         -------
         np.ndarray
@@ -293,8 +316,6 @@ class CASSCF(ES_Strategy):
         prev_state = state2  # previous geometry
         curr_state = state1  # current geometry
 
-        if prev_state.mf is None or curr_state.mf is None:
-            raise ValueError("HF states are required for time-overlap computation.")
         if prev_state.mol is None or curr_state.mol is None:
             raise ValueError("Molecule states are required for time-overlap computation.")
 
@@ -304,10 +325,19 @@ class CASSCF(ES_Strategy):
 
         ao_overlap = self._compute_ao_overlap(prev_state, curr_state)
 
-        # Always build CASCI roots and matching active-space MO blocks for both
-        # geometries.  State-averaged CASSCF `mc.ci` representations can differ
-        # (and be incompatible with `fci.addons.overlap`'s expected transform),
-        # so recomputing CASCI ensures consistent CI + one-particle overlap.
+        if self._overlap_orbitals == "casscf":
+            prev_act, prev_roots, prev_nelec = self._optimized_overlap_data(prev_state)
+            curr_act, curr_roots, curr_nelec = self._optimized_overlap_data(curr_state)
+            if prev_nelec != curr_nelec:
+                raise ValueError("CASSCF snapshots must have the same active electron counts")
+            s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
+            return self._contract_active_overlap(prev_roots, curr_roots, s12_mo, prev_nelec)
+
+        if prev_state.mf is None or curr_state.mf is None:
+            raise ValueError("HF states are required for time-overlap computation.")
+
+        # Historical default: recompute auxiliary CASCI roots on HF orbitals.
+        # These need not be the optimized states used for energies/gradients.
         prev_casci = mcscf.CASCI(prev_state.mf, self._norbcas, self._nelecas)
         solver_cls = fci.direct_spin0.FCISolver if self._spin == 0 else fci.direct_spin1.FCISolver
         prev_casci.fcisolver = solver_cls(prev_state.mol)
@@ -358,6 +388,31 @@ class CASSCF(ES_Strategy):
             :, curr_casci.ncore : curr_casci.ncore + curr_casci.ncas
         ]
         s12_mo = prev_act.T.conj() @ ao_overlap @ curr_act
+        return self._contract_active_overlap(prev_roots, curr_roots, s12_mo, self._nelecas)
+
+    def _optimized_overlap_data(self, state: CASSCF_States):
+        """Extract matching optimized active orbitals and determinant CI roots."""
+        mc = state.mc
+        if mc is None or getattr(mc, "mo_coeff", None) is None or getattr(mc, "ci", None) is None:
+            raise ValueError(
+                "overlap_orbitals='casscf' requires optimized CASSCF orbitals and CI roots "
+                "in both snapshots; compute CASSCF energies first"
+            )
+        if mc.ncas != self._norbcas:
+            raise ValueError("CASSCF snapshot active-space size does not match the strategy")
+        if isinstance(mc.ci, (list, tuple)):
+            roots = [np.asarray(vec) for vec in mc.ci]
+        else:
+            ci = np.asarray(mc.ci)
+            roots = [ci] if ci.ndim == 2 else list(ci)
+        if len(roots) < self._n_total() or any(vec.ndim != 2 for vec in roots):
+            raise ValueError("CASSCF snapshots must contain the requested determinant CI roots")
+        active = np.asarray(mc.mo_coeff)[:, mc.ncore : mc.ncore + mc.ncas]
+        return active, roots[:self._n_total()], tuple(mc.nelecas)
+
+    def _contract_active_overlap(self, prev_roots, curr_roots, s12_mo, nelecas):
+        """Contract determinant CI roots and apply the existing column phases."""
+        nroots = self._n_total()
         overlap = np.zeros((nroots, nroots), dtype=float)
         for i in range(nroots):
             for j in range(nroots):
@@ -365,7 +420,7 @@ class CASSCF(ES_Strategy):
                     prev_roots[i],
                     curr_roots[j],
                     self._norbcas,
-                    self._nelecas,
+                    nelecas,
                     s=s12_mo,
                 )
 
