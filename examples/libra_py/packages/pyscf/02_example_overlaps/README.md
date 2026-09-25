@@ -24,8 +24,8 @@ The source-tree location is resolved relative to the script, so both invocation 
 | `casscf_hf` | CASSCF strategy, historical auxiliary CASCI roots in HF orbitals |
 | `casscf` | Optimized CASSCF active orbitals and their stored CI roots |
 | `cisd` | Restricted CISD for LiH; UCISD for LiH⁺; no frozen orbitals in this example |
-| `tda` | RKS/UKS PBE0 TDA, normalized X-only pseudo-states |
-| `tddft` | RKS/UKS PBE0 full TDDFT energies, normalized X-only pseudo-overlaps |
+| `tda` | RKS PBE0 TDA: normalized spin-adapted singlet determinant expansion; UKS: alpha/beta determinant expansion |
+| `tddft` | Same determinant construction using normalized X amplitudes from full TDDFT; Y amplitudes are not represented |
 
 `--method all` and `--system all` are the defaults: ten comparisons in total. Other system choices are `lih` and `lih_plus`. CASSCF uses CAS(2 electrons, 2 orbitals) for LiH and CAS(1 electron, 2 orbitals) for LiH⁺, both with one doubly occupied inactive orbital. The open-shell calculation targets a doublet. TDDFT/TDA retain the reference and one response root; CASSCF/CISD retain two CI roots. These method-dependent roots need not describe identical physical states.
 
@@ -56,11 +56,46 @@ U = optimized_overlaps.compute_time_overlap(current_state, previous_state)
 
 Despite the argument order, `U[i, j] = <previous root i | current root j>`. In the ordinary sequential interface, request `ES_Request(n_singlets=2, time_overlap=True)` and read `result.time_overlap` after the second geometry. The direct strategy returns `None` on the first geometry because there is no previous snapshot; the dynamics adapter supplies its initial identity matrix.
 
+## Restricted TDDFT and TDA determinant overlaps
+
+For an RKS reference, each normalized X-only response root is represented as
+
+```text
+|Psi_I> = sum_ia X^I_ia (|Phi_i^a alpha> + |Phi_i^a beta>)/sqrt(2),
+sum_ia |X^I_ia|^2 = 1.
+```
+
+The implementation evaluates every alpha/beta determinant pair with the full cross-geometry MO overlap matrix. Consequently, the closed-shell reference overlap is `det(S_occ)^2`; reference–excited elements contain the singlet `sqrt(2)` factor and determinant cofactors; and excited–excited elements retain occupied–virtual cross terms. This replaces the former occupied/virtual contraction.
+
+The public calculation is unchanged:
+
+```python
+from libra_py.packages.pyscf.implementations import TDDFT
+from libra_py.packages.pyscf.interfaces import ES_Request
+
+method = TDDFT(atom_labels=("Li", "H"), nexc=1, basis="sto-3g",
+               xc="pbe0", use_tda=True)
+request = ES_Request(n_singlets=2, time_overlap=True)
+
+first = method.compute_result(geometry_t, request)
+second = method.compute_result(geometry_t_plus_dt, request)
+U = second.time_overlap       # U[I,J] = <Psi_I(t)|Psi_J(t+dt)>
+```
+
+Run only the closed-shell TDA or TDDFT examples with:
+
+```bash
+python examples/libra_py/packages/pyscf/02_example_overlaps/overlaps.py \
+  --source-tree --system lih --method tda --output /tmp/lih_tda_overlaps
+python examples/libra_py/packages/pyscf/02_example_overlaps/overlaps.py \
+  --source-tree --system lih --method tddft --output /tmp/lih_tddft_overlaps
+```
+
 ## Outputs and interpretation
 
 Each comparison writes a JSON record and an overlap CSV; `summary.json` collects all records. The terminal prints the matrices. JSON includes both sets of energies, the current-state self-overlap, singular values, the overlap orthogonality defect, and the full-MO metric error `||C† S_AO C − I||F` (maximum over spin channels for unrestricted references). All matrices use the interface's column-phase alignment. Off-diagonal signs can vary between independent electronic calculations; comparisons of absolute matrix elements remove that sign ambiguity but do not solve root tracking.
 
-Both CASSCF options retain the existing **active-space-only contraction**. Neither includes inactive-core determinant factors or core–active cross terms. The optimized option therefore improves orbital/CI consistency without claiming a complete all-electron CASSCF overlap. CISD uses the existing PySCF determinant overlap routines. The restricted TDDFT/TDA overlap uses the current approximate occupied/virtual contraction; the unrestricted path uses determinant sums of the selected X-only pseudo-states. Full TDDFT's Y amplitudes are omitted from these overlaps. These existing limitations are not changed by this example.
+Both CASSCF options retain the existing **active-space-only contraction**. Neither includes inactive-core determinant factors or core–active cross terms. The optimized option therefore improves orbital/CI consistency without claiming a complete all-electron CASSCF overlap. CISD uses the existing PySCF determinant overlap routines. Restricted TDDFT/TDA now uses exact determinant sums for the selected normalized singlet X-only pseudo-states, and the unrestricted path uses determinant sums of its selected X-only pseudo-states. Full TDDFT's Y amplitudes remain omitted, so these are pseudo-wavefunction overlaps rather than overlaps of the complete linear-response object.
 
 An overlap between different geometries need not be unitary in a truncated state space. Even identical-geometry X-only TDDFT pseudo-states need not be mutually orthogonal when several response roots are retained. Report diagnostics rather than automatically replacing the matrices by identities.
 
@@ -76,7 +111,7 @@ The existing CASSCF energy routine passes the previous geometry's MO coefficient
 
 ## Unit tests
 
-The tests in `unittests/test_libra_py/test_packages/test_pyscf/test_casscf_overlaps.py` compare both representations against an independent small determinant expansion. They cover the HF default, optimized orbitals and matching CI roots without auxiliary CASCI, state sequencing, initial-geometry self-overlap, single-root and multiroot representations, column signs, copy isolation, invalid/missing data, and the open-shell alpha/beta electron partition.
+The CASSCF tests in `unittests/test_libra_py/test_packages/test_pyscf/test_casscf_overlaps.py` compare both representations against an independent small determinant expansion. The restricted-response tests in `test_tddft_overlaps.py` cover the analytic two-electron orbital rotation, singlet normalization, the squared closed-shell determinant, orthogonality at identical geometry, invalid amplitude dimensions, and the public displaced-geometry TDA request.
 
 For an installed build containing this revision:
 
