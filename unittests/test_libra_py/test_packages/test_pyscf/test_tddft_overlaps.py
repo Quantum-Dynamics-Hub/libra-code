@@ -75,6 +75,21 @@ class RestrictedTDDFTOverlapTests(unittest.TestCase):
         det_occ = np.linalg.det(s_mo[:2, :2])
         np.testing.assert_allclose(actual[0, 0], det_occ ** 2, atol=1e-14)
 
+    def test_determinant_minor_formula_matches_explicit_expansion(self):
+        rng = np.random.default_rng(17)
+        s_mo = np.eye(4) + 0.08 * rng.normal(size=(4, 4))
+        left_states = [None, rng.normal(size=(2, 2)), rng.normal(size=(2, 2))]
+        right_states = [None, rng.normal(size=(2, 2)), rng.normal(size=(2, 2))]
+        left_states[1:] = [x / np.linalg.norm(x) for x in left_states[1:]]
+        right_states[1:] = [x / np.linalg.norm(x) for x in right_states[1:]]
+        minors = self.strategy._restricted_singlet_cis_overlap_minors(
+            left_states, right_states, s_mo, 2
+        )
+        determinants = self.strategy._restricted_singlet_cis_overlap_determinants(
+            left_states, right_states, 4, 4, 2, s_mo
+        )
+        np.testing.assert_allclose(minors, determinants, atol=1e-12)
+
     def test_bad_amplitude_shape_fails_explicitly(self):
         state = restricted_state(np.eye(3), [np.ones((1, 1))], nocc=1)
         with self.assertRaisesRegex(ValueError, "amplitude shape"):

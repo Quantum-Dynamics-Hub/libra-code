@@ -543,17 +543,96 @@ class TDDFT(ES_Strategy):
 
         left_states = [None] + list(left.amplitudes[: nstates - 1])
         right_states = [None] + list(right.amplitudes[: nstates - 1])
+        expected_left = (nocc_left, left_mo.shape[1] - nocc_left)
+        expected_right = (nocc_right, right_mo.shape[1] - nocc_right)
+        for side, states, expected in (
+            ("left", left_states, expected_left),
+            ("right", right_states, expected_right),
+        ):
+            for amplitude in states[1:]:
+                if np.asarray(amplitude).shape != expected:
+                    raise ValueError(
+                        f"Restricted TDDFT {side} amplitude shape does not match "
+                        f"the MO occupation: expected {expected}, got "
+                        f"{np.asarray(amplitude).shape}."
+                    )
+        occupied = s_mo[:nocc_left, :nocc_right]
+        # The determinant-minor identities below are exact when the occupied
+        # block is invertible and avoid the quadratic number of nocc-by-nocc
+        # determinants in an explicit singles expansion.  Near singularities,
+        # use the general determinant contraction instead.
+        try:
+            condition = np.linalg.cond(occupied)
+        except np.linalg.LinAlgError:
+            condition = np.inf
+        if np.isfinite(condition) and condition < 1.0 / np.sqrt(np.finfo(float).eps):
+            return self._restricted_singlet_cis_overlap_minors(
+                left_states, right_states, s_mo, nocc_left
+            )
+        return self._restricted_singlet_cis_overlap_determinants(
+            left_states, right_states, left_mo.shape[1], right_mo.shape[1],
+            nocc_left, s_mo,
+        )
+
+    def _restricted_singlet_cis_overlap_minors(
+        self, left_states, right_states, s_mo, nocc
+    ):
+        """Evaluate restricted singlet overlaps from exact determinant minors."""
+        occupied = s_mo[:nocc, :nocc]
+        occ_virtual = s_mo[:nocc, nocc:]
+        virtual_occ = s_mo[nocc:, :nocc]
+        virtual_virtual = s_mo[nocc:, nocc:]
+        inverse = np.linalg.inv(occupied)
+        determinant = np.linalg.det(occupied)
+        right_minor = inverse @ occ_virtual
+        left_minor = virtual_occ @ inverse
+        double_remainder = virtual_virtual - virtual_occ @ inverse @ occ_virtual
+        reference_overlap = determinant * determinant
+
         dtype = np.result_type(s_mo, *(left_states[1:] + right_states[1:]))
-        overlap = np.zeros((nstates, nstates), dtype=dtype)
+        overlap = np.zeros((len(left_states), len(right_states)), dtype=dtype)
+        overlap[0, 0] = reference_overlap
+        left_contractions = [None]
+        right_contractions = [None]
+        for i, amplitude in enumerate(left_states[1:], start=1):
+            contraction = np.einsum(
+                "ia,ai->", np.conjugate(amplitude), left_minor, optimize=True
+            )
+            left_contractions.append(contraction)
+            overlap[i, 0] = np.sqrt(2.0) * reference_overlap * contraction
+        for j, amplitude in enumerate(right_states[1:], start=1):
+            contraction = np.einsum(
+                "jb,jb->", amplitude, right_minor, optimize=True
+            )
+            right_contractions.append(contraction)
+            overlap[0, j] = np.sqrt(2.0) * reference_overlap * contraction
+        for i, amplitude_i in enumerate(left_states[1:], start=1):
+            for j, amplitude_j in enumerate(right_states[1:], start=1):
+                connected = np.einsum(
+                    "ia,jb,ji,ab->",
+                    np.conjugate(amplitude_i), amplitude_j, inverse,
+                    double_remainder, optimize=True,
+                )
+                overlap[i, j] = reference_overlap * (
+                    2.0 * left_contractions[i] * right_contractions[j] + connected
+                )
+        return np.real_if_close(overlap)
+
+    def _restricted_singlet_cis_overlap_determinants(
+        self, left_states, right_states, nmo_left, nmo_right, nocc, s_mo
+    ):
+        """General determinant-sum fallback for a singular occupied block."""
+        dtype = np.result_type(s_mo, *(left_states[1:] + right_states[1:]))
+        overlap = np.zeros((len(left_states), len(right_states)), dtype=dtype)
         left_configs = [
             self._restricted_singlet_configurations(
-                amplitude, left_mo.shape[1], nocc_left
+                amplitude, nmo_left, nocc
             )
             for amplitude in left_states
         ]
         right_configs = [
             self._restricted_singlet_configurations(
-                amplitude, right_mo.shape[1], nocc_right
+                amplitude, nmo_right, nocc
             )
             for amplitude in right_states
         ]

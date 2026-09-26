@@ -1,6 +1,6 @@
 # Small overlap checks
 
-Checked with PySCF 2.13.1 using the repository's Python implementation and one thread. The PySCF interface unit-test directory passed all 14 tests, including six focused TDDFT/TDA determinant-overlap tests. The combined run emitted existing duplicate Boost/Python converter registration warnings.
+Checked with PySCF 2.13.1 using the repository's Python implementation and one thread. The PySCF interface unit-test directory passed all 15 tests, including seven focused TDDFT/TDA determinant-overlap tests. The combined run emitted existing duplicate Boost/Python converter registration warnings.
 
 All ten independent-geometry examples converged. The table lists absolute matrix elements because independently chosen electronic signs can differ. Geometry: Li–H 3.0 → 3.1 Bohr; basis: STO-3G; two roots. These are illustrative method-dependent overlaps, not accuracy benchmarks or comparable spectra.
 
