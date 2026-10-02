@@ -46,6 +46,11 @@ class ldr_solver:
     only in ``istate``; omitted overlaps are zero. The default assumes
     coordinate-independent orthonormal electronic states.
 
+    ``alpha`` contains positive Gaussian exponents: a scalar or a vector
+    of length ``ndof`` gives uniform widths; shape ``(ngrids, ndof)`` gives
+    a separate width for each center and dimension. A one-element vector
+    broadcasts over dimensions. The nuclear basis functions are normalized.
+
     Energies have shape ``(nstates, ngrids)`` and electronic overlaps have
     shape ``(nstates * ngrids, nstates * ngrids)``, in state-major order.
     Inputs are converted to float64/complex128 on ``device``.
@@ -64,6 +69,16 @@ class ldr_solver:
         self.qgrid = torch.as_tensor(params.get("qgrid", [[-10 + i * 0.1] for i in range(int((10 - (-10)) / 0.1) + 1)] ), dtype=torch.float64, device=self.device) #(N, D)
         self.ngrids = len(self.qgrid) # N
         self.ndof = self.qgrid.shape[1] 
+        if not torch.all(torch.isfinite(self.alpha) & (self.alpha > 0)):
+            raise ValueError("Gaussian widths must be positive and finite")
+        if self.alpha.ndim == 0 or (
+                self.alpha.ndim == 1 and self.alpha.numel() in (1, self.ndof)):
+            self._alpha_grid = self.alpha.expand(self.ngrids, self.ndof)
+        elif self.alpha.shape == (self.ngrids, self.ndof):
+            self._alpha_grid = self.alpha
+        else:
+            raise ValueError("alpha must be scalar, have shape (ndof,), "
+                             "or have shape (ngrids, ndof)")
         self.nstates = params.get("nstates", 2)
         self.istate = params.get("istate", 0)
         if not 0 <= self.istate < self.nstates:
@@ -141,8 +156,17 @@ class ldr_solver:
         from the Gaussian basis, g(x; q) = \exp(-\alpha * (x-q)**2).
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]    # (N, N, D)
-        exponent = -0.5 * torch.sum(self.alpha * delta**2, dim=2)  # (N, N)
-        self.s_nucl = torch.exp(exponent)
+        if self.alpha.ndim < 2:
+            exponent = -0.5 * torch.sum(self.alpha * delta**2, dim=2)
+            self.s_nucl = torch.exp(exponent)
+        else:
+            alpha_i = self._alpha_grid[:, None, :]
+            alpha_j = self._alpha_grid[None, :, :]
+            alpha_sum = alpha_i + alpha_j
+            beta = alpha_i * alpha_j / alpha_sum
+            prefactor = torch.sqrt(2 * torch.sqrt(alpha_i * alpha_j) / alpha_sum)
+            self.s_nucl = prefactor.prod(dim=2) * torch.exp(
+                -torch.sum(beta * delta**2, dim=2))
 
     def chi_kinetic(self):
         """
@@ -150,7 +174,13 @@ class ldr_solver:
         with T = \sum_{\nu} -0.5* m_ν^{-1} \partial^{2}/\partial x_{\nu}^2.
         """
         delta = self.qgrid[:, None, :] - self.qgrid[None, :, :]               # (N, N, D)
-        tau = self.alpha / (2.0 * self.mass) * (1.0 - self.alpha * delta**2)  # (N, N, D)
+        if self.alpha.ndim < 2:
+            tau = self.alpha / (2.0 * self.mass) * (1.0 - self.alpha * delta**2)
+        else:
+            alpha_i = self._alpha_grid[:, None, :]
+            alpha_j = self._alpha_grid[None, :, :]
+            beta = alpha_i * alpha_j / (alpha_i + alpha_j)
+            tau = beta / self.mass * (1.0 - 2.0 * beta * delta**2)
         tau_sum = torch.sum(tau, dim=2)                                       # (N, N)
     
         self.t_nucl = self.s_nucl * tau_sum                                   # (N, N)
@@ -253,15 +283,16 @@ class ldr_solver:
         if torch.any(self.alpha <= 0) or torch.any(alpha0 <= 0):
             raise ValueError("Gaussian widths must be positive")
         delta = self.qgrid - self.q0
-        width = self.alpha + alpha0
+        alpha = self._alpha_grid
+        width = alpha + alpha0
         momentum = self.p0 / self.hbar
         # Analytic overlap of normalized Gaussians, in coordinates relative
         # to q0 to avoid cancellation between large absolute positions.
-        prefactor = torch.prod((4 * self.alpha * alpha0 / width**2)**0.25)
+        prefactor = torch.prod((4 * alpha * alpha0 / width**2)**0.25, dim=1)
         exponent = torch.sum(
-            -self.alpha * alpha0 / width * delta**2
+            -alpha * alpha0 / width * delta**2
             -momentum**2 / (4 * width)
-            +1j * self.alpha / width * momentum * delta,
+            +1j * alpha / width * momentum * delta,
             dim=1,
         )
         nuclear_overlap = prefactor * torch.exp(exponent)
@@ -408,7 +439,10 @@ class ldr_solver:
         
         avg_q = []
         for idof in range(self.ndof):
-            q_med = 0.5 * (self.qgrid[:, None, idof] + self.qgrid[None,:,idof])
+            alpha_i = self._alpha_grid[:, None, idof]
+            alpha_j = self._alpha_grid[None, :, idof]
+            q_med = (alpha_i * self.qgrid[:, None, idof]
+                     + alpha_j * self.qgrid[None, :, idof]) / (alpha_i + alpha_j)
             q_nucl = self.s_nucl * q_med 
             Q_4d = q_nucl[None, :, None, :]
             Q_4d_compound = s_elec_4d * Q_4d
