@@ -114,15 +114,16 @@ def test_complex_overlap_square_root_recovers_known_positive_hermitian_matrix():
     assert_close(solver.S_half, root, atol=1e-12, rtol=1e-12)
 
 
-def test_complex_gauge_covariance_projection_and_propagation():
+@pytest.mark.parametrize("alpha", [[1.0], [[0.7], [1.3], [2.1]]])
+def test_complex_gauge_covariance_projection_and_propagation(alpha):
     se = electronic_basis()
     energies = [[0.1, 0.3, 0.8], [0.5, 0.9, 1.4]]
-    ref = make_solver(nstates=2, E=energies, s_elec=se,
+    ref = make_solver(nstates=2, E=energies, s_elec=se, alpha=alpha,
                       elec_ampl=se[:, 0].reshape(2, 3), k=[0.6], p0=[0.7])
     phase = torch.exp(1j * torch.tensor([0.1, 0.7, -1.2, 2.1, -0.4, 1.5],
                                       dtype=torch.float64))
     phased = make_solver(
-        nstates=2, E=energies, s_elec=phase.conj()[:, None] * se * phase[None, :],
+        nstates=2, E=energies, alpha=alpha, s_elec=phase.conj()[:, None] * se * phase[None, :],
         elec_ampl=(phase.conj() * se[:, 0]).reshape(2, 3), k=[0.6], p0=[0.7],
     )
     for solver in [ref, phased]:
