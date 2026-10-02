@@ -37,22 +37,50 @@ import torch
 
 
 class ldr_solver:
+    """Dynamics in a fixed, nonorthogonal Gaussian/electronic basis.
+
+    ``elec_ampl[j, n]`` is the overlap of electronic basis state ``(j, n)``
+    with the desired initial electronic state, not an expansion coefficient.
+    Supply all states, shape ``(nstates, ngrids)``, for a fixed electronic
+    reference state. A legacy vector of shape ``(ngrids,)`` supplies overlaps
+    only in ``istate``; omitted overlaps are zero. The default assumes
+    coordinate-independent orthonormal electronic states.
+
+    Energies have shape ``(nstates, ngrids)`` and electronic overlaps have
+    shape ``(nstates * ngrids, nstates * ngrids)``, in state-major order.
+    Inputs are converted to float64/complex128 on ``device``.
+    """
+
     def __init__(self, params):
         self.prefix = params.get("prefix", "ldr-solution")
-        self.device = params.get("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(params.get("device", "cuda" if torch.cuda.is_available() else "cpu"))
         self.hbar = 1.0
         self.hamiltonian_scheme = "symmetrized"
-        self.q0 = torch.tensor(params.get("q0", [0.0]), dtype=torch.float64, device=self.device)
-        self.p0 = torch.tensor(params.get("p0", [0.0]), dtype=torch.float64, device=self.device)
-        self.k = torch.tensor(params.get("k", [0.001]), dtype=torch.float64, device=self.device)
-        self.mass = torch.tensor(params.get("mass", [2000.0]), dtype=torch.float64, device=self.device)
-        self.alpha = torch.tensor(params.get("alpha", [18.0]), dtype=torch.float64, device=self.device)
-        self.qgrid = torch.tensor(params.get("qgrid", [[-10 + i * 0.1] for i in range(int((10 - (-10)) / 0.1) + 1)] ), dtype=torch.float64, device=self.device) #(N, D)
+        self.q0 = torch.as_tensor(params.get("q0", [0.0]), dtype=torch.float64, device=self.device)
+        self.p0 = torch.as_tensor(params.get("p0", [0.0]), dtype=torch.float64, device=self.device)
+        self.k = torch.as_tensor(params.get("k", [0.001]), dtype=torch.float64, device=self.device)
+        self.mass = torch.as_tensor(params.get("mass", [2000.0]), dtype=torch.float64, device=self.device)
+        self.alpha = torch.as_tensor(params.get("alpha", [18.0]), dtype=torch.float64, device=self.device)
+        self.qgrid = torch.as_tensor(params.get("qgrid", [[-10 + i * 0.1] for i in range(int((10 - (-10)) / 0.1) + 1)] ), dtype=torch.float64, device=self.device) #(N, D)
         self.ngrids = len(self.qgrid) # N
         self.ndof = self.qgrid.shape[1] 
         self.nstates = params.get("nstates", 2)
         self.istate = params.get("istate", 0)
-        self.elec_ampl = params.get("elec_ampl", torch.tensor([1.0+0.j]*self.ngrids, dtype=torch.cdouble))
+        if not 0 <= self.istate < self.nstates:
+            raise ValueError("istate must index one of nstates electronic states")
+        amplitudes = torch.as_tensor(
+            params.get("elec_ampl", torch.ones(self.ngrids)),
+            dtype=torch.cdouble, device=self.device,
+        )
+        if amplitudes.shape == (self.ngrids,):
+            self.elec_ampl = torch.zeros(
+                self.nstates, self.ngrids, dtype=torch.cdouble, device=self.device
+            )
+            self.elec_ampl[self.istate] = amplitudes
+        elif amplitudes.shape == (self.nstates, self.ngrids):
+            self.elec_ampl = amplitudes
+        else:
+            raise ValueError("elec_ampl must have shape (ngrids,) or (nstates, ngrids)")
 
         self.save_every_n_steps = params.get("save_every_n_steps", 1)
         self.properties_to_save = params.get("properties_to_save", ["time", "population_right"])
@@ -60,13 +88,31 @@ class ldr_solver:
         self.nsteps = params.get("nsteps", 500)
         self.ndim = self.nstates * self.ngrids
 
-        self.E = params.get("E", torch.zeros(self.nstates, self.ngrids, device=self.device) )
+        energies = torch.as_tensor(
+            params.get("E", torch.zeros(self.nstates, self.ngrids)),
+            dtype=torch.cdouble, device=self.device,
+        )
+        if energies.shape != (self.nstates, self.ngrids):
+            raise ValueError("E must have shape (nstates, ngrids)")
+        if energies.is_complex():
+            if torch.any(energies.imag != 0):
+                raise ValueError("E must contain real electronic energies")
+            energies = energies.real
+        self.E = energies.to(dtype=torch.float64)
 
-        s_elec_default = torch.zeros(self.ndim, self.ndim, dtype=torch.cdouble, device=self.device)
-        for i in range(self.nstates):
-            start, end = i * self.ngrids, (i + 1) * self.ngrids
-            s_elec_default[start:end, start:end] = torch.eye(self.ngrids, device=self.device)            
-        self.s_elec = params.get("s_elec", s_elec_default )   
+        if "s_elec" in params:
+            self.s_elec = torch.as_tensor(
+                params["s_elec"], dtype=torch.cdouble, device=self.device
+            )
+        else:
+            # The same electronic state overlaps with itself at EVERY center.
+            self.s_elec = torch.kron(
+                torch.eye(self.nstates, dtype=torch.cdouble, device=self.device),
+                torch.ones(self.ngrids, self.ngrids, dtype=torch.cdouble, device=self.device),
+            )
+        if self.s_elec.shape != (self.ndim, self.ndim):
+            raise ValueError("s_elec must have shape (nstates * ngrids, nstates * ngrids)")
+        self.s_elec = self.s_elec.contiguous()
 
         # Computed with LDR methods
         self.C0 = torch.zeros(self.ndim, dtype=torch.cdouble, device=self.device)
@@ -162,8 +208,10 @@ class ldr_solver:
 
     def compute_propagator(self):
         """
-        Compute the exponential propagator matrix U = exp(-i H dt) in the non-orthogonal basis
-        using the Lowdin orthonormalization.
+        Compute U = S^-1/2 exp(-i S^-1/2 H S^-1/2 dt / hbar) S^1/2.
+
+        The overlap must be positive definite; linearly dependent basis
+        functions must be removed before propagation.
   
         """
         S = self.S
@@ -171,15 +219,20 @@ class ldr_solver:
         dt = self.dt
     
         evals_S, evecs_S = torch.linalg.eigh(S)
-    
-        self.S_half = (evecs_S @ torch.diag(evals_S.sqrt().to(dtype=torch.cdouble)) @ evecs_S.T).to(dtype=torch.cdouble)
-        S_invhalf = (evecs_S @ torch.diag((1.0 / evals_S).sqrt().to(dtype=torch.cdouble)) @ evecs_S.T).to(dtype=torch.cdouble)
+        if not torch.all(torch.isfinite(evals_S) & (evals_S > 0)):
+            raise ValueError("The compound overlap S must be positive definite")
+        evecs_S = evecs_S.to(dtype=torch.cdouble)
+        # eigh returns eigenvectors as COLUMNS of Q: S Q = Q diag(evals_S).
+        # Thus S^p = Q diag(evals_S^p) Q^dagger, not Q^dagger diag(...) Q.
+        # Broadcasting the eigenvalue vector below scales Q's columns.
+        self.S_half = (evecs_S * evals_S.sqrt()) @ evecs_S.conj().T
+        S_invhalf = (evecs_S * evals_S.rsqrt()) @ evecs_S.conj().T
     
         H_ortho = S_invhalf @ H @ S_invhalf
     
         evals_H, evecs_H = torch.linalg.eigh(H_ortho)
     
-        exp_diag = torch.diag(torch.exp(-1j * evals_H * dt))
+        exp_diag = torch.diag(torch.exp(-1j * evals_H * dt / self.hbar))
         U_ortho = evecs_H @ exp_diag @ evecs_H.conj().T
     
         self.U = S_invhalf @ U_ortho @ self.S_half
@@ -187,49 +240,37 @@ class ldr_solver:
 
     def initialize_C(self):
         """
-        Initialize coefficient vector self.C0 at t=0, assuming:
-        - electronic state self.istate
-        - nuclear wavefunction is a Gaussian centered at self.q0 and self.p0, i.e.
-        chi0(q;q0,p0) = exp( - alpha0 * (q - self.q0)**2 + i * self.p0 * (q - self.q0) )
-        alpha0 = 0.5/s_q **2; s_q = (1/(self.k * self.mass)) **0.25
-        
-        For the Gaussian overlap calculation, consult with the formula in Begušić, T.; Vaníček, J. J. Chem. Phys. 2020, 153 (18), 184110.
+        Project a normalized Gaussian onto the compound basis and normalize.
 
-        Sets:
-            self.C0 : complex-valued coefficient vector of shape (ndim)
+        The target nuclear wavefunction is proportional to
+        exp[-sum(alpha0 * (q-q0)^2) + i p0.(q-q0)/hbar], where
+        alpha0 = sqrt(k * mass)/2. Electronic overlaps are supplied through
+        ``elec_ampl`` (see the class docstring). Build S before calling this
+        method. Solve S C0 = b with b_a = <psi_a|Psi0>; the overlaps themselves
+        are NOT expansion coefficients in a nonorthogonal basis.
         """
-        N, ist = self.ngrids, self.istate
-
-        q0     = self.q0.to(torch.cdouble)
-        p0     = self.p0.to(torch.cdouble)
-        qgrid  = self.qgrid.to(torch.cdouble)
-        alpha  = self.alpha.to(torch.cdouble)
-
-        s_q = (1.0 / (self.k*self.mass) ) ** 0.25
-        alpha0 = 1 / ( 2 * s_q **2 )
-        alpha0 = alpha0.to(torch.cdouble)
-
-        # Width matrix
-        Ag, A = torch.diag(2.j * self.alpha), torch.diag(2.j * alpha0)
-        delta_A = A - Ag.conj()
-        delta_A_inv = torch.torch.linalg.inv(delta_A)
-
-        # Compute Gaussian nuclear wavefunction at each grid point
-        for n in range(N):
-            index = ist * N + n
-    
-            xi0, xig = p0 - torch.matmul(A, q0), -torch.matmul(Ag, qgrid[n])
-            delta_xi = xi0 - xig.conj()
-            delta_eta = -0.5 * torch.dot(xi0 + p0, q0) + 0.5 * torch.dot(xig, qgrid[n]).conj()
-            exponent = -1.j * 0.5 * torch.dot(delta_xi, torch.matmul(delta_A_inv, delta_xi)) + 1.j * delta_eta
-    
-            self.C0[index] = self.elec_ampl[n] * torch.exp(exponent)
-    
-        # Normalize
-        overlap = torch.matmul(self.S, self.C0)
-        norm = torch.sqrt(torch.vdot(self.C0, overlap))
-    
-        self.C0 /= norm
+        alpha0 = 0.5 * torch.sqrt(self.k * self.mass)
+        if torch.any(self.alpha <= 0) or torch.any(alpha0 <= 0):
+            raise ValueError("Gaussian widths must be positive")
+        delta = self.qgrid - self.q0
+        width = self.alpha + alpha0
+        momentum = self.p0 / self.hbar
+        # Analytic overlap of normalized Gaussians, in coordinates relative
+        # to q0 to avoid cancellation between large absolute positions.
+        prefactor = torch.prod((4 * self.alpha * alpha0 / width**2)**0.25)
+        exponent = torch.sum(
+            -self.alpha * alpha0 / width * delta**2
+            -momentum**2 / (4 * width)
+            +1j * self.alpha / width * momentum * delta,
+            dim=1,
+        )
+        nuclear_overlap = prefactor * torch.exp(exponent)
+        b = (self.elec_ampl * nuclear_overlap[None, :]).reshape(self.ndim)
+        coefficients = torch.linalg.solve(self.S, b)
+        norm_squared = torch.vdot(coefficients, self.S @ coefficients).real
+        if not torch.isfinite(norm_squared) or norm_squared <= 0:
+            raise ValueError("The initial state must have a finite, nonzero projected norm")
+        self.C0 = coefficients / norm_squared.sqrt()
     
     def propagate(self):
         """
@@ -424,4 +465,3 @@ class ldr_solver:
         print("Propagating Coefficients")
         self.propagate()
         self.save()
-
