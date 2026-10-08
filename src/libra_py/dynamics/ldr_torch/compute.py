@@ -343,22 +343,13 @@ class ldr_solver:
             self.C_save.append(self.C_curr)
         
     def compute_populations(self):
+        """Return the diagonal of the Lowdin electronic density matrix.
+
+        Populations use the same orthogonalized coefficients as coherences.
+        They are nonnegative and sum to C_curr^+ S C_curr, which is one
+        for a normalized wavefunction, without separate renormalization.
         """
-        Compute electronic state population for a single step.
-        """
-        N, s = self.ngrids, self.nstates
-        C_vec = self.C_curr
-        
-        # Compute SC once: shape (ndim,)
-        SC = self.S @ C_vec
-    
-        C_blocks = C_vec.view(s, N)
-        SC_blocks = SC.view(s, N)
-    
-        # Compute P[i] = sum_j <C_j|S_{ji}|C_i> = Re[ sum_N (C_j*) * SC_j ]
-        P = torch.sum(C_blocks.conj() * SC_blocks, dim=1).real
-    
-        return P
+        return self.compute_denmat().diagonal().real
 
     def compute_denmat(self):
         """
