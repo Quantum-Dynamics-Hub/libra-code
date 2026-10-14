@@ -100,6 +100,57 @@ def test_legacy_overlap_vector_matches_explicit_single_state_block():
     assert_close(legacy.C0, full.C0)
 
 
+@pytest.mark.parametrize("phase_angles", [None, [0.1, 0.7, -1.2, 2.1]])
+@pytest.mark.parametrize("amplitude_scale", [1.0, 2.0])
+def test_lowdin_populations_for_state_with_negative_mulliken_population(
+        phase_angles, amplitude_scale):
+    # Two normalized Gaussians with overlap 1/2, and local electronic
+    # frames rotated by pi/3. The compound Gram matrix is positive definite.
+    overlap, angle = 0.5, np.pi / 3
+    ca, sa = np.cos(angle), np.sin(angle)
+    vectors = torch.tensor([[1., 0.], [ca, sa], [0., 1.], [-sa, ca]],
+                           dtype=torch.cdouble)
+    se = vectors.conj() @ vectors.T
+    coefficients = torch.tensor([1., 0., 0., 3.], dtype=torch.cdouble)
+    norm_squared = 10 - 6 * overlap * sa
+    coefficients *= amplitude_scale / np.sqrt(norm_squared)
+    if phase_angles is not None:
+        phase = torch.exp(1j * torch.tensor(phase_angles, dtype=torch.float64))
+        se = phase.conj()[:, None] * se * phase[None, :]
+        coefficients = phase.conj() * coefficients
+    solver = make_solver(
+        nstates=2, qgrid=[[0.], [np.sqrt(-2 * np.log(overlap))]],
+        E=[[0.1, 0.3], [0.5, 0.9]], s_elec=se,
+        properties_to_save=["population_right", "denmat"],
+    )
+    solver.compute_propagator()
+    solver.C_curr = coefficients
+    old_populations = (coefficients.conj() * (solver.S @ coefficients)).real
+    assert old_populations.reshape(2, 2).sum(dim=1)[0] < 0
+
+    # Analytic positive square root: S = I + overlap*T, T^2 = I.
+    # This gives an independent expected population, without diagonalizing S.
+    a = (np.sqrt(1 + overlap) + np.sqrt(1 - overlap)) / 2
+    b = (np.sqrt(1 + overlap) - np.sqrt(1 - overlap)) / 2
+    expected = amplitude_scale**2 / norm_squared * torch.tensor([
+        (a - 3*b*sa)**2 + (b*ca)**2,
+        (3*b*ca)**2 + (3*a - b*sa)**2,
+    ], dtype=torch.float64)
+    populations = solver.compute_populations()
+    assert_close(populations, expected, atol=1e-12, rtol=1e-12)
+
+    for step in range(4):
+        solver.save_results(step)
+        populations = solver.population_right[-1]
+        rho = solver.denmat[-1]
+        assert_close(populations, rho.diagonal().real, atol=1e-12, rtol=1e-12)
+        assert torch.all(populations >= 0)
+        assert_close(populations.sum(), torch.vdot(solver.C_curr,
+                     solver.S @ solver.C_curr).real, atol=1e-12, rtol=1e-12)
+        assert float(populations.sum()) == pytest.approx(amplitude_scale**2)
+        solver.C_curr = solver.U @ solver.C_curr
+
+
 def test_complex_overlap_square_root_recovers_known_positive_hermitian_matrix():
     # Construct S=A^2 with an explicitly positive Hermitian A. This checks
     # reconstruction in the original basis without using eigh as an oracle.
