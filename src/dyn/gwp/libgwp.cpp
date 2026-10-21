@@ -37,6 +37,18 @@ namespace libdyn{
 namespace libgwp{
 
 
+// Python floats cannot bind to the double& output arguments of the native
+// scalar overload. Return the decomposition as a tuple for Python callers.
+boost::python::tuple gwp_product_decomposition_tuple(
+    double q1, double p1, double gamma1, double alp1,
+    double q2, double p2, double gamma2, double alp2){
+  double q, p, gamma, alp;
+  double scale = gwp_product_decomposition(q1, p1, gamma1, alp1,
+                                          q2, p2, gamma2, alp2,
+                                          q, p, gamma, alp);
+  return boost::python::make_tuple(scale, q, p, gamma, alp);
+}
+
 void export_gwp_objects(){
 /** 
   \brief Exporter of libgwp classes and functions
@@ -69,6 +81,7 @@ void export_gwp_objects(){
    MATRIX& q2, MATRIX& p2, MATRIX& gamma2, MATRIX& alp2,
    MATRIX& q,  MATRIX& p,  MATRIX& gamma,  MATRIX& alp) = &gwp_product_decomposition;
 
+  def("gwp_product_decomposition", &gwp_product_decomposition_tuple);
   def("gwp_product_decomposition",  expt_gwp_product_decomposition_v1);
   def("gwp_product_decomposition",  expt_gwp_product_decomposition_v2);
 

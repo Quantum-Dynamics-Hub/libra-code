@@ -111,7 +111,7 @@ complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& P, MATRIX& alp){
 */
 
   int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
-  double re, im, nrm;
+  double re = 0.0, im, nrm;
   nrm = 1.0;
   MATRIX dR(Ndof, 1);  dR = r - R;
 
@@ -149,7 +149,7 @@ complex<double> gwp_value(MATRIX& r, MATRIX& R, MATRIX& alp){
 //  int Ndof = check_dimensions("libgwp::gwp_overlap", r, P, R, P);
   int Ndof = R.n_rows;
 
-  double re, nrm;
+  double re = 0.0, nrm;
   nrm = 1.0;
   MATRIX dR(Ndof, 1);  dR = r - R;
 
@@ -265,7 +265,7 @@ double gwp_product_decomposition(double q1, double p1, double gamma1, double alp
   double dq = q2 - q1;
   gamma = gamma1 + gamma2 + dq * (alp2 * p1 - alp1 * p2) / alp;
   
-  double prefactor = pow(2.0 * alp1 * alp2 / alp, 0.25) * exp( - (alp1 * alp2 / alp) * dq*dq ); 
+  double prefactor = pow(2.0 * alp1 * alp2 / (M_PI * alp), 0.25) * exp( - (alp1 * alp2 / alp) * dq*dq );
   
   return prefactor;
 }
@@ -304,7 +304,7 @@ double gwp_product_decomposition(MATRIX& q1, MATRIX& p1, MATRIX& gamma1, MATRIX&
     gamma.set(i,0, gamma1.get(i,0) + gamma2.get(i,0) + dq * (alp2.get(i,0) * p1.get(i,0) - alp1.get(i,0) * p2.get(i,0)) / alp.get(i,0));      
 
     double a1a2_over_a = alp1.get(i,0) * alp2.get(i,0) / alp.get(i,0);
-    pref1 *= (2.0 * a1a2_over_a );
+    pref1 *= (2.0 * a1a2_over_a / M_PI);
     pref2 += a1a2_over_a * dq*dq;   
   
   }
