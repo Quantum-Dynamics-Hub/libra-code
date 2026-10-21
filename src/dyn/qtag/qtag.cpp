@@ -370,7 +370,7 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
     d2v_i = d2Ham1[indx]->get(n1,n2);
     d2v_j = d2Ham2[indx]->get(n1,n2);
 
-    v += 0.25 * (d2v_i * Q2_i + d2v_i * Q2_j);
+    v += 0.25 * (d2v_i * Q2_i + d2v_j * Q2_j);
 
     //Now the cross-terms, where the 2 indicates the second DoF under consideration
     for(int dof2=0; dof2<dof; dof2++){
@@ -391,14 +391,14 @@ complex<double> LHA(CMATRIX* Ham1, CMATRIX* Ham2,
       double dp2 = p2j - p2i;
       double denom2 = a2i + a2j;
  
-      double X2_ij = (a2i * q2i + a2j * q2j)/denom;
-      double P2_ij = dp2/denom;
+      double X2_ij = (a2i * q2i + a2j * q2j)/denom2;
+      double P2_ij = dp2/denom2;
 
       complex<double> zeta( X_ij, P_ij );
       complex<double> zeta2( X2_ij, P2_ij );
       complex<double> zeta12( X_ij*X2_ij - P_ij*P2_ij, X_ij*P2_ij + X2_ij*P_ij );
 
-      v+=0.5*( d2vxyi*( zeta12 - zeta*q1i - zeta2*q2i + q1i*q2i ) + d2vxyj*( zeta12 - zeta*q1j - zeta2*q2j + q1j*q2j ));
+      v+=0.5*( d2vxyi*( zeta12 - zeta*q2i - zeta2*q1i + q1i*q2i ) + d2vxyj*( zeta12 - zeta*q2j - zeta2*q1j + q1j*q2j ));
     } // for dof2
 
   }// for  dof
@@ -729,16 +729,14 @@ void qtag_hamiltonian_and_overlap(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, 
   vector< vector<int> > traj_on_surf(nstates); // indices of trajectories on each state
 
 
-  indx = 0;
-  n1 = active_states[0];
-  for(itraj = 0; itraj<ntraj; itraj++){
-    if(n1 != active_states[itraj]){
-      indx+=1;
-      }//if n1 != active_states[itraj]
+  // Clear output blocks that may have changed state assignments since last call.
+  super_ovlp.Init(complex<double>(0.0, 0.0));
+  super_ham.Init(complex<double>(0.0, 0.0));
 
-    traj_on_surf[indx].push_back(itraj);
-    n1 = active_states[itraj];
-  }// for itraj
+  // Group by the actual electronic label, independent of packet ordering.
+  for(itraj = 0; itraj<ntraj; itraj++){
+    traj_on_surf[active_states[itraj]].push_back(itraj);
+  }
 
   // Compute Hamiltonians for all the trajectories
   //ham.compute_diabatic(compute_ham_funct, bp::object(q), compute_ham_params, 1);
@@ -843,7 +841,7 @@ CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coe
   complex<double> dzt;
   double dq, nrm;
 
-  CMATRIX mom(ndof,ntraj); // real = mom, imag = r
+  CMATRIX mom(ndof,ntraj); // real = grad(log|psi|), imag = momentum
   CMATRIX dz(ndof,1);
   complex<double> one(0.0, 1.0);
 
@@ -858,7 +856,7 @@ CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coe
           dq = q.get(idof, i) - q.get(idof, j);
           double argg = (p.get(idof, j) * dq + s.get(idof, j) );
           complex<double> tmp( cos(argg), sin(argg) );
-          nrm *= exp( -0.5 * alp.get(idof, j) * dq*dq ) * tmp * pow( (alp.get(idof, i)/M_PI), 0.25);
+          nrm *= exp( -0.5 * alp.get(idof, j) * dq*dq ) * tmp * pow( (alp.get(idof, j)/M_PI), 0.25);
      
       }// for idof
 
@@ -873,7 +871,7 @@ CMATRIX qtag_momentum(MATRIX& q, MATRIX& p, MATRIX& alp, MATRIX& s, CMATRIX& Coe
     }// for j
 
     for(idof=0; idof<ndof; idof++){
-      mom.set(i, idof,  dz.get(idof)/z );
+      mom.set(idof, i,  dz.get(idof)/z );
     }// for idof
 
   }// for i

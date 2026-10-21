@@ -210,7 +210,7 @@ void nHamiltonian::compute_diabatic(bp::object py_funct, MATRIX& q, bp::object p
       vector<CMATRIX> _d2ham_dia(nnucl*nnucl, CMATRIX(ndia,ndia));
       _d2ham_dia = extract<CMATRIXList>(obj.attr("d2ham_dia"));   
 
-      for(int i=0;i<nnucl;i++){    *d2ham_dia[i] = _d2ham_dia[i];  }
+      for(int i=0;i<nnucl*nnucl;i++){    *d2ham_dia[i] = _d2ham_dia[i];  }
     }
 
     has_attr=0;
