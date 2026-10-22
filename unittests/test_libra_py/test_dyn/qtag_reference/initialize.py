@@ -3,7 +3,7 @@
 
 """Initial Gaussian bases and wavefunction projection for array-based QTAG."""
 import numpy as np
-from ...gwp import integrals as gwp
+from libra_py.dyn.gwp import integrals as gwp
 from . import core
 from ._backend import asarray, xp_of, scalar
 

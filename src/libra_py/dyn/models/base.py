@@ -102,12 +102,24 @@ class AnalyticalHamiltonianModel:
 
         effective_params = self._merged_params(params)
         H_dia, dH_dia = self.diabatic_with_derivatives(Q, effective_params)
-        return {
+        result = {
             "H_dia": H_dia,
             "dH_dia": dH_dia,
             "DC1_dia": self.zeros_like(dH_dia),
             "S_dia": self.overlap_like(H_dia),
         }
+        hessian = self.diabatic_hessian(Q, effective_params)
+        if hessian is not None:
+            result["d2H_dia"] = hessian
+        return result
+
+    def diabatic_hessian(self, Q, params):
+        """Optional analytic Hessian (*grid,ndof,ndof,nstates,nstates).
+
+        Models without a Hessian return None. Gaussian LHA quadrature requires
+        this field explicitly; no numerical derivative is silently substituted.
+        """
+        return None
 
     def diabatic(self, Q, params=None):
         """Return only ``H_dia`` for exact-dynamics coordinate grids."""

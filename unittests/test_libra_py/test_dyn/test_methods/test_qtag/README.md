@@ -60,3 +60,57 @@ This takes longer, especially for Torch's iterative fit. It checks the actual
 snapshot selection and both state densities at all five tutorial times against
 the original Python/C++ workflow. See `data/README.md` for reference provenance.
 All outputs go to pytest's temporary directory; no source tutorial is required.
+
+
+# Algorithm tests
+
+`test_python_npi.py` tests NPI against its C++ implementation.
+`test_engine_qtag.py` tests the integrated TBF/storage QTAG driver against the test-only
+`qtag_reference` implementation, without requiring C++ or SymPy.
+
+The QTAG tests now live in `../test_methods/test_qtag`. Run from that directory:
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 python -m pytest -q test_engine_qtag.py
+```
+
+Short tests compare all saved energies, populations, coefficients, coordinates,
+momenta, widths, phases and reconstructed densities on NumPy and Torch. They
+cover both 1D Holstein and 2D Ferretti, BAT/LHA/exact-coupling variants,
+noncontiguous slots/labels, independent trajectories, inactive trajectories,
+pruning/compaction, timestep alignment, input validation, and a scalar Torch
+gradient checked against finite differences. The gradient test uses a
+nondegenerate metric; repeated eigenvalues need not have finite eigenvector
+derivatives. A subprocess blocks the reference package, SymPy and C++ imports.
+
+Full 800-step Holstein and 100-step Ferretti comparisons are opt-in because
+the iterative Torch momentum fit is slower:
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 QTAG_FULL_TESTS=1 \
+  python -m pytest -q test_engine_qtag.py
+```
+
+These four tests compare entire histories and all five density snapshots with
+the preserved method implementation, on both backends. Reference densities
+are computed at runtime, so no new binary trajectory fixture is needed.
+
+Tests for the shared modules live beside their corresponding source packages:
+
+- `test_core/test_gaussian_storage.py`: allocation, spawning, expansion, views,
+  parent copying and compaction of optional Gaussian fields.
+- `test_initialization/test_gaussian_initialization.py`: deterministic grids,
+  seeded sampling, phases, noncontiguous labels and projection coefficients.
+- `test_gwp/test_packets.py`: unequal-width Gaussian kernels vs the reference.
+- `test_models/test_gaussian_hessians.py`: finite differences of gradients,
+  including mixed derivatives and the Ferretti Y=0 point.
+- `test_observables/test_gaussian_observables.py`: coherent cross terms, generic
+  saver round trips, density reconstruction, PNGs and disk-only histories.
+
+All tests use float64 except explicit allocation precision checks. Torch tests
+skip if unavailable. C++ is only needed for the pre-existing NPI tests.
+
+`test_core.py` and `test_workflow.py` exercise the frozen test-only oracle;
+`test_engine_qtag.py` compares the production common engine with that oracle.
+`test_tutorial.py` exercises the migrated production example against the C++
+density fixture. Production code never imports `qtag_reference`.

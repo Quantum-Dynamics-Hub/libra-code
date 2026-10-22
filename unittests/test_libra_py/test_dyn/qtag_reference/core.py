@@ -13,7 +13,7 @@ callback returning array data. No C++ extension or SymPy is used.
 """
 from dataclasses import dataclass
 import numpy as np
-from ...gwp import integrals as gwp
+from libra_py.dyn.gwp import integrals as gwp
 from ._backend import xp_of, asarray, zeros, stack, adjoint, indices
 
 __all__ = ["HamiltonianData", "evaluate_model", "qtag_psi", "qtag_overlap_elementary",

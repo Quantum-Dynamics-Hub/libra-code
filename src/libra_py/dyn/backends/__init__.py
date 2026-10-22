@@ -8,7 +8,8 @@
 # ***********************************************************/
 
 from .numpy_backend import NumpyBackend
+from .torch_backend import TorchBackend
 
 backend = NumpyBackend()
 
-__all__ = ["NumpyBackend", "backend"]
+__all__ = ["NumpyBackend", "TorchBackend", "backend"]

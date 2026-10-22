@@ -4,6 +4,8 @@ from typing import Any
 
 import numpy as np
 
+from ..backends.arrays import xp_of, adjoint
+
 
 def generalized_eigh(hamiltonian: Any, overlap: Any) -> tuple[Any, Any]:
     """
@@ -71,3 +73,22 @@ def diag_embed(values: Any, dtype=complex):
     idx = np.arange(ns)
     out[..., idx, idx] = values
     return out
+
+
+# Spectral metric operations for coherent nonorthogonal expansions.
+
+def _orthogonalizer(S, rcond):
+    xp = xp_of(S)
+    if not 0 <= rcond < 1:
+        raise ValueError("overlap_rcond must lie in [0,1)")
+    vals, vecs = xp.linalg.eigh((S+adjoint(S))/2)
+    keep = vals > rcond*vals.max()
+    if not bool(keep.any()):
+        raise ValueError("overlap has no positive retained eigenvalues")
+    return vecs[:, keep]/xp.sqrt(vals[keep])[None, :]
+
+
+def metric_solve(S, rhs, rcond=1e-12):
+    """Solve S*x=rhs in its positive spectral subspace (relative cutoff)."""
+    W = _orthogonalizer(S, rcond)
+    return W @ (adjoint(W) @ rhs)

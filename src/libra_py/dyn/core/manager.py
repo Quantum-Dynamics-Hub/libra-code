@@ -177,6 +177,8 @@ class TrajectoryManager:
             "p",
             "iM",
             "f",
+            "gaussian_alpha",
+            "gaussian_phase",
             "ampl_adi",
             "ampl_dia",
             "q_mm",

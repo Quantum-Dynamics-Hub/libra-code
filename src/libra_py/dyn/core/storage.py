@@ -194,6 +194,13 @@ class TensorStorage:
     # Active nuclear forces.
     f: Optional[Any] = None
 
+    # Optional Gaussian parameters, shape (ntraj, capacity, ndof).
+    # G = product_d (alpha_d/pi)**1/4 exp(-alpha_d*(r_d-q_d)**2/2
+    #                                      + i*p_d*(r_d-q_d) + i*phase_d).
+    gaussian_alpha: Optional[Any] = None
+    gaussian_phase: Optional[Any] = None
+    gaussian_vars_status: int = 0
+
     # -------------------------------------------------
     # Electronic
     # -------------------------------------------------
@@ -506,6 +513,20 @@ class TensorStorage:
         self.f = self._zeros(self._shape(nd))
 
         self.nuclear_vars_status = 1
+
+    def allocate_gaussian_vars(self):
+        """Allocate Gaussian widths/phases without resetting existing data.
+
+        Coherent state-labeled packet coefficients use ampl_dia, with only
+        act_states_dia populated in each row. They are not normalized per TBF.
+        The optional fields participate in standard expansion, copying and
+        compaction because they have the usual (ntraj, capacity, ...) prefix.
+        """
+        if self.gaussian_alpha is None:
+            self.gaussian_alpha = self._zeros(self._shape(self.ndof))
+        if self.gaussian_phase is None:
+            self.gaussian_phase = self._zeros(self._shape(self.ndof))
+        self.gaussian_vars_status = 1
 
     def allocate_electronic_vars(self):
         """

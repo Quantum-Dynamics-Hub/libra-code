@@ -7,9 +7,9 @@
 # * http://www.gnu.org/copyleft/gpl.txt
 # ***********************************************************/
 
-from .engine import DynamicsEngine, StepResult, dynamics_defaults, run_dynamics
+from .engine import DynamicsEngine, DynamicsRunResult, StepResult, dynamics_defaults, run_dynamics
 
-__all__ = ["DynamicsEngine",
+__all__ = ["DynamicsEngine", "DynamicsRunResult",
            "StepResult",
            "algorithms",
            "backends",

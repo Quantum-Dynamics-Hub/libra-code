@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import numpy as np
 import pytest
-from libra_py.dyn.methods.qtag._backend import to_numpy
+from qtag_reference._backend import to_numpy
 
 
 @pytest.mark.skipif(os.environ.get('QTAG_FULL_TESTS') != '1',
@@ -27,7 +27,7 @@ def test_holstein_density_snapshots(backend, tmp_path, monkeypatch):
     tutorial = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(tutorial)
     waves = []
-    monkeypatch.setattr(tutorial.plot, 'wf_plot', lambda wave, *args: waves.append(wave))
+    monkeypatch.setattr(tutorial.plotting, 'wf_plot', lambda wave, *args: waves.append(wave))
     tutorial.main(backend=backend, output=tmp_path)
     with np.load(Path(__file__).parent/'data/holstein_reference.npz') as reference:
         np.testing.assert_array_equal(waves[0]['snaps'], reference['steps'])

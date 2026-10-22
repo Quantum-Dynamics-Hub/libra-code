@@ -38,3 +38,12 @@ spawning → core
 
 Core must never depend on physics.
 
+
+## Coherent Gaussian dynamics (QTAG)
+
+The integrated QTAG implementation uses `TrajectoryManager`/`TensorStorage`
+through `initialization.make_gaussian_ensemble` and `DynamicsEngine(method="qtag")`.
+Gaussian kernels, Hamiltonian assembly, model Hessians, propagation and coherent
+observables live in their shared packages. See [the module map and API guide](methods/qtag/README.md)
+and `examples/libra_py/dyn/methods/qtag/1_basics/run.py` for both NumPy and Torch.
+The former standalone method lives in the test-only `qtag_reference` package.

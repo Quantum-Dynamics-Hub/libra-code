@@ -612,7 +612,10 @@ def _is_array_payload(value: Any) -> bool:
 
 
 def _as_saveable_array(value: Any) -> Any:
-    return np.asarray(value)
+    # Saving is an explicit detach/CPU boundary; numerical propagation keeps
+    # tensors and graphs on their original backend/device.
+    from ..backends.arrays import to_numpy
+    return to_numpy(value)
 
 
 def _is_hdf5_dataset_value(value: Any) -> bool:

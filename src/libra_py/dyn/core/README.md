@@ -245,3 +245,15 @@ python test6.py  # TrajectoryManager
 ```
 
 Run them from `src/libra_py/dyn/core`.
+
+## Optional coherent Gaussian fields
+
+`allocate_gaussian_vars()` adds `gaussian_alpha` and `gaussian_phase`, each
+`(ntraj,ntbf_capacity,ndof)`. Allocation is idempotent. Width alpha multiplies
+`-(r-q)^2/2`; phases are per DOF. `TensorView` exposes both fields, and manager
+parent copying, storage expansion and compaction preserve them.
+
+The integrated QTAG path stores one coefficient in `ampl_dia` at each packet's
+`act_states_dia` label. These are coherent expansion coefficients, not separately
+normalized per-TBF electronic states. Gaussian physics and pair matrices remain
+outside core; see `../methods/qtag/README.md` for the module map and conventions.

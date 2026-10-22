@@ -26,6 +26,24 @@ class FerrettiModel(AnalyticalHamiltonianModel):
     ndof: int = 2
     nstates: int = 2
 
+    def diabatic_hessian(self, Q, params):
+        """Analytic Hessian with both mixed X/Y entries; finite at Y=0."""
+        p = merged_params(params, {'X3': 3., 'Kx': .02, 'Ky': .1,
+                                  'alpha': 3., 'beta': 1.5, 'gamma': .005})
+        dx, y = Q[0]-p['X3'], Q[1]
+        alpha, beta, gamma = p['alpha'], p['beta'], p['gamma']
+        e = self.xp.exp(-alpha*dx**2-beta*y**2)
+        out = zeros_from(y, (*tuple(y.shape), 2, 2, 2, 2))
+        for state in range(2):
+            out[..., 0, 0, state, state] = p['Kx']
+            out[..., 1, 1, state, state] = p['Ky']
+        for i, j in ((0, 1), (1, 0)):
+            out[..., 0, 0, i, j] = (4*alpha**2*dx**2-2*alpha)*gamma*y*e
+            out[..., 1, 1, i, j] = gamma*e*(-6*beta*y+4*beta**2*y**3)
+            out[..., 0, 1, i, j] = -2*alpha*dx*gamma*e*(1-2*beta*y**2)
+            out[..., 1, 0, i, j] = out[..., 0, 1, i, j]
+        return out
+
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
         p = merged_params(

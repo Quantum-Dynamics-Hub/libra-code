@@ -10,8 +10,8 @@ include mixed-coordinate polynomials, unequal widths and nonzero phases.
 from types import SimpleNamespace
 import numpy as np
 import pytest
-from libra_py.dyn.methods.qtag import core
-from libra_py.dyn.methods.qtag._backend import asarray, zeros, xp_of
+from qtag_reference import core
+from qtag_reference._backend import asarray, zeros, xp_of
 
 
 @pytest.fixture(params=["numpy", "torch"])
@@ -263,7 +263,7 @@ def test_legacy_momentum_fit_cpp(cpp, backend, beta):
     A displaced Gaussian makes the normal matrix ill-conditioned enough
     that replacing the finite-tolerance iteration with an exact solve fails.
     """
-    from libra_py.dyn.methods.qtag import compute
+    from qtag_reference import compute
     q = backend([[-3., -2.5, -2., -1.5, -1.]])
     p, a, s = q*0+.4, q*0+2., q*0
     c = q[0]*0+0j

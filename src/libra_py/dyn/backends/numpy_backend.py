@@ -13,7 +13,18 @@ class NumpyBackend:
 
     array = staticmethod(np.array)
     asarray = staticmethod(np.asarray)
-    zeros = staticmethod(np.zeros)
+    def __init__(self, dtype=np.float64):
+        self.dtype = np.dtype(dtype)
+        if self.dtype not in (np.dtype('float32'), np.dtype('float64')):
+            raise ValueError('NumpyBackend requires float32 or float64')
+
+    def zeros(self, shape, dtype=float):
+        """Allocate storage with the selected real/complex precision."""
+        if dtype is float:
+            dtype = self.dtype
+        elif dtype is complex:
+            dtype = np.complex64 if self.dtype == np.dtype('float32') else np.complex128
+        return np.zeros(shape, dtype=dtype)
     ones = staticmethod(np.ones)
     eye = staticmethod(np.eye)
     diag = staticmethod(np.diag)

@@ -20,6 +20,7 @@ from .decoherence import (
     sdm,
 )
 from .hamiltonians import HamiltonianEngine
+from .methods.base import DynamicsMethodImplementation
 from .hopping import (
     accept_hops,
     handle_hops_nuclear,
@@ -42,7 +43,7 @@ from .transformations.basis_rotation import (
 )
 from .transformations.projectors import update_proj_adi
 
-DynamicsMethod = Literal["adiabatic", "ehrenfest", "tsh"]
+DynamicsMethod = Literal["adiabatic", "ehrenfest", "tsh", "qtag"]
 Representation = Literal["adiabatic", "diabatic"]
 ForceMode = Literal["state-specific", "ehrenfest", "none"]
 
@@ -65,20 +66,37 @@ class StepResult:
 
 
 @dataclass
+class DynamicsRunResult:
+    """Live manager and per-trajectory snapshot histories from a method run."""
+    manager: Any
+    histories: dict
+
+    @property
+    def storage(self):
+        return self.manager.storage
+
+
+@dataclass
 class DynamicsEngine:
     """
     Storage-backed nonadiabatic dynamics driver.
 
+    Existing (traj, storage, model_fn) construction remains supported. For
+    coherent methods, use (manager, model_fn, method="qtag") or explicit
+    manager/model_fn keywords. QTAG returns per-trajectory records from step
+    and DynamicsRunResult from run; existing methods retain StepResult lists.
+
     Supported methods:
+    - ``qtag``: coherent Gaussian splitting delegated to methods/qtag.
     - ``adiabatic``: nuclei follow the active adiabatic state; no TDSE update.
     - ``ehrenfest``: TDSE plus Ehrenfest mean-field nuclear forces.
     - ``tsh``: TDSE, hop proposal, acceptance, momentum adjustment, and
       state-specific forces using the legacy ``tsh_method`` option numbering.
     """
 
-    traj: Any
-    storage: Any
-    model_fn: Callable
+    traj: Any = None
+    storage: Any = None
+    model_fn: Callable | None = None
     ham_engine: HamiltonianEngine | None = None
     params: DynControlParams | dict[str, Any] | None = None
     method: DynamicsMethod | None = None
@@ -91,8 +109,33 @@ class DynamicsEngine:
     metadata: dict[str, Any] = field(default_factory=dict)
     saver: Any = None
     observable_config: Any = None
+    manager: Any = None
 
     def __post_init__(self):
+        # Preserve the established (traj, storage, model_fn) constructor.
+        # Also accept (manager, model_fn, method='qtag').
+        if self.manager is None and hasattr(self.traj, 'trajectories') and callable(self.storage) and self.model_fn is None:
+            self.manager, self.model_fn = self.traj, self.storage
+            self.traj, self.storage = None, self.manager.storage
+        self._implementation: DynamicsMethodImplementation | None = None
+        if self.method == 'qtag':
+            if self.manager is None or self.model_fn is None:
+                raise ValueError("QTAG requires manager and model_fn")
+            if self.storage is not None and self.storage is not self.manager.storage:
+                raise ValueError("storage must be the manager's storage")
+            if self.rep not in (None, 'diabatic'):
+                raise ValueError("QTAG requires diabatic representation")
+            self.storage = self.manager.storage
+            self.params = dict(self.params or {}) if isinstance(self.params, (dict, type(None))) else asdict(self.params)
+            self.rep = 'diabatic'
+            self.dt = self._method_dt(self.params.get('dt', 1.))
+            if self.time == 0.0:
+                self.time = self.storage.timestep*self.dt
+            from .methods.qtag import QTAGMethod
+            self._implementation = QTAGMethod(self.storage, self.model_fn, self.params)
+            self._initialized = False
+            self._initial_method_energy = {}
+            return
         self.params = self.params or DynControlParams()
         self.ham = self.ham_engine or HamiltonianEngine(self.storage.backend)
         self.rng = self.rng or np.random.default_rng()
@@ -106,8 +149,17 @@ class DynamicsEngine:
         self._validate()
 
     def initialize(self, evaluate_hamiltonian: bool = True):
-        """Build the initial Hamiltonian, forces, and density matrices."""
+        """Initialize Hamiltonians and observables, plus method-appropriate forces."""
 
+        if self._implementation is not None:
+            if not evaluate_hamiltonian:
+                raise ValueError("method initialization requires Hamiltonian evaluation")
+            trajectories = self._method_trajectories()
+            self._implementation.prepare(trajectories)
+            self._setup_saver()
+            self._initialized = True
+            self._save_method_records(self._method_records(trajectories), force=True)
+            return self
         if evaluate_hamiltonian:
             self.evaluate_hamiltonian()
         self._initialize_representations()
@@ -122,10 +174,17 @@ class DynamicsEngine:
         self._save_if_due(force=True)
         return self
 
-    def step(self, dt) -> StepResult:
-        """Advance one mixed quantum-classical dynamics step."""
+    def step(self, dt=None) -> StepResult | dict:
+        """Advance one step; coherent methods return per-trajectory snapshots."""
 
-        dt = normalize_dt(dt)
+        if self._implementation is not None:
+            dt = self._method_dt(self.dt if dt is None else dt)
+            self.dt = dt
+            if not self._initialized:
+                self.initialize()
+                return self._advance_method(dt, reuse=True)
+            return self._advance_method(dt)
+        dt = normalize_dt(_param(self.params, 'dt', 41.) if dt is None else dt)
         self._step_dt = dt
         if not self._initialized:
             self.initialize()
@@ -175,12 +234,109 @@ class DynamicsEngine:
         return self._result(forces, hopping, proposed, accepted,
                             decoherence_rates)
 
-    def run(self, nsteps: int | None = None, dt=None):
-        """Run several steps and return their summaries."""
+    def run(self, nsteps: int | None = None, dt=None, *, savers=None, keep_history=True):
+        """Run the selected method.
 
+        Existing independent-path methods return a list of StepResult objects.
+        Coherent method hooks return DynamicsRunResult with initial/completed
+        snapshots; keep_history=False disables accumulation, not disk saving.
+        """
+
+        if self._implementation is not None:
+            return self._run_method(nsteps, dt, savers, keep_history)
+        if savers is not None:
+            self.saver = savers
         nsteps = int(_param(self.params, "nsteps", 1) if nsteps is None else nsteps)
         dt = _param(self.params, "dt", 41.0) if dt is None else dt
         return run_steps(self.step, nsteps, dt)
+
+    @staticmethod
+    def _method_dt(dt):
+        dt = float(dt)
+        if not np.isfinite(dt) or dt <= 0:
+            raise ValueError('dt must be finite and positive')
+        return dt
+
+    def _method_trajectories(self):
+        """Select active registered trajectories in stable manager order."""
+        return [t for t in self.manager.trajectories.values() if t.active]
+
+    def _method_records(self, trajectories):
+        records = self._implementation.snapshots(trajectories, self.time)
+        for tid, record in records.items():
+            self._initial_method_energy.setdefault(tid, record['Etot'])
+            record['dEtot'] = record['Etot']-self._initial_method_energy[tid]
+        return records
+
+    def snapshots(self):
+        """Refresh method caches and return coherent records without stepping."""
+        if self._implementation is None:
+            raise NotImplementedError('use compute_observables for independent paths')
+        trajectories = self._method_trajectories()
+        self._implementation.prepare(trajectories)
+        return self._method_records(trajectories)
+
+    def _method_savers(self):
+        if self.saver is None:
+            return {}
+        if isinstance(self.saver, dict):
+            return self.saver
+        trajectories = self._method_trajectories()
+        if len(trajectories) != 1:
+            raise ValueError('provide a saver mapping for multiple trajectories')
+        return {trajectories[0].id: self.saver}
+
+    def _save_method_records(self, records, force=False):
+        stride = int(_param(self.params, 'nprint', 1))
+        if stride < 1:
+            raise ValueError('nprint must be positive')
+        if force or self.storage.timestep % stride == 0:
+            for tid, saver in self._method_savers().items():
+                if tid in records:
+                    saver.save_step(self.storage.timestep, records[tid],
+                                    metadata=dict(self.metadata, method=self.method, trajectory_id=tid))
+
+    def _advance_method(self, dt, reuse=False):
+        trajectories = self._method_trajectories()
+        if not reuse:
+            self._implementation.prepare(trajectories)
+        self._implementation.advance(trajectories, dt)
+        # One clock update for the ensemble, before new-time model evaluation.
+        self.time += dt
+        self.storage.timestep += 1
+        self._implementation.finish(trajectories, dt)
+        records = self._method_records(trajectories)
+        self._save_method_records(records)
+        return records
+
+    def _run_method(self, nsteps, dt, savers, keep_history):
+        from .backends.arrays import stack
+        nsteps = _param(self.params, 'nsteps', 1) if nsteps is None else nsteps
+        if int(nsteps) != nsteps or nsteps < 0:
+            raise ValueError('nsteps must be a nonnegative integer')
+        self.dt = self._method_dt(self.dt if dt is None else dt)
+        if savers is not None:
+            self.saver = savers
+        self._setup_saver()
+        self._method_savers()  # validate before advancing any state
+        histories = {}
+        def record(records):
+            if keep_history:
+                for tid, snapshot in records.items():
+                    history = histories.setdefault(tid, {k: [] for k in snapshot})
+                    for key, value in snapshot.items():
+                        history[key].append(value)
+        # External edits are allowed between run calls. Inside run models and
+        # savers must not mutate topology or unrelated live state.
+        initial = self.snapshots()
+        self._initialized = True
+        self._save_method_records(initial, force=True)
+        record(initial)
+        for _ in range(int(nsteps)):
+            record(self._advance_method(self.dt, reuse=True))
+        return DynamicsRunResult(self.manager, {
+            tid: {key: stack(values) for key, values in history.items()}
+            for tid, history in histories.items()})
 
     def evaluate_hamiltonian(self):
         """Evaluate the Hamiltonian model into TensorStorage."""
@@ -807,8 +963,12 @@ class DynamicsEngine:
     def close(self):
         """Close an attached saver when it owns external resources."""
 
-        if self.saver is not None and hasattr(self.saver, "close"):
-            self.saver.close()
+        savers = self.saver.values() if isinstance(self.saver, dict) else [self.saver]
+        seen = set()
+        for saver in savers:
+            if saver is not None and id(saver) not in seen and hasattr(saver, 'close'):
+                saver.close()
+                seen.add(id(saver))
 
     def __enter__(self):
         return self

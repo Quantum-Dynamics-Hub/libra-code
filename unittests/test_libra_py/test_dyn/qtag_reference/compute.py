@@ -4,7 +4,7 @@
 """QTAG moving-basis propagation using only NumPy or PyTorch arrays."""
 from dataclasses import dataclass
 import numpy as np
-from ...gwp import integrals as gwp
+from libra_py.dyn.gwp import integrals as gwp
 from . import core
 from ._backend import xp_of, asarray, zeros, stack, copy, indices, scalar
 

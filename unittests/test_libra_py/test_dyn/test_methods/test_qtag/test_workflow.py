@@ -4,8 +4,8 @@
 """Initialization, moving/frozen basis evolution, persistence and plotting tests."""
 import numpy as np
 import pytest
-from libra_py.dyn.methods.qtag import core, compute, initialize, save, plot
-from libra_py.dyn.methods.qtag._backend import zeros, to_numpy, asarray
+from qtag_reference import core, compute, initialize, save, plot
+from qtag_reference._backend import zeros, to_numpy, asarray
 
 
 def harmonic(q, params):
@@ -196,11 +196,12 @@ def test_without_cpp_or_sympy():
     program = f'''
 import sys
 sys.path.insert(0, {str(src)!r})
+sys.path.insert(0, {str(Path(__file__).resolve().parents[2])!r})
 sys.modules['liblibra_core'] = None
 sys.modules['cyglibra_core'] = None
 sys.modules['sympy'] = None
 import numpy as np
-from libra_py.dyn.methods.qtag import core, initialize, compute
+from qtag_reference import core, initialize, compute
 n,q,p,a,s,labels = initialize.gbfs(dict(states=[0], grid_dims=[3]))
 q0,p0,a0,s0 = initialize.wfc_centers(dict(states=[0]))
 c = initialize.coeffs(q0,p0,a0,s0,[0],q,p,a,s,labels)

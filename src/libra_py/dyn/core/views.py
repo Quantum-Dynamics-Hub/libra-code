@@ -84,6 +84,16 @@ class TensorView:
             return None
         return value[self._traj, self._tbf]
 
+    @property
+    def gaussian_alpha(self):
+        """Per-DOF Gaussian widths (twice the gwp.integrals width)."""
+        return self.get("gaussian_alpha")
+
+    @property
+    def gaussian_phase(self):
+        """Per-DOF Gaussian phases in radians."""
+        return self.get("gaussian_phase")
+
     def as_dict(self, names):
         """
         Return selected allocated fields as a dictionary of writable slices.

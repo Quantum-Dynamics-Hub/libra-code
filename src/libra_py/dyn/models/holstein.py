@@ -78,6 +78,22 @@ class Holstein5Model(AnalyticalHamiltonianModel):
 
     ndof: int = 1
 
+    def diabatic_hessian(self, Q, params):
+        """Analytic second derivatives, including Gaussian couplings."""
+        x = Q[0]
+        n = len(params['E_n'])
+        out = zeros_from(x, (*tuple(x.shape), 1, 1, n, n))
+        for i in range(n):
+            out[..., 0, 0, i, i] = params['k_n'][i]
+            for j in range(n):
+                if i == j:
+                    continue
+                alpha = params['alpha'][i][j]
+                dx = x-params['x_nm'][i][j]
+                coupling = params['V'][i][j]*self.xp.exp(-alpha*dx**2)
+                out[..., 0, 0, i, j] = (4*alpha**2*dx**2-2*alpha)*coupling
+        return out
+
     def diabatic_with_derivatives(self, Q, params):
         xp = self.xp
         p = merged_params(params, {})

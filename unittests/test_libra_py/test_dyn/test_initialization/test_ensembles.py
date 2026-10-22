@@ -78,3 +78,34 @@ def test_initialized_ensemble_can_be_observed_with_observables_module():
     np.testing.assert_allclose(snapshot["potential_energy"], [0.1, 0.4])
     assert snapshot["q"].shape == (2, 1)
     assert snapshot["p"].shape == (2, 1)
+
+
+def test_dof_draw_order_matches_historical_qtag_sampling():
+    """The optional draw order preserves QTAG's seeded multi-DOF sequence."""
+    rng = np.random.default_rng(13)
+    q, p = sample_gaussian_initial_conditions(
+        5, [1., 2.], [.3, .4], [-1., .5], [.7, .8], ndof=2,
+        rng=rng, draw_order='dof')
+    expected_rng = np.random.default_rng(13)
+    expected_q = expected_rng.normal(np.array([1., 2.])[:, None],
+                                    np.array([.3, .4])[:, None], (2, 5)).T
+    expected_p = expected_rng.normal(np.array([-1., .5])[:, None],
+                                    np.array([.7, .8])[:, None], (2, 5)).T
+    np.testing.assert_array_equal(q, expected_q)
+    np.testing.assert_array_equal(p, expected_p)
+
+
+def test_qtag_uses_shared_sampler(monkeypatch):
+    """Gaussian TBF initialization delegates to the existing ensemble sampler."""
+    from libra_py.dyn.initialization import ensembles
+    original = ensembles.sample_gaussian_initial_conditions
+    calls = []
+    def tracked(*args, **kwargs):
+        calls.append(kwargs['draw_order'])
+        return original(*args, **kwargs)
+    monkeypatch.setattr(ensembles, 'sample_gaussian_initial_conditions', tracked)
+    manager = ensembles.make_gaussian_ensemble(dict(
+        init_placement=1, wfc_q0=[0., 1.], grid_dims=[2, 3], rho_cut=.5,
+        states=[0, 1], seed=17), [1., .5])
+    assert calls == ['dof']
+    assert len(manager.tbfs) == 12
