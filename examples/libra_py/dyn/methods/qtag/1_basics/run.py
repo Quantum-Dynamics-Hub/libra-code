@@ -79,6 +79,9 @@ def main(backend="numpy", case="holstein", steps=None, output=None, device="cpu"
         ntraj, q, p, a, s, labels = initialize.gbfs(init_params)
         q0, p0, a0, s0 = initialize.wfc_centers(init_params)
         coeff = initialize.coeffs(q0, p0, a0, s0, [0], q, p, a, s, labels)
+
+        print(coeff)
+
         # Same basis updates and synchronization choices as the tutorial.
         # A stable spectral cutoff replaces inversion of nearly singular S.
         dyn_params = {
@@ -88,6 +91,8 @@ def main(backend="numpy", case="holstein", steps=None, output=None, device="cpu"
             "s_update_method": 0, "q_sync_method": 1, "p_sync_method": 0,
             "a_sync_method": 0, "s_sync_method": 0,
             "mom_calc_type": 1, "d_weight": 1, "decpl_den": 0.01,
+            # Match the notebook's iterative momentum fit and its tolerance.
+            "momentum_fit": "legacy", "linfit_beta": 1e-3,
             "overlap_rcond": 1e-12,
         }
         result = compute.run_qtag(q, p, a, s, labels, coeff, inv_mass,
@@ -96,8 +101,13 @@ def main(backend="numpy", case="holstein", steps=None, output=None, device="cpu"
         save.save_text(result, output)
         plot.energy_and_pops(result, output)
         plot.trajectories(result, output)
-        # Snapshots index actual saved times: index 0 is the INITIAL state.
-        grid.update(snaps=sorted(set(np.linspace(0, nsteps, 5, dtype=int))), which_states=[0, 1])
+
+        # Tutorial rows [0,199,399,599,799] contain completed steps
+        # [1,200,400,600,800]: its files omit the initial state, ours retain it.
+        # Match those physical times, also supporting shorter runs and 2D.
+        snaps = sorted(set([1] + [int(nsteps*f) for f in (.25, .5, .75, 1)])) if nsteps else [0]
+        snaps = [k for k in snaps if k > 0] if nsteps else snaps
+        grid.update(snaps=snaps, which_states=[0, 1])
         wave = compute.wf_calc_nD(result, grid)
         plot.wf_plot(wave, output)
         # Plot diabatic and adiabatic potential cuts, one file per spatial DOF.

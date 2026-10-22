@@ -254,3 +254,35 @@ def test_invalid_inputs(backend):
     with pytest.raises(ValueError, match='ex_cpl'):
         core.qtag_hamiltonian_and_overlap(q, p, a, s, [0]*4, backend([1, 1]), polynomial,
                                          dyn_params={'qtag_pot_approx_method': 2})
+
+
+@pytest.mark.parametrize('beta', [1e-1, 1e-3, 1e-6])
+def test_legacy_momentum_fit_cpp(cpp, backend, beta):
+    """Match both columns and stopping criterion of the tutorial's C++ fit.
+
+    A displaced Gaussian makes the normal matrix ill-conditioned enough
+    that replacing the finite-tolerance iteration with an exact solve fails.
+    """
+    from libra_py.dyn.methods.qtag import compute
+    q = backend([[-3., -2.5, -2., -1.5, -1.]])
+    p, a, s = q*0+.4, q*0+2., q*0
+    c = q[0]*0+0j
+    c[2] = 1
+    ratio, _, density = core.momentum_fields(q, p, a, s, c)
+    design = np.column_stack([np.ones(5), numpy(q)[0]])
+    weights = numpy(density)
+    normal = design.T @ (weights[:, None]*design)
+    rhs = design.T @ (weights*numpy(ratio)[0])
+    result = cpp.MATRIX(2, 2)
+    cpp.solve_linsys(cm(cpp, normal), cm(cpp, np.column_stack([rhs.imag, rhs.real])),
+                     result, beta, 200000)
+    fit = unmatrix(result)
+    actual = compute.qtag_momentum(q, p, a, s, c, {'linfit_beta': beta})
+    for value, expected in zip(actual, [(design@fit[:, 0])[None],
+                                       (design@fit[:, 1])[None],
+                                       np.full((1, 5), fit[1, 0]),
+                                       np.full((1, 5), fit[1, 1])]):
+        close(value, expected, atol=2e-10)
+    direct = compute.qtag_momentum(q, p, a, s, c, {'linfit_beta': beta, 'momentum_fit': 'direct'})
+    close(direct[1], -2*(q+2))
+    assert np.max(abs(numpy(actual[1])-numpy(direct[1]))) > beta

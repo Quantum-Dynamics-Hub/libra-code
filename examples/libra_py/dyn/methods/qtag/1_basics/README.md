@@ -50,8 +50,12 @@ is not the sum of Gaussians assumed by those methods. LHA (1) is available.
 
 Both examples use the notebook's q/p/width updates, fixed phases, population
 threshold, density-weighted momentum fit, and synchronization choices. A
-spectral overlap cutoff and direct linear fit replace fragile explicit matrix
-inversions and the iterative fit. Initial projected coefficients are normalized.
+spectral overlap cutoff replaces explicit matrix inversions. The momentum fit
+uses `momentum_fit="legacy", linfit_beta=1e-3`, reproducing the notebook
+solver with NumPy/PyTorch operations. Initial projected coefficients are normalized.
+The earlier direct-fit implementation changed the basis motion and did not
+reproduce the Holstein snapshots; using a more accurate fit is a different
+numerical experiment, not a drop-in replacement for this tutorial.
 
 The input comments distinguish initial GWP widths (`wfc_a0`) from QTAG basis
 widths (`alp = wfc_a0*alp_scl`), explain atomic units and show which parameters
@@ -73,31 +77,33 @@ The output directory contains:
   other coordinates held at zero.
 
 The default full runs create 14 PNGs in 1D and 24 in 2D. No plot calls `show()`.
-Snapshot 0 is the actual initial state; final index is `nsteps`. Five evenly
-spaced saved snapshots are selected (duplicates removed for very short runs).
+The archive includes the actual initial state at index 0. For Holstein, plots
+select indices `[1,200,400,600,800]`, at times `[0.01,2,4,6,8]` a.u. These match
+the notebook file rows `[0,199,399,599,799]`, which omit the initial state.
+Shorter runs use the first completed step and quarter-duration checkpoints
+(duplicates removed); a zero-step run plots the initial state.
 Explicit output paths are overwritten on a repeated run.
 
 ## Numerical validation and interpretation
 
-Both full-length cases were run on NumPy and CPU PyTorch in float64 without
-SymPy. For the parameters above:
+The corrected Holstein case was run on NumPy and CPU PyTorch; Ferretti was
+run on NumPy, all in float64 without SymPy. For the parameters above:
 
 | Case | Final populations | Final norm | Energy change (Ha) |
 | --- | --- | --- | --- |
-| Holstein, 800 steps | about `[0.83881, 0.15306]` | about `0.991874` | about `-1.5697` |
-| Ferretti, 100 steps | about `[0.99999879, 4.61e-11]` | about `0.99999879` | about `-3.32e-6` |
+| Holstein, 800 steps | about `[0.738272, 0.256036]` | about `0.994307` | about `-0.538847` |
+| Ferretti, 100 steps | about `[0.99999948, 4.72e-11]` | about `0.99999948` | about `-2.08e-6` |
 
-Over the recorded trajectories, the largest NumPy/PyTorch population difference
-was about `3.4e-6` in the long Holstein run and `3e-14` in Ferretti. Differences
-can accumulate in ill-conditioned moving Gaussian bases. These values are
-validation observations, not an exact reference trajectory for every BLAS/device.
+The five Holstein density snapshots were compared point by point on the
+100-point spatial grid with a fresh run of the original Python/C++ tutorial
+workflow. Maximum absolute density errors were below `1.5e-8` for both NumPy
+and CPU PyTorch. The unit suite includes an optional full-run regression
+against these independently generated reference densities. These are floating
+point comparisons, not a promise of bitwise equality across BLAS/devices.
 
-The Holstein norm loss and roughly 7.5% drift of its initial `C^H H C` energy
-show that the notebook parameter set is not a converged accuracy benchmark.
-The code reports these quantities rather than renormalizing or hiding the drift.
-Refine the time step/basis and compare approximation choices before interpreting
-long-time populations quantitatively. Tests of a fixed basis conserve norm and
-energy; moving-basis projection adds a distinct source of numerical error.
+The finite moving basis still loses some norm and energy. These quantities are
+reported without renormalization; reproducing the tutorial does not establish
+convergence with respect to timestep or basis size.
 
 Useful follow-up exercises mirror the notebook: vary the duration, number of
 packets, approximation, frozen/moving widths, and synchronization threshold.

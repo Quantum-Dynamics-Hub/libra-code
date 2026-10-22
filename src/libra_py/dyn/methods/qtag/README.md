@@ -162,12 +162,18 @@ in that retained subspace. Results are not renormalized after each step.
 | `decpl_den` | 0.25 | Population threshold for independent surface motion |
 | `mom_calc_type` | 1 | 0 raw momentum/zero slopes; 1 fitted; 2 raw momentum/analytic slopes |
 | `d_weight` | 1 | Density-weighted fit (0 disables weighting) |
-| `fit_rcond` | `1e-12` | Spectral cutoff in the linear fit |
+| `fit_rcond` | `1e-12` | Spectral cutoff in the direct linear fit |
+| `momentum_fit` | see below | `direct` or `legacy` iterative fit |
+| `linfit_beta` | `0.1` in legacy mode | Iterative coefficient-change tolerance |
 | `node_tol` | `1e-14` | Relative wavefunction-amplitude threshold below which raw ratios are zeroed |
 | `overlap_rcond` | `1e-12` | Relative metric cutoff for electronic evolution and projection |
 
-Linear fitting is a direct weighted least-squares solve, replacing the iterative
-legacy solver (`linfit_beta` is not used). Stable population ordering handles
+Linear fitting defaults to a direct weighted least-squares solve. Supplying
+`linfit_beta` selects the legacy iterative fit unless `momentum_fit` is explicitly
+set. The tutorial uses `momentum_fit="legacy", linfit_beta=1e-3`. This reproduces
+the C++ Gauss-Seidel iterations and stopping criterion using arrays only. The
+tolerance affects basis motion and subsequent densities; a direct solve or a
+tighter tolerance does not reproduce the tutorial trajectory. Stable population ordering handles
 ties. The most populated nonzero surface is always available as a synchronization
 reference, even when every population is below `decpl_den`. Synchronization
 requires equal packet counts on the affected surfaces. Width updates use the

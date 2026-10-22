@@ -44,4 +44,19 @@ Direct formula comparisons use relative/absolute tolerances around `1e-10` /
 error. End-to-end parity tests use short trajectories to avoid treating
 accumulated differences of ill-conditioned long adaptive runs as exact equality.
 Full 800-step Holstein and 100-step Ferretti CPU runs are documented in the
-example README; they are integration validation, not part of the unit suite.
+example README; the full Holstein regression is opt-in as described below.
+
+The momentum-fit tests compare NumPy and Torch against C++ `solve_linsys`
+at three stopping tolerances. They check both momentum and real logarithmic
+gradient, including their slopes, and ensure that an exact fit is distinguishable.
+
+To additionally run the full Holstein example regression on both backends:
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 QTAG_FULL_TESTS=1 python -m pytest -q test_tutorial.py
+```
+
+This takes longer, especially for Torch's iterative fit. It checks the actual
+snapshot selection and both state densities at all five tutorial times against
+the original Python/C++ workflow. See `data/README.md` for reference provenance.
+All outputs go to pytest's temporary directory; no source tutorial is required.
