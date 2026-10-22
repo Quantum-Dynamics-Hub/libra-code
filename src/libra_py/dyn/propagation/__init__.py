@@ -8,6 +8,7 @@ from .electronic import (
     apply_local_diabatization,
     euler_propagator,
     exp_propagator,
+    hermitian_propagator,
     interpolated_hamiltonian_propagator,
     propagate_electronic,
     propagate_electronic_method,
@@ -15,12 +16,14 @@ from .electronic import (
     tdse_step,
 )
 from .integrators import normalize_dt, run_steps
-from .nuclear import drift, kick, velocity, velocity_verlet_step
+from .nuclear import drift_coordinates, drift, kick, velocity, velocity_verlet_step
 
 __all__ = [
     "apply_local_diabatization",
     "density_matrix",
     "drift",
+    "drift_coordinates",
+    "hermitian_propagator",
     "ehrenfest_forces",
     "euler_propagator",
     "exp_propagator",

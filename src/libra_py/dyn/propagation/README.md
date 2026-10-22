@@ -62,3 +62,20 @@ Documented differences from C++
 - The greedy C++ state tracker reverses cycles longer than two because of its
   permutation-composition order. Python retains `perm[old] = new`, which is
   required by projector construction and the propagation equations above.
+
+Shared QTAG propagation kernels
+-------------------------------
+
+`methods/qtag/method.py` composes `nonorthogonal.propagate_coefficients` and
+`gaussian.propagate_basis`. The former handles overlap-rank truncation and
+transforms coefficients to an orthonormal basis, then calls
+`electronic.hermitian_propagator` for fixed-Hamiltonian TDSE evolution before
+transforming back. The latter calls `nuclear.drift_coordinates` with the quantum
+momentum field; classical `nuclear.drift` uses the same array kernel with stored
+momenta. Both kernels support NumPy/PyTorch without modifying their inputs.
+
+QTAG retains its Gaussian width updates, surface synchronization, and moving-basis
+coefficient projection. These cannot be replaced by classical velocity Verlet
+or an orthonormal electronic update directly. Quantum-momentum estimation and
+fitting remain in `algorithms/quantum_potential.py`; the common DynamicsEngine
+retains the clock, lifecycle, and output loop.

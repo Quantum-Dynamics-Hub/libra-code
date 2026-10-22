@@ -21,7 +21,7 @@ def test_holstein_density_snapshots(backend, tmp_path, monkeypatch):
     """
     if backend == 'torch':
         pytest.importorskip('torch')
-    example = Path(__file__).resolve().parents[5]/'examples/libra_py/dyn/methods/qtag/1_basics'
+    example = Path(__file__).resolve().parents[5]/'examples/libra_py/dyn/methods/1_qtag/1_basics'
     monkeypatch.syspath_prepend(str(example))
     spec = importlib.util.spec_from_file_location('qtag_basics', example/'run.py')
     tutorial = importlib.util.module_from_spec(spec)

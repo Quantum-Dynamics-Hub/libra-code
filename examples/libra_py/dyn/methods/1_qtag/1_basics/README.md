@@ -8,13 +8,13 @@ is retained only in the test suite for numerical comparisons.
 Run from the repository root:
 
 ```bash
-PYTHONPATH=src python examples/libra_py/dyn/methods/qtag/1_basics/run.py --backend numpy
-PYTHONPATH=src python examples/libra_py/dyn/methods/qtag/1_basics/run.py --backend torch
-PYTHONPATH=src python examples/libra_py/dyn/methods/qtag/1_basics/run.py --case ferretti
+PYTHONPATH=src python examples/libra_py/dyn/methods/1_qtag/1_basics/run.py --backend numpy
+PYTHONPATH=src python examples/libra_py/dyn/methods/1_qtag/1_basics/run.py --backend torch
+PYTHONPATH=src python examples/libra_py/dyn/methods/1_qtag/1_basics/run.py --case ferretti
 ```
 
 `--steps 10` selects a short run. `--backend torch --device cuda` selects GPU
-storage when available. `--output PATH` controls output; rerunning replaces
+storage when available. `--output PATH` controls output (default: `output/<case>_<backend>` beside the script); rerunning replaces
 that example's snapshot series and plots. `OPENBLAS_NUM_THREADS=1` and
 `OMP_NUM_THREADS=1` can reduce overhead for the small dense matrices.
 
@@ -51,7 +51,7 @@ Reload the snapshots with existing saver tools:
 from libra_py.dyn.savers import load_saved_steps, stack_saved_observables
 from libra_py.dyn.observables.gaussian import reconstruct_density
 
-history = stack_saved_observables(load_saved_steps("qtag_integrated_holstein_numpy/snapshots"))
+history = stack_saved_observables(load_saved_steps("examples/libra_py/dyn/methods/1_qtag/1_basics/output/holstein_numpy/snapshots"))
 density = reconstruct_density(history, xmin=[-4.], xmax=[4.], npoints=[100],
                               snaps=[1, 200, 400, 600, 800])
 ```

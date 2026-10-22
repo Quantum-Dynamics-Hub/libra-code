@@ -55,6 +55,37 @@ def exp_propagator(C, H, dt, backend=backend_default):
     return _apply_matrix_to_state(U, C, backend)
 
 
+def hermitian_propagator(C, H, dt, basis=None, metric=None):
+    """Propagate vector(s) with a fixed Hermitian Hamiltonian by diagonalization.
+
+    H has shape (nstates, nstates); C has shape (nstates,) or
+    (nstates, nvec). NumPy and PyTorch arrays retain dtype/device and tensor
+    gradients. The Hermitian part of H is used to remove roundoff asymmetry.
+    With optional basis W and metric S, H is already expressed in the
+    orthonormal basis and C is in the original basis. The update uses
+    Z = W @ eigenvectors and Z @ exp(-i*E*dt) @ Z† @ S @ C. Supply both W
+    and S together. This preserves multiplication ordering for sensitive
+    nonorthogonal expansions; rank truncation remains the caller's concern.
+    No normalization is performed.
+    """
+    from ..backends.arrays import xp_of, adjoint, asarray
+
+    xp = xp_of(H)
+    values, vectors = xp.linalg.eigh((H + adjoint(H))/2)
+    if (basis is None) != (metric is None):
+        raise ValueError("basis and metric must be supplied together")
+    size = H.shape[0] if basis is None else basis.shape[0]
+    state = asarray(C, H, True).reshape(size, -1)
+    vectors = asarray(vectors, state, True)
+    if basis is None:
+        projected = adjoint(vectors) @ state
+    else:
+        vectors = basis @ vectors
+        projected = adjoint(vectors) @ metric @ state
+    evolved = vectors @ (xp.exp(-1j*dt*values)[:, None] * projected)
+    return evolved.reshape(C.shape)
+
+
 def euler_propagator(C, H, dt, backend=backend_default):
     """
     First-order Euler TDSE integrator (debug / weak coupling only)

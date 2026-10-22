@@ -10,6 +10,16 @@ from __future__ import annotations
 from typing import Any
 
 
+def drift_coordinates(q, momentum, inverse_mass, dt):
+    """Return q + dt * inverse_mass * momentum without modifying inputs.
+
+    Arrays must have broadcast-compatible layouts and use the same backend.
+    Supports NumPy/PyTorch and arbitrary batch/DOF axes. Momentum may be a
+    classical stored momentum or a quantum-momentum field supplied by QTAG.
+    """
+    return q + dt * inverse_mass * momentum
+
+
 def velocity(storage: Any, traj: Any) -> Any:
     """Return active nuclear velocities v = p / M = p * iM."""
 
@@ -21,7 +31,10 @@ def drift(storage: Any, traj: Any, dt: float) -> Any:
     """Advance active nuclear coordinates by one drift substep."""
 
     idx = traj.tbf_ids
-    storage.q[traj.id, idx] = storage.q[traj.id, idx] + dt * velocity(storage, traj)
+    storage.q[traj.id, idx] = drift_coordinates(
+        storage.q[traj.id, idx], storage.p[traj.id, idx],
+        storage.iM[traj.id, idx], dt,
+    )
     return storage.q[traj.id, idx]
 
 

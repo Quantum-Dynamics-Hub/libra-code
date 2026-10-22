@@ -393,3 +393,14 @@ def test_engine_saver_receives_initial_and_stride_snapshots():
     engine.run(3, 0.1)
 
     assert saver.steps == [0, 2]
+
+
+def test_fssh_is_a_tsh_submethod_not_an_engine_selector():
+    """Reject FSSH as a top-level method; algorithm 0 belongs to the TSH branch."""
+    import pytest
+    with pytest.raises(ValueError, match="method must be"):
+        DynamicsEngine(_trajectory(), _storage(), _adiabatic_model,
+                       method="fssh", rep="adiabatic")
+    engine = DynamicsEngine(_trajectory(), _storage(), _adiabatic_model,
+                            method="tsh", rep="adiabatic", params={"tsh_method": 0})
+    assert engine.step(0.1).method == "tsh"

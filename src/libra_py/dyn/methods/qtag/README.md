@@ -15,8 +15,9 @@ an isolated test oracle. No production code imports it.
 | Analytic potentials and Hessians | `models/holstein.py`, `models/ferretti.py` |
 | Sampling and projection into a Gaussian basis | `initialization/ensembles.py` |
 | Positive-subspace metric solve | `utils/linalg.py` |
-| Generalized electronic evolution | `propagation/nonorthogonal.py` |
-| Quantum momentum fit and basis updates | `propagation/gaussian.py` |
+| Generalized electronic evolution | `propagation/nonorthogonal.py`, shared `electronic.hermitian_propagator` |
+| Quantum momentum and logarithmic-gradient fitting | `algorithms/quantum_potential.py` |
+| Basis updates and coefficient projection | `propagation/gaussian.py`, shared `nuclear.drift_coordinates` |
 | Coherent populations, energy and density reconstruction | `observables/gaussian.py` |
 | Individual PNG plots | `observables/plotting.py` |
 | Disk snapshots | Existing `savers.FaultTolerantSaver` and HDF5 savers |
@@ -153,7 +154,7 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 QTAG_FULL_TESTS=1 PYTHONPATH=src \
 
 Both the 800-step Holstein and 100-step Ferretti runs have been compared with
 the preserved implementation on NumPy and CPU Torch, including all five density
-snapshots. The runnable scripts live in `examples/libra_py/dyn/methods/qtag/1_basics`.
+snapshots. The runnable scripts live in `examples/libra_py/dyn/methods/1_qtag/1_basics`.
 
 ### Performance
 

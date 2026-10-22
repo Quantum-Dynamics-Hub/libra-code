@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Storage-backed QTAG tutorial; save individual PNGs and generic NPZ snapshots.
 
-PYTHONPATH=src python examples/libra_py/dyn/methods/qtag/1_basics/run.py --backend numpy
+PYTHONPATH=src python examples/libra_py/dyn/methods/1_qtag/1_basics/run.py --backend numpy
 Use --backend torch for tensors, --case ferretti for 2D, --steps 10 for a smoke run.
 """
 import argparse
@@ -64,7 +64,7 @@ def main(backend='numpy', case='holstein', steps=None, output=None, device='cpu'
     initial, mass, model, dynamics, grid = configuration(case, backend, device)
     if steps is not None:
         dynamics['nsteps'] = steps
-    output = Path(output or f'qtag_integrated_{case}_{backend}')
+    output = Path(output) if output else Path(__file__).resolve().parent / 'output' / f'{case}_{backend}'
     context = nullcontext()
     if backend == 'torch':
         import torch
@@ -94,7 +94,7 @@ def main(backend='numpy', case='holstein', steps=None, output=None, device='cpu'
         snaps = sorted({1, *[max(1, int(n*f)) for f in (.25, .5, .75, 1)]}) if n else [0]
         density = reconstruct_density(history, **grid, snaps=snaps)
         plotting.wf_plot(density, output)
-    print(f'Backend: {backend}; model: {case}; completed steps: {dynamics["nsteps"]}')
+    print(f'Method: qtag; backend: {backend}; model: {case}; completed steps: {dynamics["nsteps"]}')
     print('Final populations:', to_numpy(history['pops'][-1]))
     print('Final norm:', float(history['norm'][-1]))
     print('Energy change (Ha):', float(history['dEtot'][-1]))

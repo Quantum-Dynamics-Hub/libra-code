@@ -169,7 +169,7 @@ def test_full_tutorial(backend, case):
     if backend == 'torch':
         torch = pytest.importorskip('torch')
         torch.set_num_threads(1)
-    file = ROOT/'examples/libra_py/dyn/methods/qtag/1_basics/run.py'
+    file = ROOT/'examples/libra_py/dyn/methods/1_qtag/1_basics/run.py'
     spec = importlib.util.spec_from_file_location('integrated_qtag_example', file)
     example = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(example)
