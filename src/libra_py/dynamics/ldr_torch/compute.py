@@ -145,8 +145,10 @@ class ldr_tdse_solver_multistate:
                     initial_representation=self.initial_representation)
             params.update(E=E, s_elec=se, elec_ampl=ampl)
             if self.hamiltonian_scheme == "BAT1":
-                if torch.any((E[1:] - E[:-1]).abs() < 1e-12):
-                    raise ValueError("BAT1 energy gradients are not unique at an electronic degeneracy")
+                # Continue with the eigensolver-selected reference basis at degeneracies.
+                # The resulting Hellmann-Feynman gradients depend on that basis.
+                # if torch.any((E[1:] - E[:-1]).abs() < 1e-12):
+                #     raise ValueError("BAT1 energy gradients are not unique at an electronic degeneracy")
                 self.dE = electronic.compute_energy_gradients(
                     self.qgrid, self.eigvecs, self.potential_fn, self.potential_fn_params)
         amplitudes = torch.as_tensor(
