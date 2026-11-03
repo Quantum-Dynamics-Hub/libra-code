@@ -123,7 +123,11 @@ class exact_tdse_solver:
 
         # Momentum-space grid        
         self.dk = 2 * torch.pi / (self.grid_size * self.dq)
-        k_axes = [torch.fft.fftshift(torch.arange(-self.grid_size[i] // 2, self.grid_size[i] // 2)) * self.dk[i] for i in range(self.ndim)]
+        # FFT-ordered integer modes, scaled by the existing momentum spacing.
+        k_axes = [
+            torch.fft.fftfreq(int(n), d=1.0 / int(n), device=self.dk.device) * self.dk[i]
+            for i, n in enumerate(self.grid_size)
+        ]
         k_grids = torch.meshgrid(*k_axes, indexing="ij")
         self.K = torch.stack(k_grids)
         print("K grid = ", self.K.shape)
@@ -247,7 +251,8 @@ class exact_tdse_solver_multistate:
         self.potential_fn_params = params.get("potential_fn_params", {})
         self.psi0_fn = params.get("psi0_fn", None)        
         self.psi0_fn_params = params.get("psi0_fn_params", {})
-        self.device = params.get("device", torch.device("cuda" if torch.cuda.is_available() else "cpu"))
+        self.device = torch.device(params.get("device", "cuda" if torch.cuda.is_available() else "cpu"))
+        self.mass = self.mass.to(self.device)
         self.hbar = 1.0
         self.Nstates = params.get("Nstates", 2)
         self.representation = params.get("representation", "diabatic")
@@ -272,16 +277,21 @@ class exact_tdse_solver_multistate:
         print("self.ngrid = ", self.ngrid)
 
         # Real-space grid
-        q_axes = [torch.linspace(self.q_min[i], self.q_max[i], self.grid_size[i]) for i in range(self.ndim)]
+        q_axes = [torch.linspace(self.q_min[i], self.q_max[i], int(self.grid_size[i]),
+                                 device=self.device) for i in range(self.ndim)]
         q_grids = torch.meshgrid(*q_axes, indexing="ij")
-        self.dq = torch.tensor([q_axes[i][1] - q_axes[i][0] for i in range(self.ndim)])
+        self.dq = torch.stack([q_axes[i][1] - q_axes[i][0] for i in range(self.ndim)])
         self.Q = torch.stack(q_grids)
         print("Q = ", self.Q.shape)
         print("dq = ", self.dq)
 
         # Momentum-space grid        
-        self.dk = 2 * torch.pi / (self.grid_size * self.dq)
-        k_axes = [torch.fft.fftshift(torch.arange(-self.grid_size[i] // 2, self.grid_size[i] // 2)) * self.dk[i] for i in range(self.ndim)]
+        self.dk = 2 * torch.pi / (self.grid_size.to(self.device) * self.dq)
+        # FFT-ordered integer modes, scaled by the existing momentum spacing.
+        k_axes = [
+            torch.fft.fftfreq(int(n), d=1.0 / int(n), device=self.dk.device) * self.dk[i]
+            for i, n in enumerate(self.grid_size)
+        ]
         k_grids = torch.meshgrid(*k_axes, indexing="ij")
         self.K = torch.stack(k_grids)
         print("K = ", self.K.shape)
@@ -295,28 +305,28 @@ class exact_tdse_solver_multistate:
     
 
         # Allocate storage:
-        self.nsnaps = self.nsteps // self.save_every_n_steps  # how many snapshots to save
+        self.nsnaps = len(range(0, self.nsteps, self.save_every_n_steps))
 
-        self.time = torch.zeros( self.nsnaps, dtype=torch.float )
-        self.kinetic_energy = torch.zeros( self.nsnaps, dtype=torch.float )
-        self.potential_energy = torch.zeros( self.nsnaps, dtype=torch.float )
-        self.total_energy = torch.zeros( self.nsnaps, dtype=torch.float )
-        self.population_right = torch.zeros( self.nsnaps, dtype=torch.float )
-        self.norm = torch.zeros( self.nsnaps, dtype=torch.float )
+        self.time = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
+        self.kinetic_energy = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
+        self.potential_energy = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
+        self.total_energy = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
+        self.population_right = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
+        self.norm = torch.zeros( self.nsnaps, dtype=torch.float, device=self.device)
 
         # Diabatic properties
-        self.psi_r_dia = torch.zeros((*self.grid_size, self.Nstates), dtype=torch.cfloat)
+        self.psi_r_dia = torch.zeros((*self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
         self.psi_k_dia = torch.zeros_like(self.psi_r_dia)
-        self.psi_r_dia_all = torch.zeros(( self.nsnaps , *self.grid_size, self.Nstates), dtype=torch.cfloat)
-        self.psi_k_dia_all = torch.zeros((self.nsnaps, *self.grid_size, self.Nstates), dtype=torch.cfloat)
-        self.rho_dia_all = torch.zeros((self.nsnaps, self.Nstates, self.Nstates), dtype=torch.cfloat)
+        self.psi_r_dia_all = torch.zeros(( self.nsnaps , *self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
+        self.psi_k_dia_all = torch.zeros((self.nsnaps, *self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
+        self.rho_dia_all = torch.zeros((self.nsnaps, self.Nstates, self.Nstates), dtype=torch.cfloat, device=self.device)
 
         # Adiabatic properties
-        self.psi_r_adi = torch.zeros((*self.grid_size, self.Nstates), dtype=torch.cfloat)
+        self.psi_r_adi = torch.zeros((*self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
         self.psi_k_adi = torch.zeros_like(self.psi_r_adi)
-        self.psi_r_adi_all = torch.zeros(( self.nsnaps , *self.grid_size, self.Nstates), dtype=torch.cfloat)
-        self.psi_k_adi_all = torch.zeros((self.nsnaps, *self.grid_size, self.Nstates), dtype=torch.cfloat)
-        self.rho_adi_all = torch.zeros((self.nsnaps, self.Nstates, self.Nstates), dtype=torch.cfloat)
+        self.psi_r_adi_all = torch.zeros(( self.nsnaps , *self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
+        self.psi_k_adi_all = torch.zeros((self.nsnaps, *self.grid_size, self.Nstates), dtype=torch.cfloat, device=self.device)
+        self.rho_adi_all = torch.zeros((self.nsnaps, self.Nstates, self.Nstates), dtype=torch.cfloat, device=self.device)
 
 
     def update_adi_r(self):
@@ -406,6 +416,8 @@ class exact_tdse_solver_multistate:
                 f"point; maximum |V - V†| is {hermitian_residual.item():.3e}"
             )
 
+        self.V = self.V.to(device=self.device)
+
         # dia  <-> adi transformation for all points
         # V U = U E => V = U E U.H
         # E = <psi_adi | H | psi_adi >
@@ -466,7 +478,7 @@ class exact_tdse_solver_multistate:
                 self.rho_adi_all[istep] = torch.einsum("...i, ...j->ij", self.psi_r_adi, self.psi_r_adi.conj() )  * self.dV
 
                 # Kinetic energy
-                KE = torch.einsum("...i,...,...i->", self.psi_k_dia.conj(), self.T, self.psi_k_dia ) * (self.dq/self.grid_size).prod()
+                KE = torch.einsum("...i,...,...i->", self.psi_k_dia.conj(), self.T, self.psi_k_dia ) * self.dV / self.ngrid
 
                 # Full potential energy: PE = ∫ ψ* V ψ dx
                 PE = torch.einsum("...i,...ij,...j->", self.psi_r_dia.conj(), self.V, self.psi_r_dia) * self.dV
@@ -487,6 +499,10 @@ class exact_tdse_solver_multistate:
                 print(f"Step {step}: Norm = {nrm:.4f}")
         
         
+            # The state at step nsteps-1 is the requested final state.
+            if step == self.nsteps - 1:
+                break
+
             #=================== Doing computations ==========================        
             if self.method == "crank-nicolson":
                 # Use Crank-Nicolson scheme for time propagation
@@ -521,6 +537,11 @@ class exact_tdse_solver_multistate:
                     # Another half of the propagation in real space
                     self.psi_r_dia = torch.einsum("...ij,...j->...i", self.expV_half, self.psi_r_dia) #self.expV_half @ self.psi
 
+
+        # Keep all final representations synchronized, even off the save stride.
+        self.update_adi_r()
+        self.transform_r2k(0)
+        self.transform_r2k(1)
 
     def save(self):
         """Saves the grid, wavefunction, and observables to disk."""
