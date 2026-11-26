@@ -48,9 +48,9 @@ class ldr_tdse_solver_multistate:
     ``Nstates`` and ``initial_state_index`` follow the exact_torch names.
 
     The initial nuclear state is the analytic Gaussian specified by q0, p0,
-    k and mass. With potential_fn, ``initial_representation="adiabatic"``
-    (the default) selects the adiabatic eigenvector at q0; ``"diabatic"``
-    selects a unit vector in the model's diabatic basis. Both use
+    k and mass. With potential_fn, ``initial_representation="diabatic"``
+    (the default) selects a unit vector in the model's diabatic basis;
+    ``"adiabatic"`` selects the adiabatic eigenvector at q0. Both use
     ``initial_state_index`` and hold the electronic vector fixed across the
     Gaussian. This is not a locally adiabatic state at every coordinate.
     ``initial_electronic_state`` overrides this selection with a normalized
