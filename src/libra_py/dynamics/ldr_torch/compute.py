@@ -678,3 +678,124 @@ class ldr_tdse_solver_multistate:
         print("Propagating Coefficients")
         self.propagate()
         self.save()
+
+
+@torch.no_grad()
+def wf_calc_nD(filename, axes, potential_fn=None, potential_fn_params=None,
+               *, times=None, batch_size=256, normalize=True, device="cpu"):
+    """Reconstruct saved LDR amplitudes and densities on a Cartesian display grid.
+
+    Args:
+        filename: Path to an LDR ``.pt`` file containing ``qgrid``, ``alpha``,
+            ``eigvecs``, ``C_save`` and ``time``. Normalization also needs ``norm``.
+        axes: One 1D coordinate array per nuclear dimension. These display
+            coordinates are independent of the original Gaussian centers.
+        potential_fn: Optional model with the usual LDR signature
+            ``potential_fn(q, params)``, where q has shape (ndof, npoints).
+            Supply the original model to obtain adiabatic components at the
+            display points. Without it, only diabatic and total results exist.
+        potential_fn_params: Parameters for the original model.
+        times: Saved physical times to select, in the requested order; None
+            selects every saved time. Times are not interpolated.
+        batch_size: Number of display points evaluated together (default 256).
+        normalize: Divide amplitudes by the saved amplitude norm (default True).
+            False retains the raw coefficient normalization. The display box
+            and individual electronic states are never separately normalized.
+        device: Torch device for reconstruction (default "cpu").
+
+    Returns:
+        Dictionary with ``axes``, ``time``, ``psi_r_dia``, ``psi_r_adi``,
+        ``rho_dia``, ``rho_adi`` and ``rho_total``. Amplitudes and state densities
+        have shape (ntime, len(axis_0), ..., len(axis_Dminus1), nstates).
+        ``rho_total`` omits the state axis; adiabatic entries are None when
+        potential_fn is omitted. Here rho denotes a spatial density, not an
+        electronic density matrix. Amplitudes are complex128, densities float64.
+
+    The complex Gaussian contributions are summed before squaring, retaining
+    interference. Every Gaussian is evaluated, without density interpolation
+    or tail truncation. Projection uses fresh electronic states at each display
+    point; individual adiabatic components are basis-dependent at an exact
+    degeneracy. The saved reference eigenvectors must define the same complete
+    diabatic model basis as potential_fn. No propagation or file output occurs.
+    """
+    if isinstance(batch_size, bool) or not isinstance(batch_size, int) or batch_size < 1:
+        raise ValueError("batch_size must be a positive integer")
+    device = torch.device(device)
+    # Memory-map large saved matrices; only the reconstruction arrays are read.
+    saved = torch.load(filename, map_location="cpu", weights_only=True, mmap=True)
+    q = torch.as_tensor(saved["qgrid"], dtype=torch.float64, device=device)
+    alpha = torch.as_tensor(saved["alpha"], dtype=torch.float64, device=device).expand_as(q)
+    if saved.get("eigvecs") is None:
+        raise ValueError("A separate display grid requires saved eigvecs in a common diabatic basis")
+    frames = torch.as_tensor(saved["eigvecs"], dtype=torch.cdouble, device=device)
+    n, ndof = q.shape
+    nstates = frames.shape[-1]
+    if frames.shape != (n, nstates, nstates):
+        raise ValueError("eigvecs must have shape (ncenters, nstates, nstates)")
+    if not torch.isfinite(q).all() or not torch.all(torch.isfinite(alpha) & (alpha > 0)):
+        raise ValueError("Centers must be finite and Gaussian widths must be finite and positive")
+
+    saved_times = torch.as_tensor(saved["time"], dtype=torch.float64, device="cpu")
+    if saved_times.ndim != 1 or len(saved_times) == 0 or len(saved["C_save"]) != len(saved_times):
+        raise ValueError("Save both time and C_save at the same snapshots")
+    if times is None:
+        indices = torch.arange(len(saved_times))
+    else:
+        requested = torch.as_tensor(times, dtype=torch.float64, device="cpu")
+        if requested.ndim != 1 or requested.numel() == 0 or not torch.isfinite(requested).all():
+            raise ValueError("times must be a nonempty sequence of finite saved times")
+        indices = (saved_times[:, None] - requested).abs().argmin(dim=0)
+        if not torch.allclose(saved_times[indices], requested, rtol=0, atol=1e-8):
+            raise ValueError("A requested time is absent from the saved trajectory")
+    coefficients = torch.stack([
+        torch.as_tensor(saved["C_save"][i], dtype=torch.cdouble, device=device).reshape(nstates, n)
+        for i in indices.tolist()
+    ])
+    if normalize:
+        if len(saved.get("norm", [])) != len(saved_times):
+            raise ValueError("normalize=True requires a saved norm for every coefficient snapshot")
+        # LDR's norm is sqrt(C^dagger S C), not the probability norm itself.
+        norms = torch.stack([
+            torch.as_tensor(saved["norm"][i], dtype=torch.cdouble, device=device).reshape(())
+            for i in indices.tolist()
+        ]).abs()
+        if not torch.all(torch.isfinite(norms) & (norms > 0)):
+            raise ValueError("Saved amplitude norms must be finite and positive")
+        coefficients = coefficients / norms[:, None, None]
+    if not torch.isfinite(coefficients).all() or not torch.isfinite(frames).all():
+        raise ValueError("Saved coefficients and electronic frames must be finite")
+
+    axes = tuple(torch.as_tensor(a, dtype=torch.float64, device=device) for a in axes)
+    if len(axes) != ndof or any(a.ndim != 1 or a.numel() == 0 or not torch.isfinite(a).all()
+                                for a in axes):
+        raise ValueError("axes must contain one nonempty finite 1D array per nuclear dimension")
+    points = torch.stack(torch.meshgrid(*axes, indexing="ij"), dim=-1).reshape(-1, ndof)
+    ntime = len(indices)
+    prefactor = (2 * alpha / torch.pi).pow(0.25).prod(dim=1)
+    # U_n[a,i] C[t,i,n] gives each center's contribution in the common frame.
+    center_vectors = torch.einsum("nai,tin->nta", frames, coefficients).reshape(n, -1)
+    psi_dia = torch.empty(ntime, len(points), nstates, dtype=torch.cdouble, device=device)
+    psi_adi = torch.empty_like(psi_dia) if potential_fn is not None else None
+    model_params = {} if potential_fn_params is None else potential_fn_params
+    for start in range(0, len(points), batch_size):
+        stop = min(start + batch_size, len(points))
+        p = points[start:stop]
+        delta = p[:, None, :] - q[None, :, :]
+        gaussian = prefactor * torch.exp(-(alpha * delta.square()).sum(dim=-1))
+        psi = (gaussian.to(torch.cdouble) @ center_vectors).reshape(len(p), ntime, nstates)
+        psi_dia[:, start:stop] = psi.permute(1, 0, 2)
+        if psi_adi is not None:
+            _, local_frames = electronic.diagonalize_potential(
+                p.T, potential_fn, model_params, nstates)
+            chi = torch.einsum("pak,pta->ptk", local_frames.conj(), psi)
+            psi_adi[:, start:stop] = chi.permute(1, 0, 2)
+
+    shape = (ntime, *(len(a) for a in axes), nstates)
+    psi_dia = psi_dia.reshape(shape)
+    psi_adi = psi_adi.reshape(shape) if psi_adi is not None else None
+    rho_dia = psi_dia.abs().square()
+    rho_adi = psi_adi.abs().square() if psi_adi is not None else None
+    return {"axes": axes, "time": saved_times[indices].to(device),
+            "psi_r_dia": psi_dia, "psi_r_adi": psi_adi,
+            "rho_dia": rho_dia, "rho_adi": rho_adi,
+            "rho_total": rho_dia.sum(dim=-1)}

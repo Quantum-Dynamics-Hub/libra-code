@@ -7,7 +7,7 @@ import pytest
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "src"))
-from libra_py.dynamics.ldr_torch.compute import ldr_tdse_solver_multistate
+from libra_py.dynamics.ldr_torch.compute import ldr_tdse_solver_multistate, wf_calc_nD
 
 
 def potential(q, params):
@@ -211,3 +211,111 @@ def test_inference_tensors_reconstruct_after_explicit_update():
         s.C_curr *= 2
         s.update_psi_r()
         torch.testing.assert_close(s.psi_r_dia, 2*initial)
+
+
+@pytest.mark.parametrize("ndof,nstates,batch", [(1, 1, 1), (2, 2, 3), (3, 3, 256)])
+def test_wf_calc_nD_matches_full_complex_sum_on_independent_grid(tmp_path, ndof, nstates, batch):
+    centers = torch.tensor([[-0.8, 0.2, 0.3], [0.0, -0.4, 0.6], [1.3, 0.7, -0.2]],
+                           dtype=torch.double)[:, :ndof]
+    widths = torch.tensor([[0.7, 1.2, 0.6], [1.3, 0.6, 0.9], [2.1, 0.9, 1.1]],
+                          dtype=torch.double)[:, :ndof]
+    s = make_solver(initialize=False, Nstates=nstates, qgrid=centers, alpha=widths,
+                    q0=[0.0]*ndof, p0=[0.0]*ndof, k=[4.0]*ndof, mass=[1.0]*ndof,
+                    potential_fn_params={"nstates": nstates})
+    s.chi_overlap()
+    s.build_compound_overlap()
+    index = torch.arange(s.ndim, dtype=torch.double)
+    c = torch.stack([torch.cos(index) + 1j*torch.sin(0.7*index),
+                     torch.sin(index + 0.4) - 0.3j*torch.cos(index)])
+    norms = [torch.vdot(row, s.S @ row).real.sqrt() for row in c]
+    filename = tmp_path / "snapshots.pt"
+    torch.save(dict(qgrid=s.qgrid, alpha=s.alpha, eigvecs=s.eigvecs,
+                    C_save=list(c), time=[0., 2.5], norm=norms), filename)
+    axes = [torch.linspace(-0.93, 1.17, 4+i, dtype=torch.double) for i in range(ndof)]
+    result = wf_calc_nD(filename, axes, potential, {"nstates": nstates},
+                        times=[2.5, 0.], batch_size=batch)
+    points = torch.stack(torch.meshgrid(*axes, indexing="ij"), dim=-1).reshape(-1, ndof)
+    expected = torch.stack([explicit_sum(s, points, c[i]) / norms[i] for i in [1, 0]])
+    local_frames = torch.linalg.eigh(potential(points.T, {"nstates": nstates}))[1]
+    expected_adi = torch.stack([
+        torch.stack([local_frames[p].conj().T @ row[p] for p in range(len(points))])
+        for row in expected
+    ])
+    shape = (2, *(len(a) for a in axes), nstates)
+    torch.testing.assert_close(result["time"], torch.tensor([2.5, 0.], dtype=torch.double))
+    torch.testing.assert_close(result["psi_r_dia"], expected.reshape(shape), atol=2e-12, rtol=2e-12)
+    torch.testing.assert_close(result["psi_r_adi"], expected_adi.reshape(shape), atol=2e-12, rtol=2e-12)
+    torch.testing.assert_close(result["rho_dia"], result["psi_r_dia"].abs().square())
+    torch.testing.assert_close(result["rho_adi"], result["psi_r_adi"].abs().square())
+    torch.testing.assert_close(result["rho_total"], result["rho_adi"].sum(-1))
+
+
+def test_wf_calc_nD_reads_actual_saved_history_and_preserves_reference_phases(tmp_path):
+    s = make_solver(prefix=str(tmp_path / "solution"), save_every_n_steps=1,
+                    properties_to_save=["time", "norm", "C_save", "psi_r_dia", "psi_r_adi"])
+    s.propagate()
+    s.save()
+    filename = tmp_path / "solution.pt"
+    result = wf_calc_nD(filename, [s.qgrid[:, 0]], potential, normalize=False, batch_size=1)
+    torch.testing.assert_close(result["psi_r_dia"], s.psi_r_dia_all)
+    torch.testing.assert_close(result["rho_adi"], s.psi_r_adi_all.abs().square())
+
+    saved = torch.load(filename, weights_only=True)
+    phase = torch.exp(1j*torch.arange(s.ndim, dtype=torch.double).reshape(s.nstates, s.ngrids))
+    saved["eigvecs"] = saved["eigvecs"] * phase.T[:, None, :]
+    saved["C_save"] = [row * phase.conj().reshape(-1) for row in saved["C_save"]]
+    torch.save(saved, filename)
+    phased = wf_calc_nD(filename, [s.qgrid[:, 0]], potential, normalize=False, batch_size=2)
+    torch.testing.assert_close(phased["psi_r_dia"], result["psi_r_dia"])
+    torch.testing.assert_close(phased["rho_adi"], result["rho_adi"])
+
+
+def test_wf_calc_nD_normalization_matches_analytic_gaussian(tmp_path):
+    s = make_solver(qgrid=[[0.]], alpha=1., prefix=str(tmp_path / "gaussian"),
+                    initial_electronic_state=[1., 2.j], properties_to_save=["time", "norm", "C_save"])
+    s.C_curr *= 3.
+    s.save_results(0)
+    s.save()
+    x = torch.linspace(-8., 8., 1001, dtype=torch.double)
+    filename = tmp_path / "gaussian.pt"
+    result = wf_calc_nD(filename, [x], potential)
+    expected = (2/torch.pi)**0.5 * torch.exp(-2*x.square())
+    torch.testing.assert_close(result["rho_total"][0], expected, atol=2e-12, rtol=2e-12)
+    torch.testing.assert_close(torch.trapezoid(result["rho_total"][0], x), torch.tensor(1., dtype=torch.double))
+    torch.testing.assert_close(result["rho_adi"].sum(-1), result["rho_total"])
+
+    saved = torch.load(filename, weights_only=True)
+    saved.pop("norm")
+    torch.save(saved, filename)
+    raw = wf_calc_nD(filename, [x], normalize=False)
+    torch.testing.assert_close(raw["rho_total"][0], 9*expected, atol=2e-12, rtol=2e-12)
+    assert raw["psi_r_adi"] is None and raw["rho_adi"] is None
+    with pytest.raises(ValueError, match="requires a saved norm"):
+        wf_calc_nD(filename, [x])
+
+
+@pytest.mark.parametrize("problem,match", [
+    ("times", "requested time"), ("coefficients", "time and C_save"),
+    ("frames", "saved eigvecs"), ("axes", "axes must contain"),
+    ("batch", "batch_size"), ("norm", "norms must be finite and positive"),
+])
+def test_wf_calc_nD_rejects_missing_or_inconsistent_data(tmp_path, problem, match):
+    saved = dict(qgrid=torch.zeros(1, 1), alpha=1., eigvecs=torch.ones(1, 1, 1),
+                 C_save=[torch.ones(1)], time=[0.], norm=[1.])
+    options = dict(axes=[[0.]], times=[0.])
+    if problem == "times":
+        options["times"] = [0.5]
+    elif problem == "coefficients":
+        saved["C_save"] = []
+    elif problem == "frames":
+        saved["eigvecs"] = None
+    elif problem == "axes":
+        options["axes"] = [[0.], [0.]]
+    elif problem == "batch":
+        options["batch_size"] = 0
+    elif problem == "norm":
+        saved["norm"] = [0.]
+    filename = tmp_path / "invalid.pt"
+    torch.save(saved, filename)
+    with pytest.raises(ValueError, match=match):
+        wf_calc_nD(filename, **options)
