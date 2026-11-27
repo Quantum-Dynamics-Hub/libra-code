@@ -60,7 +60,7 @@ Several such matrices and diagonalization workspaces are held simultaneously.
 Run the full 2D defaults on a machine with sufficient memory for tens of GB of
 working storage. The full grids are not silently reduced by the scripts.
 
-The shared implementation in `_common.py` calls `ldr_torch.ldr_solver` for
+The shared implementation in `_common.py` calls `ldr_torch.ldr_tdse_solver_multistate` for
 matrix construction, corrected initial projection, and propagation. The DVR
 reference uses `exact_torch.exact_tdse_solver_multistate` potential/kinetic
 operators and electronic transformations with a small example adapter for

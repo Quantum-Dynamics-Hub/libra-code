@@ -7,17 +7,17 @@ import pytest
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[4] / "src"))
-from libra_py.dynamics.ldr_torch.compute import ldr_solver
+from libra_py.dynamics.ldr_torch.compute import ldr_tdse_solver_multistate
 
 
 def make_solver(alpha, ndim=2, **overrides):
-    params = dict(device="cpu", nstates=1,
+    params = dict(device="cpu", Nstates=1,
                   qgrid=np.array([[-0.7, 0.1], [0.4, -0.6], [1.3, 0.8]])[:, :ndim],
                   alpha=alpha, q0=[0.2, -0.3][:ndim], p0=[1.1, -0.7][:ndim],
                   mass=[1.4, 2.0][:ndim], k=[0.9, 0.6][:ndim],
                   E=[[0.1, 0.3, 0.8]], dt=0.17)
     params.update(overrides)
-    solver = ldr_solver(params)
+    solver = ldr_tdse_solver_multistate(params)
     solver.buildSH()
     return solver
 

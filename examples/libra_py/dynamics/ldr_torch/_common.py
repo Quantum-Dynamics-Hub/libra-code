@@ -14,7 +14,7 @@ import torch
 
 SRC = Path(__file__).resolve().parents[4] / "src"
 sys.path.insert(0, str(SRC))
-from libra_py.dynamics.ldr_torch.compute import ldr_solver
+from libra_py.dynamics.ldr_torch.compute import ldr_tdse_solver_multistate
 from libra_py.dynamics.exact_torch.compute import exact_tdse_solver_multistate
 
 
@@ -154,10 +154,10 @@ def make_ldr(settings, device):
     sigma = q.new_tensor(settings["sigma"])
     mass = q.new_tensor(settings["mass"])
     alpha = q.new_tensor([1 / (2 * float(a[1] - a[0])**2) for a in axes])
-    solver = ldr_solver({
+    solver = ldr_tdse_solver_multistate({
         "device": device, "qgrid": q.T, "alpha": alpha,
         "q0": settings["q0"], "p0": settings["p0"], "mass": mass,
-        "k": 1 / (4 * mass * sigma**4), "nstates": 2, "istate": settings["istate"],
+        "k": 1 / (4 * mass * sigma**4), "Nstates": 2, "initial_state_index": settings["istate"],
         "E": energies.T, "s_elec": se, "elec_ampl": b_el, "dt": settings["dt"],
     })
     solver.buildSH()

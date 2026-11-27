@@ -11,7 +11,7 @@ SRC = Path(__file__).resolve().parents[4] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from libra_py.dynamics.ldr_torch.compute import ldr_solver
+from libra_py.dynamics.ldr_torch.compute import ldr_tdse_solver_multistate
 
 
 def assert_close(actual, expected, *, atol=1e-10, rtol=1e-10):
@@ -20,12 +20,12 @@ def assert_close(actual, expected, *, atol=1e-10, rtol=1e-10):
 
 def make_solver(**overrides):
     params = dict(
-        device="cpu", nstates=1, qgrid=[[0.0], [0.8], [1.7]],
+        device="cpu", Nstates=1, qgrid=[[0.0], [0.8], [1.7]],
         q0=[0.0], p0=[0.0], alpha=[1.0], mass=[1.0], k=[4.0],
         dt=0.17, E=[[0.1, 0.3, 0.8]],
     )
     params.update(overrides)
-    solver = ldr_solver(params)
+    solver = ldr_tdse_solver_multistate(params)
     solver.buildSH()
     return solver
 
@@ -52,7 +52,7 @@ def test_initial_gaussian_equal_to_basis_function_recovers_unit_coefficient():
 
 def test_initialization_uses_all_electronic_overlaps_and_resets_coefficients():
     se = electronic_basis()
-    solver = make_solver(nstates=2, E=torch.zeros(2, 3),
+    solver = make_solver(Nstates=2, E=torch.zeros(2, 3),
                          s_elec=se, elec_ampl=se[:, 0].reshape(2, 3))
     assert solver.elec_ampl[1].abs().max() > 0.5
     solver.initialize_C()
@@ -92,7 +92,7 @@ def test_gaussian_projection_matches_independent_two_dimensional_quadrature():
 
 
 def test_legacy_overlap_vector_matches_explicit_single_state_block():
-    params = dict(nstates=2, istate=1, E=torch.zeros(2, 3), s_elec=electronic_basis())
+    params = dict(Nstates=2, initial_state_index=1, E=torch.zeros(2, 3), s_elec=electronic_basis())
     legacy = make_solver(**params, elec_ampl=[0.8, 0.9, 1.0])
     full = make_solver(**params, elec_ampl=[[0, 0, 0], [0.8, 0.9, 1.0]])
     legacy.initialize_C()
@@ -119,7 +119,7 @@ def test_lowdin_populations_for_state_with_negative_mulliken_population(
         se = phase.conj()[:, None] * se * phase[None, :]
         coefficients = phase.conj() * coefficients
     solver = make_solver(
-        nstates=2, qgrid=[[0.], [np.sqrt(-2 * np.log(overlap))]],
+        Nstates=2, qgrid=[[0.], [np.sqrt(-2 * np.log(overlap))]],
         E=[[0.1, 0.3], [0.5, 0.9]], s_elec=se,
         properties_to_save=["population_right", "denmat"],
     )
@@ -169,12 +169,12 @@ def test_complex_overlap_square_root_recovers_known_positive_hermitian_matrix():
 def test_complex_gauge_covariance_projection_and_propagation(alpha):
     se = electronic_basis()
     energies = [[0.1, 0.3, 0.8], [0.5, 0.9, 1.4]]
-    ref = make_solver(nstates=2, E=energies, s_elec=se, alpha=alpha,
+    ref = make_solver(Nstates=2, E=energies, s_elec=se, alpha=alpha,
                       elec_ampl=se[:, 0].reshape(2, 3), k=[0.6], p0=[0.7])
     phase = torch.exp(1j * torch.tensor([0.1, 0.7, -1.2, 2.1, -0.4, 1.5],
                                       dtype=torch.float64))
     phased = make_solver(
-        nstates=2, E=energies, alpha=alpha, s_elec=phase.conj()[:, None] * se * phase[None, :],
+        Nstates=2, E=energies, alpha=alpha, s_elec=phase.conj()[:, None] * se * phase[None, :],
         elec_ampl=(phase.conj() * se[:, 0]).reshape(2, 3), k=[0.6], p0=[0.7],
     )
     for solver in [ref, phased]:
@@ -242,7 +242,7 @@ def test_cpu_input_tensors_are_moved_to_cuda():
     ({"s_elec": [[1]]}, "s_elec"),
     ({"E": [[1j, 0, 0]]}, "real electronic energies"),
     ({"E": [[1]]}, "E must have shape"),
-    ({"istate": 1}, "istate"),
+    ({"initial_state_index": 1}, "initial_state_index"),
     ({"alpha": [-1.0]}, "widths must be positive"),
 ])
 def test_invalid_initialization_inputs_are_rejected(params, message):
@@ -254,3 +254,23 @@ def test_singular_overlap_is_rejected_before_building_propagator():
     solver = make_solver(qgrid=[[0.0], [0.0]], E=[[0.0, 0.0]])
     with pytest.raises(ValueError, match="positive definite"):
         solver.compute_propagator()
+
+
+def test_constructor_options_select_state_count_and_initial_state():
+    solver = make_solver(Nstates=3, initial_state_index=2, E=torch.zeros(3, 3))
+    solver.initialize_C()
+    assert solver.nstates == solver.Nstates == 3
+    assert solver.istate == solver.initial_state_index == 2
+    expected = torch.zeros(9, dtype=torch.cdouble)
+    expected[6] = 1
+    assert_close(solver.C0, expected, atol=1e-13, rtol=0)
+
+
+@pytest.mark.parametrize("params", [
+    {"nstates": 1}, {"istate": 1},
+    {"Nstates": 2, "nstates": 2},
+    {"initial_state_index": 0, "istate": 0},
+])
+def test_removed_constructor_names_are_rejected(params):
+    with pytest.raises(ValueError, match="Use Nstates and initial_state_index"):
+        ldr_tdse_solver_multistate(params)
