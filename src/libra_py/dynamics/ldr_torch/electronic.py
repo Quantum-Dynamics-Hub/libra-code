@@ -1,36 +1,10 @@
-"""Electronic preparation for LDR models in a fixed orthonormal diabatic basis."""
+"""Electronic preparation for LDR models in a fixed orthonormal diabatic basis.
+
+Model callbacks return finite Hermitian tensors of shape (npoints, nstates,
+nstates), in float64 or complex128 on the input coordinates' device.
+"""
 
 import torch
-
-
-def _hermitian_tensor(value, shape, device, name):
-    raw = torch.as_tensor(value, device=device)
-    tolerance = 1e-6 if raw.dtype in (torch.float32, torch.complex64) else 1e-12
-    matrix = raw.to(torch.cdouble)
-    if tuple(matrix.shape) != tuple(shape):
-        raise ValueError(f"{name} must return shape {tuple(shape)}; received {tuple(matrix.shape)}")
-    if not torch.isfinite(matrix).all():
-        raise ValueError(f"{name} must return finite values")
-    if not torch.allclose(matrix, matrix.conj().transpose(-2, -1), atol=tolerance, rtol=0):
-        raise ValueError(f"{name} must return Hermitian matrices")
-    return matrix
-
-
-def evaluate_potential(q, potential_fn, model_params, nstates):
-    """Evaluate V(q); q is (ndof, npoints), output is (npoints, s, s).
-
-    This uses the same coordinate-first, matrix-last model convention as
-    exact_torch. Each model value is evaluated in one common diabatic basis.
-    """
-    if not callable(potential_fn):
-        raise ValueError("potential_fn must be callable")
-    return _hermitian_tensor(potential_fn(q, model_params),
-                             (q.shape[1], nstates, nstates), q.device, "potential_fn")
-
-
-def diagonalize_potential(q, potential_fn, model_params, nstates):
-    """Return ordered energies and column eigenvectors at all supplied points."""
-    return torch.linalg.eigh(evaluate_potential(q, potential_fn, model_params, nstates))
 
 
 def prepare_reference_data(qgrid, q0, nstates, istate, potential_fn, model_params,
@@ -45,7 +19,8 @@ def prepare_reference_data(qgrid, q0, nstates, istate, potential_fn, model_param
     """
     if initial_representation not in ("adiabatic", "diabatic"):
         raise ValueError("initial_representation must be 'adiabatic' or 'diabatic'")
-    energies, frames = diagonalize_potential(qgrid.T, potential_fn, model_params, nstates)
+    potential = potential_fn(qgrid.T, model_params).to(torch.cdouble)
+    energies, frames = torch.linalg.eigh(potential)
     if initial_electronic_state is None:
         if initial_representation == "diabatic":
             initial = torch.zeros(nstates, dtype=torch.cdouble, device=qgrid.device)
@@ -53,7 +28,8 @@ def prepare_reference_data(qgrid, q0, nstates, istate, potential_fn, model_param
         else:
             if q0.shape != (qgrid.shape[1],):
                 raise ValueError("q0 must have shape (ndof,)")
-            _, initial_frames = diagonalize_potential(q0[:, None], potential_fn, model_params, nstates)
+            initial_potential = potential_fn(q0[:, None], model_params).to(torch.cdouble)
+            _, initial_frames = torch.linalg.eigh(initial_potential)
             initial = initial_frames[0, :, istate]
     else:
         initial = torch.as_tensor(initial_electronic_state, dtype=torch.cdouble, device=qgrid.device)
@@ -83,7 +59,7 @@ def compute_energy_gradients(qgrid, frames, potential_fn, model_params):
                "For a constant potential, retain a zero dependence such as 0*q.sum().")
     with torch.enable_grad():
         q = qgrid.detach().T.clone().requires_grad_(True)
-        potential = evaluate_potential(q, potential_fn, model_params, s)
+        potential = potential_fn(q, model_params).to(torch.cdouble)
         if not potential.requires_grad:
             raise ValueError(message)
         fixed_frames = frames.detach()
@@ -119,6 +95,6 @@ def compute_midpoint_potential(qgrid, alpha, frames, potential_fn, model_params,
         n, m = pairs // N, pairs % N
         an, am = alpha[n], alpha[m]
         qbar = (an*qgrid[n] + am*qgrid[m]) / (an+am)
-        potential = evaluate_potential(qbar.T, potential_fn, model_params, s)
+        potential = potential_fn(qbar.T, model_params).to(torch.cdouble)
         result[:, n, :, m] = frames[n].conj().transpose(-2, -1) @ potential @ frames[m]
     return result

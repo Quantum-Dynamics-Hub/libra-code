@@ -143,6 +143,34 @@ def test_history_and_final_snapshot_match_coefficients(tmp_path, scheme):
     torch.testing.assert_close(s.psi_r_dia_all[0], saved_initial)
 
 
+@pytest.mark.parametrize("scheme", ["diagonal", "BAT0", "BAT1", "midpoint"])
+def test_real_double_potential_matches_complex_double(tmp_path, scheme):
+    def real_potential(q, params):
+        return potential(q, params).real
+
+    def complex_potential(q, params):
+        return real_potential(q, params).to(torch.cdouble)
+
+    settings = dict(hamiltonian_scheme=scheme, initial_representation="adiabatic",
+                    prefix=str(tmp_path / "real"), properties_to_save=["time", "norm", "C_save"])
+    real = make_solver(potential_fn=real_potential, **settings)
+    complex_ = make_solver(potential_fn=complex_potential, **settings)
+    torch.testing.assert_close(real.H, complex_.H)
+    real.propagate()
+    complex_.propagate()
+    torch.testing.assert_close(real.C_curr, complex_.C_curr)
+    torch.testing.assert_close(real.psi_r_dia, complex_.psi_r_dia)
+    torch.testing.assert_close(real.psi_r_adi, complex_.psi_r_adi)
+
+    real.save()
+    axes = [torch.linspace(-2., 2., 11, dtype=torch.double)]
+    filename = tmp_path / "real.pt"
+    result = wf_calc_nD(filename, axes, real_potential)
+    expected = wf_calc_nD(filename, axes, complex_potential)
+    torch.testing.assert_close(result["psi_r_adi"], expected["psi_r_adi"])
+    torch.testing.assert_close(result["rho_adi"].sum(-1), result["rho_total"])
+
+
 def test_default_save_has_final_amplitudes_without_histories(tmp_path):
     s = make_solver(prefix=str(tmp_path / "solution"))
     s.save()

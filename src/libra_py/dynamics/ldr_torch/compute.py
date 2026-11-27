@@ -37,10 +37,11 @@ from . import electronic
 class ldr_tdse_solver_multistate:
     """LDR dynamics driven by a diabatic model function, as in exact_torch.
 
-    Supply ``potential_fn(q, potential_fn_params)`` returning shape
-    (npoints, nstates, nstates) for q of shape (ndof, npoints). Libra prepares
-    reference energies, eigenvectors, electronic overlaps, and initial
-    electronic overlaps in a fixed orthonormal diabatic model basis.
+    Supply ``potential_fn(q, potential_fn_params)`` returning finite Hermitian
+    tensors of shape (npoints, nstates, nstates) for q of shape (ndof, npoints).
+    The callback supplies float64 or complex128 values on q.device. Libra
+    prepares reference energies, eigenvectors, electronic overlaps, and
+    initial electronic overlaps in a fixed orthonormal diabatic model basis.
 
     ``qgrid`` has shape (ngrids, ndof). Alternatively, ``grid_size``, ``q_min``
     and ``q_max`` define a regular grid with both endpoints included.
@@ -692,6 +693,8 @@ def wf_calc_nD(filename, axes, potential_fn=None, potential_fn_params=None,
             coordinates are independent of the original Gaussian centers.
         potential_fn: Optional model with the usual LDR signature
             ``potential_fn(q, params)``, where q has shape (ndof, npoints).
+            Return finite Hermitian tensors of shape (npoints, nstates,
+            nstates), in float64 or complex128 on q.device.
             Supply the original model to obtain adiabatic components at the
             display points. Without it, only diabatic and total results exist.
         potential_fn_params: Parameters for the original model.
@@ -785,8 +788,8 @@ def wf_calc_nD(filename, axes, potential_fn=None, potential_fn_params=None,
         psi = (gaussian.to(torch.cdouble) @ center_vectors).reshape(len(p), ntime, nstates)
         psi_dia[:, start:stop] = psi.permute(1, 0, 2)
         if psi_adi is not None:
-            _, local_frames = electronic.diagonalize_potential(
-                p.T, potential_fn, model_params, nstates)
+            potential = potential_fn(p.T, model_params).to(torch.cdouble)
+            _, local_frames = torch.linalg.eigh(potential)
             chi = torch.einsum("pak,pta->ptk", local_frames.conj(), psi)
             psi_adi[:, start:stop] = chi.permute(1, 0, 2)
 
